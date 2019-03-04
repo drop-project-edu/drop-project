@@ -19,6 +19,16 @@
  */
 package org.dropProject.controllers
 
+import org.dropProject.TestsHelper
+import org.dropProject.dao.Assignee
+import org.dropProject.dao.Assignment
+import org.dropProject.dao.AssignmentACL
+import org.dropProject.dao.Language
+import org.dropProject.forms.AssignmentForm
+import org.dropProject.forms.SubmissionMethod
+import org.dropProject.repository.AssigneeRepository
+import org.dropProject.repository.AssignmentRepository
+import org.hamcrest.CoreMatchers.containsString
 import org.hamcrest.collection.IsCollectionWithSize.hasSize
 import org.junit.Assert.*
 import org.junit.FixMethodOrder
@@ -39,16 +49,10 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import org.springframework.validation.BindingResult
-import org.dropProject.TestsHelper
-import org.dropProject.dao.Assignment
-import org.dropProject.dao.AssignmentACL
-import org.dropProject.dao.Language
-import org.dropProject.forms.AssignmentForm
-import org.dropProject.forms.SubmissionMethod
-import org.dropProject.repository.AssignmentRepository
 import java.io.File
 
 
@@ -65,6 +69,9 @@ class AssignmentControllerTests {
 
     @Autowired
     lateinit var assignmentRepository: AssignmentRepository
+
+    @Autowired
+    lateinit var assigneeRepository: AssigneeRepository
 
     @Autowired
     lateinit var testsHelper: TestsHelper
@@ -100,7 +107,7 @@ class AssignmentControllerTests {
 
         try {
             // post form
-            this.mvc.perform(MockMvcRequestBuilders.post("/assignment/new")
+            this.mvc.perform(post("/assignment/new")
                     .param("assignmentId", "dummyAssignment2")
                     .param("assignmentName", "Dummy Assignment")
                     .param("assignmentPackage", "org.dummy")
@@ -109,13 +116,13 @@ class AssignmentControllerTests {
                     .param("gitRepositoryUrl", "git@bitbucket.org:palves-ulht/projecto-modelo-aed-2017-18.git")
 //                    .param("gitRepositoryUrl", "git@bitbucket.org:pedrohalves/projecto-modelo-aed-2017-18.git")
             )
-                    .andExpect(MockMvcResultMatchers.status().isFound())
-                    .andExpect(MockMvcResultMatchers.header().string("Location", "/assignment/setup-git/dummyAssignment2"))
+                    .andExpect(status().isFound())
+                    .andExpect(header().string("Location", "/assignment/setup-git/dummyAssignment2"))
 
 
             // get assignment detail
-            this.mvc.perform(MockMvcRequestBuilders.get("/assignment/setup-git/dummyAssignment2"))
-                    .andExpect(MockMvcResultMatchers.status().isOk)
+            this.mvc.perform(get("/assignment/setup-git/dummyAssignment2"))
+                    .andExpect(status().isOk)
 
             // inject private and public key to continue
             val assignment = assignmentRepository.getOne("dummyAssignment2")
@@ -157,10 +164,10 @@ class AssignmentControllerTests {
 
 
             // connect to git repository
-            this.mvc.perform(MockMvcRequestBuilders.post("/assignment/setup-git/dummyAssignment2"))
-                    .andExpect(MockMvcResultMatchers.status().isFound())
-                    .andExpect(MockMvcResultMatchers.header().string("Location", "/assignment/info/dummyAssignment2"))
-                    .andExpect(MockMvcResultMatchers.flash().attribute<String>("message","Assignment was successfully created and connected to git repository"))
+            this.mvc.perform(post("/assignment/setup-git/dummyAssignment2"))
+                    .andExpect(status().isFound())
+                    .andExpect(header().string("Location", "/assignment/info/dummyAssignment2"))
+                    .andExpect(flash().attribute<String>("message","Assignment was successfully created and connected to git repository"))
 
             val updatedAssignment = assignmentRepository.getOne("dummyAssignment2")
             assert(updatedAssignment.active == false)
@@ -179,7 +186,7 @@ class AssignmentControllerTests {
     @DirtiesContext
     fun test_03_createAssignmentWithInvalidGitRepository() {
 
-        val mvcResult = this.mvc.perform(MockMvcRequestBuilders.post("/assignment/new")
+        val mvcResult = this.mvc.perform(post("/assignment/new")
                 .param("assignmentId", "dummyAssignment3")
                 .param("assignmentName", "Dummy Assignment")
                 .param("assignmentPackage", "org.dummy")
@@ -187,8 +194,8 @@ class AssignmentControllerTests {
                 .param("language", "JAVA")
                 .param("gitRepositoryUrl", "git@githuu.com:someuser/cs1Assigment1.git")
         )
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.model().attributeHasFieldErrors("assignmentForm", "gitRepositoryUrl"))
+                .andExpect(status().isOk())
+                .andExpect(model().attributeHasFieldErrors("assignmentForm", "gitRepositoryUrl"))
                 .andReturn()
 
         val result = mvcResult.modelAndView.model.get(BindingResult.MODEL_KEY_PREFIX + "assignmentForm") as BindingResult
@@ -209,11 +216,11 @@ class AssignmentControllerTests {
         val user = User("p1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
 
         try {// list assigments should return empty
-            this.mvc.perform(MockMvcRequestBuilders.get("/assignment/my")
+            this.mvc.perform(get("/assignment/my")
                     .with(SecurityMockMvcRequestPostProcessors.user(user)))
-                    .andExpect(MockMvcResultMatchers.status().isOk())
-                    .andExpect(MockMvcResultMatchers.model().hasNoErrors<String>())
-                    .andExpect(MockMvcResultMatchers.model().attribute("assignments", emptyList<Assignment>()))
+                    .andExpect(status().isOk())
+                    .andExpect(model().hasNoErrors<String>())
+                    .andExpect(model().attribute("assignments", emptyList<Assignment>()))
 
             // create assignment
             testsHelper.createAndSetupAssignment(mvc, assignmentRepository, "dummyAssignment4", "Dummy Assignment",
@@ -222,11 +229,11 @@ class AssignmentControllerTests {
                     teacherId = "p1", activateRightAfterCloning = false)
 
             // list assignments should return one assignment
-            val mvcResult = this.mvc.perform(MockMvcRequestBuilders.get("/assignment/my")
+            val mvcResult = this.mvc.perform(get("/assignment/my")
                     .with(SecurityMockMvcRequestPostProcessors.user(user)))
-                    .andExpect(MockMvcResultMatchers.status().isOk())
-                    .andExpect(MockMvcResultMatchers.model().hasNoErrors<String>())
-                    .andExpect(MockMvcResultMatchers.model().attribute("assignments", hasSize<Assignment>(1)))
+                    .andExpect(status().isOk())
+                    .andExpect(model().hasNoErrors<String>())
+                    .andExpect(model().attribute("assignments", hasSize<Assignment>(1)))
                     .andReturn()
 
             @Suppress("UNCHECKED_CAST")
@@ -255,7 +262,7 @@ class AssignmentControllerTests {
     fun test_05_createNewAssignmentAndForgetToConnectWithGithub() {  // assignment should be marked as inactive
 
         // post form
-        this.mvc.perform(MockMvcRequestBuilders.post("/assignment/new")
+        this.mvc.perform(post("/assignment/new")
                 .param("assignmentId", "dummyAssignment5")
                 .param("assignmentName", "Dummy Assignment")
                 .param("assignmentPackage", "org.dummy")
@@ -263,13 +270,13 @@ class AssignmentControllerTests {
                 .param("language", "JAVA")
                 .param("gitRepositoryUrl", "git@github.com:palves-ulht/sampleJavaAssignment.git")
         )
-                .andExpect(MockMvcResultMatchers.status().isFound())
-                .andExpect(MockMvcResultMatchers.header().string("Location", "/assignment/setup-git/dummyAssignment5"))
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", "/assignment/setup-git/dummyAssignment5"))
 
 
         // get assignment detail
-        this.mvc.perform(MockMvcRequestBuilders.get("/assignment/setup-git/dummyAssignment5"))
-                .andExpect(MockMvcResultMatchers.status().isOk)
+        this.mvc.perform(get("/assignment/setup-git/dummyAssignment5"))
+                .andExpect(status().isOk)
 
         val assignment = assignmentRepository.getOne("dummyAssignment5")
         assert(assignment.active == false)
@@ -288,23 +295,23 @@ class AssignmentControllerTests {
                     assignees = "21800000")
 
             // login as 21800000 and get an empty list of assignments
-            this.mvc.perform(MockMvcRequestBuilders.get("/")
+            this.mvc.perform(get("/")
                     .with(SecurityMockMvcRequestPostProcessors.user("21800000")))
-                    .andExpect(MockMvcResultMatchers.status().isOk)
-                    .andExpect(MockMvcResultMatchers.model().hasNoErrors<String>())
-                    .andExpect(MockMvcResultMatchers.model().attribute("assignments", hasSize<Assignment>(0)))
+                    .andExpect(status().isOk)
+                    .andExpect(model().hasNoErrors<String>())
+                    .andExpect(model().attribute("assignments", hasSize<Assignment>(0)))
 
             // mark the assignment as active
-            this.mvc.perform(MockMvcRequestBuilders.get("/assignment/toggle-status/dummyAssignment6"))
-                    .andExpect(MockMvcResultMatchers.status().isFound)
-                    .andExpect(MockMvcResultMatchers.header().string("Location", "/assignment/my"))
-                    .andExpect(MockMvcResultMatchers.flash().attribute<String>("message","Assignment was marked active"))
+            this.mvc.perform(get("/assignment/toggle-status/dummyAssignment6"))
+                    .andExpect(status().isFound)
+                    .andExpect(header().string("Location", "/assignment/my"))
+                    .andExpect(flash().attribute<String>("message","Assignment was marked active"))
 
             // login again as 21800000 and get a redirect to the assignment
-            this.mvc.perform(MockMvcRequestBuilders.get("/")
+            this.mvc.perform(get("/")
                     .with(SecurityMockMvcRequestPostProcessors.user("21800000")))
-                    .andExpect(MockMvcResultMatchers.status().isFound)
-                    .andExpect(MockMvcResultMatchers.header().string("Location", "/upload/dummyAssignment6"))
+                    .andExpect(status().isFound)
+                    .andExpect(header().string("Location", "/upload/dummyAssignment6"))
 
         } finally {
 
@@ -328,8 +335,8 @@ class AssignmentControllerTests {
                     acl = "p1000, p1001")
 
             // get assignment detail
-            val mvcResult = this.mvc.perform(MockMvcRequestBuilders.get("/assignment/info/dummyAssignment7"))
-                    .andExpect(MockMvcResultMatchers.status().isOk)
+            val mvcResult = this.mvc.perform(get("/assignment/info/dummyAssignment7"))
+                    .andExpect(status().isOk)
                     .andReturn()
 
             @Suppress("UNCHECKED_CAST")
@@ -340,11 +347,11 @@ class AssignmentControllerTests {
 
             // accessing "/assignments/my" with p1000 should give one assignment
             val user = User("p1000", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
-            this.mvc.perform(MockMvcRequestBuilders.get("/assignment/my")
+            this.mvc.perform(get("/assignment/my")
                     .with(SecurityMockMvcRequestPostProcessors.user(user)))
-                    .andExpect(MockMvcResultMatchers.status().isOk)
-                    .andExpect(MockMvcResultMatchers.model().hasNoErrors<String>())
-                    .andExpect(MockMvcResultMatchers.model().attribute("assignments", hasSize<Assignment>(1)))
+                    .andExpect(status().isOk)
+                    .andExpect(model().hasNoErrors<String>())
+                    .andExpect(model().attribute("assignments", hasSize<Assignment>(1)))
 
         } finally {
 
@@ -366,10 +373,10 @@ class AssignmentControllerTests {
                     "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git")
 
             // get edit form
-            this.mvc.perform(MockMvcRequestBuilders.get("/assignment/edit/dummyAssignment8"))
-                    .andExpect(MockMvcResultMatchers.status().isOk)
-                    .andExpect(MockMvcResultMatchers.model().hasNoErrors<String>())
-                    .andExpect(MockMvcResultMatchers.model().attribute("assignmentForm",
+            this.mvc.perform(get("/assignment/edit/dummyAssignment8"))
+                    .andExpect(status().isOk)
+                    .andExpect(model().hasNoErrors<String>())
+                    .andExpect(model().attribute("assignmentForm",
                             AssignmentForm(assignmentId = "dummyAssignment8",
                                     assignmentName = "Dummy Assignment",
                                     assignmentPackage = "org.dummy",
@@ -379,7 +386,7 @@ class AssignmentControllerTests {
                                     editMode = true)))
 
             // post a change
-            mvc.perform(MockMvcRequestBuilders.post("/assignment/new")
+            mvc.perform(post("/assignment/new")
                     .param("assignmentId", "dummyAssignment8")
                     .param("assignmentName", "New Name")
                     .param("editMode", "true")
@@ -387,8 +394,8 @@ class AssignmentControllerTests {
                     .param("language", "JAVA")
                     .param("gitRepositoryUrl", "git@github.com:palves-ulht/sampleJavaAssignment.git")
             )
-                    .andExpect(MockMvcResultMatchers.status().isFound())
-                    .andExpect(MockMvcResultMatchers.header().string("Location", "/assignment/info/dummyAssignment8"))
+                    .andExpect(status().isFound())
+                    .andExpect(header().string("Location", "/assignment/info/dummyAssignment8"))
 
 
         } finally {
@@ -413,14 +420,38 @@ class AssignmentControllerTests {
         assignmentRepository.save(assignment01)
 
         // toggle status
-        this.mvc.perform(MockMvcRequestBuilders.get("/assignment/toggle-status/testJavaProj"))
-                .andExpect(MockMvcResultMatchers.status().isFound)
-                .andExpect(MockMvcResultMatchers.header().string("Location", "/assignment/my"))
-                .andExpect(MockMvcResultMatchers.flash().attribute<String>("message","Assignment was marked active"))
+        this.mvc.perform(get("/assignment/toggle-status/testJavaProj"))
+                .andExpect(status().isFound)
+                .andExpect(header().string("Location", "/assignment/my"))
+                .andExpect(flash().attribute<String>("message","Assignment was marked active"))
 
         // confirm it is now active
         val assignment = assignmentRepository.getOne("testJavaProj")
         assertTrue("assignment is not active", assignment.active)
+    }
+
+
+    @Test
+    @WithMockUser("teacher1",roles=["TEACHER"])
+    @DirtiesContext
+    fun test_10_getAssignmentInfo() {
+
+        // create initial assignment
+        val assignment = Assignment(id = "testJavaProj", name = "Test Project (for automatic tests)",
+                packageName = "org.testProj", ownerUserId = "teacher1",
+                submissionMethod = SubmissionMethod.UPLOAD, active = false, gitRepositoryUrl = "git://dummyRepo",
+                gitRepositoryFolder = "testJavaProj", public = false)
+        assignmentRepository.save(assignment)
+        assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student1"))
+
+        this.mvc.perform(get("/assignment/info/testJavaProj"))
+                .andExpect(status().isOk)
+                .andExpect(view().name("assignment-detail"))
+                .andExpect(model().hasNoErrors<String>())
+                .andExpect(model().attribute("assignment", assignment))
+                .andExpect(content().string(containsString(assignment.id)))
+
+
     }
 
 
