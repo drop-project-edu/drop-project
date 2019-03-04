@@ -1,4 +1,3 @@
-[![CircleCI](https://circleci.com/gh/palves-ulht/drop-project.svg?style=svg&circle-token=a10b1b375d007834692b0a023f215a1a98181ec4)](https://circleci.com/gh/palves-ulht/drop-project)
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/palves-ulht/drop-project)
 
