@@ -11,7 +11,7 @@
   ],
 
   "env": {
-    "M2_HOME": {
+    "DP_M2_HOME": {
       "description": "Maven home",
       "value": ".maven"
     },
