@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/drop-project-edu/drop-project.svg?branch=master)](https://travis-ci.org/drop-project-edu/drop-project)
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/palves-ulht/drop-project)
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/drop-project-edu/drop-project)
 
 # Drop Project - Continuous Auto-Grader
 
