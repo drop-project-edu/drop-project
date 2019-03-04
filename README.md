@@ -1,8 +1,10 @@
+# Drop Project - Continuous Auto-Grader
+
 [![Build Status](https://travis-ci.org/drop-project-edu/drop-project.svg?branch=master)](https://travis-ci.org/drop-project-edu/drop-project)
+[![Apache License](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/drop-project-edu/drop-project)
 
-# Drop Project - Continuous Auto-Grader
 
 A web application where students drop their projects to check for correctness and quality.
 
