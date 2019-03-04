@@ -298,7 +298,7 @@ class UploadControllerTests {
         assert(buildResult.PMDerrors().isEmpty())
         assert(buildResult.hasJUnitErrors() == false)
         assertNotNull(buildResult.elapsedTimeJUnit())
-        assert(buildResult.elapsedTimeJUnit()!! > 5.toBigDecimal())
+        assert(buildResult.elapsedTimeJUnit()!! > 1.toBigDecimal())
 
     }
 
