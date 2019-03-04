@@ -11,11 +11,11 @@
   ],
 
   "env": {
-    "M2.HOME": {
+    "M2_HOME": {
       "description": "Maven home",
       "value": ".maven"
     },
-    "DP.MVN.REPO": {
+    "DP_MVN_REPO": {
       "description": "Maven repository",
       "value": ".mvn_repository"
     }
