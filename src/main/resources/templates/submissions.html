@@ -68,7 +68,7 @@
         <tbody>
         <tr th:each="submission : ${submissions}">
             <td th:text="${#dates.format(submission.submissionDate, 'dd/MMM HH:mm:ss')}"></td>
-            <td th:text="${submission.status}"></td>
+            <td th:text="${submission.getStatus().description}"></td>
             <td>
                 <span th:if="${submission.markedAsFinal}" class="label label-success">Final</span>
             </td>

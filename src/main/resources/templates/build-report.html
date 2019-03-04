@@ -209,18 +209,18 @@
         </thead>
         <tbody>
         <tr>
-            <td th:text="${buildReport.junitSummary(T(org..dropProject.data.TestType).HIDDEN)}"></td>
+            <td th:text="${buildReport.junitSummary(T(org.dropProject.data.TestType).HIDDEN)}"></td>
         </tr>
-        <tr th:if="${buildReport.jUnitErrors(T(org..dropProject.data.TestType).HIDDEN)}">
+        <tr th:if="${buildReport.jUnitErrors(T(org.dropProject.data.TestType).HIDDEN)}">
             <td>
-                <pre th:text="${buildReport.jUnitErrors(T(org..dropProject.data.TestType).HIDDEN)}"></pre>
+                <pre th:text="${buildReport.jUnitErrors(T(org.dropProject.data.TestType).HIDDEN)}"></pre>
             </td>
         </tr>
         </tbody>
     </table>
     </div>
 
-    <a th:href="@{'/upload/' + ${assignment.id}}" th:if="${submission.status} == 'Validated'" class="btn btn-default">Submit new project</a>
+    <a th:href="@{'/upload/' + ${assignment.id}}" th:if="${submission.getStatus() == T(org.dropProject.dao.SubmissionStatus).VALIDATED}" class="btn btn-default">Submit new project</a>
 
     <!--/*@thymesVar id="buildReport" type="org..dropProject.data.BuildReport"*/-->
     <h2 th:if="${buildReport != null and isTeacher}">Full report</h2>
