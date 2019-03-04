@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:if="${!archived}" th:replace="layout/layout :: head (pageTitle='Drop Project - My assignments')">
+</head>
+<head th:if="${archived}" th:replace="layout/layout :: head (pageTitle='Drop Project - My archived assignments')">
+</head>
+
+<body>
+
+<div th:replace="layout/layout :: header"></div>
+
+<div class="container" style="max-width: 760px">
+
+    <h1 class="page-header" th:if="${!archived}">Manage Assignments</h1>
+    <h1 class="page-header" th:if="${archived}">Archived Assignments</h1>
+
+    <div th:if="${message}">
+        <div class="alert alert-info" th:text="${message}"/>
+    </div>
+
+    <div th:if="${error}">
+        <div class="alert alert-danger" th:text="${error}"/>
+    </div>
+
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Assignment ID</th>
+            <th>Name</th>
+            <th th:if="${!archived}">Active?</th>
+            <th th:if="${!archived}">Private?</th>
+            <th>Submissions</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!--/*@thymesVar id="assignments" type="java.util.ArrayList<org..dropProject.dao.Assignment>"*/-->
+        <tr th:each="assignment : ${assignments}">
+            <td th:text="${assignment.id}"></td>
+            <td th:text="${assignment.name}"></td>
+            <td th:if="${!archived}" class="text-center">
+                <form th:action="@{'/assignment/toggle-status/' + ${assignment.id}}" method="post" style="display: inline;">
+                    <input type="checkbox" th:checked="${assignment.active}" onChange="this.form.submit()"/>
+                </form>
+            </td>
+            <td th:if="${!archived}" class="text-center">
+                <span th:if="${!assignment.public}" class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+            </td>
+            <td class="text-center">
+                <a class="btn btn-default btn-sm" th:href="@{'/report/' + ${assignment.id}}"
+                   th:text="${assignment.numSubmissions}"></a>
+                <span class="glyphicon glyphicon-user" aria-hidden="true" th:text="${assignment.numUniqueSubmitters}"></span>
+            </td>
+            <td class="text-center text-nowrap">
+                <a th:href="@{'/assignment/info/' + ${assignment.id}}">
+                    <span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span>
+                </a>
+                <form th:if="${!archived}" th:action="@{'/assignment/archive/' + ${assignment.id}}" method="post" style="display: inline;">
+                    <button class="glyphicon glyphicon-inbox" aria-hidden="true" type="submit"
+                            style="border: 0;" title="Archive assignment"></button>
+                </form>
+                <form th:action="@{'/assignment/delete/' + ${assignment.id}}" method="post" style="display: inline;">
+                    <button class="glyphicon glyphicon-trash" aria-hidden="true" type="submit"
+                            style="border: 0;" data-toggle="confirmation" data-title="Delete assignment?" title="Delete assignment"></button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <a th:if="${!archived}" th:href="@{/assignment/new}" class="btn btn-primary">Create Assignment</a>
+
+</div>
+
+<div th:replace="layout/layout :: footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-confirmation2@2.4.2/bootstrap-confirmation.min.js"></script>
+<script>
+    $('[data-toggle=confirmation]').confirmation({
+        rootSelector: '[data-toggle=confirmation]'
+        // other options
+    });
+</script>
+
+</body>
+</html>

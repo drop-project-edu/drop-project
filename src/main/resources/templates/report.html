@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="layout/layout :: head (pageTitle='Drop Project - Report')">
+</head>
+
+<body>
+
+<div th:replace="layout/layout :: header"></div>
+
+<!--/*@thymesVar id="submissions" type="java.util.ArrayList<org..dropProject.data.SubmissionInfo>"*/-->
+<div class="container" style="max-width: 900px; margin-bottom: 65px">
+
+    <h1 class="page-header" th:text="${assignmentId} + ' submissions'"></h1>
+    <h6>
+        <span th:text="${submissions.size()}"></span> groups submitted /
+        <span th:text="${countMarkedAsFinal}"></span> marked as final
+    </h6>
+
+    <div class="btn-group" role="group">
+        <a th:href="@{'/exportCSV/' + ${assignmentId}}"
+           class="btn btn-default"
+           data-toggle="confirmation" data-title="Export"
+           data-content="This will export only submissions marked as final"
+           data-btn-ok-label="Continue" data-btn-cancel-label="Cancel">Export as CSV</a>
+    </div>
+
+    <div class="btn-group" role="group">
+        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Download All <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu">
+            <li>
+                <a th:href="@{'/downloadOriginalAll/' + ${assignmentId}}"
+                   class="btn-group" title="Download all the original submissions in this page in a single zip file">Original</a>
+            </li>
+            <li>
+                <a th:href="@{'/downloadMavenizedAll/' + ${assignmentId}}"
+                   class="btn-group" title="Download all the mavenized submissions in this page in a single zip file">Mavenized</a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="btn-group" role="group" th:if="${isAdmin}">
+        <form class="inline btn-group" method="post" th:action="@{'/cleanup/' + ${assignmentId}}" >
+            <input type="submit" value="Cleanup" class="btn btn-default" title="Remove non-final files" />
+        </form>
+    </div>
+
+    <div th:if="${error}">
+        <div class="alert alert-danger" th:text="${error}"/>
+    </div>
+
+    <p>&nbsp;</p>
+
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Students</th>
+            <th>Submissions</th>
+            <th>Last Submission Date</th>
+            <th>Status</th>
+            <th>Summary</th>
+            <th>Tests</th>
+            <th class="text-center"><span class="glyphicon glyphicon-time" aria-hidden="true" title="Time spent running tests"></span></th>
+            <th>Final</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+
+        <tr th:each="submissionInfo : ${submissions}">
+            <td th:text="${submissionInfo.projectGroup.authorsStr(', ')}" th:title="${submissionInfo.projectGroup.authorsNameStr()}"></td>
+            <td class="text-center"><a class="btn btn-default btn-sm" th:href="@{/submissions/(assignmentId=${submissionInfo.lastSubmission.assignmentId},groupId=${submissionInfo.projectGroup.id})}"
+                   th:text="${submissionInfo.allSubmissions.size()}"></a></td>
+            <td th:text="${#dates.format(submissionInfo.lastSubmission.submissionDate, 'dd/MMM HH:mm:ss')}"></td>
+            <td th:text="${submissionInfo.lastSubmission.status}"></td>
+            <td class="text-nowrap">
+                <span th:each="report : ${submissionInfo.lastSubmission.reportElements}">
+                    <img src="../img/if_sign-check_299110.png" th:if="${report.reportValue == 'OK'}" th:alt="${report.reportKey.description}" th:title="${report.reportKey.description}" width="16" height="16" />
+                    <img src="../img/if_sign-error_299045.png" th:if="${report.reportValue == 'NOK'}" th:alt="${report.reportKey.description}" th:title="${report.reportKey.description}" width="16" height="16" />
+                    <img src="../img/if_sign-question-mark.png" th:if="${report.reportValue == 'Not Enough Tests'}" th:alt="${report.reportKey.description}" th:title="${report.reportKey.description}" width="16" height="16" />
+                </span>
+            </td>
+
+            <td class="text-nowrap text-right">
+                <span th:text="${submissionInfo.lastSubmission.teacherTests?.toStr()}" title="Teacher tests"></span>
+                <span th:if="${submissionInfo.lastSubmission.hiddenTests != null}" title="Hidden tests">
+                    (<small th:text="${submissionInfo.lastSubmission.hiddenTests?.toStr()}"></small>)
+                </span>
+                <span th:if="${submissionInfo.lastSubmission.coverage != null}" title="Coverage of student tests">
+                    (<small th:text="${submissionInfo.lastSubmission.coverage}"></small>%)
+                </span>
+            </td>
+
+            <td th:text="${submissionInfo.lastSubmission.ellapsed} ? ${#numbers.formatDecimal(submissionInfo.lastSubmission.ellapsed, 0, 'DEFAULT', 2, 'DEFAULT')}"></td>
+            <td>
+                <span th:if="${submissionInfo.lastSubmission.markedAsFinal}" class="label label-success">Final</span>
+            </td>
+            <td class="text-nowrap">
+                <a th:href="'../buildReport/' + ${submissionInfo.lastSubmission.id}">
+                    <span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span>
+                </a>
+                &nbsp;
+                <a th:href="'../downloadOriginalProject/' + ${submissionInfo.lastSubmission.id}" title="Download original project">
+                    <span class="glyphicon glyphicon-save" aria-hidden="true"></span>
+                </a>
+                <a th:href="'../downloadMavenProject/' + ${submissionInfo.lastSubmission.id}" title="Download mavenized project">
+                    <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span>
+                </a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <!--<form th:action="'../cleanup/' + ${assignmentId}" method="post">-->
+        <!--<input type="submit" value="Cleanup non-final submissions"/>-->
+    <!--</form>-->
+
+</div>
+
+<div th:replace="layout/layout :: footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-confirmation2@2.4.2/bootstrap-confirmation.min.js"></script>
+<script>
+    $('[data-toggle=confirmation]').confirmation({
+        rootSelector: '[data-toggle=confirmation]'
+        // other options
+    });
+</script>
+
+</body>
+</html>

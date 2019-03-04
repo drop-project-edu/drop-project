@@ -1,0 +1,7 @@
+.idea
+*.iml
+target
+upload
+mavenized-projects-test
+mavenized-projects
+*.zip

@@ -1,0 +1,91 @@
+[INFO] Scanning for projects...
+[INFO]
+[INFO] --------< org.dropProject:sampleJavaAssignment >---------
+[INFO] Building lp2-miniteste-1-v2 - "PersonagemComputador" 1.0-SNAPSHOT
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO]
+[INFO] --- maven-clean-plugin:2.5:clean (default-clean) @ sampleJavaAssignment ---
+[INFO]
+[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ sampleJavaAssignment ---
+[WARNING] Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
+[INFO] skip non existing resourceDirectory /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/resources
+[INFO]
+[INFO] --- maven-compiler-plugin:3.1:compile (default-compile) @ sampleJavaAssignment ---
+[INFO] Changes detected - recompiling the module!
+[WARNING] File encoding has not been set, using platform encoding UTF-8, i.e. build is platform dependent!
+[INFO] Compiling 1 source file to /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/target/classes
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR :
+[INFO] -------------------------------------------------------------
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[7,27] '{' expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[8,9] illegal start of type
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[8,13] ';' expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[8,18] <identifier> expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[9,10] illegal start of type
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[9,14] ';' expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[9,16] <identifier> expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[10,10] illegal start of type
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[10,14] ';' expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[10,16] <identifier> expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[11,10] illegal start of type
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[11,14] ';' expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[11,16] <identifier> expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[14,6] invalid method declaration; return type required
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[16,15] <identifier> expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[16,21] invalid method declaration; return type required
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[16,34] <identifier> expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[16,38] <identifier> expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[16,42] <identifier> expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[20,20] ';' expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[20,21] ')' expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[20,24] illegal start of expression
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[28,26] <identifier> expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[28,30] <identifier> expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[28,34] <identifier> expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[30,18] ';' expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[32,15] ';' expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[42,2] reached end of file while parsing
+[INFO] 28 errors
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 0.798 s
+[INFO] Finished at: 2018-10-23T09:04:25Z
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.1:compile (default-compile) on project sampleJavaAssignment: Compilation failure: Compilation failure:
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[7,27] '{' expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[8,9] illegal start of type
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[8,13] ';' expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[8,18] <identifier> expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[9,10] illegal start of type
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[9,14] ';' expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[9,16] <identifier> expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[10,10] illegal start of type
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[10,14] ';' expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[10,16] <identifier> expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[11,10] illegal start of type
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[11,14] ';' expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[11,16] <identifier> expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[14,6] invalid method declaration; return type required
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[16,15] <identifier> expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[16,21] invalid method declaration; return type required
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[16,34] <identifier> expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[16,38] <identifier> expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[16,42] <identifier> expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[20,20] ';' expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[20,21] ')' expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[20,24] illegal start of expression
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[28,26] <identifier> expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[28,30] <identifier> expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[28,34] <identifier> expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[30,18] ';' expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[32,15] ';' expected
+[ERROR] /srv/drop-project/mavenized-projects/1540285463411-MiniTeste1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:[42,2] reached end of file while parsing
+[ERROR] -> [Help 1]
+[ERROR]
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR]
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

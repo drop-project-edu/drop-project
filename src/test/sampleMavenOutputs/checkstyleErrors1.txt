@@ -1,0 +1,68 @@
+[INFO] Scanning for projects...
+[INFO]
+[INFO] --------< org.dropProject:sampleJavaAssignment >---------
+[INFO] Building lp2-miniteste-1-v2 - "PersonagemComputador" 1.0-SNAPSHOT
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO]
+[INFO] --- maven-clean-plugin:2.5:clean (default-clean) @ sampleJavaAssignment ---
+[INFO]
+[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ sampleJavaAssignment ---
+[WARNING] Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
+[INFO] skip non existing resourceDirectory /srv/drop-project/mavenized-projects/1540285383565-miniTest1-mavenized/src/main/resources
+[INFO]
+[INFO] --- maven-compiler-plugin:3.1:compile (default-compile) @ sampleJavaAssignment ---
+[INFO] Changes detected - recompiling the module!
+[WARNING] File encoding has not been set, using platform encoding UTF-8, i.e. build is platform dependent!
+[INFO] Compiling 2 source files to /srv/drop-project/mavenized-projects/1540285383565-miniTest1-mavenized/target/classes
+[INFO]
+[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ sampleJavaAssignment ---
+[WARNING] Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
+[INFO] skip non existing resourceDirectory /srv/drop-project/mavenized-projects/1540285383565-miniTest1-mavenized/src/main/resources
+[INFO]
+[INFO] --- maven-compiler-plugin:3.1:compile (default-compile) @ sampleJavaAssignment ---
+[INFO] Changes detected - recompiling the module!
+[WARNING] File encoding has not been set, using platform encoding UTF-8, i.e. build is platform dependent!
+[INFO] Compiling 2 source files to /srv/drop-project/mavenized-projects/1540285383565-miniTest1-mavenized/target/classes
+[INFO]
+[INFO] --- maven-checkstyle-plugin:3.0.0:check (validate) @ sampleJavaAssignment ---
+[INFO] Starting audit...
+[WARN] /srv/drop-project/mavenized-projects/1540285383565-miniTest1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/PersonagemComputador.java:22: Linha com indentação incorrecta [Indentation]
+[WARN] /srv/drop-project/mavenized-projects/1540285383565-miniTest1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/PersonagemComputador.java:23: Linha com indentação incorrecta [Indentation]
+[WARN] /srv/drop-project/mavenized-projects/1540285383565-miniTest1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/PersonagemComputador.java:25: Linha com indentação incorrecta [Indentation]
+[WARN] /srv/drop-project/mavenized-projects/1540285383565-miniTest1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/PersonagemComputador.java:26: Linha com indentação incorrecta [Indentation]
+[WARN] /srv/drop-project/mavenized-projects/1540285383565-miniTest1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/PersonagemComputador.java:32: Linha com indentação incorrecta [Indentation]
+[WARN] /srv/drop-project/mavenized-projects/1540285383565-miniTest1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/PersonagemComputador.java:33: Linha com indentação incorrecta [Indentation]
+[WARN] /srv/drop-project/mavenized-projects/1540285383565-miniTest1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/PersonagemComputador.java:34: Linha com indentação incorrecta [Indentation]
+[WARN] /srv/drop-project/mavenized-projects/1540285383565-miniTest1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/PersonagemComputador.java:35: Linha com indentação incorrecta [Indentation]
+[WARN] /srv/drop-project/mavenized-projects/1540285383565-miniTest1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:5: Linha com indentação incorrecta [Indentation]
+[WARN] /srv/drop-project/mavenized-projects/1540285383565-miniTest1-mavenized/src/main/java/pt/ulusofona/deisi/lp2/miniTeste1/Main.java:6: Linha com indentação incorrecta [Indentation]
+Audit done.
+[INFO]
+[INFO] --- maven-resources-plugin:2.6:testResources (default-testResources) @ sampleJavaAssignment ---
+[WARNING] Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
+[INFO] skip non existing resourceDirectory /srv/drop-project/mavenized-projects/1540285383565-miniTest1-mavenized/src/test/resources
+[INFO]
+[INFO] --- maven-compiler-plugin:3.1:testCompile (default-testCompile) @ sampleJavaAssignment ---
+[INFO] Changes detected - recompiling the module!
+[WARNING] File encoding has not been set, using platform encoding UTF-8, i.e. build is platform dependent!
+[INFO] Compiling 1 source file to /srv/drop-project/mavenized-projects/1540285383565-miniTest1-mavenized/target/test-classes
+[INFO]
+[INFO] --- maven-surefire-plugin:2.12.4:test (default-test) @ sampleJavaAssignment ---
+[INFO] Surefire report directory: /srv/drop-project/mavenized-projects/1540285383565-miniTest1-mavenized/target/surefire-reports
+
+-------------------------------------------------------
+ T E S T S
+-------------------------------------------------------
+Running org.lp2.miniTeste1.TestProject
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.037 sec
+
+Results :
+
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0
+
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 2.118 s
+[INFO] Finished at: 2018-10-23T09:03:06Z
+[INFO] ------------------------------------------------------------------------

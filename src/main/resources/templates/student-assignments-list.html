@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="layout/layout :: head (pageTitle='Drop Project - My assignments')">
+</head>
+
+<body>
+
+<div th:replace="layout/layout :: header"></div>
+
+<div class="container" style="max-width: 760px">
+
+    <h1 class="page-header">My Assignments</h1>
+
+    <!--/*@thymesVar id="assignments" type="java.util.ArrayList<org..dropProject.dao.Assignment>"*/-->
+    <table class="table" th:if="${!assignments.isEmpty()}">
+        <thead>
+        <tr>
+            <th>Assignment ID</th>
+            <th>Name</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="assignment : ${assignments}">
+            <td th:text="${assignment.id}"></td>
+            <td th:text="${assignment.name}"></td>
+            <td>
+                <a th:href="@{'/upload/' + ${assignment.id}}">
+                    <span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span>
+                </a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <div class="alert alert-info" th:if="${assignments.isEmpty()}">
+        You don't have any assignments yet.
+    </div>
+
+</div>
+
+<div th:replace="layout/layout :: footer"></div>
+
+</body>
+</html>

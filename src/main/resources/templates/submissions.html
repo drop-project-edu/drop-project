@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="layout/layout :: head (pageTitle='Drop Project - Submissions')">
+</head>
+
+<body>
+
+<div th:replace="layout/layout :: header"></div>
+
+<div class="container" style="max-width: 760px">
+
+    <h1 th:unless="${group}"  class="page-header" th:text="${username} + ' submissions'"></h1>
+    <h1 th:if="${group}"  class="page-header" th:text="${group.authorsNameStr()} + ' submissions'"></h1>
+    <h6>
+        Assignment: <span th:text="${assignment.id}"></span>
+        <span th:if="${gitRepository}"> | Repository: <a th:href="${gitRepository}" th:text="${gitRepository}">link</a></span>
+    </h6>
+
+    <div th:if="${error}">
+        <div class="alert alert-danger" th:text="${error}"/>
+    </div>
+
+    <p>&nbsp;</p>
+
+    <!--/*@thymesVar id="gitHistory" type="java.util.List<org..dropProject.services.GitClient.CommitInfo>"*/-->
+    <div th:if="${gitHistory != null and !gitHistory.isEmpty()}">
+        <h3>
+            <a data-toggle="collapse" href="#collapseGitHistory"
+               aria-expanded="false" aria-controls="collapseGitHistory" title="Click to expand/collapse">Git History</a>
+
+            <small><span th:text="'(' + ${gitHistory.size() + ' commits)'}"/></small>
+        </h3>
+        <table class="table table-condensed collapse" id="collapseGitHistory">
+            <thead>
+            <tr>
+                <th>Date</th>
+                <th>Author</th>
+                <th>Message</th>
+                <th># Changes</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="commit : ${gitHistory}">
+                <td th:text="${commit.getDateAsStr()}"></td>
+                <td th:text="${commit.getAuthorName()}" th:title="${commit.getAuthorEmail()}"></td>
+                <td th:text="${#strings.abbreviate(commit.getMessage(),60)}" th:title="${commit.getMessage()}"></td>
+                <td class="text-right" th:text="${commit.numOfChanges()}" th:title="${commit.summaryOfChanges()}"></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!--/*@thymesVar id="submissions" type="java.util.ArrayList<org..dropProject.dao.Submission>"*/-->
+    <h3>Submission History <small><span th:text="'(' + ${submissions.size() + ' submissions)'}"/></small></h3>
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Submission Date</th>
+            <th>Status</th>
+            <th>Final</th>
+            <th>Summary</th>
+            <th>Tests</th>
+            <th class="text-center"><span class="glyphicon glyphicon-time" aria-hidden="true" title="Time spent running tests"></span></th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="submission : ${submissions}">
+            <td th:text="${#dates.format(submission.submissionDate, 'dd/MMM HH:mm:ss')}"></td>
+            <td th:text="${submission.status}"></td>
+            <td>
+                <span th:if="${submission.markedAsFinal}" class="label label-success">Final</span>
+            </td>
+            <td>
+                <span th:each="report : ${submission.reportElements}">
+                    <img src="../img/if_sign-check_299110.png" th:if="${report.reportValue == 'OK'}" th:alt="${report.reportKey.description}" th:title="${report.reportKey.description}" width="16" height="16" />
+                    <img src="../img/if_sign-error_299045.png" th:if="${report.reportValue == 'NOK'}" th:alt="${report.reportKey.description}" th:title="${report.reportKey.description}" width="16" height="16" />
+                    <img src="../img/if_sign-question-mark.png" th:if="${report.reportValue == 'Not Enough Tests'}" th:alt="${report.reportKey.description}" th:title="${report.reportKey.description}" width="16" height="16" />
+                </span>
+            </td>
+
+            <td class="text-nowrap text-right">
+                <span th:text="${submission.teacherTests?.toStr()}" title="Teacher tests"></span>
+                <span th:if="${submission.hiddenTests != null}" title="Hidden tests">
+                    (<small th:text="${submission.hiddenTests?.toStr()}"></small>)
+                </span>
+            </td>
+
+            <td th:text="${submission.ellapsed} ? ${#numbers.formatDecimal(submission.ellapsed, 0, 'DEFAULT', 2, 'DEFAULT')}"></td>
+            <td>
+                <form class="inline" method="post" th:action="'../markAsFinal/' + ${submission.id}">
+                    <a th:href="'../buildReport/' + ${submission.id}">
+                        <span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span>
+                    </a>
+                    <input type="submit" th:if="${!submission.markedAsFinal and isTeacher}" value="Mark as Final" class="btn btn-default btn-xs"/>
+                    <input type="submit" th:if="${submission.markedAsFinal and isTeacher}" value="Unmark as Final" class="btn btn-default btn-xs"/>
+                    <input type="hidden" name="redirectToSubmissionsList" value="true" />
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+</div>
+
+<div th:replace="layout/layout :: footer"></div>
+
+</body>
+</html>

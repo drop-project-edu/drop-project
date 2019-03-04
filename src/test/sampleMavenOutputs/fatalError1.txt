@@ -1,0 +1,34 @@
+[INFO] Scanning for projects...
+[INFO]
+[INFO] ------------------------------------------------------------------------
+[INFO] Building sampleJavaAssignment 1.0-SNAPSHOT
+[INFO] ------------------------------------------------------------------------
+[INFO]
+[INFO] --- maven-clean-plugin:2.5:clean (default-clean) @ sampleJavaAssignment ---
+[INFO]
+[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ sampleJavaAssignment ---
+[WARNING] Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
+[INFO] skip non existing resourceDirectory /Users/pedroalves/projects/Lusofona/DropProject/DropProject/mavenized-projects-test/projectSampleJavaAssignmentNOK-mavenized/src/main/resources
+[INFO]
+[INFO] --- maven-compiler-plugin:3.1:compile (default-compile) @ sampleJavaAssignment ---
+[INFO] Changes detected - recompiling the module!
+[WARNING] File encoding has not been set, using platform encoding UTF-8, i.e. build is platform dependent!
+[INFO] Compiling 1 source file to /Users/pedroalves/projects/Lusofona/DropProject/DropProject/mavenized-projects-test/projectSampleJavaAssignmentNOK-mavenized/target/classes
+[INFO]
+[INFO] >>> maven-pmd-plugin:3.9.0:check (default-cli) > :pmd @ sampleJavaAssignment >>>
+[INFO]
+[INFO] --- maven-pmd-plugin:3.9.0:pmd (pmd) @ sampleJavaAssignment ---
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 2.777 s
+[INFO] Finished at: 2018-10-13T20:22:18+01:00
+[INFO] Final Memory: 19M/172M
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-pmd-plugin:3.9.0:pmd (pmd) on project sampleJavaAssignment: Execution pmd of goal org.apache.maven.plugins:maven-pmd-plugin:3.9.0:pmd failed: org.apache.maven.reporting.MavenReportException: Could not find resource 'pmd.xml'. -> [Help 1]
+[ERROR]
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR]
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/PluginExecutionException

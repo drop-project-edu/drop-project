@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="layout/layout :: head (pageTitle='Drop Project - Upload submission')">
+</head>
+
+<body>
+
+<div th:replace="layout/layout :: header"></div>
+
+<div class="container" style="max-width: 760px; margin-bottom: 65px">
+
+    <div class="row">
+        <h1 class="page-header col-sm-11" th:if="${assignment != null}" th:text="${assignment.name}">Assignment</h1>
+        <span class="label label-warning col-sm-1" th:if="${!assignment.active}">Inactive</span>
+    </div>
+
+    <small th:if="${assignment?.dueDate != null}">Deadline: <span th:text="${assignment.dueDateFormatted()}"></span></small>
+
+    <div th:if="${error}">
+        <div class="alert alert-danger" th:text="${error}"/>
+    </div>
+
+    <div th:if="${uploadForm}">
+        <form th:object="${uploadForm}" enctype="multipart/form-data" method="post"
+              class="dropzone" id="my-awesome-dropzone" th:action="@{/upload}" th:if="${coolOffEnd == null}">
+            <input type="hidden" th:field="*{assignmentId}" />
+        </form>
+        <div class="panel" th:if="${coolOffEnd != null}">
+            <img th:src="@{/img/iconfinder_cat_sleep_185528.png}" />
+            &nbsp;
+            <span class="lead">Relaxa. Estás em período cool-off...</span>
+            <span th:text="${'Poderás voltar a submeter a partir das ' + coolOffEnd}"></span>
+        </div>
+
+        <br/>
+        <br/>
+
+        <div th:utext="${instructionsFragment}"></div>
+
+        <div class="alert alert-info">
+            O ficheiro tem que ser um zip com a seguinte estrutura:
+            <pre th:utext="${packageTree}">
+            </pre>
+            Nota: Todos os outros ficheiros devem ser omitidos do ficheiro zip, nomeadamente os
+            ficheiros que resultam da compilação
+        </div>
+    </div>
+
+</div>
+
+<div th:replace="layout/layout :: footer"></div>
+
+<script th:src="@{/js/dropzone.js}"></script>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var context = [[@{/}]];
+    /*]]>*/
+</script>
+<script th:src="@{/js/dropproject.js}"></script>
+
+</body>
+</html>

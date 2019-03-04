@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head lang="en">
+    <title>Drop Project</title>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
+    <meta http-equiv="refresh" content="15" th:if="${autoRefresh}"/>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
+</head>
+<body>
+
+<div th:replace="layout/layout :: header"></div>
+
+<!--/*@thymesVar id="gitSubmission" type="org..dropProject.dao.GitSubmission"*/-->
+<!--/*@thymesVar id="assignment" type="org..dropProject.dao.Assignment"*/-->
+<!--/*@thymesVar id="summary" type="org..dropProject.dao.SubmissionReport"*/-->
+<!--/*@thymesVar id="submission" type="org..dropProject.dao.Submission"*/-->
+<div class="container" style="max-width: 760px; margin-bottom: 65px">
+
+    <div class="alert alert-info" th:text="${message}" th:if="${message}" />
+
+    <h1 class="page-header" th:text="'Build report for submission ' + ${submission.id}"></h1>
+    <h6>
+        Assignment: <span th:text="${assignment.id}"></span> |
+        Submitted: <span th:text="${#dates.format(submission.submissionDate, 'dd-MM HH:mm:ss')}"></span>
+        <span th:if="${submission.markedAsFinal}" class="label label-success">Final</span>
+    </h6>
+
+    <h6 th:if="${gitSubmission} != null">
+        Git repository: <span th:text="${gitSubmission.gitRepositoryUrl}"></span> |
+        Last commit: <span th:text="${#dates.format(gitSubmission.lastCommitDate, 'dd-MM HH:mm:ss')}"></span>
+    </h6>
+
+    <div class="btn-group" role="group" th:if="${isTeacher}" th:unless="${autoRefresh}">
+
+        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Rebuild <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu">
+            <li>
+                <form class="inline btn-group" method="post" th:action="'../rebuild/' + ${submission.id}">
+                    <input type="submit" value="Without changing anything" class="btn" title="Rebuild the submission without changing anything (useful for timeouts)" />
+                </form>
+            </li>
+            <li>
+                <form class="inline btn-group" method="post" th:action="'../rebuildFull/' + ${submission.id}">
+                    <input type="submit" value="Reapplying the assignment test files" class="btn" title="Reapply the assignment test files and rebuild" />
+                </form>
+            </li>
+        </ul>
+    </div>
+
+    <div class="btn-group" role="group" th:if="${isTeacher}" th:unless="${autoRefresh}">
+
+        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Download <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu">
+            <li>
+                <a th:href="'../downloadOriginalProject/' + ${submission.id}">Original submission (.zip)</a>
+            </li>
+            <li>
+                <a th:href="'../downloadMavenProject/' + ${submission.id}">Mavenized submission (.zip)</a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="btn-group" role="group" th:if="${isTeacher}" th:unless="${autoRefresh}">
+        <form class="inline btn-group" method="post" th:action="'../markAsFinal/' + ${submission.id}">
+            <input type="submit" th:if="${!submission.markedAsFinal}" value="Mark as Final" class="btn btn-default"/>
+            <input type="submit" th:if="${submission.markedAsFinal}" value="Unmark as Final" class="btn btn-default"/>
+        </form>
+    </div>
+
+    <div class="alert alert-error" th:if="${error}">
+    <span th:text="${error}"/><i th:if="${autoRefresh}" class="fa fa-spinner fa-spin" style="font-size:24px"></i>
+    </div>
+
+    <div th:if="${error == null}">
+    <h2>Group elements</h2>
+    <table class="table table-bordered">
+        <tbody>
+        <tr th:each="author : ${authors}">
+            <td>
+                <span th:text="${author.number}"></span>
+                <span class="label label-primary" th:if="${author.submitter}">Submitter</span>
+            </td>
+            <td th:text="${author.name}"></td>
+        </tr>
+        </tbody>
+    </table>
+
+    <h2>Results summary</h2>
+    <table class="table table-bordered">
+        <tbody>
+        <tr th:each="summaryResult : ${summary}">
+            <td th:text="${summaryResult.reportKey.description}"></td>
+            <td>
+                <img src="../img/if_sign-check_299110.png" th:if="${summaryResult.reportValue == 'OK'}" />
+                <img src="../img/if_sign-error_299045.png" th:if="${summaryResult.reportValue == 'NOK'}" />
+                <img src="../img/if_sign-question-mark.png" th:if="${summaryResult.reportValue == 'Not Enough Tests'}" alt="Not Enough Tests" />
+                <!--<h3><span class="label label-success" th:if="${summaryResult.reportValue == '14/14'}">14/14</span></h3>-->
+                <!--<h3><span class="label label-danger" th:if="${summaryResult.reportValue == '12/14'}">12/14</span></h3>-->
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <table class="table table-bordered" th:if="${!structureErrors.empty}">
+        <thead>
+        <tr>
+            <th>Project Structure Errors</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="structureError : ${structureErrors}">
+            <td th:text="${structureError}"></td>
+        </tr>
+        </tbody>
+    </table>
+
+    <table class="table table-bordered" th:if="${buildReport != null and !buildReport.compilationErrors().empty}">
+        <thead>
+        <tr>
+            <th>Compilation Errors</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="compilationError : ${buildReport.compilationErrors()}">
+            <td th:text="${compilationError}"></td>
+        </tr>
+        </tbody>
+    </table>
+
+    <table class="table table-bordered" th:if="${buildReport != null and !buildReport.checkstyleErrors().empty}">
+        <thead>
+        <tr>
+            <th>Code Quality (checkstyle) Errors</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="checkstyleError : ${buildReport.checkstyleErrors()}">
+            <td th:text="${checkstyleError}"></td>
+        </tr>
+        </tbody>
+    </table>
+
+    <!--<table class="table table-bordered" th:if="${buildReport != null and !buildReport.PMDerrors().empty}">-->
+        <!--<thead>-->
+        <!--<tr>-->
+            <!--<th>Code Quality (PMD) Errors</th>-->
+        <!--</tr>-->
+        <!--</thead>-->
+        <!--<tbody>-->
+        <!--<tr th:each="pmd : ${buildReport.PMDerrors()}">-->
+            <!--<td th:text="${pmd}"></td>-->
+        <!--</tr>-->
+        <!--</tbody>-->
+    <!--</table>-->
+
+    <table class="table table-bordered" th:if="${assignment.acceptsStudentTests and buildReport != null}">
+        <thead>
+        <tr>
+            <th>JUnit Summary (Student Tests)</th>
+        </tr>
+        <tr th:if="${isTeacher and !buildReport.jacocoResults.isEmpty()}">
+            <td>Coverage: <span th:text="${buildReport.jacocoResults[0].lineCoveragePercent}"></span>&percnt; <small>(Only visible to teacher)</small></td>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:if="${buildReport.junitSummary(T(org..dropProject.data.TestType).STUDENT) != null}">
+            <td th:text="${buildReport.junitSummary(T(org..dropProject.data.TestType).STUDENT)}"></td>
+        </tr>
+        <tr th:if="${buildReport.junitSummary(T(org..dropProject.data.TestType).STUDENT) == null}">
+            <td th:text="${buildReport.notEnoughStudentTestsMessage()}"></td>
+        </tr>
+        <tr th:if="${buildReport.jUnitErrors(T(org..dropProject.data.TestType).STUDENT)}">
+            <td>
+                <pre th:text="${buildReport.jUnitErrors(T(org..dropProject.data.TestType).STUDENT)}"></pre>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+
+    <table class="table table-bordered" th:if="${buildReport != null and buildReport.junitSummary(T(org..dropProject.data.TestType).TEACHER) != null}">
+        <thead>
+        <tr>
+            <th>JUnit Summary (Teacher Tests)</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td th:text="${buildReport.junitSummary(T(org..dropProject.data.TestType).TEACHER)}"></td>
+        </tr>
+        <tr th:if="${buildReport.jUnitErrors(T(org..dropProject.data.TestType).TEACHER)}">
+            <td>
+                <pre th:text="${buildReport.jUnitErrors(T(org..dropProject.data.TestType).TEACHER)}"></pre>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <table class="table table-bordered" th:if="${isTeacher and buildReport != null and buildReport.junitSummary(T(org..dropProject.data.TestType).HIDDEN) != null}">
+        <thead>
+        <tr>
+            <th>JUnit Summary (Hidden Tests)<br/><small>(Students don't see this)</small></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td th:text="${buildReport.junitSummary(T(org..dropProject.data.TestType).HIDDEN)}"></td>
+        </tr>
+        <tr th:if="${buildReport.jUnitErrors(T(org..dropProject.data.TestType).HIDDEN)}">
+            <td>
+                <pre th:text="${buildReport.jUnitErrors(T(org..dropProject.data.TestType).HIDDEN)}"></pre>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    </div>
+
+    <a th:href="@{'/upload/' + ${assignment.id}}" th:if="${submission.status} == 'Validated'" class="btn btn-default">Submit new project</a>
+
+    <!--/*@thymesVar id="buildReport" type="org..dropProject.data.BuildReport"*/-->
+    <h2 th:if="${buildReport != null and isTeacher}">Full report</h2>
+    <pre th:if="${buildReport != null and isTeacher}" th:text="${buildReport.mavenOutput()}"></pre>
+</div>
+
+<div th:replace="layout/layout :: footer"></div>
+
+</body>
+</html>

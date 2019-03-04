@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="layout/layout :: head (pageTitle='Drop Project - Login')">
+</head>
+
+<body>
+
+<div class="container" style="max-width: 480px;">
+    <form method="POST" th:action="@{/login}" class="form-signin">
+        <h2 class="form-heading">Welcome to Drop Project</h2>
+
+        <div class="form-group">
+            <div th:if="${param.error}" class="alert alert-danger">
+                Invalid username and password.
+            </div>
+            <div th:if="${param.logout}" class="alert alert-success">
+                You have been logged out.
+            </div>
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input name="username" id="username" type="text" class="form-control" placeholder="Username"
+                       autofocus="true" value="student1"/>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input name="password" id="password" type="password" class="form-control" placeholder="Password" value="123"/>
+            </div>
+
+            <button class="btn btn-primary" type="submit">Log In</button>
+        </div>
+
+        <div class="alert alert-warning">
+            <strong>Warning: Application is running in demo mode.</strong>
+            <br/>
+            3 users created (user/pass):
+            <ul>
+                <li>admin / 123</li>
+                <li>teacher1 / 123</li>
+                <li>student1 / 123</li>
+            </ul>
+        </div>
+
+    </form>
+</div>
+
+</body>
+</html>

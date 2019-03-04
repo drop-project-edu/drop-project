@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head (pageTitle)">
+    <title th:text="${pageTitle}">Drop Project</title>
+    <meta name="viewport" content="width=device-with, initial-scale=1.0"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"/>
+    <link th:href="@{/css/dropzone.css}" rel="stylesheet" />
+    <link th:href="@{/css/dropproject.css}" rel="stylesheet" />
+</head>
+<body>
+    <nav class="navbar navbar-default" th:fragment="header">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+                        data-target="#drop-project-navbar-collapse-1" aria-expanded="false">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" th:href="@{/}">Drop Project</a>
+            </div>
+
+            <div class="collapse navbar-collapse" id="drop-project-navbar-collapse-1">
+                <ul class="nav navbar-nav" th:if="${#authorization.expression('hasRole(''ROLE_TEACHER'')')}">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown1" role="button" data-toggle="dropdown"
+                           aria-haspopup="true" aria-expanded="false">
+                            <span>Manage Assignments</span><span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a th:href="@{/assignment/my}">Current Assignments</a>
+                            </li>
+                            <li>
+                                <a th:href="@{/assignment/archived}">Archived Assignments</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <ul class="nav navbar-nav navbar-right">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown2" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <span class="glyphicon glyphicon-user"></span> <span th:text="${#authentication.name}"></span><span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu" th:if="${numSubmissions != null}">
+                            <li>
+                                <a th:href="@{/mySubmissions/(assignmentId=${assignment?.id})}">Submissions <span class="badge" th:text="${numSubmissions}"></span></a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="navbar navbar-default navbar-fixed-bottom" th:fragment="footer">
+        <div class="container">
+            <p class="navbar-text pull-left">Feedback: <a href="mailto:pedro.alves@ulusofona.pt">pedro.alves@ulusofona.pt</a></p>
+            <p class="navbar-text" th:if="${embeddedDB}" style="color:red"><strong>WARNING: Using in-memory database. All data will be lost on restart!!!</strong></p>
+            <p class="navbar-text pull-right">
+                <!--(<small th:text="${buildInfo.version + ' - ' + #dates.format(buildInfo.time, 'dd-MM-yyyy')}"></small>) -->
+                &copy; DEISI / ULHT
+            </p>
+        </div>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    </div>
+</body>
+</html>

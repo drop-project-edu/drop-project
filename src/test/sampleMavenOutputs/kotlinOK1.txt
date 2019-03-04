@@ -1,0 +1,54 @@
+[INFO] Scanning for projects...
+[INFO]
+[INFO] --------< org.dropProject:fp-miniteste-exemplo >---------
+[INFO] Building fp-miniteste-exemplo 1.0-SNAPSHOT
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO]
+[INFO] --- maven-clean-plugin:2.5:clean (default-clean) @ fp-miniteste-exemplo ---
+[INFO]
+[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ fp-miniteste-exemplo ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory /srv/drop-project/mavenized-projects/1540857289260-mini_teste_pratico-mavenized/src/main/resources
+[INFO]
+[INFO] --- maven-compiler-plugin:3.1:compile (default-compile) @ fp-miniteste-exemplo ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO]
+[INFO] --- kotlin-maven-plugin:1.2.71:compile (compile) @ fp-miniteste-exemplo ---
+[INFO]
+[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ fp-miniteste-exemplo ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory /srv/drop-project/mavenized-projects/1540857289260-mini_teste_pratico-mavenized/src/main/resources
+[INFO]
+[INFO] --- maven-compiler-plugin:3.1:compile (default-compile) @ fp-miniteste-exemplo ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO]
+[INFO] --- kotlin-maven-plugin:1.2.71:compile (compile) @ fp-miniteste-exemplo ---
+[INFO]
+[INFO] --- maven-resources-plugin:2.6:testResources (default-testResources) @ fp-miniteste-exemplo ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory /srv/drop-project/mavenized-projects/1540857289260-mini_teste_pratico-mavenized/src/test/resources
+[INFO]
+[INFO] --- maven-compiler-plugin:3.1:testCompile (default-testCompile) @ fp-miniteste-exemplo ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO]
+[INFO] --- kotlin-maven-plugin:1.2.71:test-compile (test-compile) @ fp-miniteste-exemplo ---
+[INFO]
+[INFO] --- maven-surefire-plugin:2.12.4:test (default-test) @ fp-miniteste-exemplo ---
+[INFO] Surefire report directory: /srv/drop-project/mavenized-projects/1540857289260-mini_teste_pratico-mavenized/target/surefire-reports
+
+-------------------------------------------------------
+ T E S T S
+-------------------------------------------------------
+Running TestProject
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.081 sec
+
+Results :
+
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
+
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 6.111 s
+[INFO] Finished at: 2018-10-29T23:54:56Z
+[INFO] ------------------------------------------------------------------------

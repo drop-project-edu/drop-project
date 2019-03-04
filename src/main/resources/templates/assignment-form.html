@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="layout/layout :: head (pageTitle='Drop Project - Create new assignment')">
+</head>
+
+<body>
+
+<div th:replace="layout/layout :: header"></div>
+
+<div class="container" style="max-width: 760px; margin-bottom: 65px">
+
+    <h1 class="page-header" th:if="${!assignmentForm.editMode}">Create a new assignment</h1>
+    <h1 class="page-header" th:if="${assignmentForm.editMode}">Edit assignment</h1>
+
+    <!--/*@thymesVar id="assignmentForm" type="org..dropProject.forms.AssignmentForm"*/-->
+    <form th:object="${assignmentForm}" method="post" th:action="@{/assignment/new}">
+        <div class="form-group" th:classappend="${#fields.hasErrors('assignmentId')} ? 'has-error' : ''">
+            <label for="assignmentId">Assignment ID</label>
+            <input th:field="*{assignmentId}" type="text" class="form-control" th:readonly="*{editMode}"
+                   id="assignmentId" placeholder="cs1Project2018" maxlength="30"/>
+            <p class="help-block" th:if="${#fields.hasErrors('assignmentId')}" th:errors="*{assignmentId}">Error</p>
+            <p class="help-block" th:if="${!#fields.hasErrors('assignmentId')}">An unique short ID, with no spaces (e.g., cs1Project2018)</p>
+        </div>
+        <div class="form-group" th:classappend="${#fields.hasErrors('assignmentName')} ? 'has-error' : ''">
+            <label for="assignmentName">Assignment Name</label>
+            <input th:field="*{assignmentName}" type="text" class="form-control" id="assignmentName" placeholder="CS1 Main Project for 2018"/>
+            <p class="help-block" th:if="${#fields.hasErrors('assignmentName')}" th:errors="*{assignmentName}">Error</p>
+            <p class="help-block" th:if="${!#fields.hasErrors('assignmentName')}">A longer human-friendly name (e.g., CS1 Main Project for 2018)</p>
+        </div>
+        <div class="form-group" th:classappend="${#fields.hasErrors('assignmentPackage')} ? 'has-error' : ''">
+            <label for="assignmentPackage">Assignment Package</label>
+            <input th:field="*{assignmentPackage}" type="text" class="form-control" id="assignmentPackage"
+                   placeholder="edu.someUniversity.cs1Project2018" maxlength="60"/>
+            <p class="help-block" th:if="${#fields.hasErrors('assignmentPackage')}" th:errors="*{assignmentPackage}">Error</p>
+            <p class="help-block" th:if="${!#fields.hasErrors('assignmentPackage')}" >A Java/Kotlin package that all the submissions must respect (e.g., edu.someUniversity.cs1Project2018)</p>
+        </div>
+        <div class="form-group" th:classappend="${#fields.hasErrors('language')} ? 'has-error' : ''">
+            <label for="language">Programming Language</label>
+            <select th:field="*{language}" class="form-control" id="language">
+                <option value="JAVA" th:selected="${assignmentForm.language=='JAVA'}">Java</option>
+                <option value="KOTLIN" th:selected="${assignmentForm.language=='KOTLIN'}">Kotlin</option>
+            </select>
+            <p class="help-block" th:if="${#fields.hasErrors('language')}" th:errors="*{language}">Error</p>
+            <p class="help-block" th:if="${!#fields.hasErrors('language')}" >Submissions must be implemented using this language</p>
+        </div>
+
+        <div class="form-group" th:classappend="${#fields.hasErrors('submissionMethod')} ? 'has-error' : ''">
+            <label for="submissionMethod">Submission Method</label>
+            <select th:field="*{submissionMethod}" class="form-control" id="submissionMethod">
+                <option value=""></option>
+                <option value="UPLOAD" th:selected="${assignmentForm.submissionMethod=='UPLOAD'}">Upload zip file</option>
+                <option value="GIT" th:selected="${assignmentForm.submissionMethod=='GIT'}">Connect to git repository</option>
+            </select>
+            <p class="help-block" th:if="${#fields.hasErrors('submissionMethod')}" th:errors="*{submissionMethod}">Error</p>
+            <p class="help-block" th:if="${!#fields.hasErrors('submissionMethod')}" >How the assignment is submitted</p>
+        </div>
+        <div class="form-inline" th:classappend="${#fields.hasErrors('acceptsStudentTests')} ? 'has-error' : ''">
+            <div class="checkbox">
+                <label>
+                    <input th:field="*{acceptsStudentTests}" type="checkbox" id="acceptsStudentTests" /> <strong>Accepts student tests?</strong>
+                </label>
+            </div>
+            <div class="form-group">
+                <label for="minStudentTests">&nbsp;&nbsp;&nbsp;At least: </label>
+                <div class="input-group">
+                    <input type="number" class="form-control " id="minStudentTests" th:field="*{minStudentTests}" />
+                    <div class="input-group-addon">tests</div>
+                </div>
+            </div>
+            <p class="help-block" th:if="${#fields.hasErrors('acceptsStudentTests')}" th:errors="*{acceptsStudentTests}">Error</p>
+            <p class="help-block" th:if="${!#fields.hasErrors('acceptsStudentTests')}">Check this you are asking your
+                students to include junit tests in their submission. In this case, your (teacher) tests will have to
+                be named TestTeacherXXX to distinguish them from the student tests.
+                You will also have to specify a minimum number of tests each student must implement.</p>
+        </div>
+
+        <div class="form-group" th:classappend="${#fields.hasErrors('gitRepositoryUrl')} ? 'has-error' : ''">
+            <label for="gitRepositoryUrl">Git Repository URL (ssh style)</label>
+            <input th:field="*{gitRepositoryUrl}" type="text" class="form-control" id="gitRepositoryUrl"
+                   placeholder="git@github.com:someuser/cs1Assigment1.git" maxlength="90" th:readonly="*{editMode}"/>
+            <p class="help-block" th:if="${#fields.hasErrors('gitRepositoryUrl')}" th:errors="*{gitRepositoryUrl}">Error</p>
+            <p class="help-block" th:if="${!#fields.hasErrors('gitRepositoryUrl')}" >Repository containing the assignment
+                skeleton (pom.xml, checkstyle.xml, auxiliar classes, test files, etc.). This skeleton will be merged
+                with each submission before building and running tests.</p>
+        </div>
+        <div class="form-group" th:classappend="${#fields.hasErrors('dueDate')} ? 'has-error' : ''">
+            <label for="dueDate">Due Date (optional)</label>
+            <input th:field="*{dueDate}" type="datetime-local" class="form-control" id="dueDate" />
+            <p class="help-block" th:if="${#fields.hasErrors('dueDate')}" th:errors="*{dueDate}">Error</p>
+            <p class="help-block" th:if="${!#fields.hasErrors('dueDate')}">Only informative - submissions are still accepted after this</p>
+        </div>
+        <div class="form-group" th:classappend="${#fields.hasErrors('cooloffPeriod')} ? 'has-error' : ''">
+            <label for="cooloffPeriod">Cool-off period (optional)</label>
+            <input th:field="*{cooloffPeriod}" type="number" class="form-control" id="cooloffPeriod" />
+            <p class="help-block" th:if="${#fields.hasErrors('cooloffPeriod')}" th:errors="*{cooloffPeriod}">Error</p>
+            <p class="help-block" th:if="${!#fields.hasErrors('cooloffPeriod')}">Minimum time between student submissions (in minutes)</p>
+        </div>
+
+        <div class="form-group" th:classappend="${#fields.hasErrors('assignees')} ? 'has-error' : ''">
+            <label for="assignees">Open to (optional)</label>
+            <textarea th:field="*{assignees}" class="form-control" id="assignees" rows="3" placeholder="a21701234,a21705678" />
+            <p class="help-block" th:if="${#fields.hasErrors('assignees')}" th:errors="*{assignees}">Error</p>
+            <p class="help-block" th:if="${!#fields.hasErrors('assignees')}">Comma separated list of student id's that are allowed to upload submissions (new lines and spaces will be trimmed)</p>
+        </div>
+        <div class="form-group" th:classappend="${#fields.hasErrors('acl')} ? 'has-error' : ''">
+            <label for="acl">Other teachers (optional)</label>
+            <input th:field="*{acl}" type="text" class="form-control" id="acl"
+                   placeholder="teacherId1,teacherId2,..." maxlength="60"/>
+            <p class="help-block" th:if="${#fields.hasErrors('acl')}" th:errors="*{acl}">Error</p>
+            <p class="help-block" th:if="${!#fields.hasErrors('acl')}" >A comma-separated list of userid's that are allowed to manage this assignment</p>
+        </div>
+        <input name="editMode" type="hidden" value="true" th:if="*{editMode}" />
+        <button type="submit" class="btn btn-primary">Save</button>
+    </form>
+
+</div>
+
+<div th:replace="layout/layout :: footer"></div>
+
+<script th:src="@{/js/dropproject.js}"></script>
+
+</body>
+</html>

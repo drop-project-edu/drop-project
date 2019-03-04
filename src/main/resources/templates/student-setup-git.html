@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="layout/layout :: head (pageTitle='Drop Project - Configuração Git')">
+</head>
+
+<body>
+
+<div th:replace="layout/layout :: header"></div>
+
+<!--/*@thymesVar id="gitSubmission" type="org..dropProject.dao.GitSubmission"*/-->
+<div class="container" style="max-width: 760px">
+
+    <h1 class="page-header">Configuração Git</h1>
+
+    <div th:if="${error}">
+        <div class="alert alert-danger" th:text="${error}"/>
+    </div>
+
+    <p>Tens que autorizar o Drop Project a aceder a <strong><span th:text="${gitSubmission.gitRepositoryUrl}"></span></strong></p>
+
+    <p>Acede aos <a th:href="${repositorySettingsUrl}" target="_blank">settings do teu repositório</a> e
+        adiciona esta chave pública (public key) à lista de access keys:
+        <span class="glyphicon glyphicon-question-sign" aria-hidden="true" data-toggle="popover"
+              data-trigger="focus" tabindex="0"
+              title="Na página do repositório no github:" data-html="true"
+              data-content="&lt;img src='../img/github-deploy-keys-2.png' width='250'/&gt;"></span>
+    </p>
+    <div class="alert alert-info">
+        <span>Title</span><pre>drop-project</pre>
+        <span>Key</span>
+        <pre th:text="${gitSubmission.gitRepositoryPubKey}"></pre>
+    </div>
+
+    <form th:action="@{'/student/setup-git-2/' + ${gitSubmission.id}}" method="post">
+        <div class="checkbox">
+            <label>
+                <input type="checkbox" id="confirmCB" />Já adicionei esta chave à lista de access keys
+            </label>
+        </div>
+        <button type="submit" class="btn btn-primary" id="connectBTN" disabled="disabled">Estabelecer ligação</button>
+    </form>
+
+</div>
+
+<div th:replace="layout/layout :: footer"></div>
+
+<script>
+    $("#confirmCB").click(function() {
+        $("#connectBTN").attr("disabled", !this.checked);
+    });
+
+    $(function () {
+        $('[data-toggle="popover"]').popover()
+    });
+</script>
+
+</body>
+</html>

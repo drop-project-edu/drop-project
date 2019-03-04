@@ -1,0 +1,23 @@
+{
+  "name": "Drop Project - Continuous Auto-Grader",
+  "description": "A web application where students drop their projects to check for correctness and quality.",
+  "repository": "https://github.com/palves-ulht/drop-project",
+  "keywords": ["auto-grader", "maven", "java", "kotlin", "education"],
+
+  "buildpacks": [
+    {
+      "url": "https://github.com/palves-ulht/heroku-buildpack-java-maven"
+    }
+  ],
+
+  "env": {
+    "M2.HOME": {
+      "description": "Maven home",
+      "value": ".maven"
+    },
+    "DP.MVN.REPO": {
+      "description": "Maven repository",
+      "value": ".mvn_repository"
+    }
+  }
+}

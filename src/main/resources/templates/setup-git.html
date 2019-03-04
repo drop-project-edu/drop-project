@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="layout/layout :: head (pageTitle='Drop Project - Setup Git Credentials')">
+</head>
+
+<body>
+
+<div th:replace="layout/layout :: header"></div>
+
+<div class="container" style="max-width: 760px">
+
+    <h1 class="page-header">Setup Git Authorization</h1>
+
+    <div th:if="${error}">
+        <div class="alert alert-danger" th:text="${error}"/>
+    </div>
+
+    <p>You have to authorize Drop Project to access <span th:text="${assignment.gitRepositoryUrl}"></span></p>
+
+    <p>Go to the <a th:href="${repositorySettingsUrl}" target="_blank">settings of your repository</a> and add this public key to the list of access/deploy keys:</p>
+    <div class="alert alert-info">
+        <pre th:text="${assignment.gitRepositoryPubKey}"></pre>
+    </div>
+
+    <form th:action="@{'/assignment/setup-git/' + ${assignment.id}}" method="post">
+        <div class="checkbox">
+            <label>
+                <input type="checkbox" id="confirmCB" />Already added this key to the list of access/deploy keys
+            </label>
+        </div>
+        <button type="submit" class="btn btn-primary" id="connectBTN" disabled="disabled">Connect</button>
+    </form>
+
+</div>
+
+<div th:replace="layout/layout :: footer"></div>
+
+<script>
+    $("#confirmCB").click(function() {
+        $("#connectBTN").attr("disabled", !this.checked);
+    });
+</script>
+
+</body>
+</html>
