@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/drop-project-edu/drop-project.svg?branch=master)](https://travis-ci.org/drop-project-edu/drop-project)
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/palves-ulht/drop-project)
 
@@ -32,7 +33,8 @@ The results are collected into a report that is viewable by the student and the 
 
 Projects must not be maven projects because they are "mavenized" by the server, after uploading. 
 By "mavenizing", I mean copying the files into a proper Maven folder structure (e.g. putting the sources 
-into /src/main/java) and adding a pom.xml. This pom.xml is provided by the teacher.
+into /src/main/java), mixing the student files with the teacher unit tests and adding a pom.xml 
+(also provided by the teacher). 
 
 Since checking a project may take some time, it is done asynchronously - the student submits the file and must come 
 back later to check the report.
