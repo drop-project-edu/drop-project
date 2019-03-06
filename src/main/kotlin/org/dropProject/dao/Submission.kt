@@ -20,9 +20,11 @@
 package org.dropProject.dao
 
 import org.dropProject.data.JUnitSummary
+import java.io.File
 import java.util.*
 import javax.persistence.*
 import java.math.BigDecimal
+import java.text.SimpleDateFormat
 
 enum class SubmissionStatus(val code: String, val description: String) {
     SUBMITTED("S", "Submitted"),
@@ -54,7 +56,13 @@ data class Submission(
         val id: Long = 0,
         val submissionId: String? = null,
         val gitSubmissionId: Long? = null,
-        val submissionDate: Date? = null,
+
+        val submissionFolder: String? = null,  // TODO: For now, this is null for git submissions
+
+        @Column(nullable = false)
+        val submissionDate: Date,
+
+        @Column(nullable = false)
         val submitterUserId: String,
 
         @Column(nullable = false)
@@ -91,9 +99,9 @@ data class Submission(
     lateinit var group: ProjectGroup
 
     constructor(submissionId: String, assignmentId: String, submitterNumber: String, status: String,
-                statusDate: Date, group: ProjectGroup) :
+                statusDate: Date, group: ProjectGroup, submissionFolder: String) :
             this(submissionId = submissionId, assignmentId = assignmentId, submitterUserId = submitterNumber,
-                    status = status, statusDate = statusDate) {
+                    status = status, statusDate = statusDate, submissionDate = Date(), submissionFolder = submissionFolder) {
         this.group = group
     }
 
@@ -106,6 +114,11 @@ data class Submission(
         if (!dontUpdateStatusDate) {
             this.statusDate = Date()
         }
+    }
+
+
+    companion object {
+        fun relativeUploadFolder(assignmentId: String, submissionDate: Date) = "$assignmentId/${SimpleDateFormat("w-yy").format(submissionDate)}"
     }
 
 }

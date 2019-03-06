@@ -19,6 +19,7 @@
  */
 package org.dropProject.storage
 
+import org.dropProject.dao.Submission
 import org.springframework.web.multipart.MultipartFile
 import java.io.File
 
@@ -26,7 +27,9 @@ interface StorageService {
 
     fun init()
 
-    fun store(file: MultipartFile): File?
+    fun rootFolder() : File
 
-    fun retrieveProjectFolder(submissionId: String?): File?
+    fun store(file: MultipartFile, assignmentId: String): File?
+
+    fun retrieveProjectFolder(submission: Submission): File?
 }

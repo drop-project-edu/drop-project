@@ -237,7 +237,8 @@ class ReportController(
             }
 
             if (submission.submissionId != null) {
-                val projectFile = File(uploadSubmissionsRootLocation, "${submission.submissionId}.zip")
+                val projectFolder = File(uploadSubmissionsRootLocation, submission.submissionFolder)
+                val projectFile = File("${projectFolder.absolutePath}.zip")  // for every folder, there is a corresponding zip file with the same name
 
                 LOG.info("[${principal.name}] downloaded ${projectFile.name}")
 
@@ -301,7 +302,7 @@ class ReportController(
 
                 val submission = submissionInfo.lastSubmission
 
-                val originalProjectFolder = storageService.retrieveProjectFolder(submission.submissionId)
+                val originalProjectFolder = storageService.retrieveProjectFolder(submission)
                         ?: throw IllegalArgumentException("projectFolder for ${submission.submissionId} doesn't exist")
 
                 var hadToUnzip = false

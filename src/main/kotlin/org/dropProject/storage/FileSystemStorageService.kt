@@ -21,7 +21,7 @@ package org.dropProject.storage
 
 import net.lingala.zip4j.core.ZipFile
 import net.lingala.zip4j.exception.ZipException
-import net.lingala.zip4j.model.UnzipParameters
+import org.dropProject.dao.Submission
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.util.StringUtils
@@ -32,6 +32,8 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
+import java.text.SimpleDateFormat
+import java.util.*
 
 
 fun unzip(file: Path, originalFilename: String?): File {
@@ -49,10 +51,14 @@ fun unzip(file: Path, originalFilename: String?): File {
 @Service
 class FileSystemStorageService : StorageService  {
 
-    @Value("\${storage.rootLocation}")
-    val rootLocation : String = "submissions"
+    @Value("\${storage.rootLocation}/upload")
+    val uploadRootLocation : String = "submissions/upload"
 
-    override fun store(file: MultipartFile) : File? {
+    override fun rootFolder(): File {
+        return File(uploadRootLocation)
+    }
+
+    override fun store(file: MultipartFile, assignmentId: String) : File? {
         val filename = StringUtils.cleanPath(file.originalFilename)
         try {
             if (file.isEmpty) {
@@ -63,36 +69,39 @@ class FileSystemStorageService : StorageService  {
                 throw StorageException("Cannot store file with relative path outside current directory ${filename}")
             }
 
-            val destinationFile = Paths.get("$rootLocation/upload").resolve("${System.currentTimeMillis()}-${filename}")
+            val destinationPartialFolder = File(uploadRootLocation, Submission.relativeUploadFolder(assignmentId, Date()))
+            destinationPartialFolder.mkdirs()
+
+            val destinationFile = File(destinationPartialFolder, "${System.currentTimeMillis()}-${filename}")
             Files.copy(file.inputStream,
-                    destinationFile,
+                    destinationFile.toPath(),
                     StandardCopyOption.REPLACE_EXISTING)
 
             if (filename.endsWith(".zip", ignoreCase = true)) {
-                val destinationFolder = unzip(destinationFile, filename)
+                val destinationFolder = unzip(destinationFile.toPath(), filename)
 
                 return destinationFolder
+            } else {
+                throw Exception("$filename doesn't end with .zip! This shouldn't happen.")
             }
 
         } catch (e: IOException) {
-            throw StorageException("Failed to store file " + filename, e)
+            throw StorageException("Failed to store file $filename", e)
         }
-
-        return null
     }
 
 
 
     override fun init() {
         try {
-            Files.createDirectories(Paths.get("$rootLocation/upload"))
+            Files.createDirectories(Paths.get("$uploadRootLocation/upload"))
         } catch (e: IOException) {
             throw StorageException("Could not initialize storage", e)
         }
 
     }
 
-    override fun retrieveProjectFolder(submissionId: String?): File? {
-        return File(File(rootLocation,"upload"), submissionId)
+    override fun retrieveProjectFolder(submission: Submission): File? {
+        return File(File(uploadRootLocation), submission.submissionFolder)
     }
 }

@@ -256,7 +256,7 @@ class UploadController(
         }
 
         LOG.info("[${principal.name}] uploaded ${file.originalFilename}")
-        val projectFolder : File? = storageService.store(file)
+        val projectFolder : File? = storageService.store(file, assignment.id)
 
         if (projectFolder != null) {
             val authors = getProjectAuthors(projectFolder)
@@ -279,7 +279,9 @@ class UploadController(
             }
 
             val submission = Submission(submissionId = projectFolder.name, submissionDate = Date(),
-                    status = SubmissionStatus.SUBMITTED.code, statusDate = Date(), assignmentId = assignment.id, submitterUserId = principal.name)
+                    status = SubmissionStatus.SUBMITTED.code, statusDate = Date(), assignmentId = assignment.id,
+                    submitterUserId = principal.name,
+                    submissionFolder = projectFolder.relativeTo(storageService.rootFolder()).path)
             submission.group = group
             submissionRepository.save(submission)
 
@@ -517,6 +519,7 @@ class UploadController(
                 submissionDate = submission.submissionDate,
                 submitterUserId = submission.submitterUserId,
                 assignmentId = submission.assignmentId,
+                submissionFolder = submission.submissionFolder,
                 status = SubmissionStatus.SUBMITTED_FOR_REBUILD.code,
                 statusDate = Date())
         rebuiltSubmission.group = submission.group
@@ -524,7 +527,7 @@ class UploadController(
         val projectFolder =
             if (submission.submissionId != null) {  // submission through upload
 
-                val projectFolder = storageService.retrieveProjectFolder(rebuiltSubmission.submissionId)
+                val projectFolder = storageService.retrieveProjectFolder(rebuiltSubmission)
                         ?: throw IllegalArgumentException("projectFolder for ${rebuiltSubmission.submissionId} doesn't exist")
 
                 LOG.info("Retrieved project folder: ${projectFolder.absolutePath}")
@@ -841,7 +844,8 @@ class UploadController(
         }
 
         val submission = Submission(gitSubmissionId = gitSubmission.id, submissionDate = Date(),
-                status = SubmissionStatus.SUBMITTED.code, statusDate = Date(), assignmentId = assignment.id, submitterUserId = principal.name)
+                status = SubmissionStatus.SUBMITTED.code, statusDate = Date(), assignmentId = assignment.id,
+                submitterUserId = principal.name)
         submission.group = gitSubmission.group
         submissionRepository.save(submission)
 
@@ -920,7 +924,7 @@ class UploadController(
 
     // returns the date when the next submission can be made or null if it's not in cool-off period
     private fun calculateCoolOff(lastSubmission: Submission, assignment: Assignment) : LocalDateTime? {
-        val lastSubmissionDate = Timestamp(lastSubmission.submissionDate!!.time).toLocalDateTime()
+        val lastSubmissionDate = Timestamp(lastSubmission.submissionDate.time).toLocalDateTime()
         val now = LocalDateTime.now()
         val delta = ChronoUnit.MINUTES.between(lastSubmissionDate, now)
         if (delta < assignment.cooloffPeriod!!) {

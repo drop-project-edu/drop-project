@@ -144,7 +144,7 @@ class UploadControllerTests {
                 .andExpect(header().string("Location", "/upload"))
                 .andExpect(flash().attribute<String>("error", "O ficheiro tem que ser um .zip"))
 
-        verify(this.storageService, never()).store(multipartFile)
+        verify(this.storageService, never()).store(multipartFile, "")
     }
 
     // @Test   - Infelizmente o MockMvc não consegue testar isto....
@@ -158,7 +158,7 @@ class UploadControllerTests {
                 .andExpect(header().string("Location", "/upload"))
                 .andExpect(flash().attribute<String>("error", "Ficheiro excede o tamanho máximo permitido"))
 
-        verify(this.storageService, never()).store(multipartFile)
+        verify(this.storageService, never()).store(multipartFile, "")
     }
 
     @Test
@@ -173,6 +173,19 @@ class UploadControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(view().name("student-upload-form"))
 
+
+    }
+
+    @Test
+    @DirtiesContext
+    fun uploadProjectGoesIntoRightFolder() {
+
+        val submissionId = testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", "testJavaProj", STUDENT_1)
+
+        val submissionDB = submissionRepository.getOne(submissionId.toLong())
+        val submissionFolder = File("$submissionsRootLocation/upload", submissionDB.submissionFolder)
+
+        assertTrue("submission folder doesn't exist", submissionFolder.exists())
 
     }
 
