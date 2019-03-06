@@ -168,15 +168,15 @@
         </tr>
         </thead>
         <tbody>
-        <tr th:if="${buildReport.junitSummary(T(org..dropProject.data.TestType).STUDENT) != null}">
-            <td th:text="${buildReport.junitSummary(T(org..dropProject.data.TestType).STUDENT)}"></td>
+        <tr th:if="${buildReport.junitSummary(T(org.dropProject.data.TestType).STUDENT) != null}">
+            <td th:text="${buildReport.junitSummary(T(org.dropProject.data.TestType).STUDENT)}"></td>
         </tr>
-        <tr th:if="${buildReport.junitSummary(T(org..dropProject.data.TestType).STUDENT) == null}">
+        <tr th:if="${buildReport.junitSummary(T(org.dropProject.data.TestType).STUDENT) == null}">
             <td th:text="${buildReport.notEnoughStudentTestsMessage()}"></td>
         </tr>
-        <tr th:if="${buildReport.jUnitErrors(T(org..dropProject.data.TestType).STUDENT)}">
+        <tr th:if="${buildReport.jUnitErrors(T(org.dropProject.data.TestType).STUDENT)}">
             <td>
-                <pre th:text="${buildReport.jUnitErrors(T(org..dropProject.data.TestType).STUDENT)}"></pre>
+                <pre th:text="${buildReport.jUnitErrors(T(org.dropProject.data.TestType).STUDENT)}"></pre>
             </td>
         </tr>
         </tbody>
@@ -191,11 +191,11 @@
         </thead>
         <tbody>
         <tr>
-            <td th:text="${buildReport.junitSummary(T(org..dropProject.data.TestType).TEACHER)}"></td>
+            <td th:text="${buildReport.junitSummary(T(org.dropProject.data.TestType).TEACHER)}"></td>
         </tr>
-        <tr th:if="${buildReport.jUnitErrors(T(org..dropProject.data.TestType).TEACHER)}">
+        <tr th:if="${buildReport.jUnitErrors(T(org.dropProject.data.TestType).TEACHER)}">
             <td>
-                <pre th:text="${buildReport.jUnitErrors(T(org..dropProject.data.TestType).TEACHER)}"></pre>
+                <pre th:text="${buildReport.jUnitErrors(T(org.dropProject.data.TestType).TEACHER)}"></pre>
             </td>
         </tr>
         </tbody>
