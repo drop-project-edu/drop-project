@@ -30,7 +30,7 @@
             <button class="btn btn-primary" type="submit">Log In</button>
         </div>
 
-        <div class="alert alert-warning">
+        <div class="alert alert-warning" th:if="${demoMode}">
             <strong>Warning: Application is running in demo mode.</strong>
             <br/>
             3 users created (user/pass):

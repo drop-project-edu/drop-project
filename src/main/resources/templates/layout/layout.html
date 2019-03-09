@@ -51,6 +51,11 @@
                                 <a th:href="@{/mySubmissions/(assignmentId=${assignment?.id})}">Submissions <span class="badge" th:text="${numSubmissions}"></span></a>
                             </li>
                         </ul>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a th:href="@{/logout}">Logout</a>
+                            </li>
+                        </ul>
                     </li>
                 </ul>
             </div>

@@ -1,0 +1,4 @@
+username;password;roles
+student1;123;STUDENT
+teacher1;123;TEACHER
+admin;123;TEACHER,DROP_PROJECT_ADMIN

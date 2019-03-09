@@ -41,51 +41,6 @@ into /src/main/java), mixing the student files with the teacher unit tests and a
 Since checking a project may take some time, it is done asynchronously - the student submits the file and must come 
 back later to check the report.
 
-## FAQ
+## Documentation
 
-**How do I change the max upload file size?**
-
-Check dropProject.properties.
-
-**How to get coverage metrics for student unit testes?**
-
-Add the following lines to your pom.xml:
-```
-<properties>
-    <dp.argLine></dp.argLine>
-</properties>
-
-<plugin>
-    <groupId>org.apache.maven.plugins</groupId>
-    <artifactId>maven-surefire-plugin</artifactId>
-    <version>2.19.1</version>
-    <configuration>
-        <argLine>@{argLine} ${dp.argLine}</argLine>
-    </configuration>
-</plugin>
-
-<plugin>
-    <groupId>org.jacoco</groupId>
-    <artifactId>jacoco-maven-plugin</artifactId>
-    <version>0.8.2</version>
-    <configuration>
-        <includes>
-            <include>edu/someUniversity/xxx/xxx/*</include>
-        </includes>
-    </configuration>
-    <executions>
-        <execution>
-            <goals>
-                <goal>prepare-agent</goal>
-            </goals>
-        </execution>
-        <execution>
-            <id>generate-code-coverage-report</id>
-            <phase>test</phase>
-            <goals>
-                <goal>report</goal>
-            </goals>
-        </execution>
-    </executions>
-</plugin>
-```
+https://github.com/drop-project-edu/drop-project/wiki/Documentation
