@@ -136,7 +136,7 @@ class AssignmentController(
                     packageName = assignmentForm.assignmentPackage, language = assignmentForm.language!!,
                     dueDate = assignmentForm.dueDate, acceptsStudentTests = assignmentForm.acceptsStudentTests,
                     minStudentTests = assignmentForm.minStudentTests, cooloffPeriod = assignmentForm.cooloffPeriod,
-                    submissionMethod = assignmentForm.submissionMethod!!,
+                    maxMemoryMb = assignmentForm.maxMemoryMb!!, submissionMethod = assignmentForm.submissionMethod!!,
                     gitRepositoryUrl = assignmentForm.gitRepositoryUrl!!, ownerUserId = principal.name,
                     gitRepositoryFolder = assignmentForm.assignmentId!!)
             assignmentRepository.save(newAssignment)
@@ -171,6 +171,7 @@ class AssignmentController(
             existingAssignment.acceptsStudentTests = assignmentForm.acceptsStudentTests
             existingAssignment.minStudentTests = assignmentForm.minStudentTests
             existingAssignment.cooloffPeriod = assignmentForm.cooloffPeriod
+            existingAssignment.maxMemoryMb = assignmentForm.maxMemoryMb!!
             assignmentRepository.save(existingAssignment)
 
             assignment = existingAssignment

@@ -19,10 +19,12 @@
  */
 package org.dropProject.forms
 
+import org.dropProject.Constants
 import org.hibernate.validator.constraints.NotEmpty
 import org.springframework.format.annotation.DateTimeFormat
 import org.dropProject.dao.Language
 import java.time.LocalDateTime
+import javax.validation.constraints.Min
 import javax.validation.constraints.NotNull
 
 enum class SubmissionMethod {
@@ -30,34 +32,38 @@ enum class SubmissionMethod {
 }
 
 data class AssignmentForm(
-    @field:NotEmpty(message = "Error: Assignment Id must not be empty")
-    var assignmentId: String? = null,
+        @field:NotEmpty(message = "Error: Assignment Id must not be empty")
+        var assignmentId: String? = null,
 
-    @field:NotEmpty(message = "Error: Assignment Name must not be empty")
-    var assignmentName: String? = null,
+        @field:NotEmpty(message = "Error: Assignment Name must not be empty")
+        var assignmentName: String? = null,
 
-    var assignmentPackage: String? = null,
+        var assignmentPackage: String? = null,
 
-    @field:NotNull(message = "Error: Language must not be empty")
-    var language: Language? = null,
+        @field:NotNull(message = "Error: Language must not be empty")
+        var language: Language? = null,
 
-    @field:DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    var dueDate: LocalDateTime? = null,
+        @field:DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+        var dueDate: LocalDateTime? = null,
 
-    var acceptsStudentTests: Boolean = false,
-    var minStudentTests: Int? = null,
-    var cooloffPeriod: Int? = null,
+        var acceptsStudentTests: Boolean = false,
+        var minStudentTests: Int? = null,
+        var cooloffPeriod: Int? = null,
 
-    var assignees: String? = null,
+        @field:NotNull(message = "Error: Max memory must be set")
+        @field:Min(value=32, message="Error: Max memory must be >= 32")
+        var maxMemoryMb: Int? = Constants.DEFAULT_MAX_MEMORY_MB,
 
-    var editMode: Boolean = false,
+        var assignees: String? = null,
 
-    @field:NotNull(message = "Error: Submission Method must not be empty")
-    var submissionMethod: SubmissionMethod? = null,
+        var editMode: Boolean = false,
 
-    @field:NotEmpty(message = "Error: Git repository must not be empty")
-    var gitRepositoryUrl: String? = null,
+        @field:NotNull(message = "Error: Submission Method must not be empty")
+        var submissionMethod: SubmissionMethod? = null,
 
-    var acl: String? = null
+        @field:NotEmpty(message = "Error: Git repository must not be empty")
+        var gitRepositoryUrl: String? = null,
+
+        var acl: String? = null
 )
     

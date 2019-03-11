@@ -1011,6 +1011,39 @@ class UploadControllerTests {
         assertEquals("junit should be OK (value)", "OK", summary[3].reportValue)
     }
 
+    @Test
+    @DirtiesContext
+    fun uploadProjectOutOfMemory() {
+
+        val assignment = assignmentRepository.getOne("testJavaProj")
+        assignment.maxMemoryMb = 64  // <<< this is very important for this test
+        assignmentRepository.save(assignment)
+
+        val submissionId = testsHelper.uploadProject(this.mvc, "projectOutOfMemory", "testJavaProj", STUDENT_1)
+
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId"))
+                .andExpect(status().isOk())
+                .andReturn()
+
+        @Suppress("UNCHECKED_CAST")
+        val summary = reportResult.modelAndView.modelMap["summary"] as List<SubmissionReport>
+        assertEquals("Summary should be 5 lines", 5, summary.size)
+        assertEquals("projectStructure should be OK (key)", Indicator.PROJECT_STRUCTURE, summary[0].getReportKey())
+        assertEquals("projectStructure should be OK (value)", "OK", summary[0].reportValue)
+        assertEquals("compilation should be OK (key)", Indicator.COMPILATION, summary[1].getReportKey())
+        assertEquals("compilation should be OK (value)", "OK", summary[1].reportValue)
+        assertEquals("checkstyle should be OK (key)", Indicator.CHECKSTYLE, summary[2].getReportKey())
+        assertEquals("checkstyle should be OK (value)", "OK", summary[2].reportValue)
+        assertEquals("junit should be NOK (key)", Indicator.TEACHER_UNIT_TESTS, summary[3].getReportKey())
+        assertEquals("junit should be NOK (value)", "NOK", summary[3].reportValue)
+
+        val buildResult = reportResult.modelAndView.modelMap["buildReport"] as BuildReport
+        assertTrue("Should exist a failure with OutOfMemoryError",
+                buildResult.junitResults.first { it.testClassName == "TestTeacherProject" }
+                .junitMethodResults.any { it.failureType == "java.lang.OutOfMemoryError" })
+
+    }
+
 
 }
 

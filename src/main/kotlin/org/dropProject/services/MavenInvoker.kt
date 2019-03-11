@@ -42,7 +42,7 @@ class MavenInvoker {
     @Value("\${dropProject.maven.repository}")
     val mavenRepository : String = ""
 
-    fun run(mavenizedProjectFolder: File, principalName: String?) : MavenResult {
+    fun run(mavenizedProjectFolder: File, principalName: String?, maxMemoryMb: Int) : MavenResult {
 
         if (!File(mavenRepository).exists()) {
             val success = File(mavenRepository).mkdirs()
@@ -57,8 +57,9 @@ class MavenInvoker {
         request.baseDirectory = mavenizedProjectFolder
         request.isDebug = false
         request.isBatchMode = true
+        request.mavenOpts = "-DargLine=\"-Xmx${maxMemoryMb}M\""
         if (principalName != null) {
-            request.mavenOpts = "-Ddp.argLine=\"-DdropProject.currentUserId=${principalName}\""
+            request.mavenOpts += " -Ddp.argLine=\"-DdropProject.currentUserId=${principalName}\""  // TODO: Review this
             // the above line only works if the surefire plugin is configured this way:
 //            <properties>
 //               ...

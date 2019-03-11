@@ -23,6 +23,8 @@ object Constants {
     const val TEST_NAME_PREFIX = "Test"
     const val TEACHER_TEST_NAME_PREFIX = "TestTeacher"
     const val TEACHER_HIDDEN_TEST_NAME_PREFIX = "TestTeacherHidden"
+
+    const val DEFAULT_MAX_MEMORY_MB = 512  // max memory (in Mb) that is given to each submission to run their tests
 }
     
     

@@ -75,6 +75,13 @@
                 You will also have to specify a minimum number of tests each student must implement.</p>
         </div>
 
+        <div class="form-group" th:classappend="${#fields.hasErrors('maxMemoryMb')} ? 'has-error' : ''">
+            <label for="maxMemoryMb">Max Memory (Mb)</label>
+            <input th:field="*{maxMemoryMb}" type="number" class="form-control" id="maxMemoryMb" />
+            <p class="help-block" th:if="${#fields.hasErrors('maxMemoryMb')}" th:errors="*{maxMemoryMb}">Error</p>
+            <p class="help-block" th:if="${!#fields.hasErrors('maxMemoryMb')}" >Max heap memory available for each submission tests (-Xmx flag)</p>
+        </div>
+
         <div class="form-group" th:classappend="${#fields.hasErrors('gitRepositoryUrl')} ? 'has-error' : ''">
             <label for="gitRepositoryUrl">Git Repository URL (ssh style)</label>
             <input th:field="*{gitRepositoryUrl}" type="text" class="form-control" id="gitRepositoryUrl"

@@ -79,6 +79,10 @@
             <label class="col-sm-3 control-label">Cool-off period:</label>
             <div class="col-sm-9 read-row" th:text="${assignment.cooloffPeriod + ' minutes'}"></div>
         </div>
+        <div class="form-group" th:if="${assignment.maxMemoryMb}">
+            <label class="col-sm-3 control-label">Max memory:</label>
+            <div class="col-sm-9 read-row" th:text="${assignment.maxMemoryMb + ' Mb'}"></div>
+        </div>
         <div class="form-group">
             <label class="col-sm-3 control-label">Open to:</label>
             <div class="col-sm-9 read-row" th:if="${assignees.isEmpty()}">Everyone through this <a th:href="@{'/upload/' + ${assignment.id}}">link</a></div>

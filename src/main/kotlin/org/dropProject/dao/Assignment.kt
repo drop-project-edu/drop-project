@@ -19,6 +19,7 @@
  */
 package org.dropProject.dao
 
+import org.dropProject.Constants
 import org.dropProject.forms.SubmissionMethod
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -50,6 +51,7 @@ data class Assignment(
         var acceptsStudentTests: Boolean = false,
         var minStudentTests: Int? = null,
         var cooloffPeriod: Int? = null, // minutes
+        var maxMemoryMb: Int = Constants.DEFAULT_MAX_MEMORY_MB,
 
         val gitRepositoryUrl: String,
         @Column(columnDefinition = "TEXT")

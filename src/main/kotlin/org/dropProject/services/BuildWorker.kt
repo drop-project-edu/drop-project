@@ -56,14 +56,14 @@ class BuildWorker(
     fun checkProject(mavenizedProjectFolder: File, authorsStr: String, submission: Submission,
                           principalName: String?, dontChangeStatusDate: Boolean = false, rebuildByTeacher: Boolean = false) {
 
-        LOG.info("[${authorsStr}] Started maven invocation")
+        val assignment = assignmentRepository.findOne(submission.assignmentId)
+
+        LOG.info("[${authorsStr}] Started maven invocation (max: ${assignment.maxMemoryMb}Mb)")
 
         val realPrincipalName = if (rebuildByTeacher) submission.submitterUserId else principalName
-        val mavenResult = mavenInvoker.run(mavenizedProjectFolder, realPrincipalName)
+        val mavenResult = mavenInvoker.run(mavenizedProjectFolder, realPrincipalName, assignment.maxMemoryMb)
 
         LOG.info("[${authorsStr}] Finished maven invocation")
-
-        val assignment = assignmentRepository.findOne(submission.assignmentId)
 
         if (!mavenResult.expiredByTimeout) {
 
@@ -161,7 +161,7 @@ class BuildWorker(
 
                 LOG.info("[${authorsStr}] Started maven invocation again (for coverage)")
 
-                val mavenResultCoverage = mavenInvoker.run(mavenizedProjectFolder, realPrincipalName)
+                val mavenResultCoverage = mavenInvoker.run(mavenizedProjectFolder, realPrincipalName, assignment.maxMemoryMb)
                 if (!mavenResultCoverage.expiredByTimeout) {
                     LOG.info("[${authorsStr}] Finished maven invocation (for coverage)")
 
@@ -217,9 +217,9 @@ class BuildWorker(
 
     fun checkAssignment(assignmentFolder: File, assignment: Assignment, principalName: String?) : BuildReport? {
 
-        LOG.info("Started maven invocation to check ${assignment.id}");
+        LOG.info("Started maven invocation to check ${assignment.id} (max: ${assignment.maxMemoryMb}Mb)");
 
-        val mavenResult = mavenInvoker.run(assignmentFolder, principalName)
+        val mavenResult = mavenInvoker.run(assignmentFolder, principalName, assignment.maxMemoryMb)
 
         LOG.info("Finished maven invocation to check ${assignment.id}");
 
