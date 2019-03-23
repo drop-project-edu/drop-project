@@ -35,7 +35,7 @@
         </tr>
         </thead>
         <tbody>
-        <!--/*@thymesVar id="assignments" type="java.util.ArrayList<org..dropProject.dao.Assignment>"*/-->
+        <!--/*@thymesVar id="assignments" type="java.util.ArrayList<org.dropProject.dao.Assignment>"*/-->
         <tr th:each="assignment : ${assignments}">
             <td th:text="${assignment.id}"></td>
             <td th:text="${assignment.name}"></td>

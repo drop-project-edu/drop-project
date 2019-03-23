@@ -13,107 +13,136 @@
     <div class="alert alert-info" th:text="${message}" th:if="${message}" />
     <div class="alert alert-danger" th:text="${error}" th:if="${error}" />
 
-    <!--/*@thymesVar id="assignment" type="org..dropProject.dao.Assignment"*/-->
-    <!--/*@thymesVar id="assignees" type="java.util.List<org..dropProject.dao.Assignee>"*/-->
-    <!--/*@thymesVar id="acl" type="java.util.List<org..dropProject.dao.AssignmentACL>"*/-->
+    <!--/*@thymesVar id="assignment" type="org.dropProject.dao.Assignment"*/-->
+    <!--/*@thymesVar id="assignees" type="java.util.List<org.dropProject.dao.Assignee>"*/-->
+    <!--/*@thymesVar id="acl" type="java.util.List<org.dropProject.dao.AssignmentACL>"*/-->
+    <!--/*@thymesVar id="report" type="java.util.List<org.dropProject.dao.AssignmentReport>"*/-->
     <div class="row">
         <h1 class="page-header col-sm-11" th:text="'Assignment ' + ${assignment.id}">Assignment</h1>
         <span class="label label-warning col-sm-1" th:if="${!assignment.active}">Inactive</span>
     </div>
 
-    <form class="form-horizontal">
-        <div class="form-group">
-            <label class="col-sm-3 control-label">Name:</label>
-            <div class="col-sm-9 read-row" th:text="${assignment.name}"></div>
-        </div>
-        <div class="form-group">
-            <label class="col-sm-3 control-label">Submission link:</label>
-            <div class="col-sm-9 read-row alert alert-info">
-                <a th:href="@{'/upload/' + ${assignment.id}}" th:text="@{'/upload/' + ${assignment.id}}">link</a>
-            </div>
-        </div>
-        <div class="form-group" >
-            <label class="col-sm-3 control-label">Connected to:</label>
-            <div th:if="${assignment.gitRepositoryPrivKey != null}" class="col-sm-9 read-row" th:text="${assignment.gitRepositoryUrl}"></div>
-            <div th:if="${assignment.gitRepositoryPrivKey == null}" class="col-sm-9 read-row alert alert-warning">This assignment is not yet connected to a git repository!</div>
-        </div>
-        <div class="form-group" th:if="${lastCommitInfoStr != null}">
-            <label class="col-sm-3 control-label">Last commit:</label>
-            <div class="col-sm-8">
-                <span class="read-row" th:text="${lastCommitInfoStr}"></span>
-                <button type="button" id="refreshBtn" class="btn btn-primary btn-sm has-spinner">
-                    <span class="spinner"><i class="fa fa-refresh fa-spin"></i></span> Refresh
-                </button>
-            </div>
-        </div>
-        <div class="form-group">
-            <label class="col-sm-3 control-label">Package:</label>
-            <div class="col-sm-9 read-row" th:text="${assignment.packageName}"></div>
-        </div>
-        <div class="form-group">
-            <label class="col-sm-3 control-label">Language:</label>
-            <div class="col-sm-9 read-row" th:text="${assignment.language}"></div>
-        </div>
-        <div class="form-group">
-            <label class="col-sm-3 control-label">Submission method:</label>
-            <div class="col-sm-9 read-row" th:text="${assignment.submissionMethod}"></div>
-        </div>
-        <div class="form-group">
-            <label class="col-sm-3 control-label">Files <u>not copied</u> over the student submissions:</label>
-            <div class="col-sm-9 read-row">/src/main/**</div>
-        </div>
-        <div class="form-group">
-            <label class="col-sm-3 control-label">Due Date:</label>
-            <div class="col-sm-9 read-row" th:if="${assignment.dueDate != null}" th:text="${assignment.dueDateFormatted()}"></div>
-            <div class="col-sm-9 read-row" th:if="${assignment.dueDate == null}">Not set</div>
-        </div>
-        <div class="form-group">
-            <label class="col-sm-3 control-label">Accepts student tests:</label>
-            <div class="col-sm-9 read-row" th:text="${assignment.acceptsStudentTests}"></div>
-        </div>
-        <div class="form-group" th:if="${assignment.acceptsStudentTests}">
-            <label class="col-sm-3 control-label">Minimum # of tests:</label>
-            <div class="col-sm-9 read-row" th:text="${assignment.minStudentTests}"></div>
-        </div>
-        <div class="form-group" th:if="${assignment.cooloffPeriod}">
-            <label class="col-sm-3 control-label">Cool-off period:</label>
-            <div class="col-sm-9 read-row" th:text="${assignment.cooloffPeriod + ' minutes'}"></div>
-        </div>
-        <div class="form-group" th:if="${assignment.maxMemoryMb}">
-            <label class="col-sm-3 control-label">Max memory:</label>
-            <div class="col-sm-9 read-row" th:text="${assignment.maxMemoryMb + ' Mb'}"></div>
-        </div>
-        <div class="form-group">
-            <label class="col-sm-3 control-label">Open to:</label>
-            <div class="col-sm-9 read-row" th:if="${assignees.isEmpty()}">Everyone through this <a th:href="@{'/upload/' + ${assignment.id}}">link</a></div>
-            <div class="col-sm-9 read-row" th:if="${!assignees.isEmpty()}">
-                <table class="table table-bordered">
-                    <tbody>
-                        <tr th:each="assignee : ${assignees}">
-                            <td th:text="${assignee.authorUserId}"></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+    <ul class="nav nav-tabs">
+        <li class="active">
+            <a href="#1" data-toggle="tab">Overview</a>
+        </li>
+        <li><a href="#2" data-toggle="tab">Validation Report</a>
+        </li>
+    </ul>
 
+    <div class="tab-content">
+        <div class="tab-pane active" id="1">
+            <form class="form-horizontal">
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Name:</label>
+                    <div class="col-sm-9 read-row" th:text="${assignment.name}"></div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Submission link:</label>
+                    <div class="col-sm-9 read-row alert alert-info">
+                        <a th:href="@{'/upload/' + ${assignment.id}}" th:text="@{'/upload/' + ${assignment.id}}">link</a>
+                    </div>
+                </div>
+                <div class="form-group" >
+                    <label class="col-sm-3 control-label">Connected to:</label>
+                    <div th:if="${assignment.gitRepositoryPrivKey != null}" class="col-sm-9 read-row" th:text="${assignment.gitRepositoryUrl}"></div>
+                    <div th:if="${assignment.gitRepositoryPrivKey == null}" class="col-sm-9 read-row alert alert-warning">This assignment is not yet connected to a git repository!</div>
+                </div>
+                <div class="form-group" th:if="${lastCommitInfoStr != null}">
+                    <label class="col-sm-3 control-label">Last commit:</label>
+                    <div class="col-sm-8">
+                        <span class="read-row" th:text="${lastCommitInfoStr}"></span>
+                        <button type="button" id="refreshBtn" class="btn btn-primary btn-sm has-spinner">
+                            <span class="spinner"><i class="fa fa-refresh fa-spin"></i></span> Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Package:</label>
+                    <div class="col-sm-9 read-row" th:text="${assignment.packageName}"></div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Language:</label>
+                    <div class="col-sm-9 read-row" th:text="${assignment.language}"></div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Submission method:</label>
+                    <div class="col-sm-9 read-row" th:text="${assignment.submissionMethod}"></div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Files <u>not copied</u> over the student submissions:</label>
+                    <div class="col-sm-9 read-row">/src/main/**</div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Due Date:</label>
+                    <div class="col-sm-9 read-row" th:if="${assignment.dueDate != null}" th:text="${assignment.dueDateFormatted()}"></div>
+                    <div class="col-sm-9 read-row" th:if="${assignment.dueDate == null}">Not set</div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Accepts student tests:</label>
+                    <div class="col-sm-9 read-row" th:text="${assignment.acceptsStudentTests}"></div>
+                </div>
+                <div class="form-group" th:if="${assignment.acceptsStudentTests}">
+                    <label class="col-sm-3 control-label">Minimum # of tests:</label>
+                    <div class="col-sm-9 read-row" th:text="${assignment.minStudentTests}"></div>
+                </div>
+                <div class="form-group" th:if="${assignment.cooloffPeriod}">
+                    <label class="col-sm-3 control-label">Cool-off period:</label>
+                    <div class="col-sm-9 read-row" th:text="${assignment.cooloffPeriod + ' minutes'}"></div>
+                </div>
+                <div class="form-group" th:if="${assignment.maxMemoryMb}">
+                    <label class="col-sm-3 control-label">Max memory:</label>
+                    <div class="col-sm-9 read-row" th:text="${assignment.maxMemoryMb + ' Mb'}"></div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Open to:</label>
+                    <div class="col-sm-9 read-row" th:if="${assignees.isEmpty()}">Everyone through this <a th:href="@{'/upload/' + ${assignment.id}}">link</a></div>
+                    <div class="col-sm-9 read-row" th:if="${!assignees.isEmpty()}">
+                        <table class="table table-bordered">
+                            <tbody>
+                                <tr th:each="assignee : ${assignees}">
+                                    <td th:text="${assignee.authorUserId}"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+
+                <div class="form-group" th:if="${!acl.isEmpty()}">
+                    <label class="col-sm-3 control-label">Other teachers:</label>
+                    <div class="col-sm-9 read-row">
+                        <table class="table table-bordered">
+                            <tbody>
+                            <tr th:each="assignmentACL : ${acl}">
+                                <td th:text="${assignmentACL.userId}"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+
+                <a class="btn btn-primary" th:href="@{'/assignment/edit/' + ${assignment.id}}" role="button">Edit</a>
+            </form>
         </div>
-
-        <div class="form-group" th:if="${!acl.isEmpty()}">
-            <label class="col-sm-3 control-label">Other teachers:</label>
-            <div class="col-sm-9 read-row">
-                <table class="table table-bordered">
-                    <tbody>
-                    <tr th:each="assignmentACL : ${acl}">
-                        <td th:text="${assignmentACL.userId}"></td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
-
+        <div class="tab-pane" id="2">
+            <p>&nbsp;</p>
+            <div class="alert alert-info" th:if="${report.isEmpty()}">Sorry. No report information.</div>
+            <p th:text="${reportMsg}" th:if="${!report.isEmpty()}"></p>
+            <table class="table" th:if="${!report.isEmpty()}">
+                <tbody>
+                <tr th:each="reportLine : ${report}">
+                    <td><img th:src="@{'/img/' + ${reportLine.typeIcon()}}" width="16" /></td>
+                    <td>
+                        <strong th:text="${reportLine.message}">Some error message</strong><br/>
+                        <div th:utext="${reportLine.description}">Some error description</div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
         </div>
-
-        <a class="btn btn-primary" th:href="@{'/assignment/edit/' + ${assignment.id}}" role="button">Edit</a>
-    </form>
+    </div>
 
 </div>
 

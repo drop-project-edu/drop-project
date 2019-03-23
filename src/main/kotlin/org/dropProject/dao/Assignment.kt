@@ -51,7 +51,7 @@ data class Assignment(
         var acceptsStudentTests: Boolean = false,
         var minStudentTests: Int? = null,
         var cooloffPeriod: Int? = null, // minutes
-        var maxMemoryMb: Int = Constants.DEFAULT_MAX_MEMORY_MB,
+        var maxMemoryMb: Int? = null,
 
         val gitRepositoryUrl: String,
         @Column(columnDefinition = "TEXT")

@@ -42,7 +42,7 @@ class MavenInvoker {
     @Value("\${dropProject.maven.repository}")
     val mavenRepository : String = ""
 
-    fun run(mavenizedProjectFolder: File, principalName: String?, maxMemoryMb: Int) : MavenResult {
+    fun run(mavenizedProjectFolder: File, principalName: String?, maxMemoryMb: Int?) : MavenResult {
 
         if (!File(mavenRepository).exists()) {
             val success = File(mavenRepository).mkdirs()
@@ -53,30 +53,40 @@ class MavenInvoker {
 
         val outputLines = ArrayList<String>()
 
+        var dpArgLine = ""
+        if (maxMemoryMb != null) {
+            dpArgLine += " -Xmx${maxMemoryMb}M"
+        }
+
         val request = DefaultInvocationRequest()
         request.baseDirectory = mavenizedProjectFolder
         request.isDebug = false
         request.isBatchMode = true
-        request.mavenOpts = "-DargLine=\"-Xmx${maxMemoryMb}M\""
         if (principalName != null) {
-            request.mavenOpts += " -Ddp.argLine=\"-DdropProject.currentUserId=${principalName}\""  // TODO: Review this
-            // the above line only works if the surefire plugin is configured this way:
-//            <properties>
-//               ...
-//               <!-- Default value for dp.argLine can be defined here -->
-//               <dp.argLine></dp.argLine>
-//               ...
-//            </properties>
+            dpArgLine += " -DdropProject.currentUserId=${principalName}"
+        }
 
+        // TODO: The line below doesn't work form multiple properties. so, for now, we'll replace the property
+        //  directly the pom.file
+        // request.mavenOpts = "-Ddp.argLine=\"${dpArgLine.trim()}\""
+
+        val originalPomFileContent = File(mavenizedProjectFolder, "pom.xml").readText()
+        val replacedPomFileContent = originalPomFileContent.replace("\${dp.argLine}", dpArgLine.trim())
+
+        val replacedPomFile = File(mavenizedProjectFolder, "pom_updated.xml")
+        replacedPomFile.writeText(replacedPomFileContent)
+
+        request.pomFile = replacedPomFile
+
+        // the above line only works if the surefire plugin is configured this way:
 //            <plugin>
 //              <groupId>org.apache.maven.plugins</groupId>
 //              <artifactId>maven-surefire-plugin</artifactId>
 //              <version>2.19.1</version>
 //              <configuration>
-//                <argLine>@{argLine} ${dp.argLine}</argLine>
+//                <argLine>${dp.argLine}</argLine>
 //              </configuration>
 //            </plugin>
-        }
 
         request.setOutputHandler {
             line -> run {
@@ -91,6 +101,8 @@ class MavenInvoker {
         invoker.localRepositoryDirectory = File(mavenRepository)
 
         val result = invoker.execute(request)
+
+        replacedPomFile.delete()
 
         if (result.exitCode != 0) {
             if (result.executionException != null) {

@@ -28,13 +28,16 @@ import org.dropProject.dao.BuildReport
 import org.dropProject.dao.Language
 import org.dropProject.dao.Submission
 import org.dropProject.repository.BuildReportRepository
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.ApplicationContext
 import java.io.File
 import java.io.FileNotFoundException
 import java.security.Principal
 
 @Service
 class AssignmentTeacherFiles(val buildWorker: BuildWorker,
-                             val buildReportRepository: BuildReportRepository) {
+                             val buildReportRepository: BuildReportRepository,
+                             val applicationContext: ApplicationContext) {
 
     @Value("\${assignments.rootLocation}")
     val assignmentsRootLocation : String = ""
@@ -88,50 +91,50 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
     }
 
     // check that the project files associated with this assignment are valid
-    fun checkAssignmentFiles(assignment: Assignment, principal: Principal?): String? {
+    fun checkAssignmentFiles(assignment: Assignment, principal: Principal?): List<AssignmentValidator.Info> {
 
-        // check that the assignment repository is a valid assignment structure
         val assignmentFolder = File(assignmentsRootLocation, assignment.gitRepositoryFolder)
-        if (!File(assignmentFolder, "pom.xml").exists()) {
-            return "Assignment must have a pom.xml. Please fix this!"
+
+        val assignmentValidator = applicationContext.getBean(AssignmentValidator::class.java)
+
+        assignmentValidator.validate(assignmentFolder, assignment)
+        val report = assignmentValidator.report
+
+        // it it has found errors, it doesn't even try to run the build
+        if (report.any { it.type == AssignmentValidator.InfoType.ERROR }) {
+            return report
         }
 
         // run mvn clean test on the assignment
-        val buildReport = buildWorker.checkAssignment(assignmentFolder, assignment, principal?.name) ?:
-                return "Assignment checking (run tests) was aborted by timeout! Why is it taking so long to run?"
+        val buildReport = buildWorker.checkAssignment(assignmentFolder, assignment, principal?.name)
+        if (buildReport == null) {
+            report.add(AssignmentValidator.Info(AssignmentValidator.InfoType.ERROR,
+                    "Assignment checking (run tests) was aborted by timeout! Why is it taking so long to run?"))
+            return report
+        }
 
         val buildReportDB = buildReportRepository.save(BuildReport(buildReport = buildReport.mavenOutput()))
         assignment.buildReportId = buildReportDB.id
 
         if (!buildReport.compilationErrors().isEmpty()) {
-            return "Assignment has compilation errors. Please fix this!"
+            report.add(AssignmentValidator.Info(AssignmentValidator.InfoType.ERROR,
+                                        "Assignment has compilation errors."))
+            return report
         }
 
         if (!buildReport.checkstyleErrors().isEmpty()) {
-            return "Assignment has checkstyle errors. Please fix this!"
+            report.add(AssignmentValidator.Info(AssignmentValidator.InfoType.ERROR,
+             "Assignment has checkstyle errors."))
+            return report
         }
 
         if (buildReport.hasJUnitErrors() == true) {
-            return "Assignment is failing some JUnit tests. Please fix this!"
+            report.add(AssignmentValidator.Info(AssignmentValidator.InfoType.ERROR,
+             "Assignment is failing some JUnit tests. Please fix this!"))
+            return report
         }
 
-        if (assignment.acceptsStudentTests) {
-            val testClasses = File(assignmentFolder, "src/test")
-                    .walkTopDown()
-                    .filter { it -> it.name.startsWith(Constants.TEST_NAME_PREFIX) }
-                    .toList()
-
-            for (testClass in testClasses) {
-                if (!testClass.name.startsWith(Constants.TEACHER_TEST_NAME_PREFIX)) {
-                    return "${testClass} is not valid for assignments which accept student tests. " +
-                            "All teacher tests must be prefixed with ${Constants.TEACHER_TEST_NAME_PREFIX} " +
-                            "(e.g., ${Constants.TEACHER_TEST_NAME_PREFIX}Calculator" +
-                            " instead of ${Constants.TEST_NAME_PREFIX}Calculator)"
-                }
-            }
-        }
-
-        return null
+        return report
     }
 
     fun getProjectFolderAsFile(submission: Submission, wasRebuilt: Boolean) : File {

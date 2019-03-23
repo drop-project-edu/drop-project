@@ -23,7 +23,7 @@
 
     <p>&nbsp;</p>
 
-    <!--/*@thymesVar id="gitHistory" type="java.util.List<org..dropProject.services.GitClient.CommitInfo>"*/-->
+    <!--/*@thymesVar id="gitHistory" type="java.util.List<org.dropProject.services.GitClient.CommitInfo>"*/-->
     <div th:if="${gitHistory != null and !gitHistory.isEmpty()}">
         <h3>
             <a data-toggle="collapse" href="#collapseGitHistory"
@@ -51,7 +51,7 @@
         </table>
     </div>
 
-    <!--/*@thymesVar id="submissions" type="java.util.ArrayList<org..dropProject.dao.Submission>"*/-->
+    <!--/*@thymesVar id="submissions" type="java.util.ArrayList<org.dropProject.dao.Submission>"*/-->
     <h3>Submission History <small><span th:text="'(' + ${submissions.size() + ' submissions)'}"/></small></h3>
     <table class="table">
         <thead>
