@@ -13,7 +13,7 @@
     <h1 class="page-header" th:if="${!assignmentForm.editMode}">Create a new assignment</h1>
     <h1 class="page-header" th:if="${assignmentForm.editMode}">Edit assignment</h1>
 
-    <!--/*@thymesVar id="assignmentForm" type="org..dropProject.forms.AssignmentForm"*/-->
+    <!--/*@thymesVar id="assignmentForm" type="org.dropProject.forms.AssignmentForm"*/-->
     <form th:object="${assignmentForm}" method="post" th:action="@{/assignment/new}">
         <div class="form-group" th:classappend="${#fields.hasErrors('assignmentId')} ? 'has-error' : ''">
             <label for="assignmentId">Assignment ID</label>
@@ -33,7 +33,7 @@
             <input th:field="*{assignmentPackage}" type="text" class="form-control" id="assignmentPackage"
                    placeholder="edu.someUniversity.cs1Project2018" maxlength="60"/>
             <p class="help-block" th:if="${#fields.hasErrors('assignmentPackage')}" th:errors="*{assignmentPackage}">Error</p>
-            <p class="help-block" th:if="${!#fields.hasErrors('assignmentPackage')}" >A Java/Kotlin package that all the submissions must respect (e.g., edu.someUniversity.cs1Project2018)</p>
+            <p class="help-block" th:if="${!#fields.hasErrors('assignmentPackage')}" >(Optional) A Java/Kotlin package that all the submissions must respect (e.g., edu.someUniversity.cs1Project2018)</p>
         </div>
         <div class="form-group" th:classappend="${#fields.hasErrors('language')} ? 'has-error' : ''">
             <label for="language">Programming Language</label>
@@ -76,10 +76,10 @@
         </div>
 
         <div class="form-group" th:classappend="${#fields.hasErrors('maxMemoryMb')} ? 'has-error' : ''">
-            <label for="maxMemoryMb">Max Memory (Mb)</label>
+            <label for="maxMemoryMb">Constrain max available memory to: (Mb)</label>
             <input th:field="*{maxMemoryMb}" type="number" class="form-control" id="maxMemoryMb" />
             <p class="help-block" th:if="${#fields.hasErrors('maxMemoryMb')}" th:errors="*{maxMemoryMb}">Error</p>
-            <p class="help-block" th:if="${!#fields.hasErrors('maxMemoryMb')}" >Max heap memory available for each submission tests (-Xmx flag)</p>
+            <p class="help-block" th:if="${!#fields.hasErrors('maxMemoryMb')}" >(Optional) Max heap memory available for each submission tests (-Xmx flag)</p>
         </div>
 
         <div class="form-group" th:classappend="${#fields.hasErrors('gitRepositoryUrl')} ? 'has-error' : ''">

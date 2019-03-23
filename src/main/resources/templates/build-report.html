@@ -11,10 +11,10 @@
 
 <div th:replace="layout/layout :: header"></div>
 
-<!--/*@thymesVar id="gitSubmission" type="org..dropProject.dao.GitSubmission"*/-->
-<!--/*@thymesVar id="assignment" type="org..dropProject.dao.Assignment"*/-->
-<!--/*@thymesVar id="summary" type="org..dropProject.dao.SubmissionReport"*/-->
-<!--/*@thymesVar id="submission" type="org..dropProject.dao.Submission"*/-->
+<!--/*@thymesVar id="gitSubmission" type="org.dropProject.dao.GitSubmission"*/-->
+<!--/*@thymesVar id="assignment" type="org.dropProject.dao.Assignment"*/-->
+<!--/*@thymesVar id="summary" type="org.dropProject.dao.SubmissionReport"*/-->
+<!--/*@thymesVar id="submission" type="org.dropProject.dao.Submission"*/-->
 <div class="container" style="max-width: 760px; margin-bottom: 65px">
 
     <div class="alert alert-info" th:text="${message}" th:if="${message}" />
@@ -222,7 +222,7 @@
 
     <a th:href="@{'/upload/' + ${assignment.id}}" th:if="${submission.getStatus() == T(org.dropProject.dao.SubmissionStatus).VALIDATED}" class="btn btn-default">Submit new project</a>
 
-    <!--/*@thymesVar id="buildReport" type="org..dropProject.data.BuildReport"*/-->
+    <!--/*@thymesVar id="buildReport" type="org.dropProject.data.BuildReport"*/-->
     <h2 th:if="${buildReport != null and isTeacher}">Full report</h2>
     <pre th:if="${buildReport != null and isTeacher}" th:text="${buildReport.mavenOutput()}"></pre>
 </div>

@@ -17,25 +17,17 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.extensions
+package org.dropProject.repository
 
-import org.springframework.web.util.HtmlUtils
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.transaction.annotation.Transactional
+import org.dropProject.dao.Assignee
+import org.dropProject.dao.AssignmentReport
 
-// remove weird characters such as \uFFeF
-fun String.sanitize(): String {
+interface AssignmentReportRepository : JpaRepository<AssignmentReport, Long> {
 
-    var sanitized = ""
-    for (c in this) {
-        if (c.isLetterOrDigit()) {
-            sanitized += c
-        }
-    }
+    fun findByAssignmentId(assignmentId: String): List<AssignmentReport>
 
-    return sanitized
+    @Transactional
+    fun deleteByAssignmentId(assignmentId: String): List<AssignmentReport>
 }
-
-fun String.toEscapedHtml(): String {
-    return HtmlUtils.htmlEscape(this)
-}
-    
-    

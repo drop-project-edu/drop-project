@@ -50,9 +50,8 @@ data class AssignmentForm(
         var minStudentTests: Int? = null,
         var cooloffPeriod: Int? = null,
 
-        @field:NotNull(message = "Error: Max memory must be set")
         @field:Min(value=32, message="Error: Max memory must be >= 32")
-        var maxMemoryMb: Int? = Constants.DEFAULT_MAX_MEMORY_MB,
+        var maxMemoryMb: Int? = null,
 
         var assignees: String? = null,
 

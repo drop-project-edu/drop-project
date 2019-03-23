@@ -17,25 +17,34 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.extensions
+package org.dropProject.dao
 
-import org.springframework.web.util.HtmlUtils
+import org.dropProject.services.AssignmentValidator
+import javax.persistence.*
 
-// remove weird characters such as \uFFeF
-fun String.sanitize(): String {
+@Entity
+data class AssignmentReport(
+        @Id @GeneratedValue
+        val id: Long = 0,
 
-    var sanitized = ""
-    for (c in this) {
-        if (c.isLetterOrDigit()) {
-            sanitized += c
+        @Column(nullable = false)
+        val assignmentId: String,  // assignment.id
+
+        @Column(nullable = false)
+        val type: AssignmentValidator.InfoType,
+
+        @Column(nullable = false)
+        val message: String,
+
+        @Column(columnDefinition = "TEXT")
+        val description: String?
+) {
+
+    fun typeIcon(): String {
+        return when (type) {
+            AssignmentValidator.InfoType.ERROR -> "error.png"
+            AssignmentValidator.InfoType.WARNING -> "warn.png"
+            AssignmentValidator.InfoType.INFO -> "info.png"
         }
     }
-
-    return sanitized
 }
-
-fun String.toEscapedHtml(): String {
-    return HtmlUtils.htmlEscape(this)
-}
-    
-    

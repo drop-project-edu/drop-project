@@ -58,7 +58,11 @@ class BuildWorker(
 
         val assignment = assignmentRepository.findOne(submission.assignmentId)
 
-        LOG.info("[${authorsStr}] Started maven invocation (max: ${assignment.maxMemoryMb}Mb)")
+        if (assignment.maxMemoryMb != null) {
+            LOG.info("[${authorsStr}] Started maven invocation (max: ${assignment.maxMemoryMb}Mb)")
+        } else {
+            LOG.info("[${authorsStr}] Started maven invocation")
+        }
 
         val realPrincipalName = if (rebuildByTeacher) submission.submitterUserId else principalName
         val mavenResult = mavenInvoker.run(mavenizedProjectFolder, realPrincipalName, assignment.maxMemoryMb)
@@ -217,7 +221,7 @@ class BuildWorker(
 
     fun checkAssignment(assignmentFolder: File, assignment: Assignment, principalName: String?) : BuildReport? {
 
-        LOG.info("Started maven invocation to check ${assignment.id} (max: ${assignment.maxMemoryMb}Mb)");
+        LOG.info("Started maven invocation to check ${assignment.id}");
 
         val mavenResult = mavenInvoker.run(assignmentFolder, principalName, assignment.maxMemoryMb)
 
@@ -228,7 +232,7 @@ class BuildWorker(
             LOG.info("Maven invoker OK for ${assignment.id}")
             return buildReportBuilder.build(mavenResult.outputLines, assignmentFolder.absolutePath, assignment)
         } else {
-            LOG.info("Maven invoker abortedby timeout for ${assignment.id}")
+            LOG.info("Maven invoker aborted by timeout for ${assignment.id}")
             return null
         }
 

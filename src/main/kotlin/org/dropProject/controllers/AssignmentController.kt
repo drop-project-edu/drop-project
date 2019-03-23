@@ -32,9 +32,11 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes
 import org.dropProject.dao.Assignee
 import org.dropProject.dao.Assignment
 import org.dropProject.dao.AssignmentACL
+import org.dropProject.dao.AssignmentReport
 import org.dropProject.forms.AssignmentForm
 import org.dropProject.repository.*
 import org.dropProject.services.AssignmentTeacherFiles
+import org.dropProject.services.AssignmentValidator
 import org.dropProject.services.GitClient
 import java.io.File
 import java.security.Principal
@@ -48,6 +50,7 @@ import kotlin.collections.ArrayList
 @RequestMapping("/assignment")
 class AssignmentController(
         val assignmentRepository: AssignmentRepository,
+        val assignmentReportRepository: AssignmentReportRepository,
         val assigneeRepository: AssigneeRepository,
         val assignmentACLRepository: AssignmentACLRepository,
         val submissionRepository: SubmissionRepository,
@@ -136,7 +139,7 @@ class AssignmentController(
                     packageName = assignmentForm.assignmentPackage, language = assignmentForm.language!!,
                     dueDate = assignmentForm.dueDate, acceptsStudentTests = assignmentForm.acceptsStudentTests,
                     minStudentTests = assignmentForm.minStudentTests, cooloffPeriod = assignmentForm.cooloffPeriod,
-                    maxMemoryMb = assignmentForm.maxMemoryMb!!, submissionMethod = assignmentForm.submissionMethod!!,
+                    maxMemoryMb = assignmentForm.maxMemoryMb, submissionMethod = assignmentForm.submissionMethod!!,
                     gitRepositoryUrl = assignmentForm.gitRepositoryUrl!!, ownerUserId = principal.name,
                     gitRepositoryFolder = assignmentForm.assignmentId!!)
             assignmentRepository.save(newAssignment)
@@ -171,7 +174,7 @@ class AssignmentController(
             existingAssignment.acceptsStudentTests = assignmentForm.acceptsStudentTests
             existingAssignment.minStudentTests = assignmentForm.minStudentTests
             existingAssignment.cooloffPeriod = assignmentForm.cooloffPeriod
-            existingAssignment.maxMemoryMb = assignmentForm.maxMemoryMb!!
+            existingAssignment.maxMemoryMb = assignmentForm.maxMemoryMb
             assignmentRepository.save(existingAssignment)
 
             assignment = existingAssignment
@@ -216,6 +219,7 @@ class AssignmentController(
         val assignment = assignmentRepository.getOne(assignmentId)
         val assignees = assigneeRepository.findByAssignmentIdOrderByAuthorUserId(assignmentId)
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
+        val assignmentReports = assignmentReportRepository.findByAssignmentId(assignmentId)
 
         if (principal.name != assignment.ownerUserId && acl.find { it -> it.userId == principal.name } == null) {
             throw IllegalAccessError("Assignments can only be accessed by their owner or authorized teachers")
@@ -224,6 +228,12 @@ class AssignmentController(
         model["assignment"] = assignment
         model["assignees"] = assignees
         model["acl"] = acl
+        model["report"] = assignmentReports
+        model["reportMsg"] = if (assignmentReports.any { it.type != AssignmentValidator.InfoType.INFO }) {
+            "Assignment has errors! You have to fix them before activating it."
+        } else {
+            "Good job! Assignment has no errors and is ready to be activated."
+        }
 
         // check if it has been setup for git connection and if there is a repository folder
         if (assignment.gitRepositoryPrivKey != null && File(assignmentsRootLocation, assignment.gitRepositoryFolder).exists()) {
@@ -307,6 +317,16 @@ class AssignmentController(
                 LOG.info("Reset reportId for ${gitSubmissionsForThisAssignment.size} git submissions")
             }
 
+            // revalidate the assignment
+            val report = assignmentTeacherFiles.checkAssignmentFiles(assignment, principal)
+
+            // store the report in the DB (first, clear the previous report)
+            assignmentReportRepository.deleteByAssignmentId(assignmentId)
+            report.forEach {
+                assignmentReportRepository.save(AssignmentReport(assignmentId = assignmentId, type = it.type,
+                        message = it.message, description = it.description))
+            }
+
         } catch (re: RefNotAdvertisedException) {
             LOG.warning("Couldn't pull git repository for ${assignmentId}: head is invalid")
             return ResponseEntity("{ \"error\": \"Error pulling from ${assignment.gitRepositoryUrl}. Probably you don't have any commits yet.\"}", HttpStatus.INTERNAL_SERVER_ERROR)
@@ -383,11 +403,20 @@ class AssignmentController(
         }
 
         // check that the assignment repository is a valid assignment structure
-        val errorMsg = assignmentTeacherFiles.checkAssignmentFiles(assignment, principal)
-        if (errorMsg != null) {
+        val report = assignmentTeacherFiles.checkAssignmentFiles(assignment, principal)
+
+        // store the report in the DB (first, clear the previous report)
+        assignmentReportRepository.deleteByAssignmentId(assignmentId)
+        report.forEach {
+            assignmentReportRepository.save(AssignmentReport(assignmentId = assignmentId, type = it.type,
+                    message = it.message, description = it.description))
+        }
+
+        if (report.any { it.type == AssignmentValidator.InfoType.ERROR }) {
             assignmentRepository.save(assignment)  // assignment.buildResult was updated
-            redirectAttributes.addFlashAttribute("error", errorMsg)
-            LOG.info("Assignment has problems: ${errorMsg}")
+
+            redirectAttributes.addFlashAttribute("error", "Assignment has problems. Please check the 'Validation Report'")
+            LOG.info("Assignment has problems. Please check the 'Validation Report'")
             return "redirect:/assignment/info/${assignment.id}"
         }
 
@@ -436,6 +465,7 @@ class AssignmentController(
 
         assignmentRepository.delete(assignmentId)
         assignmentACLRepository.deleteByAssignmentId(assignmentId)
+        assignmentReportRepository.deleteByAssignmentId(assignmentId)
 
         redirectAttributes.addFlashAttribute("message", "Assignment was successfully deleted")
         return "redirect:/assignment/my"
@@ -460,12 +490,21 @@ class AssignmentController(
                 return "redirect:/assignment/my"
             }
 
-            val errorMsg = assignmentTeacherFiles.checkAssignmentFiles(assignment, principal)
-            if (errorMsg != null) {
+            val report = assignmentTeacherFiles.checkAssignmentFiles(assignment, principal)
+
+            // store the report in the DB (first, clear the previous report)
+            assignmentReportRepository.deleteByAssignmentId(assignmentId)
+            report.forEach {
+                assignmentReportRepository.save(AssignmentReport(assignmentId = assignmentId, type = it.type,
+                        message = it.message, description = it.description))
+            }
+
+            if (report.any { it.type == AssignmentValidator.InfoType.ERROR }) {  // TODO: Should it be warnings also??
                 assignmentRepository.save(assignment)  // assignment.buildResult was updated
-                LOG.info("Assignment has problems: ${errorMsg}")
-                redirectAttributes.addFlashAttribute("error", errorMsg)
-                return "redirect:/assignment/my"
+
+                redirectAttributes.addFlashAttribute("error", "Assignment has problems. Please check the 'Validation Report'")
+                LOG.info("Assignment has problems. Please check the 'Validation Report'")
+                return "redirect:/assignment/info/${assignmentId}"
             }
         }
 
