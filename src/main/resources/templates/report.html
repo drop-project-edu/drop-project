@@ -60,8 +60,8 @@
             <th>Submissions</th>
             <th>Last Submission Date</th>
             <th>Status</th>
-            <th>Summary</th>
-            <th>Tests</th>
+            <th class="text-center">Indicators</th>
+            <th class="text-center" th:if="${hasCoverage}"><span class="glyphicon glyphicon-signal" aria-hidden="true" title="Coverage of student tests"></span></th>
             <th class="text-center"><span class="glyphicon glyphicon-time" aria-hidden="true" title="Time spent running tests"></span></th>
             <th>Final</th>
             <th>Actions</th>
@@ -77,20 +77,20 @@
             <td th:text="${submissionInfo.lastSubmission.getStatus().description}"></td>
             <td class="text-nowrap">
                 <span th:each="report : ${submissionInfo.lastSubmission.reportElements}">
-                    <img src="../img/if_sign-check_299110.png" th:if="${report.reportValue == 'OK'}" th:alt="${report.reportKey.description}" th:title="${report.reportKey.description}" width="16" height="16" />
-                    <img src="../img/if_sign-error_299045.png" th:if="${report.reportValue == 'NOK'}" th:alt="${report.reportKey.description}" th:title="${report.reportKey.description}" width="16" height="16" />
-                    <img src="../img/if_sign-question-mark.png" th:if="${report.reportValue == 'Not Enough Tests'}" th:alt="${report.reportKey.description}" th:title="${report.reportKey.description}" width="16" height="16" />
+                    <span th:if="${report.progressSummary(true) == null}">
+                        <img src="../img/if_sign-check_299110.png" th:if="${report.reportValue == 'OK'}" th:alt="${report.indicator.description}" th:title="${report.indicator.description}" width="16" height="16" />
+                        <img src="../img/if_sign-error_299045.png" th:if="${report.reportValue == 'NOK'}" th:alt="${report.indicator.description}" th:title="${report.indicator.description}" width="16" height="16" />
+                        <img src="../img/if_sign-question-mark.png" th:if="${report.reportValue == 'Not Enough Tests'}" th:alt="${report.indicator.description}" th:title="${report.indicator.description}" width="16" height="16" />
+                    </span>
+                    <span class="label" th:if="${report.progressSummary(true) != null}"
+                      th:classappend="${report.cssLabel}"
+                      th:title="${report.indicator.description}"
+                      th:text="${report.progressSummary(true)}">14/14</span>
                 </span>
             </td>
 
-            <td class="text-nowrap text-right">
-                <span th:text="${submissionInfo.lastSubmission.teacherTests?.toStr()}" title="Teacher tests"></span>
-                <span th:if="${submissionInfo.lastSubmission.hiddenTests != null}" title="Hidden tests">
-                    (<small th:text="${submissionInfo.lastSubmission.hiddenTests?.toStr()}"></small>)
-                </span>
-                <span th:if="${submissionInfo.lastSubmission.coverage != null}" title="Coverage of student tests">
-                    (<small th:text="${submissionInfo.lastSubmission.coverage}"></small>%)
-                </span>
+            <td class="text-nowrap text-right" th:if="${submissionInfo.lastSubmission.coverage != null}">
+                <span th:text="${submissionInfo.lastSubmission.coverage +'%'}"></span>
             </td>
 
             <td th:text="${submissionInfo.lastSubmission.ellapsed} ? ${#numbers.formatDecimal(submissionInfo.lastSubmission.ellapsed, 0, 'DEFAULT', 2, 'DEFAULT')}"></td>

@@ -114,21 +114,29 @@ class BuildWorker(
                         submissionReportRepository.deleteBySubmissionIdAndReportKey(submission.id, Indicator.STUDENT_UNIT_TESTS.code)
                         submissionReportRepository.save(SubmissionReport(submissionId = submission.id,
                                     reportKey = Indicator.STUDENT_UNIT_TESTS.code,
-                                    reportValue = indicator))
+                                    reportValue = indicator,
+                                    reportProgress = junitSummary?.progress,
+                                    reportGoal = junitSummary?.numTests))
                     }
 
                     if (buildReport.hasJUnitErrors(TestType.TEACHER) != null) {
+                        val junitSummary = buildReport.junitSummaryAsObject(TestType.TEACHER)
                         submissionReportRepository.deleteBySubmissionIdAndReportKey(submission.id, Indicator.TEACHER_UNIT_TESTS.code)
                         submissionReportRepository.save(SubmissionReport(submissionId = submission.id,
                                 reportKey = Indicator.TEACHER_UNIT_TESTS.code,
-                                reportValue = if (buildReport.hasJUnitErrors(TestType.TEACHER) == true) "NOK" else "OK"))
+                                reportValue = if (buildReport.hasJUnitErrors(TestType.TEACHER) == true) "NOK" else "OK",
+                                reportProgress = junitSummary?.progress,
+                                reportGoal = junitSummary?.numTests))
                     }
 
                     if (buildReport.hasJUnitErrors(TestType.HIDDEN) != null) {
+                        val junitSummary = buildReport.junitSummaryAsObject(TestType.HIDDEN)
                         submissionReportRepository.deleteBySubmissionIdAndReportKey(submission.id, Indicator.HIDDEN_UNIT_TESTS.code)
                         submissionReportRepository.save(SubmissionReport(submissionId = submission.id,
                                 reportKey = Indicator.HIDDEN_UNIT_TESTS.code,
-                                reportValue = if (buildReport.hasJUnitErrors(TestType.HIDDEN) == true) "NOK" else "OK"))
+                                reportValue = if (buildReport.hasJUnitErrors(TestType.HIDDEN) == true) "NOK" else "OK",
+                                reportProgress = junitSummary?.progress,
+                                reportGoal = junitSummary?.numTests))
                     }
                 }
             }

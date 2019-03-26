@@ -26,7 +26,12 @@ data class JUnitSummary(
         val ellapsed: Float
 ) {
 
+    val progress: Int
+        get() {
+            return numTests - (numErrors + numFailures)
+        }
+
     fun toStr(): String {
-        return "${numTests - (numFailures + numErrors)}/${numTests}"
+        return "${progress}/${numTests}"
     }
 }

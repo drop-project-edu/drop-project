@@ -32,11 +32,7 @@ enum class Indicator(val code: String, val description: String) {
     HIDDEN_UNIT_TESTS("HT", "Teacher Hidden Unit Tests");
 
     companion object {
-        fun getIndicator(code: String?) : Indicator? {
-
-            if (code == null) {
-                return null
-            }
+        fun getIndicator(code: String) : Indicator {
 
             for (indicator in Indicator.values()) {
                 if (code.equals(indicator.code)) {
@@ -55,15 +51,41 @@ data class SubmissionReport(
         @Id @GeneratedValue
         val id: Long = 0,
         val submissionId: Long = 0,  // FK for Submission.id
-        var reportKey: String? = null,  // Indicator::code
-        val reportValue: String? = null
+        val reportKey: String,  // Indicator::code
+        val reportValue: String,  // TODO: Change this to enum (right now you have "OK", "NOK" and "Not Enough Tests")
+        val reportProgress: Int? = null,
+        val reportGoal: Int? = null
 ) {
 
-    fun getReportKey(): Indicator? {
-        return Indicator.getIndicator(reportKey)
+    val indicator: Indicator
+        get() {
+            return Indicator.getIndicator(reportKey)
+        }
+
+    fun progressSummary(isTeacher: Boolean): String? {
+
+        if (!isTeacher && indicator == Indicator.HIDDEN_UNIT_TESTS) {
+            return null
+        }
+
+        return if (reportProgress != null) {
+                if (reportGoal != null) {
+                    "$reportProgress / $reportGoal"
+                } else {
+                    reportProgress.toString()
+                }
+            } else {
+                null
+            }
     }
 
-    fun setReportKey(indicator: Indicator) {
-        reportKey = indicator.code
-    }
+    val cssLabel: String
+        get() {
+            return when (reportValue) {
+                "OK" -> "label-success"
+                "NOK" -> "label-danger"
+                "Not Enough Tests" -> "label-warning"
+                else -> ""
+            }
+        }
 }

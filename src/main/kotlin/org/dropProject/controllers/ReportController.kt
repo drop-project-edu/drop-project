@@ -99,6 +99,10 @@ class ReportController(
 
         val submissionInfoList = submissionService.getSubmissionsList(assignment)
 
+        if (submissionInfoList.any { it.lastSubmission.coverage != null }) {
+            model["hasCoverage"] = true
+        }
+
         model["submissions"] = submissionInfoList
         model["countMarkedAsFinal"] = submissionInfoList.asSequence().filter { it.lastSubmission.markedAsFinal }.count()
         model["isAdmin"] = request.isUserInRole("DROP_PROJECT_ADMIN")
