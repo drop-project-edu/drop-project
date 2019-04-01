@@ -141,7 +141,7 @@ class AssignmentController(
                     minStudentTests = assignmentForm.minStudentTests, cooloffPeriod = assignmentForm.cooloffPeriod,
                     maxMemoryMb = assignmentForm.maxMemoryMb, submissionMethod = assignmentForm.submissionMethod!!,
                     gitRepositoryUrl = assignmentForm.gitRepositoryUrl!!, ownerUserId = principal.name,
-                    gitRepositoryFolder = assignmentForm.assignmentId!!)
+                    gitRepositoryFolder = assignmentForm.assignmentId!!, showLeaderBoard = assignmentForm.showLeaderBoard)
             assignmentRepository.save(newAssignment)
 
             assignment = newAssignment
@@ -175,6 +175,7 @@ class AssignmentController(
             existingAssignment.minStudentTests = assignmentForm.minStudentTests
             existingAssignment.cooloffPeriod = assignmentForm.cooloffPeriod
             existingAssignment.maxMemoryMb = assignmentForm.maxMemoryMb
+            existingAssignment.showLeaderBoard = assignmentForm.showLeaderBoard
             assignmentRepository.save(existingAssignment)
 
             assignment = existingAssignment

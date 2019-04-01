@@ -52,6 +52,7 @@ data class Assignment(
         var minStudentTests: Int? = null,
         var cooloffPeriod: Int? = null, // minutes
         var maxMemoryMb: Int? = null,
+        var showLeaderBoard: Boolean = false,
 
         val gitRepositoryUrl: String,
         @Column(columnDefinition = "TEXT")

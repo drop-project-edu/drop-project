@@ -53,6 +53,8 @@ data class AssignmentForm(
         @field:Min(value=32, message="Error: Max memory must be >= 32")
         var maxMemoryMb: Int? = null,
 
+        var showLeaderBoard: Boolean = false,
+
         var assignees: String? = null,
 
         var editMode: Boolean = false,

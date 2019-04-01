@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="layout/layout :: head (pageTitle='Drop Project - Leaderboard')">
+</head>
+
+<body>
+
+<div th:replace="layout/layout :: header"></div>
+
+<!--/*@thymesVar id="submissions" type="java.util.ArrayList<org.dropProject.dao.Submission>"*/-->
+<div class="container" style="max-width: 900px; margin-bottom: 65px">
+
+    <h1 class="page-header">Leaderboard <small th:text="${assignmentId}"></small></h1>
+    <h6>
+        <span th:text="${submissions.size()}"></span> groups pass at least one test
+    </h6>
+
+    <p>Best submissions ordered by the number of teacher tests passed and ellapsed time</p>
+
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Group</th>
+            <th>Last Submission Date</th>
+            <th class="text-center">Indicators</th>
+            <th class="text-center" th:if="${hasCoverage}"><span class="glyphicon glyphicon-signal" aria-hidden="true" title="Coverage of student tests"></span></th>
+            <th class="text-center"><span class="glyphicon glyphicon-time" aria-hidden="true" title="Time spent running tests"></span></th>
+        </tr>
+        </thead>
+        <tbody>
+
+        <tr th:each="submission : ${submissions}">
+            <td th:text="${submission.group.id}"></td>
+            <td th:text="${#dates.format(submission.submissionDate, 'dd/MMM HH:mm:ss')}"></td>
+            <td class="text-nowrap">
+                <span th:each="report : ${submission.reportElements}">
+                    <span th:if="${report.progressSummary(isTeacher) == null}">
+                        <img src="../img/if_sign-check_299110.png" th:if="${report.reportValue == 'OK'}" th:alt="${report.indicator.description}" th:title="${report.indicator.description}" width="16" height="16" />
+                        <img src="../img/if_sign-error_299045.png" th:if="${report.reportValue == 'NOK'}" th:alt="${report.indicator.description}" th:title="${report.indicator.description}" width="16" height="16" />
+                        <img src="../img/if_sign-question-mark.png" th:if="${report.reportValue == 'Not Enough Tests'}" th:alt="${report.indicator.description}" th:title="${report.indicator.description}" width="16" height="16" />
+                    </span>
+                    <span class="label" th:if="${report.progressSummary(isTeacher) != null}"
+                      th:classappend="${report.cssLabel}"
+                      th:title="${report.indicator.description}"
+                      th:text="${report.progressSummary(true)}">14/14</span>
+                </span>
+            </td>
+
+            <td class="text-nowrap text-right" th:if="${submission.coverage != null}">
+                <span th:text="${submission.coverage +'%'}"></span>
+            </td>
+
+            <td th:text="${submission.ellapsed} ? ${#numbers.formatDecimal(submission.ellapsed, 0, 'DEFAULT', 2, 'DEFAULT')}"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div th:replace="layout/layout :: footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-confirmation2@2.4.2/bootstrap-confirmation.min.js"></script>
+<script>
+    $('[data-toggle=confirmation]').confirmation({
+        rootSelector: '[data-toggle=confirmation]'
+        // other options
+    });
+</script>
+
+</body>
+</html>

@@ -44,6 +44,7 @@ import org.dropProject.repository.*
 import org.dropProject.services.*
 import org.dropProject.storage.StorageService
 import org.dropProject.storage.unzip
+import org.springframework.security.access.AccessDeniedException
 import java.io.File
 import java.io.FileWriter
 import java.math.RoundingMode
@@ -562,6 +563,32 @@ class ReportController(
         headers.contentType = MediaType("application", "csv")
         headers.setContentDispositionFormData("attachment", "${assignmentId}_final_results.csv");
         return ResponseEntity(resultCSV, headers, HttpStatus.OK);
+    }
+
+    @RequestMapping(value = ["/leaderboard/{assignmentId}"], method = [(RequestMethod.GET)])
+    fun getLeaderboard(@PathVariable assignmentId: String, model: ModelMap,
+                  principal: Principal, request: HttpServletRequest): String {
+
+        val assignment = assignmentRepository.findOne(assignmentId)
+        if (!assignment.showLeaderBoard) {
+            throw AccessDeniedException("Leaderboard for this assignment is not turned on")
+        }
+
+        val submissionInfoList = submissionService.getSubmissionsList(assignment)
+
+        val sortedList =
+            submissionInfoList
+                .map { it.lastSubmission }
+                .filter { it.getStatus() == SubmissionStatus.VALIDATED || it.getStatus() == SubmissionStatus.VALIDATED_REBUILT }
+                .filter { it.teacherTests?.progress ?: 0 > 0 }
+                // compare by progress descending and ellapsed ascending
+                .sortedWith( compareBy( { -it.teacherTests!!.progress }, { it.ellapsed } ))
+
+        model["assignmentId"] = assignmentId
+        model["submissions"] = sortedList
+        model["isTeacher"] = request.isUserInRole("TEACHER")
+
+        return "leaderboard"
     }
 
     @RequestMapping(value = ["/migrate/{idx1}/{idx2}"], method = [(RequestMethod.GET)])

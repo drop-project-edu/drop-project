@@ -345,6 +345,73 @@ class ReportControllerTests {
 
     }
 
+    @Test
+    @DirtiesContext
+    fun leaderboardNotAccessible() {
+        this.mvc.perform(get("/leaderboard/testJavaProj")
+                .with(user(TEACHER_1)))
+                .andExpect(status().isForbidden())
+    }
+
+    @Test
+    @DirtiesContext
+    fun leaderboardOK() {
+
+        val assignment = assignmentRepository.getOne(defaultAssignmentId)
+        assignment.showLeaderBoard = true
+        assignmentRepository.save(assignment)
+
+        // we start with two authors
+        val projectRoot = resourceLoader.getResource("file:src/test/sampleProjects/projectOK").file
+        val path = File(projectRoot, "AUTHORS.txt").toPath()
+        val lines = Files.readAllLines(path)
+        assertEquals("student1;Student 1", lines[0])
+        assertEquals("student2;Student 2", lines[1])
+
+        val student3 = User("student3", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
+
+        try {
+            // upload five times, each time with a different author
+            testsHelper.uploadProject(this.mvc,"projectOK", defaultAssignmentId, STUDENT_1)
+            testsHelper.uploadProject(this.mvc,"projectOK", defaultAssignmentId, STUDENT_2,
+                    authors = listOf(STUDENT_2.username to "Student 2"))
+            testsHelper.uploadProject(this.mvc,"projectJUnitErrors", defaultAssignmentId, student3,
+                    authors = listOf(student3.username to "Student 3"))
+            testsHelper.uploadProject(this.mvc,"projectOK", defaultAssignmentId, STUDENT_2,
+                    authors = listOf(STUDENT_2.username to "Student 2"))
+            testsHelper.uploadProject(this.mvc,"projectOK", defaultAssignmentId, STUDENT_1,
+                    authors = listOf(STUDENT_1.username to "Student 3"))
+
+        } finally {
+            // restore original AUTHORS.txt
+            val writer = Files.newBufferedWriter(path)
+            writer.write(lines[0])
+            writer.newLine()
+            writer.write(lines[1])
+            writer.close()
+        }
+
+        val reportResult = this.mvc.perform(get("/leaderboard/testJavaProj")
+                .with(user(TEACHER_1)))
+                .andExpect(status().isOk())
+                .andReturn()
+
+        @Suppress("UNCHECKED_CAST")
+        val report = reportResult.modelAndView.modelMap["submissions"] as List<Submission>
+
+        assertEquals("report should have 4 lines", 4, report.size)
+        assertEquals("student3", report[3].group.authorsStr())  // this should be the last one because it has junit errors
+
+        // the others should pass all tests and have ascending order of ellapsed time
+        val others = report.dropLast(1)
+        assertTrue("should pass all tests", others.all { it.teacherTests?.progress == 2 })
+
+        val ellapsedList = others.map { it.ellapsed }
+        val ellapsedSortedList = ellapsedList.sortedBy { it }
+        assertArrayEquals(ellapsedSortedList.toTypedArray(), ellapsedList.toTypedArray())
+
+    }
+
 }
 
 
