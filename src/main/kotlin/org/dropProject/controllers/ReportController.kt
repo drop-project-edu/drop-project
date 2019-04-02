@@ -36,6 +36,7 @@ import org.thymeleaf.TemplateEngine
 import org.thymeleaf.context.Context
 import org.dropProject.MAVEN_MAX_EXECUTION_TIME
 import org.dropProject.dao.BuildReport
+import org.dropProject.dao.Indicator
 import org.dropProject.dao.SubmissionStatus
 import org.dropProject.data.AuthorDetails
 import org.dropProject.data.TestType
@@ -579,10 +580,14 @@ class ReportController(
         val sortedList =
             submissionInfoList
                 .map { it.lastSubmission }
-                .filter { it.getStatus() == SubmissionStatus.VALIDATED || it.getStatus() == SubmissionStatus.VALIDATED_REBUILT }
+                .filter { it.getStatus() in listOf(SubmissionStatus.VALIDATED, SubmissionStatus.VALIDATED_REBUILT) }
                 .filter { it.teacherTests?.progress ?: 0 > 0 }
                 // compare by progress descending and ellapsed ascending
                 .sortedWith( compareBy( { -it.teacherTests!!.progress }, { it.ellapsed } ))
+                .map {
+                    it.reportElements = it.reportElements?.filter { it.indicator == Indicator.TEACHER_UNIT_TESTS }
+                    it  // just return itself
+                }
 
         model["assignmentId"] = assignmentId
         model["submissions"] = sortedList
