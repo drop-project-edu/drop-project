@@ -16,7 +16,7 @@
         <span th:text="${submissions.size()}"></span> groups pass at least one test
     </h6>
 
-    <p>Best submissions ordered by the number of teacher tests passed and ellapsed time</p>
+    <div class="alert alert-info">Best submissions ordered by the number of teacher tests passed and ellapsed time</div>
 
     <table class="table">
         <thead>
@@ -46,7 +46,7 @@
                     <span class="label" th:if="${report.progressSummary(isTeacher) != null}"
                       th:classappend="${report.cssLabel}"
                       th:title="${report.indicator.description}"
-                      th:text="${report.progressSummary(true)}">14/14</span>
+                      th:text="${report.progressSummary(isTeacher)}">14/14</span>
                 </span>
             </td>
 
