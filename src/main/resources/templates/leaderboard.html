@@ -31,7 +31,10 @@
         <tbody>
 
         <tr th:each="submission : ${submissions}">
-            <td th:text="${submission.group.id}"></td>
+
+            <td th:if="${!isTeacher}" th:text="${submission.group.id}"></td>
+            <td th:if="${isTeacher}" th:text="${submission.group.id}" th:title="${submission.group.authorsNameStr()}"></td>
+
             <td th:text="${#dates.format(submission.submissionDate, 'dd/MMM HH:mm:ss')}"></td>
             <td class="text-nowrap">
                 <span th:each="report : ${submission.reportElements}">
@@ -47,8 +50,8 @@
                 </span>
             </td>
 
-            <td class="text-nowrap text-right" th:if="${submission.coverage != null}">
-                <span th:text="${submission.coverage +'%'}"></span>
+            <td class="text-nowrap text-right" th:if="${hasCoverage}">
+                <span th:if="${submission.coverage != null}" th:text="${submission.coverage +'%'}"></span>
             </td>
 
             <td th:text="${submission.ellapsed} ? ${#numbers.formatDecimal(submission.ellapsed, 0, 'DEFAULT', 2, 'DEFAULT')}"></td>
