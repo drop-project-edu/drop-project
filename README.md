@@ -41,6 +41,8 @@ into /src/main/java), mixing the student files with the teacher unit tests and a
 Since checking a project may take some time, it is done asynchronously - the student submits the file and must come 
 back later to check the report.
 
+![How DP works](docs/how_dp_works.png)
+
 ## Documentation
 
 https://github.com/drop-project-edu/drop-project/wiki/Documentation
