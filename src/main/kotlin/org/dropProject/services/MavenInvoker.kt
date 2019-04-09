@@ -19,6 +19,9 @@
  */
 package org.dropProject.services
 
+import org.apache.maven.model.Dependency
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader
+import org.apache.maven.model.io.xpp3.MavenXpp3Writer
 import org.apache.maven.shared.invoker.DefaultInvocationRequest
 import org.apache.maven.shared.invoker.DefaultInvoker
 import org.codehaus.plexus.util.cli.CommandLineTimeOutException
@@ -26,10 +29,11 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.dropProject.data.MavenResult
 import java.io.File
+import java.io.FileReader
+import java.io.StringWriter
 import java.security.Principal
 import java.util.*
 import java.util.logging.Logger
-
 
 @Service
 class MavenInvoker {
@@ -41,6 +45,12 @@ class MavenInvoker {
 
     @Value("\${dropProject.maven.repository}")
     val mavenRepository : String = ""
+
+    var securityManagerEnabled = true
+
+    fun disableSecurity() {
+        securityManagerEnabled = false
+    }
 
     fun run(mavenizedProjectFolder: File, principalName: String?, maxMemoryMb: Int?) : MavenResult {
 
@@ -66,15 +76,15 @@ class MavenInvoker {
             dpArgLine += " -DdropProject.currentUserId=${principalName}"
         }
 
+        if (securityManagerEnabled) {
+            dpArgLine += " -Djava.security.manager=org.dropProject.security.SandboxSecurityManager"
+        }
+
         // TODO: The line below doesn't work form multiple properties. so, for now, we'll replace the property
         //  directly the pom.file
         // request.mavenOpts = "-Ddp.argLine=\"${dpArgLine.trim()}\""
 
-        val originalPomFileContent = File(mavenizedProjectFolder, "pom.xml").readText()
-        val replacedPomFileContent = originalPomFileContent.replace("\${dp.argLine}", dpArgLine.trim())
-
-        val replacedPomFile = File(mavenizedProjectFolder, "pom_updated.xml")
-        replacedPomFile.writeText(replacedPomFileContent)
+        val replacedPomFile = transformPomFile(mavenizedProjectFolder, dpArgLine)
 
         request.pomFile = replacedPomFile
 
@@ -118,5 +128,29 @@ class MavenInvoker {
         }
 
         return MavenResult(resultCode = result.exitCode, outputLines = outputLines)
+    }
+
+    private fun transformPomFile(mavenizedProjectFolder: File, dpArgLine: String): File {
+        val reader = MavenXpp3Reader()
+        val model = reader.read(FileReader(File(mavenizedProjectFolder, "pom.xml")))
+
+        if (securityManagerEnabled) {
+            val securityManagerDependency = Dependency()
+            securityManagerDependency.artifactId = "drop-project-security-manager"
+            securityManagerDependency.groupId = "pt.ulusofona.deisi"
+            securityManagerDependency.version = "0.1.1"
+            securityManagerDependency.scope = "test"
+            model.dependencies.add(securityManagerDependency)
+        }
+
+        val stringWriter = StringWriter()
+        MavenXpp3Writer().write(stringWriter, model)
+
+        var replacedPomFileContent = stringWriter.buffer.toString()
+        replacedPomFileContent = replacedPomFileContent.replace("\${dp.argLine}", dpArgLine.trim())
+
+        val replacedPomFile = File(mavenizedProjectFolder, "pom_updated.xml")
+        replacedPomFile.writeText(replacedPomFileContent)
+        return replacedPomFile
     }
 }

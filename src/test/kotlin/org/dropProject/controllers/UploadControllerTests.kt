@@ -344,7 +344,6 @@ class UploadControllerTests {
 
     }
 
-    @Ignore("Still not working")
     @Test
     @DirtiesContext
     fun uploadProjectHackingAttempt() {
@@ -357,11 +356,12 @@ class UploadControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val summary = reportResult.modelAndView.modelMap["summary"] as List<SubmissionReport>
-        assertEquals("junit should be NOK (key)", Indicator.TEACHER_UNIT_TESTS, summary[4].indicator)
-        assertEquals("junit should be NOK (value)", "NOK", summary[4].reportValue)
+        assertEquals("junit should be NOK (key)", Indicator.TEACHER_UNIT_TESTS, summary[3].indicator)
+        assertEquals("junit should be NOK (value)", "NOK", summary[3].reportValue)
 
         val buildResult = reportResult.modelAndView.modelMap["buildReport"] as BuildReport
-        assert(buildResult.mavenOutput().contains("AccessControlException"))
+        assertEquals(2, buildResult.junitSummaryAsObject(TestType.TEACHER)?.numErrors)
+        assertTrue(buildResult.jUnitErrors(TestType.TEACHER)?.contains("SecurityException") == true)
     }
 
 
