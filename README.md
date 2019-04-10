@@ -43,6 +43,19 @@ back later to check the report.
 
 ![How DP works](docs/how_dp_works.png)
 
+## Quick start
+
+After cloning the repository, change src/main/resources/drop-project.properties:
+
+    dropProject.maven.home=<path_to_maven_home>
+    dropProject.maven.repository=<path_to_maven_repository>
+    
+And run the embedded jetty runner:
+
+    mvn jetty:run
+    
+The application should now be accessible on http://localhost:8080
+
 ## Documentation
 
 https://github.com/drop-project-edu/drop-project/wiki/Documentation
