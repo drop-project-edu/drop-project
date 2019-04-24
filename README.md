@@ -1,4 +1,4 @@
-<img width="77px" height="77px" align="center" src="docs/dp_logo.png"/>
+<img width="77px" height="77px" align="right" src="docs/dp_logo.png"/>
 
 # Drop Project - Continuous Auto-Grader
 
