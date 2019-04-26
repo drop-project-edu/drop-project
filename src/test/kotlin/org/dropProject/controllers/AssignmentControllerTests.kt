@@ -28,8 +28,10 @@ import org.dropProject.forms.AssignmentForm
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.AssigneeRepository
 import org.dropProject.repository.AssignmentRepository
+import org.dropProject.repository.SubmissionRepository
 import org.hamcrest.CoreMatchers.containsString
 import org.hamcrest.collection.IsCollectionWithSize.hasSize
+import org.json.JSONObject
 import org.junit.Assert.*
 import org.junit.FixMethodOrder
 import org.junit.Ignore
@@ -44,6 +46,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.User
 import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
@@ -72,6 +75,9 @@ class AssignmentControllerTests {
 
     @Autowired
     lateinit var assigneeRepository: AssigneeRepository
+
+    @Autowired
+    lateinit var submissionRepository: SubmissionRepository
 
     @Autowired
     lateinit var testsHelper: TestsHelper
@@ -452,6 +458,128 @@ class AssignmentControllerTests {
                 .andExpect(content().string(containsString(assignment.id)))
 
 
+    }
+
+    @Test
+    @DirtiesContext
+    fun test_11_deleteAssignment() {
+
+        val STUDENT_1 = User("student1", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
+        val TEACHER_1 = User("teacher1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
+
+        // create initial assignment
+        val assignment = Assignment(id = "testJavaProj", name = "Test Project (for automatic tests)",
+                packageName = "org.testProj", ownerUserId = "teacher1",
+                submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
+                gitRepositoryFolder = "testJavaProj", public = false)
+        assignmentRepository.save(assignment)
+        assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student1"))
+
+
+        // make a submission
+        val submissionId = testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", "testJavaProj", STUDENT_1).toLong()
+
+        // try to delete the assignment but DP will issue an error since it has submissions
+        this.mvc.perform(post("/assignment/delete/testJavaProj")
+                .with(user(TEACHER_1)))
+                .andExpect(status().isFound)
+                .andExpect(header().string("Location", "/assignment/my"))
+                .andExpect(flash().attribute<String>("error","Assignment can't be deleted because it has submissions"))
+
+        // remove the submission
+        submissionRepository.delete(submissionId)
+
+        // try to delete the assignment again, this time with success
+        this.mvc.perform(post("/assignment/delete/testJavaProj")
+                .with(user(TEACHER_1)))
+                .andExpect(status().isFound)
+                .andExpect(header().string("Location", "/assignment/my"))
+                .andExpect(flash().attribute<String>("message","Assignment was successfully deleted"))
+
+    }
+
+    @Test
+    @DirtiesContext
+    fun test_12_listArchivedAssignments() {
+
+        val user = User("p1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
+
+        try {// list archived assignments should return empty
+            this.mvc.perform(get("/assignment/archived")
+                    .with(SecurityMockMvcRequestPostProcessors.user(user)))
+                    .andExpect(status().isOk())
+                    .andExpect(model().hasNoErrors<String>())
+                    .andExpect(model().attribute("assignments", emptyList<Assignment>()))
+
+            // create assignment
+            testsHelper.createAndSetupAssignment(mvc, assignmentRepository, "dummyAssignment4", "Dummy Assignment",
+                    "org.dummy",
+                    "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git",
+                    teacherId = "p1", activateRightAfterCloning = false)
+
+            // list archived assignments should still return empty
+            this.mvc.perform(get("/assignment/archived")
+                    .with(SecurityMockMvcRequestPostProcessors.user(user)))
+                    .andExpect(status().isOk())
+                    .andExpect(model().hasNoErrors<String>())
+                    .andExpect(model().attribute("assignments", emptyList<Assignment>()))
+
+            // archive assignment
+            this.mvc.perform(post("/assignment/archive/dummyAssignment4")
+                    .with(SecurityMockMvcRequestPostProcessors.user(user)))
+                    .andExpect(status().isFound)
+                    .andExpect(header().string("Location", "/assignment/my"))
+                    .andExpect(flash().attribute<String>("message","Assignment was archived. You can now find it in the Archived assignments page"))
+
+            // list archived assignments should now return 1 assignment
+            val mvcResult = this.mvc.perform(get("/assignment/archived")
+                    .with(SecurityMockMvcRequestPostProcessors.user(user)))
+                    .andExpect(status().isOk())
+                    .andExpect(model().hasNoErrors<String>())
+                    .andExpect(model().attribute("assignments", hasSize<Assignment>(1)))
+                    .andReturn()
+
+            @Suppress("UNCHECKED_CAST")
+            val assignments = mvcResult.modelAndView.modelMap["assignments"] as List<Assignment>
+            val assignment = assignments[0]
+
+            assertEquals("dummyAssignment4", assignment.id)
+
+
+        } finally {
+            // cleanup assignment files
+            if (File(assignmentsRootLocation,"dummyAssignment4").exists()) {
+                File(assignmentsRootLocation,"dummyAssignment4").deleteRecursively()
+            }
+        }
+    }
+
+    // refreshAssignmentGitRepository
+    @Test
+    @WithMockUser("teacher1",roles=["TEACHER"])
+    @DirtiesContext
+    fun test_13_refreshAssignmentGitRepository() {
+
+        try {
+            testsHelper.createAndSetupAssignment(mvc, assignmentRepository, "dummyAssignment1", "Dummy Assignment",
+                    "org.dummy",
+                    "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git"
+            )
+
+            val contentString = this.mvc.perform(post("/assignment/refresh-git/dummyAssignment1"))
+                    .andExpect(status().isOk)
+                    .andReturn().response.contentAsString
+
+            val contentJSON = JSONObject(contentString)
+            assertEquals(true, contentJSON.getBoolean("success"))
+
+        } finally {
+
+            // cleanup assignment files
+            if (File(assignmentsRootLocation,"dummyAssignment1").exists()) {
+                File(assignmentsRootLocation,"dummyAssignment1").deleteRecursively()
+            }
+        }
     }
 
 
