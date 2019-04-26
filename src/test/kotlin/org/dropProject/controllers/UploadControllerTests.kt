@@ -1054,6 +1054,26 @@ class UploadControllerTests {
 
     }
 
+    @Test
+    @DirtiesContext
+    fun rebuild() {
+        val submissionId = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
+
+        this.mvc.perform(get("/buildReport/$submissionId"))
+                .andExpect(status().isOk)
+
+        val submission = submissionRepository.getOne(submissionId.toLong())
+        assertEquals(SubmissionStatus.VALIDATED, submission.getStatus())
+
+        this.mvc.perform(post("/rebuild/$submissionId")
+                .with(user(TEACHER_1)))
+                .andExpect(status().isFound)
+                .andExpect(header().string("Location", "/buildReport/$submissionId"))
+
+        val updatedSubmission = submissionRepository.getOne(submissionId.toLong())
+        assertEquals(SubmissionStatus.VALIDATED, updatedSubmission.getStatus())
+    }
+
 
 }
 
