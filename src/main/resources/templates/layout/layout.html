@@ -65,11 +65,12 @@
     </nav>
     <div class="navbar navbar-default navbar-fixed-bottom" th:fragment="footer">
         <div class="container">
-            <p class="navbar-text pull-left">Feedback: <a href="mailto:pedro.alves@ulusofona.pt">pedro.alves@ulusofona.pt</a></p>
+            <p class="navbar-text pull-left">Feedback: <a th:href="'mailto:' + ${adminEmail}" th:text="${adminEmail}">pedro.alves@ulusofona.pt</a></p>
             <p class="navbar-text" th:if="${embeddedDB}" style="color:red"><strong>WARNING: Using in-memory database. All data will be lost on restart!!!</strong></p>
             <p class="navbar-text pull-right">
-                <!--(<small th:text="${buildInfo.version + ' - ' + #dates.format(buildInfo.time, 'dd-MM-yyyy')}"></small>) -->
-                &copy; DEISI / ULHT
+                Powered by Drop Project
+                (<small th:text="${buildInfo.version}"></small>)
+                <!-- #dates.format(buildInfo.time, 'dd-MM-yyyy') -->
             </p>
         </div>
 

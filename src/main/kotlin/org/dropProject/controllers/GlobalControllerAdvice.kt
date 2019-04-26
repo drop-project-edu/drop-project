@@ -21,6 +21,7 @@ package org.dropProject.controllers
 
 import org.apache.tomcat.jdbc.pool.DataSource
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.info.BuildProperties
 import org.springframework.security.provisioning.InMemoryUserDetailsManager
 import org.springframework.security.provisioning.UserDetailsManager
@@ -30,6 +31,9 @@ import java.security.Principal
 
 @ControllerAdvice
 class GlobalControllerAdvice {
+
+    @Value("\${dropProject.admin.email}")
+    val adminEmailProperty: String = ""
 
     @Autowired
     lateinit var buildProperties: BuildProperties
@@ -52,6 +56,11 @@ class GlobalControllerAdvice {
     @ModelAttribute("buildInfo")
     fun getBuildInfo() : BuildProperties {
         return buildProperties
+    }
+
+    @ModelAttribute("adminEmail")
+    fun getAdminEmail() : String {
+        return adminEmailProperty
     }
 
     @ModelAttribute("embeddedDB")
