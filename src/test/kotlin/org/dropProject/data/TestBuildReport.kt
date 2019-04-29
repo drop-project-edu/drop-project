@@ -31,9 +31,11 @@ import org.dropProject.dao.Assignment
 import org.dropProject.dao.Language
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.services.BuildReportBuilder
+import org.springframework.test.context.ActiveProfiles
 
 
 @RunWith(SpringRunner::class)
+@ActiveProfiles("test")
 class TestBuildReport {
 
     @Autowired
