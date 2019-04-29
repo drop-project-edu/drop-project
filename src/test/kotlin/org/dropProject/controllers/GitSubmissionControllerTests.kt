@@ -91,10 +91,12 @@ class GitSubmissionControllerTests {
     @Before
     fun initAssignment() {
 
-        // change assignment's submission method
-        val assignment = assignmentRepository.getOne("sampleJavaProject")
-        assignment.submissionMethod = SubmissionMethod.GIT
-        assignmentRepository.save(assignment)
+        // create initial assignment
+        val assignment01 = Assignment(id = "sampleJavaProject", name = "Test Project (for automatic tests)",
+                packageName = "org.dropProject.samples.sampleJavaAssignment", ownerUserId = "teacher1",
+                submissionMethod = SubmissionMethod.GIT, active = true, gitRepositoryUrl = "git://dummy",
+                gitRepositoryFolder = "sampleJavaProject")
+        assignmentRepository.save(assignment01)
     }
 
     @After

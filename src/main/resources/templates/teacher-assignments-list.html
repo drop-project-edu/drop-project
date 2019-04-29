@@ -58,12 +58,15 @@
                 </a>
                 <form th:if="${!archived}" th:action="@{'/assignment/archive/' + ${assignment.id}}" method="post" style="display: inline;">
                     <button class="glyphicon glyphicon-inbox" aria-hidden="true" type="submit"
-                            style="border: 0;" title="Archive assignment"></button>
+                            style="border: 0;" data-toggle="confirmation" data-title="Archive assignment?" title="Archive assignment"></button>
                 </form>
                 <form th:action="@{'/assignment/delete/' + ${assignment.id}}" method="post" style="display: inline;">
                     <button class="glyphicon glyphicon-trash" aria-hidden="true" type="submit"
                             style="border: 0;" data-toggle="confirmation" data-title="Delete assignment?" title="Delete assignment"></button>
                 </form>
+                <a th:href="@{'/leaderboard/' + ${assignment.id}}" th:if="${assignment.showLeaderBoard}">
+                    <img th:src="@{/img/trophy_16.png}" alt="Leaderboard" />
+                </a>
             </td>
         </tr>
         </tbody>

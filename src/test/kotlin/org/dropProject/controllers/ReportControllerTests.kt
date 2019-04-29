@@ -51,6 +51,7 @@ import org.dropProject.dao.Assignment
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.AssignmentRepository
 import org.dropProject.repository.GitSubmissionRepository
+import org.dropProject.repository.SubmissionRepository
 import org.dropProject.services.ZipService
 
 
@@ -80,6 +81,9 @@ class ReportControllerTests {
     lateinit var assignmentRepository: AssignmentRepository
 
     @Autowired
+    lateinit var submissionRepository: SubmissionRepository
+
+    @Autowired
     private lateinit var testsHelper: TestsHelper
 
     @Autowired
@@ -99,12 +103,18 @@ class ReportControllerTests {
         }
         folder.mkdirs()
 
-        // create initial assignment
+        // create initial assignments
         val assignment01 = Assignment(id = "testJavaProj", name = "Test Project (for automatic tests)",
                 packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
                 submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
                 gitRepositoryFolder = "testJavaProj")
         assignmentRepository.save(assignment01)
+
+        val assignment02 = Assignment(id = "sampleJavaProject", name = "Test Project (for automatic tests)",
+                packageName = "org.dropProject.samples.sampleJavaAssignment", ownerUserId = "teacher1",
+                submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummy",
+                gitRepositoryFolder = "sampleJavaProject")
+        assignmentRepository.save(assignment02)
     }
 
     @After
@@ -124,35 +134,7 @@ class ReportControllerTests {
     @DirtiesContext
     fun reportForMultipleSubmissions() {
 
-        // we start with two authors
-        val projectRoot = resourceLoader.getResource("file:src/test/sampleProjects/projectInvalidStructure1").file
-        val path = File(projectRoot, "AUTHORS.txt").toPath()
-        val lines = Files.readAllLines(path)
-        assertEquals("student1;Student 1", lines[0])
-        assertEquals("student2;Student 2", lines[1])
-
-        val student3 = User("student3", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
-
-        try {
-            // upload five times, each time with a different author
-            testsHelper.uploadProject(this.mvc,"projectInvalidStructure1", defaultAssignmentId, STUDENT_1)
-            testsHelper.uploadProject(this.mvc,"projectInvalidStructure1", defaultAssignmentId, STUDENT_2,
-                    authors = listOf(STUDENT_2.username to "Student 2"))
-            testsHelper.uploadProject(this.mvc,"projectInvalidStructure1", defaultAssignmentId, student3,
-                    authors = listOf(student3.username to "Student 3"))
-            testsHelper.uploadProject(this.mvc,"projectInvalidStructure1", defaultAssignmentId, STUDENT_2,
-                    authors = listOf(STUDENT_2.username to "Student 2"))
-            testsHelper.uploadProject(this.mvc,"projectInvalidStructure1", defaultAssignmentId, STUDENT_1,
-                    authors = listOf(STUDENT_1.username to "Student 3"))
-
-        } finally {
-            // restore original AUTHORS.txt
-            val writer = Files.newBufferedWriter(path)
-            writer.write(lines[0])
-            writer.newLine()
-            writer.write(lines[1])
-            writer.close()
-        }
+        makeSeveralSubmissions()
 
         val reportResult = this.mvc.perform(get("/report/testJavaProj")
                 .with(user(TEACHER_1)))
@@ -174,6 +156,8 @@ class ReportControllerTests {
 
 
     }
+
+
 
     @Test
     @DirtiesContext
@@ -410,6 +394,66 @@ class ReportControllerTests {
         val ellapsedSortedList = ellapsedList.sortedBy { it }
         assertArrayEquals(ellapsedSortedList.toTypedArray(), ellapsedList.toTypedArray())
 
+    }
+
+    @Test
+    @DirtiesContext
+    fun exportCSV() {
+
+        makeSeveralSubmissions()
+
+        // mark all as final, otherwise the export will be empty
+        val submissions = submissionRepository.findAll()
+        for (submission in submissions) {
+            if (submission.id != 4L) {  // this submission is a repeated submission from the same student
+                submission.markedAsFinal = true
+                submissionRepository.save(submission)
+            }
+        }
+
+        this.mvc.perform(get("/exportCSV/testJavaProj")
+                .with(user(TEACHER_1)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/csv"))
+                .andExpect(content().string(
+                        "1;student1;Student 1;NOK;;;;\n" +
+                        "1;student2;Student 2;NOK;;;;\n" +
+                        "2;student2;Student 2;NOK;;;;\n" +
+                        "3;student3;Student 3;NOK;;;;\n" +
+                        "4;student1;Student 3;NOK;;;;\n"))
+
+    }
+
+    private fun makeSeveralSubmissions() {
+        // we start with two authors
+        val projectRoot = resourceLoader.getResource("file:src/test/sampleProjects/projectInvalidStructure1").file
+        val path = File(projectRoot, "AUTHORS.txt").toPath()
+        val lines = Files.readAllLines(path)
+        assertEquals("student1;Student 1", lines[0])
+        assertEquals("student2;Student 2", lines[1])
+
+        val student3 = User("student3", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
+
+        try {
+            // upload five times, each time with a different author
+            testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", defaultAssignmentId, STUDENT_1)
+            testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", defaultAssignmentId, STUDENT_2,
+                    authors = listOf(STUDENT_2.username to "Student 2"))
+            testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", defaultAssignmentId, student3,
+                    authors = listOf(student3.username to "Student 3"))
+            testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", defaultAssignmentId, STUDENT_2,
+                    authors = listOf(STUDENT_2.username to "Student 2"))
+            testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", defaultAssignmentId, STUDENT_1,
+                    authors = listOf(STUDENT_1.username to "Student 3"))
+
+        } finally {
+            // restore original AUTHORS.txt
+            val writer = Files.newBufferedWriter(path)
+            writer.write(lines[0])
+            writer.newLine()
+            writer.write(lines[1])
+            writer.close()
+        }
     }
 
 }

@@ -20,27 +20,38 @@
 package org.dropProject.controllers
 
 
+import org.dropProject.dao.*
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.ApplicationListener
-import org.springframework.context.annotation.Profile
 import org.springframework.context.event.ContextRefreshedEvent
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
-import org.dropProject.dao.Assignee
-import org.dropProject.dao.Assignment
 import org.dropProject.forms.SubmissionMethod
-import org.dropProject.repository.AssigneeRepository
-import org.dropProject.repository.AssignmentRepository
+import org.dropProject.repository.*
 import org.dropProject.services.GitClient
+import org.springframework.context.annotation.Profile
+import org.springframework.core.io.ResourceLoader
 import java.io.File
+import java.sql.Date
+import java.sql.Timestamp
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.logging.Logger
 
 
 @Component
 @Transactional
+@Profile("!test")
 class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
-                                      val assigneeRepository: AssigneeRepository,
-                                      val gitClient: GitClient) : ApplicationListener<ContextRefreshedEvent> {
+                                 val assigneeRepository: AssigneeRepository,
+                                 val submissionRepository: SubmissionRepository,
+                                 val submissionReportRepository: SubmissionReportRepository,
+                                 val buildReportRepository: BuildReportRepository,
+                                 val jUnitReportRepository: JUnitReportRepository,
+                                 val authorRepository: AuthorRepository,
+                                 val projectGroupRepository: ProjectGroupRepository,
+                                 val gitClient: GitClient,
+                                 val resourceLoader: ResourceLoader) : ApplicationListener<ContextRefreshedEvent> {
 
     companion object {
         const val sampleJavaAssignmentPrivateKey = "-----BEGIN RSA PRIVATE KEY-----\n" +
@@ -115,6 +126,7 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
                     active = true)
 
             val gitRepository = assignment.gitRepositoryUrl
+            var connected = false
             try {
                 val directory = File(assignmentsRootLocation, assignment.id)
                 if (directory.exists()) {
@@ -128,10 +140,79 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
                 assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student1"))
                 assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student2"))
 
+                connected = true
+
             } catch (e: Exception) {
                 LOG.severe("Error cloning ${gitRepository} - ${e}")
             }
+
+            if (connected) {
+
+                val author = Author(name = "Student 1", userId = "student1")
+                authorRepository.save(author)
+
+                uploadStudentSubmission(author, "2019-01-01T10:34:00", "javaSubmissionError", "NOK", 1, 2)
+                uploadStudentSubmission(author, "2019-01-02T11:05:03", "javaSubmissionOk", "OK", 2, 2)
+
+                val author2 = Author(name = "Student 2", userId = "student2")
+                authorRepository.save(author2)
+                uploadStudentSubmission(author2, "2019-01-02T14:55:30", "javaSubmissionOk", "OK", 2, 2)
+            }
         }
+    }
+
+    private fun uploadStudentSubmission(author: Author, submissionDate: String, submissionName: String,
+                                        teacherTestsIndicator: String, teacherTestsProgress: Int,
+                                        teacherTestsGoal: Int) : Long {
+
+        val submission = Submission(submissionId = "1",
+                submissionDate = Timestamp.valueOf(LocalDateTime.parse(submissionDate)),
+                status = SubmissionStatus.VALIDATED.code,
+                statusDate = Timestamp.valueOf(LocalDateTime.parse(submissionDate)),
+                assignmentId = "sampleJavaProject",
+                submitterUserId = author.userId)
+
+        submissionRepository.save(submission)
+
+        val groups = projectGroupRepository.getGroupsForAuthor(author.userId)
+        lateinit var group : ProjectGroup
+        if (groups.isEmpty()) {
+            group = ProjectGroup()
+            group.authors.add(author)
+        } else {
+            group = groups[0]
+        }
+        group.submissions.add(submission)
+        projectGroupRepository.save(group)
+
+        author.group = group
+        submission.group = group
+
+        authorRepository.save(author)
+        submissionRepository.save(submission)
+
+        submissionReportRepository.save(SubmissionReport(submissionId = submission.id,
+                reportKey = Indicator.PROJECT_STRUCTURE.code, reportValue = "OK"))
+        submissionReportRepository.save(SubmissionReport(submissionId = submission.id,
+                reportKey = Indicator.COMPILATION.code, reportValue = "OK"))
+        submissionReportRepository.save(SubmissionReport(submissionId = submission.id,
+                reportKey = Indicator.CHECKSTYLE.code, reportValue = "OK"))
+        submissionReportRepository.save(SubmissionReport(submissionId = submission.id,
+                reportKey = Indicator.TEACHER_UNIT_TESTS.code, reportValue = teacherTestsIndicator,
+                reportProgress = teacherTestsProgress, reportGoal = teacherTestsGoal))
+
+        // this file must be coherent with the report
+        val buildReport = BuildReport(buildReport = resourceLoader.getResource("classpath:/initialData/${submissionName}MavenOutput.txt").file.readText())
+        buildReportRepository.save(buildReport)
+
+        submission.buildReportId = buildReport.id
+        submissionRepository.save(submission)
+
+        jUnitReportRepository.save(JUnitReport(submissionId = submission.id,
+                fileName = "TEST-org.dropProject.samples.sampleJavaAssignment.TestTeacherProject.xml",
+                xmlReport = resourceLoader.getResource("classpath:/initialData/${submissionName}JUnitXml.txt").file.readText()))
+
+        return submission.id
     }
 
 }
