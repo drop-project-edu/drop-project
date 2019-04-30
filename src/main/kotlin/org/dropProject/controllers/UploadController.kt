@@ -330,7 +330,7 @@ class UploadController(
                     reportKey = Indicator.PROJECT_STRUCTURE.code, reportValue = "OK"))
 
             val mavenizedProjectFolder = mavenize(projectFolder, submission, assignment, teacherRebuild)
-            LOG.info("[${authorsStr}] Mavenized OK")
+            LOG.info("[${authorsStr}] Mavenized to folder ${mavenizedProjectFolder}")
 
             if (asyncExecutor is ThreadPoolTaskScheduler) {
                 LOG.info("asyncExecutor.activeCount = ${asyncExecutor.activeCount}")
