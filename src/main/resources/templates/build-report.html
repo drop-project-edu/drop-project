@@ -94,11 +94,11 @@
     <table class="table table-bordered">
         <tbody>
         <tr th:each="summaryResult : ${summary}">
-            <td>
+            <td th:if="${summaryResult.showItem(isTeacher)}">
                 <span th:text="${summaryResult.indicator.description}"></span>
                 <span th:if="${summaryResult.reportValue != 'OK'}" class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span>
             </td>
-            <td th:if="${summaryResult.progressSummary(isTeacher) == null}">
+            <td th:if="${summaryResult.showIcon(isTeacher)}">
                 <img src="../img/if_sign-check_299110.png" th:if="${summaryResult.reportValue == 'OK'}" />
                 <img src="../img/if_sign-error_299045.png" th:if="${summaryResult.reportValue == 'NOK'}" />
                 <img src="../img/if_sign-question-mark.png" th:if="${summaryResult.reportValue == 'Not Enough Tests'}" alt="Not Enough Tests" />
@@ -106,7 +106,7 @@
             <td th:if="${summaryResult.progressSummary(isTeacher) != null}">
                 <h4 style="margin-top: 3px">
                     <span class="label" th:classappend="${summaryResult.cssLabel}"
-                    th:text="${summaryResult.progressSummary(isTeacher)}">14/14</span>
+                                        th:text="${summaryResult.progressSummary(isTeacher)}">14/14</span>
                 </h4>
             </td>
         </tr>

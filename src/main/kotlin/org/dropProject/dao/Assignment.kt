@@ -31,6 +31,12 @@ enum class Language {
     JAVA, KOTLIN
 }
 
+enum class TestVisibility {
+    HIDE_EVERYTHING,
+    SHOW_OK_NOK,    // show only if it passes all the hidden tests or not
+    SHOW_PROGRESS  // show the number of tests that pass
+}
+
 @Entity
 data class Assignment(
         @Id
@@ -50,6 +56,7 @@ data class Assignment(
 
         var acceptsStudentTests: Boolean = false,
         var minStudentTests: Int? = null,
+        var hiddenTestsVisibility: TestVisibility? = null,
         var cooloffPeriod: Int? = null, // minutes
         var maxMemoryMb: Int? = null,
         var showLeaderBoard: Boolean = false,

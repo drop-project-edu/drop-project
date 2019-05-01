@@ -20,6 +20,7 @@
 package org.dropProject.services
 
 import org.dropProject.dao.Assignment
+import org.dropProject.dao.TestVisibility
 import org.dropProject.forms.SubmissionMethod
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -44,7 +45,8 @@ class TestAssignmentValidator {
     val sampleAssignmentsRootFolder = "src/test/sampleAssignments"
 
     val dummyAssignment = Assignment(id = "dummy", name = "", gitRepositoryUrl = "",
-            gitRepositoryFolder = "", ownerUserId = "p4997", submissionMethod = SubmissionMethod.UPLOAD)
+            gitRepositoryFolder = "", ownerUserId = "p4997", submissionMethod = SubmissionMethod.UPLOAD,
+            hiddenTestsVisibility = TestVisibility.HIDE_EVERYTHING)
 
     @Before
     fun initAssignmentValidator() {
@@ -57,7 +59,10 @@ class TestAssignmentValidator {
         val assignmentFolder = resourceLoader.getResource("file:${sampleAssignmentsRootFolder}/testJavaProj").file
 
         assignmentValidator.validate(assignmentFolder, dummyAssignment)
-        assertTrue("report list should not be empty", !assignmentValidator.report.isEmpty())
+        val report = assignmentValidator.report
+        assertTrue("report list should not be empty", !report.isEmpty())
+        assertTrue(report.any { it.type == AssignmentValidator.InfoType.INFO  &&
+                it.message == "You have hidden tests. The results will be completely hidden from the students." })
     }
 
 
@@ -84,5 +89,19 @@ class TestAssignmentValidator {
         assertTrue(report.any { it.message == "POM file is not prepared to use the 'dropProject.currentUserId' system property" })
     }
 
+    @Test
+    fun `Test testJavaProj assignment without setting hidden tests visibility`() {
+
+        val assignmentFolder = resourceLoader.getResource("file:${sampleAssignmentsRootFolder}/testJavaProj").file
+
+        dummyAssignment.hiddenTestsVisibility = null  // <<<< this is important
+
+        assignmentValidator.validate(assignmentFolder, dummyAssignment)
+        val report = assignmentValidator.report
+        assertTrue(report.any {
+            it.type == AssignmentValidator.InfoType.ERROR &&
+                    it.message == "You have hidden tests but you didn't set their visibility to students."
+        })
+    }
 
 }

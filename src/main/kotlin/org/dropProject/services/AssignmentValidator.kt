@@ -23,6 +23,7 @@ import org.apache.maven.model.Model
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader
 import org.dropProject.Constants
 import org.dropProject.dao.Assignment
+import org.dropProject.dao.TestVisibility
 import org.dropProject.extensions.toEscapedHtml
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Service
@@ -147,6 +148,28 @@ class AssignmentValidator {
                 report.add(Info(InfoType.INFO, "All test classes correctly prefixed"));
             }
         }
+
+        // check if it has hidden tests and the visibility policy has not been set
+        val hasHiddenTests = File(assignmentFolder, "src/test")
+                .walkTopDown()
+                .any { it -> it.name.startsWith(Constants.TEACHER_HIDDEN_TEST_NAME_PREFIX) }
+
+        if (hasHiddenTests) {
+            if (assignment.hiddenTestsVisibility == null) {
+                report.add(Info(InfoType.ERROR, "You have hidden tests but you didn't set their visibility to students.",
+                        "Edit this assignment and select an option in the field 'Hidden tests' to define if the results should be " +
+                                "completely hidden from the students or if some information is shown."))
+            } else {
+                val message = when (assignment.hiddenTestsVisibility) {
+                        TestVisibility.HIDE_EVERYTHING ->  "The results will be completely hidden from the students."
+                        TestVisibility.SHOW_OK_NOK -> "Students will only see if it passes all the hidden tests or not."
+                        TestVisibility.SHOW_PROGRESS -> "Students will only see the number of tests passed."
+                        null -> throw Exception("This shouldn't be possible!")
+                }
+                report.add(Info(InfoType.INFO, "You have hidden tests. ${message}"))
+            }
+        }
+
     }
 
     private fun searchAllSourceFilesWithinFolder(folder: File, text: String): Boolean {

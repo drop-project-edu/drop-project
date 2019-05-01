@@ -145,44 +145,37 @@ class ReportController(
 
 
             // check the submission status
-            if (submission.getStatus() == SubmissionStatus.ILLEGAL_ACCESS) {
-                model["error"] = "O projecto não pode aceder a ficheiros fora da pasta no qual é executado"
-            }
-
-            if (submission.getStatus() == SubmissionStatus.FAILED) {
-                model["error"] = "Ocorreu um erro interno a validar o seu projecto. Tente novamente. Caso o problema persista, contacte o administrador."
-            }
-
-            if (submission.getStatus() == SubmissionStatus.ABORTED_BY_TIMEOUT) {
-                model["error"] = "O processo de validação foi abortado pois estava a demorar demasiado. Tempo máximo permitido: ${MAVEN_MAX_EXECUTION_TIME} seg"
-            }
-
-            if (submission.getStatus() == SubmissionStatus.SUBMITTED ||
-                    submission.getStatus() == SubmissionStatus.SUBMITTED_FOR_REBUILD ||
-                    submission.getStatus() == SubmissionStatus.REBUILDING) {
-                model["error"] = "A submissão ainda não foi validada. Aguarde..."
-                model["autoRefresh"] = true
-            }
-
-            if (submission.getStatus() == SubmissionStatus.VALIDATED ||
-                    submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT) {
-                val submissionReport = submissionReportRepository.findBySubmissionId(submission.id)
-                model["summary"] = submissionReport
-                model["structureErrors"] = submission.structureErrors?.split(";") ?: emptyList<String>()
-
-                val authors = ArrayList<AuthorDetails>()
-                for (authorDB in submission.group.authors) {
-                    authors.add(AuthorDetails(name = authorDB.name, number = authorDB.userId,
-                            submitter = submission.submitterUserId == authorDB.userId))
+            when (submission.getStatus()) {
+                SubmissionStatus.ILLEGAL_ACCESS -> model["error"] = "O projecto não pode aceder a ficheiros fora da pasta no qual é executado"
+                SubmissionStatus.FAILED -> model["error"] = "Ocorreu um erro interno a validar o seu projecto. Tente novamente. Caso o problema persista, contacte o administrador."
+                SubmissionStatus.ABORTED_BY_TIMEOUT -> model["error"] = "O processo de validação foi abortado pois estava a demorar demasiado. Tempo máximo permitido: ${MAVEN_MAX_EXECUTION_TIME} seg"
+                SubmissionStatus.SUBMITTED, SubmissionStatus.SUBMITTED_FOR_REBUILD, SubmissionStatus.REBUILDING -> {
+                    model["error"] = "A submissão ainda não foi validada. Aguarde..."
+                    model["autoRefresh"] = true
                 }
-                model["authors"] = authors
+                SubmissionStatus.VALIDATED, SubmissionStatus.VALIDATED_REBUILT -> {
+                    val submissionReport = submissionReportRepository.findBySubmissionId(submission.id)
 
-                if (submission.buildReportId != null) {
-                    val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
-                            submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
-                    val buildReportDB = buildReportRepository.getOne(submission.buildReportId)
-                    model["buildReport"] = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
-                            mavenizedProjectFolder.absolutePath, assignment, submission)
+                    // fill the assignment in the reports
+                    submissionReport.forEach { it.assignment = assignment }
+
+                    model["summary"] = submissionReport
+                    model["structureErrors"] = submission.structureErrors?.split(";") ?: emptyList<String>()
+
+                    val authors = ArrayList<AuthorDetails>()
+                    for (authorDB in submission.group.authors) {
+                        authors.add(AuthorDetails(name = authorDB.name, number = authorDB.userId,
+                                submitter = submission.submitterUserId == authorDB.userId))
+                    }
+                    model["authors"] = authors
+
+                    if (submission.buildReportId != null) {
+                        val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
+                                submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
+                        val buildReportDB = buildReportRepository.getOne(submission.buildReportId)
+                        model["buildReport"] = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
+                                mavenizedProjectFolder.absolutePath, assignment, submission)
+                    }
                 }
             }
         }

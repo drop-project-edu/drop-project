@@ -131,7 +131,8 @@ class TestsHelper {
                                  publicKey: String = sampleJavaAssignmentPublicKey,
                                  assignees: String? = null, acl: String? = null,
                                  teacherId: String = "teacher1", language: String = "JAVA",
-                                 activateRightAfterCloning: Boolean = false) {
+                                 activateRightAfterCloning: Boolean = false,
+                                 hiddenTestsVisibility: String = "SHOW_PROGRESS") {
 
         val user = User(teacherId, "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
 
@@ -146,6 +147,7 @@ class TestsHelper {
                 .param("gitRepositoryUrl", repositoryUrl)
                 .param("assignees", assignees)
                 .param("acl", acl)
+                .param("hiddenTestsVisibility", hiddenTestsVisibility)
         )
                 .andExpect(MockMvcResultMatchers.status().isFound())
                 .andExpect(MockMvcResultMatchers.header().string("Location", "/assignment/setup-git/${assignmentId}"))

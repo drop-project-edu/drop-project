@@ -101,6 +101,24 @@
             </div>
         </div>
 
+        <div class="form-group" th:classappend="${#fields.hasErrors('hiddenTestsVisibility')} ? 'has-error' : ''">
+            <label for="hiddenTestsVisibility" class="col-sm-3 control-label">Hidden Tests</label>
+            <div class="col-sm-9">
+                <select th:field="*{hiddenTestsVisibility}" class="form-control" id="hiddenTestsVisibility">
+                    <option value=""></option>
+                    <option value="HIDE_EVERYTHING" th:selected="${assignmentForm.hiddenTestsVisibility=='HIDE_EVERYTHING'}">Hide hidden tests' results from the student</option>
+                    <option value="SHOW_OK_NOK" th:selected="${assignmentForm.hiddenTestsVisibility=='SHOW_OK_NOK'}">Show only if it passes all the hidden tests or not (OK / NOK)</option>
+                    <option value="SHOW_PROGRESS" th:selected="${assignmentForm.hiddenTestsVisibility=='SHOW_PROGRESS'}">Show only the number of hidden tests passed</option>
+                </select>
+                <p class="help-block" th:if="${#fields.hasErrors('hiddenTestsVisibility')}" th:errors="*{submissionMethod}">Error</p>
+                <p class="help-block" th:if="${!#fields.hasErrors('hiddenTestsVisibility')}" >
+                    Teachers can include hidden tests in the assignment by naming them TestTeacherHiddenXXX.
+                    Depending on the option selected above, the results of these tests can be completely hidden from the students or
+                    partial information will be shown (without specific information on which/why tests failed). Obviously, the results
+                    of hiddent tests are always visible to teachers.</p>
+            </div>
+        </div>
+
         <div class="form-group">
             <label for="maxMemoryMb" class="col-sm-3 control-label">Max memory (Mb)</label>
             <div class="col-sm-4" th:classappend="${#fields.hasErrors('maxMemoryMb')} ? 'has-error' : ''">

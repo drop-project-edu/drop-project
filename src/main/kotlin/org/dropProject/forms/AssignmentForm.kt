@@ -23,6 +23,7 @@ import org.dropProject.Constants
 import org.hibernate.validator.constraints.NotEmpty
 import org.springframework.format.annotation.DateTimeFormat
 import org.dropProject.dao.Language
+import org.dropProject.dao.TestVisibility
 import java.time.LocalDateTime
 import javax.validation.constraints.Min
 import javax.validation.constraints.NotNull
@@ -48,6 +49,7 @@ data class AssignmentForm(
 
         var acceptsStudentTests: Boolean = false,
         var minStudentTests: Int? = null,
+        var hiddenTestsVisibility: TestVisibility? = null,
         var cooloffPeriod: Int? = null,
 
         @field:Min(value=32, message="Error: Max memory must be >= 32")

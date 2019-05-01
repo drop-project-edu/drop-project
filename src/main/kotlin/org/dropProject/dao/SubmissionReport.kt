@@ -54,7 +54,9 @@ data class SubmissionReport(
         val reportKey: String,  // Indicator::code
         val reportValue: String,  // TODO: Change this to enum (right now you have "OK", "NOK" and "Not Enough Tests")
         val reportProgress: Int? = null,
-        val reportGoal: Int? = null
+        val reportGoal: Int? = null,
+
+        @Transient var assignment : Assignment? = null
 ) {
 
     val indicator: Indicator
@@ -64,8 +66,16 @@ data class SubmissionReport(
 
     fun progressSummary(isTeacher: Boolean): String? {
 
-        if (!isTeacher && indicator == Indicator.HIDDEN_UNIT_TESTS) {
+        if (!showItem(isTeacher)) {
             return null
+        }
+
+        if (!isTeacher && indicator == Indicator.HIDDEN_UNIT_TESTS) {
+            if (assignment?.hiddenTestsVisibility == TestVisibility.SHOW_PROGRESS) {
+                reportProgress?.toString()
+            } else {
+                return null
+            }
         }
 
         return if (reportProgress != null) {
@@ -77,6 +87,35 @@ data class SubmissionReport(
             } else {
                 null
             }
+    }
+
+    fun showIcon(isTeacher: Boolean): Boolean {
+
+        if (!showItem(isTeacher)) {
+            return false
+        }
+
+        if (reportProgress == null && reportGoal == null) {
+            return true
+        }
+
+        if (!isTeacher && indicator == Indicator.HIDDEN_UNIT_TESTS &&
+                assignment?.hiddenTestsVisibility == TestVisibility.SHOW_OK_NOK) {
+            return true
+        }
+
+        return false
+    }
+
+    fun showItem(isTeacher: Boolean): Boolean {
+
+        if (!isTeacher && indicator == Indicator.HIDDEN_UNIT_TESTS &&
+                (assignment?.hiddenTestsVisibility == null ||
+                 assignment?.hiddenTestsVisibility == TestVisibility.HIDE_EVERYTHING)) {
+            return false
+        }
+
+        return true
     }
 
     val cssLabel: String

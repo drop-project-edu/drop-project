@@ -55,6 +55,8 @@ import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.*
 import org.dropProject.services.ZipService
 import org.dropProject.storage.StorageService
+import org.hamcrest.CoreMatchers.not
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers
 import java.io.File
 import java.nio.file.Files
 
@@ -468,6 +470,59 @@ class UploadControllerTests {
         assertEquals(1, buildResult.junitSummaryAsObject(TestType.HIDDEN)?.numTests)
         assertEquals(1, buildResult.junitSummaryAsObject(TestType.HIDDEN)?.numFailures)
         assertEquals(0, buildResult.junitSummaryAsObject(TestType.HIDDEN)?.numErrors)
+    }
+
+    @Test
+    @DirtiesContext
+    fun uploadProjectJunitErrors_HiddenTestsVisibility() {
+
+        val assignment = assignmentRepository.getOne("testJavaProj")
+        assignment.hiddenTestsVisibility = TestVisibility.HIDE_EVERYTHING  // <<< this is very important for this test
+        assignmentRepository.save(assignment)
+
+        val submissionId = testsHelper.uploadProject(this.mvc, "projectJUnitErrors", "testJavaProj", STUDENT_1)
+
+        this.mvc.perform(get("/buildReport/$submissionId")
+                .with(user(STUDENT_1)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(not(containsString("Teacher Hidden Unit Tests"))))
+
+        this.mvc.perform(get("/buildReport/$submissionId")
+                .with(user(TEACHER_1)))
+//                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Teacher Hidden Unit Tests")))
+                .andExpect(content().string(containsString("<span class=\"label label-danger\">0 / 1</span>")))  // progress for hidden tests
+
+        assignment.hiddenTestsVisibility = TestVisibility.SHOW_OK_NOK  // <<< this is very important for this test
+        assignmentRepository.save(assignment)
+
+        this.mvc.perform(get("/buildReport/$submissionId")
+                .with(user(STUDENT_1)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Teacher Hidden Unit Tests")))
+                .andExpect(content().string(not(containsString("<span class=\"label label-danger\">0 / 1</span>"))))  // progress for hidden tests
+
+        this.mvc.perform(get("/buildReport/$submissionId")
+                .with(user(TEACHER_1)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Teacher Hidden Unit Tests")))
+                .andExpect(content().string(containsString("<span class=\"label label-danger\">0 / 1</span>")))  // progress for hidden tests
+
+        assignment.hiddenTestsVisibility = TestVisibility.SHOW_PROGRESS  // <<< this is very important for this test
+        assignmentRepository.save(assignment)
+
+        this.mvc.perform(get("/buildReport/$submissionId")
+                .with(user(STUDENT_1)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Teacher Hidden Unit Tests")))
+                .andExpect(content().string(containsString("<span class=\"label label-danger\">0 / 1</span>")))  // progress for hidden tests
+
+        this.mvc.perform(get("/buildReport/$submissionId")
+                .with(user(TEACHER_1)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Teacher Hidden Unit Tests")))
+                .andExpect(content().string(containsString("<span class=\"label label-danger\">0 / 1</span>")))  // progress for hidden tests
     }
 
 

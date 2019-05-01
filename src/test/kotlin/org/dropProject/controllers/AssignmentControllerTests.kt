@@ -20,10 +20,7 @@
 package org.dropProject.controllers
 
 import org.dropProject.TestsHelper
-import org.dropProject.dao.Assignee
-import org.dropProject.dao.Assignment
-import org.dropProject.dao.AssignmentACL
-import org.dropProject.dao.Language
+import org.dropProject.dao.*
 import org.dropProject.forms.AssignmentForm
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.AssigneeRepository
@@ -84,6 +81,15 @@ class AssignmentControllerTests {
 
     @Value("\${assignments.rootLocation}")
     val assignmentsRootLocation : String = ""
+
+    @Test
+    @WithMockUser("teacher1",roles=["TEACHER"])
+    @DirtiesContext
+    fun test_00_getNewAssignmentForm() {
+        this.mvc.perform(get("/assignment/new"))
+                .andExpect(status().isOk)
+    }
+
 
     @Test
     @WithMockUser("teacher1",roles=["TEACHER"])
@@ -422,7 +428,7 @@ class AssignmentControllerTests {
         val assignment01 = Assignment(id = "testJavaProj", name = "Test Project (for automatic tests)",
                 packageName = "org.testProj", ownerUserId = "teacher1",
                 submissionMethod = SubmissionMethod.UPLOAD, active = false, gitRepositoryUrl = "git://dummyRepo",
-                gitRepositoryFolder = "testJavaProj")
+                gitRepositoryFolder = "testJavaProj", hiddenTestsVisibility = TestVisibility.HIDE_EVERYTHING)
         assignmentRepository.save(assignment01)
 
         // toggle status
