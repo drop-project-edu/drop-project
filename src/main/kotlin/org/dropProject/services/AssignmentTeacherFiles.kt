@@ -130,7 +130,8 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
 
         if (buildReport.hasJUnitErrors() == true) {
             report.add(AssignmentValidator.Info(AssignmentValidator.InfoType.ERROR,
-             "Assignment is failing some JUnit tests. Please fix this!"))
+             "Assignment is failing some JUnit tests. Please fix this!",
+                    "<pre>${buildReport.jUnitErrors()}</pre>"))
             return report
         }
 

@@ -162,7 +162,7 @@ class AssignmentValidator {
             } else {
                 val message = when (assignment.hiddenTestsVisibility) {
                         TestVisibility.HIDE_EVERYTHING ->  "The results will be completely hidden from the students."
-                        TestVisibility.SHOW_OK_NOK -> "Students will only see if it passes all the hidden tests or not."
+                        TestVisibility.SHOW_OK_NOK -> "Students will only see if they pass all the hidden tests or not."
                         TestVisibility.SHOW_PROGRESS -> "Students will only see the number of tests passed."
                         null -> throw Exception("This shouldn't be possible!")
                 }
