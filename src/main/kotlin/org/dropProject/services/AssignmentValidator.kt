@@ -185,15 +185,15 @@ class AssignmentValidator {
         report.add(Info(InfoType.WARNING, message,
                 "The system property 'dropProject.currentUserId' only works if you add the following lines to your pom file:<br/><pre>" +
                         """
-<plugin>
-   <groupId>org.apache.maven.plugins</groupId>
-   <artifactId>maven-surefire-plugin</artifactId>
-   <version>2.19.1</version>
-   <configuration>
-      <argLine>$\{dp.argLine}</argLine>
-   </configuration>
-</plugin>
-    """.replace("\\","").toEscapedHtml()
+                        |<plugin>
+                        |   <groupId>org.apache.maven.plugins</groupId>
+                        |   <artifactId>maven-surefire-plugin</artifactId>
+                        |   <version>2.19.1</version>
+                        |   <configuration>
+                        |      <argLine>$\{dp.argLine}</argLine>
+                        |   </configuration>
+                        |</plugin>
+                        """.trimMargin().replace("\\","").toEscapedHtml()
                         + "</pre>"
 
         ))

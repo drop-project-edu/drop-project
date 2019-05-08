@@ -4,6 +4,7 @@
     <title th:text="${pageTitle}">Drop Project</title>
     <meta name="viewport" content="width=device-with, initial-scale=1.0"/>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="refresh" content="15" th:if="${autoRefresh}"/>
     <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" />
     <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"/>
     <link th:href="@{/css/dropzone.css}" rel="stylesheet" />
