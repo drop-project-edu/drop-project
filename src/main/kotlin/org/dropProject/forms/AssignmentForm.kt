@@ -49,6 +49,7 @@ data class AssignmentForm(
 
         var acceptsStudentTests: Boolean = false,
         var minStudentTests: Int? = null,
+        var calculateStudentTestsCoverage: Boolean = false,
         var hiddenTestsVisibility: TestVisibility? = null,
         var cooloffPeriod: Int? = null,
 

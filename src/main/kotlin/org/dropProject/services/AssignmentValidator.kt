@@ -59,6 +59,7 @@ class AssignmentValidator {
         if (assignment.maxMemoryMb != null) {
             validatePomPreparedForMaxMemory(model)
         }
+        validatePomPreparedForCoverage(model, assignment)
     }
 
     // tests that the assignment is ready to use the system property "dropProject.currentUserId"
@@ -93,6 +94,25 @@ class AssignmentValidator {
 
         } else {
             report.add(Info(InfoType.INFO, "POM file is prepared to define the max memory for each submission"))
+        }
+    }
+
+    private fun validatePomPreparedForCoverage(pomModel: Model, assignment: Assignment) {
+        val surefirePlugin = pomModel.build.plugins.find { it.artifactId == "jacoco-maven-plugin" }
+        if (surefirePlugin != null) {
+            if (assignment.calculateStudentTestsCoverage) {
+                report.add(Info(InfoType.INFO, "POM file is prepared to calculate coverage"))
+            } else {
+                report.add(Info(InfoType.WARNING, "POM file includes a plugin to calculate coverage but the " +
+                        "assignment has the flag 'Calculate coverage of student tests?' set to no",
+                        "For performance reasons, you should remove the jacoco-maven-plugin from your POM file"))
+            }
+        } else {
+            if (assignment.calculateStudentTestsCoverage) {
+                report.add(Info(InfoType.ERROR, "POM file is not prepared to calculate coverage",
+                        "The assignment has the flag 'Calculate coverage of student tests?' set to yes " +
+                                "but the POM file doesn't include the jacoco-maven-plugin"))
+            }
         }
     }
 

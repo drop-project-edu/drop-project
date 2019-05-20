@@ -56,6 +56,7 @@ data class Assignment(
 
         var acceptsStudentTests: Boolean = false,
         var minStudentTests: Int? = null,
+        var calculateStudentTestsCoverage: Boolean = false,
         var hiddenTestsVisibility: TestVisibility? = null,
         var cooloffPeriod: Int? = null, // minutes
         var maxMemoryMb: Int? = null,

@@ -95,6 +95,13 @@ class AssignmentController(
             return "assignment-form"
         }
 
+        if (!assignmentForm.acceptsStudentTests && assignmentForm.calculateStudentTestsCoverage) {
+            LOG.warning("If you want to calculate coverage of student tests, you must check 'Accepts student tests'")
+            bindingResult.rejectValue("acceptsStudentTests", "acceptsStudentTests.mustCheck",
+                    "Error: If you want to calculate coverage of student tests, you must check 'Accepts student tests'")
+            return "assignment-form"
+        }
+
         var assignment : Assignment
         if (!assignmentForm.editMode) {   // create
 
@@ -138,7 +145,9 @@ class AssignmentController(
             val newAssignment = Assignment(id = assignmentForm.assignmentId!!, name = assignmentForm.assignmentName!!,
                     packageName = assignmentForm.assignmentPackage, language = assignmentForm.language!!,
                     dueDate = assignmentForm.dueDate, acceptsStudentTests = assignmentForm.acceptsStudentTests,
-                    minStudentTests = assignmentForm.minStudentTests, cooloffPeriod = assignmentForm.cooloffPeriod,
+                    minStudentTests = assignmentForm.minStudentTests,
+                    calculateStudentTestsCoverage = assignmentForm.calculateStudentTestsCoverage,
+                    cooloffPeriod = assignmentForm.cooloffPeriod,
                     maxMemoryMb = assignmentForm.maxMemoryMb, submissionMethod = assignmentForm.submissionMethod!!,
                     gitRepositoryUrl = assignmentForm.gitRepositoryUrl!!, ownerUserId = principal.name,
                     gitRepositoryFolder = assignmentForm.assignmentId!!, showLeaderBoard = assignmentForm.showLeaderBoard,
@@ -174,6 +183,7 @@ class AssignmentController(
             existingAssignment.submissionMethod = assignmentForm.submissionMethod!!
             existingAssignment.acceptsStudentTests = assignmentForm.acceptsStudentTests
             existingAssignment.minStudentTests = assignmentForm.minStudentTests
+            existingAssignment.calculateStudentTestsCoverage = assignmentForm.calculateStudentTestsCoverage
             existingAssignment.cooloffPeriod = assignmentForm.cooloffPeriod
             existingAssignment.maxMemoryMb = assignmentForm.maxMemoryMb
             existingAssignment.showLeaderBoard = assignmentForm.showLeaderBoard

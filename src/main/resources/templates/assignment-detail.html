@@ -84,7 +84,10 @@
                 </div>
                 <div class="form-group" th:if="${assignment.acceptsStudentTests}">
                     <label class="col-sm-3 control-label">Minimum # of tests:</label>
-                    <div class="col-sm-9 read-row" th:text="${assignment.minStudentTests}"></div>
+                    <div class="col-sm-9 read-row" >
+                        <span th:text="${assignment.minStudentTests}"></span>
+                        <span th:if="${assignment.calculateStudentTestsCoverage}">(calculate coverage)</span>
+                    </div>
                 </div>
                 <div class="form-group" th:if="${assignment.hiddenTestsVisibility}">
                     <label class="col-sm-3 control-label">Hidden tests' results:</label>

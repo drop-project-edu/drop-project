@@ -92,6 +92,11 @@
                     </div>
                 </div>
                 <div class="col-sm-12">
+                    <label>
+                        <input th:field="*{calculateStudentTestsCoverage}" type="checkbox" id="calculateStudentTestsCoverage" /> <strong>Calculate coverage of student tests?</strong>
+                    </label>
+                </div>
+                <div class="col-sm-12">
                     <p class="help-block" th:if="${#fields.hasErrors('acceptsStudentTests')}" th:errors="*{acceptsStudentTests}">Error</p>
                     <p class="help-block" th:if="${!#fields.hasErrors('acceptsStudentTests')}">Check this you are asking your
                         students to include junit tests in their submission. In this case, your (teacher) tests will have to

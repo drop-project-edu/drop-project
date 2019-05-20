@@ -157,7 +157,7 @@ class BuildWorker(
                     }
 
 
-            if (hasCoverageReport(mavenizedProjectFolder)) {
+            if (assignment.calculateStudentTestsCoverage && hasCoverageReport(mavenizedProjectFolder)) {
 
                 // this may seem stupid but I have to rename TestTeacher files to something that will make junit ignore them,
                 // then invoke maven again, so that the coverage report is based

@@ -396,8 +396,10 @@ class UploadController(
         FileUtils.copyDirectory(File(projectFolder, "src"), File(mavenizedProjectFolder, "src/main/${folder}")) {
             it.isDirectory || (it.isFile() && !it.name.startsWith("Test")) // exclude TestXXX classes
         }
-        FileUtils.copyDirectory(File(projectFolder, "src"), File(mavenizedProjectFolder, "src/test/${folder}")) {
-            it.isDirectory || (it.isFile() && it.name.startsWith("Test")) // include TestXXX classes
+        if (assignment.acceptsStudentTests) {
+            FileUtils.copyDirectory(File(projectFolder, "src"), File(mavenizedProjectFolder, "src/test/${folder}")) {
+                it.isDirectory || (it.isFile() && it.name.startsWith("Test")) // include TestXXX classes
+            }
         }
 
         val testFilesFolder = File(projectFolder, "test-files")

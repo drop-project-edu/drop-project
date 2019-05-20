@@ -49,8 +49,10 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import org.springframework.validation.BindingResult
 import java.io.File
@@ -94,7 +96,74 @@ class AssignmentControllerTests {
     @Test
     @WithMockUser("teacher1",roles=["TEACHER"])
     @DirtiesContext
-    fun test_01_createNewAssignmentAndConnectWithGithub() {
+    fun test_01_createInvalidAssignment() {
+
+        mvc.perform(post("/assignment/new"))
+                .andExpect(status().isOk)
+                .andExpect(view().name("assignment-form"))
+                .andExpect(model().attributeHasFieldErrors("assignmentForm","assignmentId"))
+
+
+        mvc.perform(post("/assignment/new")
+                .param("assignmentId", "assignmentId")
+                .param("assignmentName", "assignmentName")
+                .param("assignmentPackage", "assignmentPackage")
+                .param("language", "JAVA")
+                .param("submissionMethod", "UPLOAD")
+                .param("gitRepositoryUrl", "git://dummy")
+                .param("acceptsStudentTests", "true")  // <<<<<
+        )
+                .andExpect(status().isOk())
+                .andExpect(view().name("assignment-form"))
+                .andExpect(model().attributeHasFieldErrors("assignmentForm","acceptsStudentTests"))
+
+        mvc.perform(post("/assignment/new")
+                .param("assignmentId", "assignmentId")
+                .param("assignmentName", "assignmentName")
+                .param("assignmentPackage", "assignmentPackage")
+                .param("language", "JAVA")
+                .param("submissionMethod", "UPLOAD")
+                .param("gitRepositoryUrl", "git://dummy")
+                .param("minStudentTests", "1")  // <<<<<
+        )
+                .andExpect(status().isOk())
+                .andExpect(view().name("assignment-form"))
+                .andExpect(model().attributeHasFieldErrors("assignmentForm","acceptsStudentTests"))
+
+        mvc.perform(post("/assignment/new")
+                .param("assignmentId", "assignmentId")
+                .param("assignmentName", "assignmentName")
+                .param("assignmentPackage", "assignmentPackage")
+                .param("language", "JAVA")
+                .param("submissionMethod", "UPLOAD")
+                .param("gitRepositoryUrl", "git://dummy")
+                .param("calculateStudentTestsCoverage", "true") // <<<<<
+        )
+                .andExpect(status().isOk())
+                .andExpect(view().name("assignment-form"))
+                .andExpect(model().attributeHasFieldErrors("assignmentForm","acceptsStudentTests"))
+
+        mvc.perform(post("/assignment/new")
+                .param("assignmentId", "assignmentId")
+                .param("assignmentName", "assignmentName")
+                .param("assignmentPackage", "assignmentPackage")
+                .param("language", "JAVA")
+                .param("submissionMethod", "UPLOAD")
+                .param("gitRepositoryUrl", "git@github.com:palves-ulht/sampleJavaAssignment.git")
+                .param("acceptsStudentTests", "true")    // <<<<
+                .param("calculateStudentTestsCoverage", "true")  // <<<<
+                .param("minStudentTests", "1")   // <<<<
+        )
+                .andExpect(MockMvcResultMatchers.status().isFound())
+                .andExpect(MockMvcResultMatchers.header().string("Location", "/assignment/setup-git/assignmentId"))
+
+
+    }
+
+    @Test
+    @WithMockUser("teacher1",roles=["TEACHER"])
+    @DirtiesContext
+    fun test_02_createNewAssignmentAndConnectWithGithub() {
 
         try {
             testsHelper.createAndSetupAssignment(mvc, assignmentRepository, "dummyAssignment1", "Dummy Assignment",
@@ -115,7 +184,7 @@ class AssignmentControllerTests {
     @Test
     @WithMockUser("teacher1",roles=["TEACHER"])
     @DirtiesContext
-    fun test_02_createNewAssignmentAndConnectWithBitbucket() {
+    fun test_03_createNewAssignmentAndConnectWithBitbucket() {
 
         try {
             // post form
@@ -196,7 +265,7 @@ class AssignmentControllerTests {
     @Test
     @WithMockUser("teacher1",roles=["TEACHER"])
     @DirtiesContext
-    fun test_03_createAssignmentWithInvalidGitRepository() {
+    fun test_04_createAssignmentWithInvalidGitRepository() {
 
         val mvcResult = this.mvc.perform(post("/assignment/new")
                 .param("assignmentId", "dummyAssignment3")
@@ -223,7 +292,7 @@ class AssignmentControllerTests {
 
     @Test
     @DirtiesContext
-    fun test_04_listAssignments() {
+    fun test_05_listAssignments() {
 
         val user = User("p1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
 
@@ -271,7 +340,7 @@ class AssignmentControllerTests {
     @Test
     @WithMockUser("teacher1",roles=["TEACHER"])
     @DirtiesContext
-    fun test_05_createNewAssignmentAndForgetToConnectWithGithub() {  // assignment should be marked as inactive
+    fun test_06_createNewAssignmentAndForgetToConnectWithGithub() {  // assignment should be marked as inactive
 
         // post form
         this.mvc.perform(post("/assignment/new")
@@ -297,7 +366,7 @@ class AssignmentControllerTests {
     @Test
     @WithMockUser("teacher1",roles=["TEACHER"])
     @DirtiesContext
-    fun test_06_showOnlyActiveAssignments() {
+    fun test_07_showOnlyActiveAssignments() {
 
         try {
             // create an assignment with white-list. it will start as inactive
@@ -337,7 +406,7 @@ class AssignmentControllerTests {
     @Test
     @WithMockUser(username="teacher1",roles=["TEACHER"])
     @DirtiesContext
-    fun test_07_createAssignmentWithOtherTeachers() {
+    fun test_08_createAssignmentWithOtherTeachers() {
 
         try {
 
@@ -377,7 +446,7 @@ class AssignmentControllerTests {
     @Test
     @WithMockUser("teacher1",roles=["TEACHER"])
     @DirtiesContext
-    fun test_08_createNewAssignmentAndEdit() {
+    fun test_09_createNewAssignmentAndEdit() {
 
         try {
             testsHelper.createAndSetupAssignment(mvc, assignmentRepository, "dummyAssignment8", "Dummy Assignment",
@@ -422,7 +491,7 @@ class AssignmentControllerTests {
     @Test
     @WithMockUser("teacher1",roles=["TEACHER"])
     @DirtiesContext
-    fun test_09_checkAssignmentHasNoErrors() {
+    fun test_10_checkAssignmentHasNoErrors() {
 
         // create initial assignment
         val assignment01 = Assignment(id = "testJavaProj", name = "Test Project (for automatic tests)",
@@ -446,7 +515,7 @@ class AssignmentControllerTests {
     @Test
     @WithMockUser("teacher1",roles=["TEACHER"])
     @DirtiesContext
-    fun test_10_getAssignmentInfo() {
+    fun test_11_getAssignmentInfo() {
 
         // create initial assignment
         val assignment = Assignment(id = "testJavaProj", name = "Test Project (for automatic tests)",
@@ -468,7 +537,7 @@ class AssignmentControllerTests {
 
     @Test
     @DirtiesContext
-    fun test_11_deleteAssignment() {
+    fun test_12_deleteAssignment() {
 
         val STUDENT_1 = User("student1", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
         val TEACHER_1 = User("teacher1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
@@ -506,7 +575,7 @@ class AssignmentControllerTests {
 
     @Test
     @DirtiesContext
-    fun test_12_listArchivedAssignments() {
+    fun test_13_listArchivedAssignments() {
 
         val user = User("p1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
 
@@ -564,7 +633,7 @@ class AssignmentControllerTests {
     @Test
     @WithMockUser("teacher1",roles=["TEACHER"])
     @DirtiesContext
-    fun test_13_refreshAssignmentGitRepository() {
+    fun test_14_refreshAssignmentGitRepository() {
 
         try {
             testsHelper.createAndSetupAssignment(mvc, assignmentRepository, "dummyAssignment1", "Dummy Assignment",
