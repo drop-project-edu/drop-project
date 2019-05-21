@@ -99,19 +99,86 @@ class AssignmentValidator {
 
     private fun validatePomPreparedForCoverage(pomModel: Model, assignment: Assignment) {
         val surefirePlugin = pomModel.build.plugins.find { it.artifactId == "jacoco-maven-plugin" }
+        val packagePath = assignment.packageName?.replace(".","/").orEmpty()
         if (surefirePlugin != null) {
             if (assignment.calculateStudentTestsCoverage) {
-                report.add(Info(InfoType.INFO, "POM file is prepared to calculate coverage"))
+                if (surefirePlugin.configuration == null ||
+                        !surefirePlugin.configuration.toString().contains("<include>${packagePath}/*</include>")) {
+                    report.add(Info(InfoType.ERROR, "jacoco-maven-plugin (used for coverage) has a configuration problem",
+                            "The jacoco-maven-plugin must include a configuration that includes only the classes of " +
+                                    "the assignment package. Please fix this in your assignment POM file. " +
+                                    "Configuration example:<br/><pre>" +
+                                    """
+                                    |<plugin>
+                                    |    <groupId>org.jacoco</groupId>
+                                    |    <artifactId>jacoco-maven-plugin</artifactId>
+                                    |    <version>0.8.2</version>
+                                    |    <configuration>
+                                    |        <includes>
+                                    |            <include>${packagePath}/*</include>
+                                    |        </includes>
+                                    |    </configuration>
+                                    |    <executions>
+                                    |        <execution>
+                                    |            <goals>
+                                    |                <goal>prepare-agent</goal>
+                                    |            </goals>
+                                    |        </execution>
+                                    |        <execution>
+                                    |            <id>generate-code-coverage-report</id>
+                                    |            <phase>test</phase>
+                                    |            <goals>
+                                    |                <goal>report</goal>
+                                    |            </goals>
+                                    |        </execution>
+                                    |    </executions>
+                                    |</plugin>
+                                    """.trimMargin().toEscapedHtml()
+                                    + "</pre>"
+
+                    ))
+                } else {
+                    report.add(Info(InfoType.INFO, "POM file is prepared to calculate coverage"))
+                }
             } else {
                 report.add(Info(InfoType.WARNING, "POM file includes a plugin to calculate coverage but the " +
-                        "assignment has the flag 'Calculate coverage of student tests?' set to no",
+                        "assignment has the flag 'Calculate coverage of student tests?' set to 'No'",
                         "For performance reasons, you should remove the jacoco-maven-plugin from your POM file"))
             }
         } else {
             if (assignment.calculateStudentTestsCoverage) {
                 report.add(Info(InfoType.ERROR, "POM file is not prepared to calculate coverage",
-                        "The assignment has the flag 'Calculate coverage of student tests?' set to yes " +
-                                "but the POM file doesn't include the jacoco-maven-plugin"))
+                        "The assignment has the flag 'Calculate coverage of student tests?' set to 'Yes' " +
+                                "but the POM file doesn't include the jacoco-maven-plugin. Please add the following " +
+                                "lines to your pom file:<br/><pre>" +
+                                """
+                                    |<plugin>
+                                    |    <groupId>org.jacoco</groupId>
+                                    |    <artifactId>jacoco-maven-plugin</artifactId>
+                                    |    <version>0.8.2</version>
+                                    |    <configuration>
+                                    |        <includes>
+                                    |            <include>${packagePath}/*</include>
+                                    |        </includes>
+                                    |    </configuration>
+                                    |    <executions>
+                                    |        <execution>
+                                    |            <goals>
+                                    |                <goal>prepare-agent</goal>
+                                    |            </goals>
+                                    |        </execution>
+                                    |        <execution>
+                                    |            <id>generate-code-coverage-report</id>
+                                    |            <phase>test</phase>
+                                    |            <goals>
+                                    |                <goal>report</goal>
+                                    |            </goals>
+                                    |        </execution>
+                                    |    </executions>
+                                    |</plugin>
+                                """.trimMargin().toEscapedHtml()
+                                + "</pre>"))
+                println("")
             }
         }
     }

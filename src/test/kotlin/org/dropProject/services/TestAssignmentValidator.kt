@@ -104,4 +104,38 @@ class TestAssignmentValidator {
         })
     }
 
+    @Test
+    fun `Test testJavaProjWithCoverage assignment with wrong package`() {
+
+        val assignmentFolder = resourceLoader.getResource("file:${sampleAssignmentsRootFolder}/testJavaProjWithCoverage").file
+
+        dummyAssignment.acceptsStudentTests = true  // <<<< this is important
+        dummyAssignment.minStudentTests = 2  // <<<< this is important
+        dummyAssignment.calculateStudentTestsCoverage = true  // <<<< this is important
+
+        assignmentValidator.validate(assignmentFolder, dummyAssignment)
+        val report = assignmentValidator.report
+        assertTrue(report.any {
+            it.type == AssignmentValidator.InfoType.ERROR &&
+                    it.message == "jacoco-maven-plugin (used for coverage) has a configuration problem"
+        })
+    }
+
+    @Test
+    fun `Test testJavaProjWithCoverage assignment with right package`() {
+
+        val assignmentFolder = resourceLoader.getResource("file:${sampleAssignmentsRootFolder}/testJavaProjWithCoverage").file
+
+        dummyAssignment.acceptsStudentTests = true  // <<<< this is important
+        dummyAssignment.minStudentTests = 2  // <<<< this is important
+        dummyAssignment.calculateStudentTestsCoverage = true  // <<<< this is important
+        dummyAssignment.packageName = "org.dropProject.sampleAssignments.testProj" // <<<< this is important
+
+        assignmentValidator.validate(assignmentFolder, dummyAssignment)
+        val report2 = assignmentValidator.report
+        assertTrue(report2.none() {
+            it.type == AssignmentValidator.InfoType.ERROR
+        })
+    }
+
 }
