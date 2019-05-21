@@ -5,7 +5,7 @@
 
 	<groupId>org.dropProject</groupId>
 	<artifactId>drop-project</artifactId>
-	<version>0.8.1</version>
+	<version>0.8.2</version>
 	<packaging>war</packaging>
 
 	<name>DropProject</name>
