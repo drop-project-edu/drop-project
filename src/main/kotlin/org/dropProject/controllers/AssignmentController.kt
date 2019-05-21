@@ -281,7 +281,11 @@ class AssignmentController(
                 gitRepositoryUrl = assignment.gitRepositoryUrl,
                 acceptsStudentTests = assignment.acceptsStudentTests,
                 minStudentTests = assignment.minStudentTests,
-                cooloffPeriod = assignment.cooloffPeriod
+                calculateStudentTestsCoverage = assignment.calculateStudentTestsCoverage,
+                cooloffPeriod = assignment.cooloffPeriod,
+                hiddenTestsVisibility = assignment.hiddenTestsVisibility,
+                showLeaderBoard = assignment.showLeaderBoard,
+                maxMemoryMb = assignment.maxMemoryMb
         )
 
         val assignees = assigneeRepository.findByAssignmentIdOrderByAuthorUserId(assignmentId)
