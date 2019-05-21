@@ -464,6 +464,7 @@ class AssignmentControllerTests {
                                     submissionMethod = SubmissionMethod.UPLOAD,
                                     language = Language.JAVA,
                                     gitRepositoryUrl = "git@github.com:palves-ulht/sampleJavaAssignment.git",
+                                    hiddenTestsVisibility= TestVisibility.SHOW_PROGRESS,
                                     editMode = true)))
 
             // post a change
