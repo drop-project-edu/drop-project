@@ -23,6 +23,7 @@ import org.dropProject.Constants
 import org.dropProject.forms.SubmissionMethod
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.*
 import javax.persistence.*
 
 val formatter = DateTimeFormatter.ofPattern("dd MMM HH:mm")
@@ -85,7 +86,10 @@ data class Assignment(
         var numUniqueSubmitters: Int = 0,
 
         @Transient
-        var public: Boolean = true
+        var public: Boolean = true,
+
+        @Transient
+        var lastSubmissionDate: Date? = null
 ) {
 
     fun dueDateFormatted(): String? {

@@ -35,7 +35,6 @@ interface SubmissionRepository : JpaRepository<Submission, Long> {
 
     fun findByAssignmentIdAndMarkedAsFinal(assignmentId: String, markedAsFinal: Boolean) : List<Submission>
     fun findBySubmitterUserIdAndAssignmentId(submitterUserId: String, assignmentId: String) : List<Submission>
-    fun countByGroup(group: ProjectGroup) : Long
     fun countBySubmitterUserIdAndAssignmentId(submitterUserId: String, assignmentId: String) : Long
     fun findByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(group: ProjectGroup, assignmentId: String) : List<Submission>
     fun findByStatusAndStatusDateBefore(status: String, statusDate: Date): List<Submission>
@@ -43,7 +42,7 @@ interface SubmissionRepository : JpaRepository<Submission, Long> {
 
     fun findByGitSubmissionId(gitSubmissionId: Long) : List<Submission>
 
-    fun findByIdBetween(start: Long, end: Long) : List<Submission>
+    fun findFirstByAssignmentIdOrderBySubmissionDateDesc(assignmentId: String) : Submission
 
     @Transactional
     fun deleteByGitSubmissionId(gitSubmissionId: Long)
