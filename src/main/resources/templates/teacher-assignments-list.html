@@ -23,7 +23,7 @@
         <div class="alert alert-danger" th:text="${error}"/>
     </div>
 
-    <table class="table">
+    <table class="table myDataTable">
         <thead>
         <tr>
             <th>Assignment ID</th>
@@ -84,6 +84,22 @@
     $('[data-toggle=confirmation]').confirmation({
         rootSelector: '[data-toggle=confirmation]'
         // other options
+    });
+
+    $(document).ready(function() {
+        var table = $('.myDataTable').DataTable({
+            "paging": false,
+            "ordering": false,
+            "info": false,
+            "searching": true,
+            "order": [],
+            "columnDefs": [
+                {
+                    "targets": [2, 3, 4, 5],
+                    "searchable": false
+                }
+            ]
+        });
     });
 </script>
 
