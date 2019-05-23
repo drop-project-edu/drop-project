@@ -181,7 +181,11 @@ class UploadController(
         }
 
         if (assignment.submissionMethod == SubmissionMethod.UPLOAD) {
+
+            val submission = submissionRepository.findFirstBySubmitterUserIdAndAssignmentIdOrderBySubmissionDateDesc(principal.name, assignmentId)
+
             model["uploadForm"] = UploadForm(assignment.id)
+            model["uploadSubmission"] = submission
             return "student-upload-form"
         } else {
 

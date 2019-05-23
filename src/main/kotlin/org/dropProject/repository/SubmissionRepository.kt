@@ -35,6 +35,7 @@ interface SubmissionRepository : JpaRepository<Submission, Long> {
 
     fun findByAssignmentIdAndMarkedAsFinal(assignmentId: String, markedAsFinal: Boolean) : List<Submission>
     fun findBySubmitterUserIdAndAssignmentId(submitterUserId: String, assignmentId: String) : List<Submission>
+    fun findFirstBySubmitterUserIdAndAssignmentIdOrderBySubmissionDateDesc(submitterUserId: String, assignmentId: String) : Submission?
     fun countBySubmitterUserIdAndAssignmentId(submitterUserId: String, assignmentId: String) : Long
     fun findByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(group: ProjectGroup, assignmentId: String) : List<Submission>
     fun findByStatusAndStatusDateBefore(status: String, statusDate: Date): List<Submission>

@@ -32,6 +32,9 @@
             <span class="lead">Relaxa. Estás em período cool-off...</span>
             <span th:text="${'Poderás voltar a submeter a partir das ' + coolOffEnd}"></span>
         </div>
+        <br/>
+        <a th:if="${uploadSubmission != null}" class="btn btn-default btn-md"
+           th:href="@{'/buildReport/' + ${uploadSubmission.submissionId}}">Visualizar último relatório</a>
 
         <br/>
         <br/>
