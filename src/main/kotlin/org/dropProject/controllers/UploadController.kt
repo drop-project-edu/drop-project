@@ -902,6 +902,7 @@ class UploadController(
     private fun getLastSubmission(principal: Principal, assignmentId: String) : Submission? {
 
         val groupsToWhichThisStudentBelongs = projectGroupRepository.getGroupsForAuthor(principal.name)
+        var lastSubmission: Submission? = null
 
         // TODO: This is ugly - should rethink data model for groups
         for (group in groupsToWhichThisStudentBelongs) {
@@ -909,19 +910,21 @@ class UploadController(
             val submissions = submissionRepository
                     .findByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(group, assignmentId)
 
-            val lastSubmission =
+            val lastSubmissionForThisGroup =
                     if (submissions.isEmpty()) {
                         null
                     } else {
                         submissions[0]
                     }
 
-            if (lastSubmission != null) {
-                return lastSubmission
+            if (lastSubmission == null ||
+                    (lastSubmissionForThisGroup != null &&
+                            lastSubmission.submissionDate.before(lastSubmissionForThisGroup.submissionDate))) {
+                lastSubmission = lastSubmissionForThisGroup
             }
         }
 
-        return null
+        return lastSubmission
     }
 
     // returns the date when the next submission can be made or null if it's not in cool-off period

@@ -180,6 +180,22 @@ class UploadControllerTests {
 
     @Test
     @DirtiesContext
+    fun getUploadPageWithCooloff() {
+
+        val assignment = assignmentRepository.getOne("testJavaProj")
+        assignment.cooloffPeriod = 10
+        assignmentRepository.save(assignment)
+
+        this.mvc.perform(get("/upload/testJavaProj")
+                .with(user(STUDENT_1)))
+                .andExpect(status().isOk())
+                .andExpect(view().name("student-upload-form"))
+
+
+    }
+
+    @Test
+    @DirtiesContext
     fun uploadProjectGoesIntoRightFolder() {
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", "testJavaProj", STUDENT_1)
@@ -240,6 +256,23 @@ class UploadControllerTests {
         val buildResult = reportResult.modelAndView.modelMap["buildReport"] as BuildReport
         assertThat(buildResult.compilationErrors(),
                 CoreMatchers.hasItems("org/dropProject/sampleAssignments/testProj/Main.java:[3,8] class Sample is public, should be declared in a file named Sample.java"))
+    }
+
+    @Test
+    @DirtiesContext
+    fun uploadProjectThenCooloff() {
+
+        val assignment = assignmentRepository.getOne("testJavaProj")
+        assignment.cooloffPeriod = 10
+        assignmentRepository.save(assignment)
+
+        testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
+
+        this.mvc.perform(get("/upload/testJavaProj")
+                .with(user(STUDENT_1)))
+                .andExpect(status().isOk)
+                .andExpect(view().name("student-upload-form"))
+                .andExpect(model().attributeExists("coolOffEnd"))
     }
 
     @Test
