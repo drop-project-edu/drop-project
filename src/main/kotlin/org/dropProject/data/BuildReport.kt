@@ -280,6 +280,7 @@ data class BuildReport(val mavenOutputLines: List<String>,
                     testType == TestType.HIDDEN && junitResult.isTeacherHidden()) {
                 result += junitResult.junitMethodResults
                         .filter { it.type != "Success" }
+                        .map { it.filterStacktrace(assignment.packageName.orEmpty()); it }
                         .joinToString(separator = "\n")
             }
         }

@@ -10,6 +10,10 @@ public class Main {
         return 3;
     }
 
+    static int funcaoQueRebenta() {
+        return 3;
+    }
+
     static int funcaoLentaParaTestar() {
         // let's fill the memory to provoke an out of memory
         System.out.println("Starting");

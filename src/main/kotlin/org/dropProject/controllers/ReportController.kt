@@ -180,8 +180,6 @@ class ReportController(
             }
         }
 
-        model["isTeacher"] = request.isUserInRole("TEACHER")
-
         return "build-report"
     }
 
@@ -429,8 +427,6 @@ class ReportController(
 
         val assignment = assignmentRepository.findOne(assignmentId)
 
-        model["username"] = principal.name
-        model["isTeacher"] = request.isUserInRole("TEACHER")
         model["assignment"] = assignment
         model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.name, assignment.id)
 
@@ -464,8 +460,6 @@ class ReportController(
         val assignment = assignmentRepository.findOne(assignmentId)
         val group = projectGroupRepository.findOne(groupId)
 
-        model["username"] = principal.name
-        model["isTeacher"] = request.isUserInRole("TEACHER")
         model["assignment"] = assignment
         model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.name, assignment.id)
 
@@ -584,7 +578,6 @@ class ReportController(
 
         model["assignmentId"] = assignmentId
         model["submissions"] = sortedList
-        model["isTeacher"] = request.isUserInRole("TEACHER")
 
         return "leaderboard"
     }

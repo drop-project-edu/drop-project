@@ -169,7 +169,7 @@ class UploadController(
         model["packageTree"] = assignmentTeacherFiles.buildPackageTree(
                 assignment.packageName, assignment.language, assignment.acceptsStudentTests)
 
-        if (assignment.cooloffPeriod != null) {
+        if (assignment.cooloffPeriod != null && !request.isUserInRole("TEACHER")) {
             val lastSubmission = getLastSubmission(principal, assignmentId)
             if (lastSubmission != null) {
                 val nextSubmissionTime = calculateCoolOff(lastSubmission, assignment)
@@ -244,7 +244,7 @@ class UploadController(
             checkAssignees(uploadForm.assignmentId!!, principal.name)
         }
 
-        if (assignment.cooloffPeriod != null) {
+        if (assignment.cooloffPeriod != null  && !request.isUserInRole("TEACHER")) {
             val lastSubmission = getLastSubmission(principal, assignment.id)
             if (lastSubmission != null) {
                 val nextSubmissionTime = calculateCoolOff(lastSubmission, assignment)
@@ -826,7 +826,7 @@ class UploadController(
             checkAssignees(assignment.id, principal.name)
         }
 
-        if (assignment.cooloffPeriod != null) {
+        if (assignment.cooloffPeriod != null && !request.isUserInRole("TEACHER")) {
             val lastSubmission = getLastSubmission(principal, assignment.id)
             if (lastSubmission != null) {
                 val nextSubmissionTime = calculateCoolOff(lastSubmission, assignment)
@@ -906,27 +906,23 @@ class UploadController(
     private fun getLastSubmission(principal: Principal, assignmentId: String) : Submission? {
 
         val groupsToWhichThisStudentBelongs = projectGroupRepository.getGroupsForAuthor(principal.name)
+        var lastSubmission: Submission? = null
 
         // TODO: This is ugly - should rethink data model for groups
         for (group in groupsToWhichThisStudentBelongs) {
 
-            val submissions = submissionRepository
-                    .findByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(group, assignmentId)
+            val lastSubmissionForThisGroup = submissionRepository
+                    .findFirstByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(group, assignmentId)
 
-            val lastSubmission =
-                    if (submissions.isEmpty()) {
-                        null
-                    } else {
-                        submissions[0]
+            if (lastSubmission == null ||
+                    (lastSubmissionForThisGroup != null &&
+                            lastSubmission.submissionDate.before(lastSubmissionForThisGroup.submissionDate))) {
+                lastSubmission = lastSubmissionForThisGroup
+            }
                     }
 
-            if (lastSubmission != null) {
                 return lastSubmission
             }
-        }
-
-        return null
-    }
 
     // returns the date when the next submission can be made or null if it's not in cool-off period
     private fun calculateCoolOff(lastSubmission: Submission, assignment: Assignment) : LocalDateTime? {

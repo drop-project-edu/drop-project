@@ -36,6 +36,7 @@
                 <version>2.9</version>
                 <configuration>
                     <argLine>${dp.argLine}</argLine>
+                    <trimStackTrace>false</trimStackTrace>
                 </configuration>
             </plugin>
 

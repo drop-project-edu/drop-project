@@ -7,7 +7,7 @@ public class TestTeacherHiddenProject {
 
     @Test
     public void testFuncaoParaTestarQueNaoApareceAosAlunos() {
-        assertEquals(3, Main.funcaoParaTestar());
+        assertEquals(3, Main.funcaoQueRebenta());
     }
 
 }

@@ -6,6 +6,10 @@ public class Main {
         return 3;
     }
 
+    static int funcaoQueRebenta() {
+        return 3;
+    }
+
     static int funcaoLentaParaTestar() {
         try {
             Thread.sleep(5000);

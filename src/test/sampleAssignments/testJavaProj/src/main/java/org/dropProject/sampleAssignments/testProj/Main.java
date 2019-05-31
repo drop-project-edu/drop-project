@@ -14,4 +14,8 @@ public class Main {
     static int funcaoLentaParaTestar() {
         return 3;
     }
+
+    static int funcaoQueRebenta() {
+        return 3;
+    }
 }
