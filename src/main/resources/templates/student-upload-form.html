@@ -23,7 +23,7 @@
 
     <div th:if="${uploadForm}">
         <form th:object="${uploadForm}" enctype="multipart/form-data" method="post"
-              class="dropzone" id="my-awesome-dropzone" th:action="@{/upload}" th:if="${coolOffEnd == null}">
+              class="dropzone" id="dpDropzone" th:action="@{/upload}" th:if="${coolOffEnd == null}">
             <input type="hidden" th:field="*{assignmentId}" />
         </form>
         <div class="panel" th:if="${coolOffEnd != null}">
