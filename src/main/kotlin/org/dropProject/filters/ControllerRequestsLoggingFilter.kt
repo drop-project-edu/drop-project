@@ -33,6 +33,7 @@ class ControllerRequestsLoggingFilter : AbstractRequestLoggingFilter() {
         return logger.isInfoEnabled &&
                 !request?.requestURI.orEmpty().endsWith(".css") &&
                 !request?.requestURI.orEmpty().endsWith(".js") &&
+                !request?.requestURI.orEmpty().endsWith(".ico") &&
                 !request?.requestURI.orEmpty().endsWith(".png");
     }
 
