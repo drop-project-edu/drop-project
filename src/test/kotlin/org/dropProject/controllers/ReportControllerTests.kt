@@ -134,7 +134,7 @@ class ReportControllerTests {
     @DirtiesContext
     fun reportForMultipleSubmissions() {
 
-        makeSeveralSubmissions()
+        makeSeveralSubmissions("projectInvalidStructure1")
 
         val reportResult = this.mvc.perform(get("/report/testJavaProj")
                 .with(user(TEACHER_1)))
@@ -400,7 +400,7 @@ class ReportControllerTests {
     @DirtiesContext
     fun exportCSV() {
 
-        makeSeveralSubmissions()
+        makeSeveralSubmissions("projectInvalidStructure1")
 
         // mark all as final, otherwise the export will be empty
         val submissions = submissionRepository.findAll()
@@ -424,9 +424,45 @@ class ReportControllerTests {
 
     }
 
-    private fun makeSeveralSubmissions() {
+    @Test
+    @DirtiesContext
+    fun exportCSVWithStudentTests() {
+
+        val assignment = assignmentRepository.getOne(defaultAssignmentId)
+        assignment.acceptsStudentTests = true
+        assignment.minStudentTests = 2
+        assignmentRepository.save(assignment)
+
+        makeSeveralSubmissions("projectWith1StudentTest")
+
+        // mark all as final, otherwise the export will be empty
+        val submissions = submissionRepository.findAll()
+        for (submission in submissions) {
+            if (submission.id != 4L) {  // this submission is a repeated submission from the same student
+                submission.markedAsFinal = true
+                submissionRepository.save(submission)
+            }
+        }
+
+        this.mvc.perform(get("/exportCSV/testJavaProj?ellapsed=false")
+                .with(user(TEACHER_1)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/csv"))
+                .andExpect(content().string(
+                        """
+                            |1;student1;Student 1;OK;OK;OK;1/1;2/2;1/1;
+                            |1;student2;Student 2;OK;OK;OK;1/1;2/2;1/1;
+                            |2;student2;Student 2;OK;OK;OK;1/1;2/2;1/1;
+                            |3;student3;Student 3;OK;OK;OK;1/1;2/2;1/1;
+                            |4;student1;Student 3;OK;OK;OK;1/1;2/2;1/1;
+                            |
+                        """.trimMargin()))
+
+    }
+
+    private fun makeSeveralSubmissions(projectName: String) {
         // we start with two authors
-        val projectRoot = resourceLoader.getResource("file:src/test/sampleProjects/projectInvalidStructure1").file
+        val projectRoot = resourceLoader.getResource("file:src/test/sampleProjects/$projectName").file
         val path = File(projectRoot, "AUTHORS.txt").toPath()
         val lines = Files.readAllLines(path)
         assertEquals("student1;Student 1", lines[0])
@@ -436,14 +472,14 @@ class ReportControllerTests {
 
         try {
             // upload five times, each time with a different author
-            testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", defaultAssignmentId, STUDENT_1)
-            testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", defaultAssignmentId, STUDENT_2,
+            testsHelper.uploadProject(this.mvc, projectName, defaultAssignmentId, STUDENT_1)
+            testsHelper.uploadProject(this.mvc, projectName, defaultAssignmentId, STUDENT_2,
                     authors = listOf(STUDENT_2.username to "Student 2"))
-            testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", defaultAssignmentId, student3,
+            testsHelper.uploadProject(this.mvc, projectName, defaultAssignmentId, student3,
                     authors = listOf(student3.username to "Student 3"))
-            testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", defaultAssignmentId, STUDENT_2,
+            testsHelper.uploadProject(this.mvc, projectName, defaultAssignmentId, STUDENT_2,
                     authors = listOf(STUDENT_2.username to "Student 2"))
-            testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", defaultAssignmentId, STUDENT_1,
+            testsHelper.uploadProject(this.mvc, projectName, defaultAssignmentId, STUDENT_1,
                     authors = listOf(STUDENT_1.username to "Student 3"))
 
         } finally {

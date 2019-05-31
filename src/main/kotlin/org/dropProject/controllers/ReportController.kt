@@ -496,7 +496,8 @@ class ReportController(
 
 
     @RequestMapping(value = ["/exportCSV/{assignmentId}"], method = [(RequestMethod.GET)])
-    fun exportCSV(@PathVariable assignmentId: String, principal: Principal): ResponseEntity<String> {
+    fun exportCSV(@PathVariable assignmentId: String,
+                  @RequestParam(name="ellapsed", defaultValue = "true") includeEllapsed: Boolean, principal: Principal): ResponseEntity<String> {
 
         val assignment = assignmentRepository.findOne(assignmentId)
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
@@ -518,16 +519,19 @@ class ReportController(
                 val buildReport = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
                         mavenizedProjectFolder.absolutePath, assignment, submission)
                 submission.ellapsed = buildReport.elapsedTimeJUnit()
+                if (assignment.acceptsStudentTests) {
+                    submission.studentTests = buildReport.junitSummaryAsObject(TestType.STUDENT)
+                }
                 submission.teacherTests = buildReport.junitSummaryAsObject(TestType.TEACHER)
                 submission.hiddenTests = buildReport.junitSummaryAsObject(TestType.HIDDEN)
-                if (buildReport.jacocoResults.isNotEmpty()) {
+                if (assignment.calculateStudentTestsCoverage && buildReport.jacocoResults.isNotEmpty()) {
                     submission.coverage = buildReport.jacocoResults[0].lineCoveragePercent
                 }
             }
 
-            val r1 = reportElements.getOrNull(0)?.reportValue.orEmpty()
-            val r2 = reportElements.getOrNull(1)?.reportValue.orEmpty()
-            val r3 = reportElements.getOrNull(2)?.reportValue.orEmpty()
+            val r1 = reportElements.getOrNull(0)?.reportValue.orEmpty()  // Project Structure
+            val r2 = reportElements.getOrNull(1)?.reportValue.orEmpty()  // Compilation
+            val r3 = reportElements.getOrNull(2)?.reportValue.orEmpty()  // Code Quality
 
             var ellapsed = submission.ellapsed
             if (ellapsed != null) {
@@ -535,15 +539,26 @@ class ReportController(
             }
 
             for (author in submission.group.authors) {
-                resultCSV += "${submission.group.id};${author.userId};${author.name};${r1};${r2};${r3};" +
-                        "${submission.teacherTests?.toStr().orEmpty()};${ellapsed?.toPlainString().orEmpty()}"
+                resultCSV += "${submission.group.id};${author.userId};${author.name};${r1};${r2};${r3};"
+
+                if (submission.studentTests != null) {
+                    resultCSV += "${submission.studentTests!!.toStr()};"
+                }
+
+                resultCSV += "${submission.teacherTests?.toStr().orEmpty()};"
+
                 if (submission.hiddenTests != null) {
-                    resultCSV += ";${submission.hiddenTests!!.toStr()}"
+                    resultCSV += "${submission.hiddenTests!!.toStr()};"
                 }
+
                 if (submission.coverage != null) {
-                    resultCSV += ";${submission.coverage}"
+                    resultCSV += "${submission.coverage};"
                 }
-                resultCSV += "\n"
+                if (includeEllapsed) {
+                    resultCSV += "${ellapsed?.toPlainString().orEmpty()}\n"
+                } else {
+                    resultCSV += "\n"
+                }
             }
         }
 

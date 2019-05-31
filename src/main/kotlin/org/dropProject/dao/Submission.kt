@@ -87,6 +87,9 @@ data class Submission(
         var ellapsed: BigDecimal? = null,
 
         @Transient
+        var studentTests: JUnitSummary? = null,
+
+        @Transient
         var teacherTests: JUnitSummary? = null,
 
         @Transient
