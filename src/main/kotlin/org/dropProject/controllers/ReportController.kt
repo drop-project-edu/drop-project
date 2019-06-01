@@ -542,13 +542,15 @@ class ReportController(
                 resultCSV += "${submission.group.id};${author.userId};${author.name};${r1};${r2};${r3};"
 
                 if (submission.studentTests != null) {
-                    resultCSV += "${submission.studentTests!!.toStr()};"
+                    resultCSV += "${submission.studentTests!!.progress};"
                 }
 
-                resultCSV += "${submission.teacherTests?.toStr().orEmpty()};"
+                if (submission.teacherTests != null) {
+                    resultCSV += "${submission.teacherTests!!.progress};"
+                }
 
                 if (submission.hiddenTests != null) {
-                    resultCSV += "${submission.hiddenTests!!.toStr()};"
+                    resultCSV += "${submission.hiddenTests!!.progress};"
                 }
 
                 if (submission.coverage != null) {

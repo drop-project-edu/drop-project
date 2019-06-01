@@ -416,11 +416,11 @@ class ReportControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/csv"))
                 .andExpect(content().string(
-                        "1;student1;Student 1;NOK;;;;\n" +
-                        "1;student2;Student 2;NOK;;;;\n" +
-                        "2;student2;Student 2;NOK;;;;\n" +
-                        "3;student3;Student 3;NOK;;;;\n" +
-                        "4;student1;Student 3;NOK;;;;\n"))
+                        "1;student1;Student 1;NOK;;;\n" +
+                        "1;student2;Student 2;NOK;;;\n" +
+                        "2;student2;Student 2;NOK;;;\n" +
+                        "3;student3;Student 3;NOK;;;\n" +
+                        "4;student1;Student 3;NOK;;;\n"))
 
     }
 
@@ -450,11 +450,11 @@ class ReportControllerTests {
                 .andExpect(content().contentType("application/csv"))
                 .andExpect(content().string(
                         """
-                            |1;student1;Student 1;OK;OK;OK;1/1;2/2;1/1;
-                            |1;student2;Student 2;OK;OK;OK;1/1;2/2;1/1;
-                            |2;student2;Student 2;OK;OK;OK;1/1;2/2;1/1;
-                            |3;student3;Student 3;OK;OK;OK;1/1;2/2;1/1;
-                            |4;student1;Student 3;OK;OK;OK;1/1;2/2;1/1;
+                            |1;student1;Student 1;OK;OK;OK;1;2;1;
+                            |1;student2;Student 2;OK;OK;OK;1;2;1;
+                            |2;student2;Student 2;OK;OK;OK;1;2;1;
+                            |3;student3;Student 3;OK;OK;OK;1;2;1;
+                            |4;student1;Student 3;OK;OK;OK;1;2;1;
                             |
                         """.trimMargin()))
 
