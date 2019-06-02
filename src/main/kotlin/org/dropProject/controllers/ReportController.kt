@@ -541,8 +541,12 @@ class ReportController(
             for (author in submission.group.authors) {
                 resultCSV += "${submission.group.id};${author.userId};${author.name};${r1};${r2};${r3};"
 
-                if (submission.studentTests != null) {
-                    resultCSV += "${submission.studentTests!!.progress};"
+                if (assignment.acceptsStudentTests) {
+                    if (submission.studentTests != null) {
+                        resultCSV += "${submission.studentTests!!.progress};"
+                    } else {
+                        resultCSV += ";"
+                    }
                 }
 
                 if (submission.teacherTests != null) {

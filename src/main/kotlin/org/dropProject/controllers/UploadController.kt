@@ -903,7 +903,7 @@ class UploadController(
         }
     }
 
-    private fun getLastSubmission(principal: Principal, assignmentId: String) : Submission? {
+    private fun getLastSubmission(principal: Principal, assignmentId: String): Submission? {
 
         val groupsToWhichThisStudentBelongs = projectGroupRepository.getGroupsForAuthor(principal.name)
         var lastSubmission: Submission? = null
@@ -919,10 +919,10 @@ class UploadController(
                             lastSubmission.submissionDate.before(lastSubmissionForThisGroup.submissionDate))) {
                 lastSubmission = lastSubmissionForThisGroup
             }
-                    }
+        }
 
-                return lastSubmission
-            }
+        return lastSubmission
+    }
 
     // returns the date when the next submission can be made or null if it's not in cool-off period
     private fun calculateCoolOff(lastSubmission: Submission, assignment: Assignment) : LocalDateTime? {
