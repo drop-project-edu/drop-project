@@ -116,7 +116,7 @@ class MavenInvoker {
 
         if (result.exitCode != 0) {
             if (result.executionException != null) {
-                if (result.executionException is CommandLineTimeOutException) {
+                if (result.executionException is org.apache.maven.shared.utils.cli.CommandLineTimeOutException) {
                     LOG.severe("Maven execution too long. Aborting...")
                     return MavenResult(resultCode = result.exitCode, outputLines = outputLines, expiredByTimeout = true)
                 } else {
