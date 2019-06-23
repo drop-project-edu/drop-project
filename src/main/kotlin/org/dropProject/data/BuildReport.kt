@@ -251,13 +251,19 @@ data class BuildReport(val mavenOutputLines: List<String>,
 
     }
 
-    fun elapsedTimeJUnit(testType: TestType = TestType.TEACHER) : BigDecimal? {
-        val junitSummary = junitSummaryAsObject(testType)
-        if (junitSummary != null) {
-            return junitSummary.ellapsed.toBigDecimal()
-        } else {
-            return null
+    fun elapsedTimeJUnit() : BigDecimal? {
+        var total : BigDecimal? = null
+        val junitSummaryTeacher = junitSummaryAsObject(TestType.TEACHER)
+        if (junitSummaryTeacher != null) {
+            total = junitSummaryTeacher.ellapsed.toBigDecimal()
         }
+
+        val junitSummaryHidden = junitSummaryAsObject(TestType.HIDDEN)
+        if (junitSummaryHidden != null && total != null) {
+            total += junitSummaryHidden.ellapsed.toBigDecimal()
+        }
+
+        return total
     }
 
 
