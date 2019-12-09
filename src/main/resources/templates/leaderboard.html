@@ -17,6 +17,7 @@
     </h6>
 
     <div class="alert alert-info">Best submissions ordered by the number of teacher tests passed and ellapsed time</div>
+    <div th:if="${isTeacher}" class="alert alert-info">Links only visible to teachers</div>
 
     <table class="table">
         <thead>
@@ -36,9 +37,16 @@
             <th scope="row" th:text="${iterStat.count + 'º'}"></th>
 
             <td th:if="${!isTeacher}" th:text="${submission.group.id}"></td>
-            <td th:if="${isTeacher}" th:text="${submission.group.id}" th:title="${submission.group.authorsNameStr()}"></td>
+            <td th:if="${isTeacher}">
+                <a th:href="@{/submissions/(assignmentId=${submission.assignmentId},groupId=${submission.group.id})}"
+                   th:text="${submission.group.id}" th:title="${submission.group.authorsNameStr()}"></a>
+            </td>
 
-            <td class="text-center" th:text="${#dates.format(submission.submissionDate, 'dd/MMM HH:mm:ss')}"></td>
+            <td th:if="${!isTeacher}" class="text-center" th:text="${#dates.format(submission.submissionDate, 'dd/MMM HH:mm:ss')}"></td>
+            <td th:if="${isTeacher}" class="text-center">
+                <a th:href="@{'/buildReport/' + ${submission.id}}" th:text="${#dates.format(submission.submissionDate, 'dd/MMM HH:mm:ss')}"></a>
+            </td>
+
             <td class="text-nowrap text-center">
                 <span th:each="report : ${submission.reportElements}">
                     <span th:if="${report.progressSummary(isTeacher) == null}">
