@@ -198,22 +198,6 @@ class UploadControllerTests {
 
     @Test
     @DirtiesContext
-    fun getUploadPageWithCooloff() {
-
-        val assignment = assignmentRepository.getOne("testJavaProj")
-        assignment.cooloffPeriod = 10
-        assignmentRepository.save(assignment)
-
-        this.mvc.perform(get("/upload/testJavaProj")
-                .with(user(STUDENT_1)))
-                .andExpect(status().isOk())
-                .andExpect(view().name("student-upload-form"))
-
-
-    }
-
-    @Test
-    @DirtiesContext
     fun uploadProjectGoesIntoRightFolder() {
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", "testJavaProj", STUDENT_1)

@@ -895,6 +895,26 @@ class UploadController(
         return "redirect:/upload/${assignment.id}"
     }
 
+    @RequestMapping(value = ["/delete/{submissionId}"], method = [(RequestMethod.POST)])
+    fun deleteSubmission(@PathVariable submissionId: Long,
+                         principal: Principal) : String {
+
+        val submission = submissionRepository.findOne(submissionId)
+        val assignment = assignmentRepository.findOne(submission.assignmentId)
+
+        val acl = assignmentACLRepository.findByAssignmentId(assignment.id)
+        if (principal.name != assignment.ownerUserId && acl.find { it -> it.userId == principal.name } == null) {
+            throw IllegalAccessError("Submissions can only be deleted by the assignment owner or authorized teachers")
+        }
+
+        submission.setStatus(SubmissionStatus.DELETED)
+        submissionRepository.save(submission)
+
+        LOG.info("[${principal.name}] deleted submission $submissionId")
+
+        return "redirect:/report/${assignment.id}"
+    }
+
     private fun checkAssignees(assignmentId: String, principalName: String) {
         if (assigneeRepository.existsByAssignmentId(assignmentId)) {
             // if it enters here, it means this assignment has a white list
