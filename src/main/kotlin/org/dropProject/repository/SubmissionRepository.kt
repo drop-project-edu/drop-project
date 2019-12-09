@@ -24,26 +24,28 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.transaction.annotation.Transactional
 import org.dropProject.dao.ProjectGroup
 import org.dropProject.dao.Submission
+import org.dropProject.dao.SubmissionStatus
 import java.util.*
 
 interface SubmissionRepository : JpaRepository<Submission, Long> {
 
     fun findByAssignmentId(assignmentId: String) : List<Submission>
 
-    @Query("SELECT COUNT(DISTINCT s.group) FROM Submission s WHERE s.assignmentId = ?1")
+    @Query("SELECT COUNT(DISTINCT s.group) FROM Submission s WHERE s.assignmentId = ?1 and s.status <> 'D'")  // TODO Replace by constant
     fun findUniqueSubmittersByAssignmentId(assignmentId: String) : Long
 
     fun findByAssignmentIdAndMarkedAsFinal(assignmentId: String, markedAsFinal: Boolean) : List<Submission>
     fun findBySubmitterUserIdAndAssignmentId(submitterUserId: String, assignmentId: String) : List<Submission>
-    fun countByGroup(group: ProjectGroup) : Long
+    fun findFirstBySubmitterUserIdAndAssignmentIdOrderBySubmissionDateDesc(submitterUserId: String, assignmentId: String) : Submission?
     fun countBySubmitterUserIdAndAssignmentId(submitterUserId: String, assignmentId: String) : Long
     fun findByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(group: ProjectGroup, assignmentId: String) : List<Submission>
+    fun findFirstByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(group: ProjectGroup, assignmentId: String) : Submission?
     fun findByStatusAndStatusDateBefore(status: String, statusDate: Date): List<Submission>
     fun countByAssignmentId(assignmentId: String): Long
 
     fun findByGitSubmissionId(gitSubmissionId: Long) : List<Submission>
 
-    fun findByIdBetween(start: Long, end: Long) : List<Submission>
+    fun findFirstByAssignmentIdOrderBySubmissionDateDesc(assignmentId: String) : Submission
 
     @Transactional
     fun deleteByGitSubmissionId(gitSubmissionId: Long)

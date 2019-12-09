@@ -53,10 +53,11 @@
 
     <p>&nbsp;</p>
 
-    <table class="table">
+    <table class="table myDataTable">
         <thead>
         <tr>
-            <th>Students</th>
+            <th>Students <small>(ID/<a class="toggle-vis" data-column-show="1" data-column-hide="0" href="">Name</a>)</small></th>
+            <th>Students <small>(<a class="toggle-vis" data-column-show="0" data-column-hide="1" href="">ID</a>/Name)</small></th>
             <th>Submissions</th>
             <th>Last Submission Date</th>
             <th>Status</th>
@@ -71,6 +72,7 @@
 
         <tr th:each="submissionInfo : ${submissions}">
             <td th:text="${submissionInfo.projectGroup.authorsStr(', ')}" th:title="${submissionInfo.projectGroup.authorsNameStr()}"></td>
+            <td th:text="${submissionInfo.projectGroup.authorsNameStr()}" th:title="${submissionInfo.projectGroup.authorsStr(', ')}"></td>
             <td class="text-center"><a class="btn btn-default btn-sm" th:href="@{/submissions/(assignmentId=${submissionInfo.lastSubmission.assignmentId},groupId=${submissionInfo.projectGroup.id})}"
                    th:text="${submissionInfo.allSubmissions.size()}"></a></td>
             <td th:text="${#dates.format(submissionInfo.lastSubmission.submissionDate, 'dd/MMM HH:mm:ss')}"></td>
@@ -127,6 +129,44 @@
         rootSelector: '[data-toggle=confirmation]'
         // other options
     });
+
+    $(document).ready(function() {
+        var table = $('.myDataTable').DataTable( {
+            "paging":    false,
+            "ordering":  true,
+            "info":      false,
+            "searching": false,
+            "order": [],
+            "columnDefs": [
+                {
+                    "targets": [ 0, 2, 4, 5, 6, 7, 8 ],
+                    "orderable": false
+                },
+                {
+                    "targets": [ 1 ],  // 1 - Student Name
+                    "visible": false,
+                    "orderable": false
+                },
+                {
+                    "targets": [ 3 ],  // 3 - Last submission date
+                    "searchable": false
+                }
+            ]
+        });
+
+        // toggle student ID and name
+        $('a.toggle-vis').on( 'click', function (e) {
+            e.preventDefault();
+
+            // Get the column API object
+            var columnShow = table.column( $(this).attr('data-column-show') );
+            var columnHide = table.column( $(this).attr('data-column-hide') );
+
+            // Toggle the visibility
+            columnHide.visible( false );
+            columnShow.visible( true );
+        } );
+    } );
 </script>
 
 </body>

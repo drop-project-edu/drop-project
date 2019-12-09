@@ -570,6 +570,9 @@ class AssignmentController(
 
         for (assignment in filteredAssigments) {
             assignment.numSubmissions = submissionRepository.countByAssignmentId(assignment.id).toInt()
+            if (assignment.numSubmissions > 0) {
+                assignment.lastSubmissionDate = submissionRepository.findFirstByAssignmentIdOrderBySubmissionDateDesc(assignment.id).submissionDate
+            }
             assignment.numUniqueSubmitters = submissionRepository.findUniqueSubmittersByAssignmentId(assignment.id).toInt()
             assignment.public = !assigneeRepository.existsByAssignmentId(assignment.id)
         }

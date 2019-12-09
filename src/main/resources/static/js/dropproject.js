@@ -3,7 +3,7 @@ $( document ).ready(function() {
 
     if (typeof Dropzone !== 'undefined') {
 
-        Dropzone.options.myAwesomeDropzone = {
+        Dropzone.options.dpDropzone = {
             paramName: "file", // The name that will be used to transfer the file
             maxFilesize: 1, // MB
             acceptedFiles: ".zip",

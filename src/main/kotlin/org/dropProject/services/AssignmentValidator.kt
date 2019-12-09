@@ -55,6 +55,7 @@ class AssignmentValidator {
         val model = reader.read(FileReader(pomFile))
 
         validateCurrentUserIdSystemVariable(assignmentFolder, model)
+        validateUntrimmedStacktrace(model)
         validateProperTestClasses(assignmentFolder, assignment)
         if (assignment.maxMemoryMb != null) {
             validatePomPreparedForMaxMemory(model)
@@ -81,6 +82,41 @@ class AssignmentValidator {
             report.add(Info(InfoType.INFO, "Doesn't use the 'dropProject.currentUserId' system property"))
         }
 
+    }
+
+    // tests that the surefire-plugin is showing full stacktraces
+    private fun validateUntrimmedStacktrace(pomModel: Model) {
+
+        val surefirePlugin = pomModel.build.plugins.find { it.artifactId == "maven-surefire-plugin" }
+        if (surefirePlugin != null && surefirePlugin.version != null) {
+
+            if (surefirePlugin.configuration == null ||
+                    !surefirePlugin.configuration.toString().contains("<trimStackTrace>false</trimStackTrace>")) {
+
+                report.add(Info(InfoType.WARNING, "POM file is not configured to prevent stacktrace trimming on junit errors",
+                        "By default, the maven-surefire-plugin trims stacktraces (version >= 2.2), which may " +
+                                "complicate students efforts to understand junit reports. " +
+                                "It is suggested to set the 'trimStackStrace' flag to false, like this:<br/><pre>" +
+                                """
+                                    |<plugin>
+                                    |   <groupId>org.apache.maven.plugins</groupId>
+                                    |   <artifactId>maven-surefire-plugin</artifactId>
+                                    |   <version>2.19.1</version>
+                                    |   <configuration>
+                                    |       ...
+                                    |       <trimStackTrace>false</trimStackTrace>
+                                    |   </configuration>
+                                    |</plugin>
+                                    """.trimMargin().toEscapedHtml()
+                                + "</pre>"
+                ))
+
+            } else {
+                report.add(Info(InfoType.INFO, "POM file is prepared to prevent stacktrace trimming on junit errors"))
+            }
+        } else {
+            report.add(Info(InfoType.INFO, "POM file is prepared to prevent stacktrace trimming on junit errors"))
+        }
     }
 
 

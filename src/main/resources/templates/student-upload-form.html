@@ -23,7 +23,7 @@
 
     <div th:if="${uploadForm}">
         <form th:object="${uploadForm}" enctype="multipart/form-data" method="post"
-              class="dropzone" id="my-awesome-dropzone" th:action="@{/upload}" th:if="${coolOffEnd == null}">
+              class="dropzone" id="dpDropzone" th:action="@{/upload}" th:if="${coolOffEnd == null}">
             <input type="hidden" th:field="*{assignmentId}" />
         </form>
         <div class="panel" th:if="${coolOffEnd != null}">
@@ -31,6 +31,14 @@
             &nbsp;
             <span class="lead">Relaxa. Estás em período cool-off...</span>
             <span th:text="${'Poderás voltar a submeter a partir das ' + coolOffEnd}"></span>
+        </div>
+        <br/>
+        <a th:if="${uploadSubmission != null}" class="btn btn-default btn-md"
+           th:href="@{'/buildReport/' + ${uploadSubmission.id}}">Visualizar último relatório</a>
+        <div class="panel panel-default" th:if="${isTeacher and assignment?.cooloffPeriod != null}">
+            <div class="panel-body">
+                <img width="16" th:src="@{/img/info.png}"/> Cool-off turned on for students. Teachers are not affected by this.
+            </div>
         </div>
 
         <br/>

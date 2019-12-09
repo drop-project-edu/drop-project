@@ -6,9 +6,13 @@ public class Main {
         return 3;
     }
 
+    static int funcaoQueRebenta() {
+        return 3;
+    }
+
     static int funcaoLentaParaTestar() {
         try {
-            Thread.sleep(5000);
+            Thread.sleep(500);
         } catch (Exception ignore) {
             // ignore
         }

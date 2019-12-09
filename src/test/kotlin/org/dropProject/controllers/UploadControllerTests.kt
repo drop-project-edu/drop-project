@@ -50,6 +50,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import org.dropProject.TestsHelper
 import org.dropProject.dao.*
 import org.dropProject.data.BuildReport
+import org.dropProject.data.SubmissionInfo
 import org.dropProject.data.TestType
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.*
@@ -168,6 +169,23 @@ class UploadControllerTests {
     fun getUploadPage() {
 
         val assignment = assignmentRepository.getOne("testJavaProj")
+        assignmentRepository.save(assignment)
+
+        this.mvc.perform(get("/upload/testJavaProj")
+                .with(user(STUDENT_1)))
+                .andExpect(status().isOk())
+                .andExpect(view().name("student-upload-form"))
+                // .andExpect(model().attribute<String>("uploadSubmission", null))  ?????
+
+
+    }
+
+    @Test
+    @DirtiesContext
+    fun getUploadPageWithCooloff() {
+
+        val assignment = assignmentRepository.getOne("testJavaProj")
+        assignment.cooloffPeriod = 10
         assignmentRepository.save(assignment)
 
         this.mvc.perform(get("/upload/testJavaProj")
@@ -308,9 +326,9 @@ class UploadControllerTests {
                         "org/dropProject/sampleAssignments/testProj/Main.java:12:17: Nome da função 'FazCoisas' deve começar por letra minúscula. Caso o nome tenha mais do que uma palavra, as palavras seguintes devem ser capitalizadas (iniciadas por uma maiúscula). [MethodName]"
                         , "org/dropProject/sampleAssignments/testProj/Main.java:3:7: O nome da classe 'aluno' deve começar com letra maiúscula. Caso o nome tenha mais do que uma palavra, as palavras seguintes devem ser capitalizadas (iniciadas por uma maiúscula). [TypeName]"
                         , "org/dropProject/sampleAssignments/testProj/Main.java:10:22: A constante 'constante' deve estar em maiúsculas. Caso o nome tenha mais do que uma palavra, as mesmas devem ser separadas pelo caracter underscore(_) [ConstantName]"
-                        , "org/dropProject/sampleAssignments/testProj/Main.java:26: 'if' deve usar '{}'s mesmo que seja uma única linha [NeedBraces]"
+                        , "org/dropProject/sampleAssignments/testProj/Main.java:30: 'if' deve usar '{}'s mesmo que seja uma única linha [NeedBraces]"
                         , "org/dropProject/sampleAssignments/testProj/Main.java:4:9: O nome da variável 'Numero' deve começar com letra minúscula. Caso o nome tenha mais do que uma palavra, as palavras seguintes devem ser capitalizadas (iniciadas por uma maiúscula). [MemberName]"
-                        , "org/dropProject/sampleAssignments/testProj/Main.java:27: Não é permitida a utilização da instrução System.exit(). Deve lançar uma Exception ou tratar graciosamente o erro. [RegexpSinglelineJava]"
+                        , "org/dropProject/sampleAssignments/testProj/Main.java:31: Não é permitida a utilização da instrução System.exit(). Deve lançar uma Exception ou tratar graciosamente o erro. [RegexpSinglelineJava]"
                 ))
     }
 
@@ -491,18 +509,31 @@ class UploadControllerTests {
         assert(buildResult.hasJUnitErrors(TestType.TEACHER) == true)
         assert(buildResult.junitSummary(TestType.TEACHER)!!.startsWith("Tests run: 2, Failures: 1, Errors: 0"))
         assertNotNull(buildResult.jUnitErrors(TestType.TEACHER))
-        assert(buildResult.jUnitErrors(TestType.TEACHER)!!.contains("java.lang.AssertionError: expected:<3> but was:<4>"))
+        assert(buildResult.jUnitErrors(TestType.TEACHER)!!.contains("java.lang.AssertionError: expected:<3> but was:<0>"))
         assertEquals(2, buildResult.junitSummaryAsObject(TestType.TEACHER)?.numTests)
         assertEquals(1, buildResult.junitSummaryAsObject(TestType.TEACHER)?.numFailures)
         assertEquals(0, buildResult.junitSummaryAsObject(TestType.TEACHER)?.numErrors)
+        val stackTraceTeacher = buildResult.jUnitErrors(TestType.TEACHER)
+        assertEquals("""
+            |FAILURE: org.dropProject.sampleAssignments.testProj.TestTeacherProject.testFuncaoParaTestar
+            |java.lang.AssertionError: expected:<3> but was:<0>
+	        |${'\t'}at org.dropProject.sampleAssignments.testProj.TestTeacherProject.testFuncaoParaTestar(TestTeacherProject.java:10)
+        """.trimMargin(), stackTraceTeacher?.trimEnd())
 
         assert(buildResult.hasJUnitErrors(TestType.HIDDEN) == true)
-        assert(buildResult.junitSummary(TestType.HIDDEN)!!.startsWith("Tests run: 1, Failures: 1, Errors: 0"))
+        assert(buildResult.junitSummary(TestType.HIDDEN)!!.startsWith("Tests run: 1, Failures: 0, Errors: 1"))
         assertNotNull(buildResult.jUnitErrors(TestType.HIDDEN))
-        assert(buildResult.jUnitErrors(TestType.HIDDEN)!!.contains("java.lang.AssertionError: expected:<3> but was:<4>"))
+        assert(buildResult.jUnitErrors(TestType.HIDDEN)!!.contains("java.lang.ArithmeticException: / by zero"))
         assertEquals(1, buildResult.junitSummaryAsObject(TestType.HIDDEN)?.numTests)
-        assertEquals(1, buildResult.junitSummaryAsObject(TestType.HIDDEN)?.numFailures)
-        assertEquals(0, buildResult.junitSummaryAsObject(TestType.HIDDEN)?.numErrors)
+        assertEquals(0, buildResult.junitSummaryAsObject(TestType.HIDDEN)?.numFailures)
+        assertEquals(1, buildResult.junitSummaryAsObject(TestType.HIDDEN)?.numErrors)
+        val stackTraceHidden = buildResult.jUnitErrors(TestType.HIDDEN)
+        assertEquals("""
+            |ERROR: org.dropProject.sampleAssignments.testProj.TestTeacherHiddenProject.testFuncaoParaTestarQueNaoApareceAosAlunos
+            |java.lang.ArithmeticException: / by zero
+            |${'\t'}at org.dropProject.sampleAssignments.testProj.Main.funcaoQueRebenta(Main.java:14)
+            |${'\t'}at org.dropProject.sampleAssignments.testProj.TestTeacherHiddenProject.testFuncaoParaTestarQueNaoApareceAosAlunos(TestTeacherHiddenProject.java:10)
+        """.trimMargin(), stackTraceHidden?.trimEnd())
     }
 
     @Test
@@ -697,7 +728,7 @@ class UploadControllerTests {
         assert(buildResult.hasJUnitErrors() == true)
         assert(buildResult.junitSummary()!!.startsWith("Tests run: 4, Failures: 2, Errors: 0, Time elapsed"))
         assertNotNull(buildResult.jUnitErrors())
-        assert(buildResult.jUnitErrors()!!.contains("java.lang.AssertionError: expected:<3> but was:<4>"))
+        assert(buildResult.jUnitErrors()!!.contains("java.lang.AssertionError: expected:<3> but was:<0>"))
 
         val junitReportsFromDB = jUnitReportRepository.findAll()
         assertEquals(2, junitReportsFromDB.size)
@@ -993,7 +1024,7 @@ class UploadControllerTests {
         assertTrue(buildResult.junitSummary(TestType.STUDENT)!!.startsWith("Tests run: 1, Failures: 0, Errors: 0"))
 
         assert(buildResult.jacocoResults.isNotEmpty())
-        assertEquals(27, buildResult.jacocoResults[0].lineCoveragePercent)
+        assertEquals(25, buildResult.jacocoResults[0].lineCoveragePercent)
     }
 
     @Test
@@ -1203,6 +1234,54 @@ class UploadControllerTests {
         assertEquals(SubmissionStatus.VALIDATED, updatedSubmission.getStatus())
     }
 
+    @Test
+    @DirtiesContext
+    fun uploadAndDeleteOneSubmission() {
+
+        val submissionId = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
+
+        this.mvc.perform(post("/delete/$submissionId")
+                .with(user(TEACHER_1)))
+                .andExpect(status().isFound)
+                .andExpect(header().string("Location", "/report/testJavaProj"))
+
+        val reportResult = this.mvc.perform(get("/report/testJavaProj")
+                .with(user(TEACHER_1)))
+                .andExpect(status().isOk())
+                .andReturn()
+
+        @Suppress("UNCHECKED_CAST")
+        val report = reportResult.modelAndView.modelMap["submissions"] as List<SubmissionInfo>
+        assertTrue("report should be empty", report.isEmpty())
+
+        this.mvc.perform(get("/buildReport/$submissionId")
+                .with(user(STUDENT_1)))
+                .andExpect(status().isForbidden())
+    }
+
+    @Test
+    @DirtiesContext
+    fun uploadMultipleAndDeleteJustOneSubmission() {
+
+        val submissionId1 = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
+        val submissionId2 = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
+
+        this.mvc.perform(post("/delete/$submissionId1")
+                .with(user(TEACHER_1)))
+                .andExpect(status().isFound)
+                .andExpect(header().string("Location", "/report/testJavaProj"))
+
+        val reportResult = this.mvc.perform(get("/report/testJavaProj")
+                .with(user(TEACHER_1)))
+                .andExpect(status().isOk())
+                .andReturn()
+
+        @Suppress("UNCHECKED_CAST")
+        val report = reportResult.modelAndView.modelMap["submissions"] as List<SubmissionInfo>
+        assertEquals(1, report.size)
+        assertEquals(1,report[0].allSubmissions.size)
+        assertEquals(submissionId2,report[0].allSubmissions[0].id.toInt())
+    }
 
 }
 

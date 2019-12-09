@@ -10,6 +10,10 @@ public class Sample {  // <<< this should be Main
         return 3;
     }
 
+    static int funcaoQueRebenta() {
+        return 3;
+    }
+
     static int funcaoLentaParaTestar() {
         return 3;
     }

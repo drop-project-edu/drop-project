@@ -129,6 +129,10 @@ class ReportController(
                 }
             }
 
+            if (submission.getStatus() == SubmissionStatus.DELETED) {
+                throw AccessDeniedException("This submission was deleted")
+            }
+
             model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.name, submission.assignmentId)
 
             val assignment = assignmentRepository.findOne(submission.assignmentId)
@@ -179,8 +183,6 @@ class ReportController(
                 }
             }
         }
-
-        model["isTeacher"] = request.isUserInRole("TEACHER")
 
         return "build-report"
     }
@@ -429,13 +431,13 @@ class ReportController(
 
         val assignment = assignmentRepository.findOne(assignmentId)
 
-        model["username"] = principal.name
-        model["isTeacher"] = request.isUserInRole("TEACHER")
         model["assignment"] = assignment
         model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.name, assignment.id)
 
         // TODO this is similar to getSubmissions: refactor
-        val submissions = submissionRepository.findBySubmitterUserIdAndAssignmentId(principal.name, assignmentId)
+        val submissions = submissionRepository
+                .findBySubmitterUserIdAndAssignmentId(principal.name, assignmentId)
+                .filter { it.getStatus() != SubmissionStatus.DELETED }
         for (submission in submissions) {
             val reportElements = submissionReportRepository.findBySubmissionId(submission.id)
             submission.reportElements = reportElements
@@ -464,12 +466,12 @@ class ReportController(
         val assignment = assignmentRepository.findOne(assignmentId)
         val group = projectGroupRepository.findOne(groupId)
 
-        model["username"] = principal.name
-        model["isTeacher"] = request.isUserInRole("TEACHER")
         model["assignment"] = assignment
         model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.name, assignment.id)
 
-        val submissions = submissionRepository.findByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(group, assignmentId)
+        val submissions = submissionRepository
+                .findByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(group, assignmentId)
+                .filter { it.getStatus() != SubmissionStatus.DELETED }
         for (submission in submissions) {
             val reportElements = submissionReportRepository.findBySubmissionId(submission.id)
             submission.reportElements = reportElements
@@ -502,7 +504,8 @@ class ReportController(
 
 
     @RequestMapping(value = ["/exportCSV/{assignmentId}"], method = [(RequestMethod.GET)])
-    fun exportCSV(@PathVariable assignmentId: String, principal: Principal): ResponseEntity<String> {
+    fun exportCSV(@PathVariable assignmentId: String,
+                  @RequestParam(name="ellapsed", defaultValue = "true") includeEllapsed: Boolean, principal: Principal): ResponseEntity<String> {
 
         val assignment = assignmentRepository.findOne(assignmentId)
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
@@ -524,16 +527,19 @@ class ReportController(
                 val buildReport = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
                         mavenizedProjectFolder.absolutePath, assignment, submission)
                 submission.ellapsed = buildReport.elapsedTimeJUnit()
+                if (assignment.acceptsStudentTests) {
+                    submission.studentTests = buildReport.junitSummaryAsObject(TestType.STUDENT)
+                }
                 submission.teacherTests = buildReport.junitSummaryAsObject(TestType.TEACHER)
                 submission.hiddenTests = buildReport.junitSummaryAsObject(TestType.HIDDEN)
-                if (buildReport.jacocoResults.isNotEmpty()) {
+                if (assignment.calculateStudentTestsCoverage && buildReport.jacocoResults.isNotEmpty()) {
                     submission.coverage = buildReport.jacocoResults[0].lineCoveragePercent
                 }
             }
 
-            val r1 = reportElements.getOrNull(0)?.reportValue.orEmpty()
-            val r2 = reportElements.getOrNull(1)?.reportValue.orEmpty()
-            val r3 = reportElements.getOrNull(2)?.reportValue.orEmpty()
+            val r1 = reportElements.getOrNull(0)?.reportValue.orEmpty()  // Project Structure
+            val r2 = reportElements.getOrNull(1)?.reportValue.orEmpty()  // Compilation
+            val r3 = reportElements.getOrNull(2)?.reportValue.orEmpty()  // Code Quality
 
             var ellapsed = submission.ellapsed
             if (ellapsed != null) {
@@ -541,15 +547,32 @@ class ReportController(
             }
 
             for (author in submission.group.authors) {
-                resultCSV += "${submission.group.id};${author.userId};${author.name};${r1};${r2};${r3};" +
-                        "${submission.teacherTests?.toStr().orEmpty()};${ellapsed?.toPlainString().orEmpty()}"
+                resultCSV += "${submission.group.id};${author.userId};${author.name};${r1};${r2};${r3};"
+
+                if (assignment.acceptsStudentTests) {
+                    if (submission.studentTests != null) {
+                        resultCSV += "${submission.studentTests!!.progress};"
+                    } else {
+                        resultCSV += ";"
+                    }
+                }
+
+                if (submission.teacherTests != null) {
+                    resultCSV += "${submission.teacherTests!!.progress};"
+                }
+
                 if (submission.hiddenTests != null) {
-                    resultCSV += ";${submission.hiddenTests!!.toStr()}"
+                    resultCSV += "${submission.hiddenTests!!.progress};"
                 }
+
                 if (submission.coverage != null) {
-                    resultCSV += ";${submission.coverage}"
+                    resultCSV += "${submission.coverage};"
                 }
-                resultCSV += "\n"
+                if (includeEllapsed) {
+                    resultCSV += "${ellapsed?.toPlainString().orEmpty()}\n"
+                } else {
+                    resultCSV += "\n"
+                }
             }
         }
 
@@ -584,7 +607,6 @@ class ReportController(
 
         model["assignmentId"] = assignmentId
         model["submissions"] = sortedList
-        model["isTeacher"] = request.isUserInRole("TEACHER")
 
         return "leaderboard"
     }

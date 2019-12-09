@@ -169,7 +169,7 @@ class UploadController(
         model["packageTree"] = assignmentTeacherFiles.buildPackageTree(
                 assignment.packageName, assignment.language, assignment.acceptsStudentTests)
 
-        if (assignment.cooloffPeriod != null) {
+        if (assignment.cooloffPeriod != null && !request.isUserInRole("TEACHER")) {
             val lastSubmission = getLastSubmission(principal, assignmentId)
             if (lastSubmission != null) {
                 val nextSubmissionTime = calculateCoolOff(lastSubmission, assignment)
@@ -181,7 +181,11 @@ class UploadController(
         }
 
         if (assignment.submissionMethod == SubmissionMethod.UPLOAD) {
+
+            val submission = submissionRepository.findFirstBySubmitterUserIdAndAssignmentIdOrderBySubmissionDateDesc(principal.name, assignmentId)
+
             model["uploadForm"] = UploadForm(assignment.id)
+            model["uploadSubmission"] = submission
             return "student-upload-form"
         } else {
 
@@ -240,7 +244,7 @@ class UploadController(
             checkAssignees(uploadForm.assignmentId!!, principal.name)
         }
 
-        if (assignment.cooloffPeriod != null) {
+        if (assignment.cooloffPeriod != null  && !request.isUserInRole("TEACHER")) {
             val lastSubmission = getLastSubmission(principal, assignment.id)
             if (lastSubmission != null) {
                 val nextSubmissionTime = calculateCoolOff(lastSubmission, assignment)
@@ -270,7 +274,9 @@ class UploadController(
             val group = getOrCreateProjectGroup(authors)
 
             // verify that there is not another submission with the Submitted status
-            val existingSubmissions = submissionRepository.findByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(group, assignment.id)
+            val existingSubmissions = submissionRepository
+                    .findByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(group, assignment.id)
+                    .filter { it.getStatus() != SubmissionStatus.DELETED }
             for (submission in existingSubmissions) {
                 if (submission.getStatus() == SubmissionStatus.SUBMITTED) {
                     LOG.info("[${authors.joinToString(separator = "|")}] tried to submit before the previous one has been validated")
@@ -899,7 +905,7 @@ class UploadController(
         }
     }
 
-    private fun getLastSubmission(principal: Principal, assignmentId: String) : Submission? {
+    private fun getLastSubmission(principal: Principal, assignmentId: String): Submission? {
 
         val groupsToWhichThisStudentBelongs = projectGroupRepository.getGroupsForAuthor(principal.name)
         var lastSubmission: Submission? = null
@@ -907,15 +913,8 @@ class UploadController(
         // TODO: This is ugly - should rethink data model for groups
         for (group in groupsToWhichThisStudentBelongs) {
 
-            val submissions = submissionRepository
-                    .findByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(group, assignmentId)
-
-            val lastSubmissionForThisGroup =
-                    if (submissions.isEmpty()) {
-                        null
-                    } else {
-                        submissions[0]
-                    }
+            val lastSubmissionForThisGroup = submissionRepository
+                    .findFirstByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(group, assignmentId)
 
             if (lastSubmission == null ||
                     (lastSubmissionForThisGroup != null &&

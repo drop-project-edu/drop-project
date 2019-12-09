@@ -10,7 +10,7 @@
 
 <div th:replace="layout/layout :: header"></div>
 
-<div class="container" style="max-width: 760px">
+<div class="container" style="max-width: 900px">
 
     <h1 class="page-header" th:if="${!archived}">Manage Assignments</h1>
     <h1 class="page-header" th:if="${archived}">Archived Assignments</h1>
@@ -23,11 +23,12 @@
         <div class="alert alert-danger" th:text="${error}"/>
     </div>
 
-    <table class="table">
+    <table class="table myDataTable">
         <thead>
         <tr>
             <th>Assignment ID</th>
             <th>Name</th>
+            <th>Last submission</th>
             <th th:if="${!archived}">Active?</th>
             <th th:if="${!archived}">Private?</th>
             <th>Submissions</th>
@@ -39,6 +40,8 @@
         <tr th:each="assignment : ${assignments}">
             <td th:text="${assignment.id}"></td>
             <td th:text="${assignment.name}"></td>
+            <td th:if="${assignment.lastSubmissionDate != null}" th:text="${#dates.format(assignment.lastSubmissionDate, 'dd/MMM HH:mm')}"></td>
+            <td th:if="${assignment.lastSubmissionDate == null}">-</td>
             <td th:if="${!archived}" class="text-center">
                 <form th:action="@{'/assignment/toggle-status/' + ${assignment.id}}" method="post" style="display: inline;">
                     <input type="checkbox" th:checked="${assignment.active}" onChange="this.form.submit()"/>
@@ -80,10 +83,30 @@
 <div th:replace="layout/layout :: footer"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-confirmation2@2.4.2/bootstrap-confirmation.min.js"></script>
-<script>
+<script th:if="${!assignments.isEmpty()}">
     $('[data-toggle=confirmation]').confirmation({
         rootSelector: '[data-toggle=confirmation]'
         // other options
+    });
+
+    $(document).ready(function() {
+        var table = $('.myDataTable').DataTable({
+            "paging": false,
+            "ordering": true,
+            "info": false,
+            "searching": true,
+            "order": [],
+            "columnDefs": [
+                {
+                    "targets": [2, 3, 4, 5, 6],
+                    "searchable": false
+                },
+                {
+                    "targets": [0, 1, 3, 4, 5, 6],
+                    "orderable": false
+                }
+            ]
+        });
     });
 </script>
 

@@ -36,8 +36,14 @@ data class JUnitMethodResult(val methodName: String,
                              val failureErrorLine: String?,
                              val failureDetail: String?) {
 
+    internal val failureDetailLines = failureDetail?.lines()?.toMutableList()
+
+    fun filterStacktrace(packageName: String) {
+        failureDetailLines?.removeIf { it.startsWith("\tat") && !it.contains(packageName) }
+    }
+
     override fun toString(): String {
-        return "FAIL: ${fullMethodName}\n${failureDetail}\n\n"
+        return "${type.toUpperCase()}: ${fullMethodName}\n${failureDetailLines?.joinToString("\n")}\n\n"
     }
 }
 
