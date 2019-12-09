@@ -34,7 +34,8 @@ enum class SubmissionStatus(val code: String, val description: String) {
     SUBMITTED_FOR_REBUILD("SR", "Submitted for rebuild"),
     VALIDATED_REBUILT("VR", "Validated (Rebuilt)"),
     REBUILDING("R", "Rebuilding"),
-    ILLEGAL_ACCESS("IA", "Illegal Access");
+    ILLEGAL_ACCESS("IA", "Illegal Access"),
+    DELETED("D", "Deleted");
 
     companion object {
         fun getSubmissionStatus(code: String) : SubmissionStatus {

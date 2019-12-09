@@ -274,7 +274,9 @@ class UploadController(
             val group = getOrCreateProjectGroup(authors)
 
             // verify that there is not another submission with the Submitted status
-            val existingSubmissions = submissionRepository.findByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(group, assignment.id)
+            val existingSubmissions = submissionRepository
+                    .findByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(group, assignment.id)
+                    .filter { it.getStatus() != SubmissionStatus.DELETED }
             for (submission in existingSubmissions) {
                 if (submission.getStatus() == SubmissionStatus.SUBMITTED) {
                     LOG.info("[${authors.joinToString(separator = "|")}] tried to submit before the previous one has been validated")
@@ -378,6 +380,7 @@ class UploadController(
     }
 
     private fun searchExistingProjectGroupOrCreateNew(authors: List<AuthorDetails>): ProjectGroup {
+
         val groups = projectGroupRepository.getGroupsForAuthor(authors.first().number)
         for (group in groups) {
             if (group.authors.size == authors.size &&
@@ -591,7 +594,9 @@ class UploadController(
             LOG.info("Marking as final: ${submissionId}")
 
             // find all other submissions from this group and assignment
-            val otherSubmissions = submissionRepository.findByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(submission.group, submission.assignmentId)
+            val otherSubmissions = submissionRepository
+                    .findByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(submission.group, submission.assignmentId)
+                    .filter { it.getStatus() != SubmissionStatus.DELETED }
             for (otherSubmission in otherSubmissions) {
                 otherSubmission.markedAsFinal = false
                 submissionRepository.save(submission)
@@ -842,6 +847,7 @@ class UploadController(
         // verify that there is not another submission with the Submitted status
         val existingSubmissions = submissionRepository
                 .findByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(gitSubmission.group, assignment.id)
+                .filter { it.getStatus() != SubmissionStatus.DELETED }
         for (submission in existingSubmissions) {
             if (submission.getStatus() == SubmissionStatus.SUBMITTED) {
                 LOG.info("[${gitSubmission.group.authorsNameStr()}] tried to submit before the previous one has been validated")
@@ -891,6 +897,26 @@ class UploadController(
 
         redirectAttributes.addFlashAttribute("message", "Desligado com sucesso do repositório ${repositoryUrl}")
         return "redirect:/upload/${assignment.id}"
+    }
+
+    @RequestMapping(value = ["/delete/{submissionId}"], method = [(RequestMethod.POST)])
+    fun deleteSubmission(@PathVariable submissionId: Long,
+                         principal: Principal) : String {
+
+        val submission = submissionRepository.findOne(submissionId)
+        val assignment = assignmentRepository.findOne(submission.assignmentId)
+
+        val acl = assignmentACLRepository.findByAssignmentId(assignment.id)
+        if (principal.name != assignment.ownerUserId && acl.find { it -> it.userId == principal.name } == null) {
+            throw IllegalAccessError("Submissions can only be deleted by the assignment owner or authorized teachers")
+        }
+
+        submission.setStatus(SubmissionStatus.DELETED)
+        submissionRepository.save(submission)
+
+        LOG.info("[${principal.name}] deleted submission $submissionId")
+
+        return "redirect:/report/${assignment.id}"
     }
 
     private fun checkAssignees(assignmentId: String, principalName: String) {

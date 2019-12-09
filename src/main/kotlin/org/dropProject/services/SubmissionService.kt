@@ -41,7 +41,9 @@ class SubmissionService(
 
 
     fun getSubmissionsList(assignment: Assignment): ArrayList<SubmissionInfo> {
-        val submissions = submissionRepository.findByAssignmentId(assignment.id)
+        val submissions = submissionRepository
+                .findByAssignmentId(assignment.id)
+                .filter { it.getStatus() != SubmissionStatus.DELETED }
 
         val submissionsByGroup = submissions.groupBy { it -> it.group }
 

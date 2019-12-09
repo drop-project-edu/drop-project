@@ -50,6 +50,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import org.dropProject.TestsHelper
 import org.dropProject.dao.*
 import org.dropProject.data.BuildReport
+import org.dropProject.data.SubmissionInfo
 import org.dropProject.data.TestType
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.*
@@ -1217,6 +1218,54 @@ class UploadControllerTests {
         assertEquals(SubmissionStatus.VALIDATED, updatedSubmission.getStatus())
     }
 
+    @Test
+    @DirtiesContext
+    fun uploadAndDeleteOneSubmission() {
+
+        val submissionId = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
+
+        this.mvc.perform(post("/delete/$submissionId")
+                .with(user(TEACHER_1)))
+                .andExpect(status().isFound)
+                .andExpect(header().string("Location", "/report/testJavaProj"))
+
+        val reportResult = this.mvc.perform(get("/report/testJavaProj")
+                .with(user(TEACHER_1)))
+                .andExpect(status().isOk())
+                .andReturn()
+
+        @Suppress("UNCHECKED_CAST")
+        val report = reportResult.modelAndView.modelMap["submissions"] as List<SubmissionInfo>
+        assertTrue("report should be empty", report.isEmpty())
+
+        this.mvc.perform(get("/buildReport/$submissionId")
+                .with(user(STUDENT_1)))
+                .andExpect(status().isForbidden())
+    }
+
+    @Test
+    @DirtiesContext
+    fun uploadMultipleAndDeleteJustOneSubmission() {
+
+        val submissionId1 = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
+        val submissionId2 = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
+
+        this.mvc.perform(post("/delete/$submissionId1")
+                .with(user(TEACHER_1)))
+                .andExpect(status().isFound)
+                .andExpect(header().string("Location", "/report/testJavaProj"))
+
+        val reportResult = this.mvc.perform(get("/report/testJavaProj")
+                .with(user(TEACHER_1)))
+                .andExpect(status().isOk())
+                .andReturn()
+
+        @Suppress("UNCHECKED_CAST")
+        val report = reportResult.modelAndView.modelMap["submissions"] as List<SubmissionInfo>
+        assertEquals(1, report.size)
+        assertEquals(1,report[0].allSubmissions.size)
+        assertEquals(submissionId2,report[0].allSubmissions[0].id.toInt())
+    }
 
 }
 

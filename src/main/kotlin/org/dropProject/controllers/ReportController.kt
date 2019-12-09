@@ -129,6 +129,10 @@ class ReportController(
                 }
             }
 
+            if (submission.getStatus() == SubmissionStatus.DELETED) {
+                throw AccessDeniedException("This submission was deleted")
+            }
+
             model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.name, submission.assignmentId)
 
             val assignment = assignmentRepository.findOne(submission.assignmentId)
@@ -431,7 +435,9 @@ class ReportController(
         model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.name, assignment.id)
 
         // TODO this is similar to getSubmissions: refactor
-        val submissions = submissionRepository.findBySubmitterUserIdAndAssignmentId(principal.name, assignmentId)
+        val submissions = submissionRepository
+                .findBySubmitterUserIdAndAssignmentId(principal.name, assignmentId)
+                .filter { it.getStatus() != SubmissionStatus.DELETED }
         for (submission in submissions) {
             val reportElements = submissionReportRepository.findBySubmissionId(submission.id)
             submission.reportElements = reportElements
@@ -463,7 +469,9 @@ class ReportController(
         model["assignment"] = assignment
         model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.name, assignment.id)
 
-        val submissions = submissionRepository.findByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(group, assignmentId)
+        val submissions = submissionRepository
+                .findByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(group, assignmentId)
+                .filter { it.getStatus() != SubmissionStatus.DELETED }
         for (submission in submissions) {
             val reportElements = submissionReportRepository.findBySubmissionId(submission.id)
             submission.reportElements = reportElements

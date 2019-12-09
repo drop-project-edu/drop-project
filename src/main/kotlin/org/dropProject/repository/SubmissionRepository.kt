@@ -24,13 +24,14 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.transaction.annotation.Transactional
 import org.dropProject.dao.ProjectGroup
 import org.dropProject.dao.Submission
+import org.dropProject.dao.SubmissionStatus
 import java.util.*
 
 interface SubmissionRepository : JpaRepository<Submission, Long> {
 
     fun findByAssignmentId(assignmentId: String) : List<Submission>
 
-    @Query("SELECT COUNT(DISTINCT s.group) FROM Submission s WHERE s.assignmentId = ?1")
+    @Query("SELECT COUNT(DISTINCT s.group) FROM Submission s WHERE s.assignmentId = ?1 and s.status <> 'D'")  // TODO Replace by constant
     fun findUniqueSubmittersByAssignmentId(assignmentId: String) : Long
 
     fun findByAssignmentIdAndMarkedAsFinal(assignmentId: String, markedAsFinal: Boolean) : List<Submission>

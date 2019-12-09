@@ -69,6 +69,14 @@
         </form>
     </div>
 
+    <div class="btn-group" role="group" th:if="${isTeacher}" th:unless="${autoRefresh}">
+        <form class="inline btn-group" method="post" th:action="'../delete/' + ${submission.id}">
+            <input type="submit" value="Delete" class="btn btn-default" data-toggle="confirmation" data-title="Delete"
+                   data-content="Are you sure you want to delete this submissions?"
+                   data-btn-ok-label="Yes, delete!" data-btn-cancel-label="Cancel"/>
+        </form>
+    </div>
+
     <div class="alert alert-error" th:if="${error}">
     <span th:text="${error}"/><i th:if="${autoRefresh}" class="fa fa-spinner fa-spin" style="font-size:24px"></i>
     </div>
@@ -232,6 +240,14 @@
 </div>
 
 <div th:replace="layout/layout :: footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-confirmation2@2.4.2/bootstrap-confirmation.min.js"></script>
+<script>
+    $('[data-toggle=confirmation]').confirmation({
+        rootSelector: '[data-toggle=confirmation]'
+        // other options
+    });
+</script>
 
 </body>
 </html>
