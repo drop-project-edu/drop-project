@@ -641,6 +641,34 @@ class ReportController(
 //
 //        }
     }
+
+//    @RequestMapping(value = ["/size"], method = [(RequestMethod.GET)])
+//    fun size() {
+//
+//        val assignments = assignmentRepository.findAll()
+//
+//        for (assignment in assignments) {
+//
+//            var countDeletedFolders = 0
+//            var countExistentFolders = 0
+//            var totalSize = 0L
+//
+//            val submissions = submissionRepository.findByAssignmentId(assignment.id)
+//
+//            for (submission in submissions) {
+//                val mavenizedFolder = File(mavenizedProjectsRootLocation + "/" + submission.submissionId + "-mavenized")
+//                if (mavenizedFolder.exists()) {
+//                    countExistentFolders++
+//                    totalSize += FileUtils.sizeOfDirectory(mavenizedFolder)
+//                } else {
+//                    countDeletedFolders++
+//                }
+//            }
+//
+//            LOG.info("*** ${assignment.id} - ${countExistentFolders} - ${countDeletedFolders} (${totalSize / 1_000_000} Mb) ***")
+//        }
+//
+//    }
 }
     
     

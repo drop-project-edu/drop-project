@@ -345,5 +345,9 @@ data class BuildReport(val mavenOutputLines: List<String>,
                 .replace("ComplexCondition -", "Condição demasiado complexa -")
                 .replace("StringLiteralDuplication -", "String duplicada. Deve ser usada uma constante -")
                 .replace("NestedBlockDepth -", "Demasiados níveis de blocos dentro de blocos -")
+                .replace("UnsafeCallOnNullableType -", "Não é permitido usar o !! pois pode causar crashes -")
+                .replace("MaxLineLength -", "Linha demasiado comprida -")
+                .replace("LongMethod -", "Função com demasiadas linhas de código -")
+                .replace("ForbiddenKeywords -", "Utilização de instruções proibidas -")
     }
 }
