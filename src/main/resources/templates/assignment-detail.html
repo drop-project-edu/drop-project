@@ -103,7 +103,7 @@
                 </div>
                 <div class="form-group" th:if="${assignment.showLeaderBoard}">
                     <label class="col-sm-3 control-label">Show leaderboard:</label>
-                    <div class="col-sm-9 read-row" th:text="${assignment.showLeaderBoard}"></div>
+                    <div class="col-sm-9 read-row" th:text="${assignment.leaderboardType}"></div>
                 </div>
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Open to:</label>
@@ -111,9 +111,9 @@
                     <div class="col-sm-9 read-row" th:if="${!assignees.isEmpty()}">
                         <table class="table table-bordered">
                             <tbody>
-                                <tr th:each="assignee : ${assignees}">
-                                    <td th:text="${assignee.authorUserId}"></td>
-                                </tr>
+                            <tr th:each="assignee : ${assignees}">
+                                <td th:text="${assignee.authorUserId}"></td>
+                            </tr>
                             </tbody>
                         </table>
                     </div>

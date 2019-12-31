@@ -38,6 +38,12 @@ enum class TestVisibility {
     SHOW_PROGRESS  // show the number of tests that pass
 }
 
+enum class LeaderboardType {
+    TESTS_OK,    // ordered by number of passed tests (desc)
+    ELLAPSED,    // ordered by number of passed tests (desc) and then ellapsed (asc)
+    COVERAGE     // ordered by number of passed tests (desc) and then coverage (desc)
+}
+
 @Entity
 data class Assignment(
         @Id
@@ -62,6 +68,7 @@ data class Assignment(
         var cooloffPeriod: Int? = null, // minutes
         var maxMemoryMb: Int? = null,
         var showLeaderBoard: Boolean = false,
+        var leaderboardType: LeaderboardType? = null,
 
         val gitRepositoryUrl: String,
         @Column(columnDefinition = "TEXT")

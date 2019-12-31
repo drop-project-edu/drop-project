@@ -8,15 +8,24 @@
 
 <div th:replace="layout/layout :: header"></div>
 
+<!--/*@thymesVar id="assignment" type="org.dropProject.dao.Assignment"*/-->
 <!--/*@thymesVar id="submissions" type="java.util.ArrayList<org.dropProject.dao.Submission>"*/-->
 <div class="container" style="max-width: 900px; margin-bottom: 65px">
 
-    <h1 class="page-header"><img th:src="@{/img/trophy_64.png}" alt="Trophy logo"/> Leaderboard <small th:text="${assignmentId}"></small></h1>
+    <h1 class="page-header"><img th:src="@{/img/trophy_64.png}" alt="Trophy logo"/> Leaderboard <small th:text="${assignment.id}"></small></h1>
     <h6>
         <span th:text="${submissions.size()}"></span> groups pass at least one test
     </h6>
 
-    <div class="alert alert-info">Best submissions ordered by the number of teacher tests passed and ellapsed time</div>
+    <div class="alert alert-info" th:if="${assignment.getLeaderboardType() == T(org.dropProject.dao.LeaderboardType).TESTS_OK}">
+        Best submissions ordered by the number of teacher tests passed
+    </div>
+    <div class="alert alert-info" th:if="${assignment.getLeaderboardType() == T(org.dropProject.dao.LeaderboardType).ELLAPSED}">
+        Best submissions ordered by the number of teacher tests passed and ellapsed time
+    </div>
+    <div class="alert alert-info" th:if="${assignment.getLeaderboardType() == T(org.dropProject.dao.LeaderboardType).COVERAGE}">
+        Best submissions ordered by the number of teacher tests passed and coverage
+    </div>
     <div th:if="${isTeacher}" class="alert alert-info">Links only visible to teachers</div>
 
     <table class="table">
@@ -26,8 +35,12 @@
             <th>Group</th>
             <th class="text-center">Last Submission Date</th>
             <th class="text-center">Indicators</th>
-            <th class="text-center" th:if="${hasCoverage}"><span class="glyphicon glyphicon-signal" aria-hidden="true" title="Coverage of student tests"></span></th>
-            <th class="text-center"><span class="glyphicon glyphicon-time" aria-hidden="true" title="Time spent running tests"></span></th>
+            <th class="text-right" th:if="${assignment.getLeaderboardType() == T(org.dropProject.dao.LeaderboardType).COVERAGE}">
+                <span class="glyphicon glyphicon-signal" aria-hidden="true" title="Coverage of student tests"></span>
+            </th>
+            <th class="text-center" th:if="${assignment.getLeaderboardType() == T(org.dropProject.dao.LeaderboardType).ELLAPSED}">
+                <span class="glyphicon glyphicon-time" aria-hidden="true" title="Time spent running tests"></span>
+            </th>
         </tr>
         </thead>
         <tbody>
@@ -55,17 +68,17 @@
                         <img src="../img/if_sign-question-mark.png" th:if="${report.reportValue == 'Not Enough Tests'}" th:alt="${report.indicator.description}" th:title="${report.indicator.description}" width="16" height="16" />
                     </span>
                     <span class="label" th:if="${report.progressSummary(isTeacher) != null}"
-                      th:classappend="${report.cssLabel}"
-                      th:title="${report.indicator.description}"
-                      th:text="${report.progressSummary(isTeacher)}">14/14</span>
+                          th:classappend="${report.cssLabel}"
+                          th:title="${report.indicator.description}"
+                          th:text="${report.progressSummary(isTeacher)}">14/14</span>
                 </span>
             </td>
 
-            <td class="text-nowrap text-right" th:if="${hasCoverage}">
-                <span th:if="${submission.coverage != null}" th:text="${submission.coverage +'%'}"></span>
+            <td class="text-nowrap text-right" th:if="${assignment.getLeaderboardType() == T(org.dropProject.dao.LeaderboardType).COVERAGE}">
+                <span th:if="${submission.coverage != null and submission.coverage != 0 }" th:text="${submission.coverage +'%'}"></span>
             </td>
 
-            <td class="text-center" th:text="${submission.ellapsed} ? ${#numbers.formatDecimal(submission.ellapsed, 0, 'DEFAULT', 2, 'DEFAULT')}"></td>
+            <td class="text-center" th:if="${assignment.getLeaderboardType() == T(org.dropProject.dao.LeaderboardType).ELLAPSED}" th:text="${submission.ellapsed} ? ${#numbers.formatDecimal(submission.ellapsed, 0, 'DEFAULT', 2, 'DEFAULT')}"></td>
         </tr>
         </tbody>
     </table>

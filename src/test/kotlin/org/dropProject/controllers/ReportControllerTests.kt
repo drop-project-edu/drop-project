@@ -48,6 +48,7 @@ import java.io.File
 import java.nio.file.Files
 import org.dropProject.TestsHelper
 import org.dropProject.dao.Assignment
+import org.dropProject.dao.LeaderboardType
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.AssignmentRepository
 import org.dropProject.repository.GitSubmissionRepository
@@ -343,6 +344,7 @@ class ReportControllerTests {
 
         val assignment = assignmentRepository.getOne(defaultAssignmentId)
         assignment.showLeaderBoard = true
+        assignment.leaderboardType = LeaderboardType.ELLAPSED
         assignmentRepository.save(assignment)
 
         // we start with two authors

@@ -115,12 +115,28 @@
                     <option value="SHOW_OK_NOK" th:selected="${assignmentForm.hiddenTestsVisibility=='SHOW_OK_NOK'}">Show only if it passes all the hidden tests or not (OK / NOK)</option>
                     <option value="SHOW_PROGRESS" th:selected="${assignmentForm.hiddenTestsVisibility=='SHOW_PROGRESS'}">Show only the number of hidden tests passed</option>
                 </select>
-                <p class="help-block" th:if="${#fields.hasErrors('hiddenTestsVisibility')}" th:errors="*{submissionMethod}">Error</p>
+                <p class="help-block" th:if="${#fields.hasErrors('hiddenTestsVisibility')}" th:errors="*{hiddenTestsVisibility}">Error</p>
                 <p class="help-block" th:if="${!#fields.hasErrors('hiddenTestsVisibility')}" >
                     Teachers can include hidden tests in the assignment by naming them TestTeacherHiddenXXX.
                     Depending on the option selected above, the results of these tests can be completely hidden from the students or
                     partial information will be shown (without specific information on which/why tests failed). Obviously, the results
                     of hiddent tests are always visible to teachers.</p>
+            </div>
+        </div>
+
+        <div class="form-group" th:classappend="${#fields.hasErrors('leaderboardType')} ? 'has-error' : ''">
+            <label for="leaderboardType" class="col-sm-3 control-label">Leaderboard Type</label>
+            <div class="col-sm-9">
+                <select th:field="*{leaderboardType}" class="form-control" id="leaderboardType">
+                    <option value="">Don't show leaderboard</option>
+                    <option value="TESTS_OK" th:selected="${assignmentForm.leaderboardType=='TESTS_OK'}">Show leaderboard with number of passed tests (DESC)</option>
+                    <option value="ELLAPSED" th:selected="${assignmentForm.leaderboardType=='ELLAPSED'}">Show leaderboard with number of passed tests (DESC) + ellapsed time (ASC)</option>
+                    <option value="COVERAGE" th:selected="${assignmentForm.leaderboardType=='COVERAGE'}">Show leaderboard with number of passed tests (DESC) + code coverage (DESC)</option>
+                </select>
+                <p class="help-block" th:if="${#fields.hasErrors('leaderboardType')}" th:errors="*{submissionMethod}">Error</p>
+                <p class="help-block" th:if="${!#fields.hasErrors('leaderboardType')}" >
+                    The leaderboard presents an anonymized table of results (viewable by everyone). This can be helpful to motivate the students.
+                    You can choose the sorting criteria that will be used to build the leaderboard</p>
             </div>
         </div>
 
@@ -131,13 +147,7 @@
                 <p class="help-block" th:if="${#fields.hasErrors('maxMemoryMb')}" th:errors="*{maxMemoryMb}">Error</p>
                 <p class="help-block" th:if="${!#fields.hasErrors('maxMemoryMb')}" >(Optional) Constrain max heap memory available for each submission tests (-Xmx flag)</p>
             </div>
-            <div class="col-sm-5" th:classappend="${#fields.hasErrors('showLeaderBoard')} ? 'has-error' : ''">
-                <input th:field="*{showLeaderBoard}" type="checkbox" /> <strong>Show Leaderboard</strong>
-                <p class="help-block" th:if="${#fields.hasErrors('showLeaderBoard')}" th:errors="*{showLeaderBoard}">Error</p>
-                <p class="help-block" th:if="${!#fields.hasErrors('showLeaderBoard')}" >Leaderboard presents anonymized table of results (viewable by everyone)</p>
-            </div>
         </div>
-
 
         <div class="form-group">
             <label for="dueDate" class="col-sm-3 control-label">Due Date (optional)</label>

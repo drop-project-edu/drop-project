@@ -475,9 +475,23 @@ class AssignmentControllerTests {
                     .param("submissionMethod","UPLOAD")
                     .param("language", "JAVA")
                     .param("gitRepositoryUrl", "git@github.com:palves-ulht/sampleJavaAssignment.git")
+                    .param("leaderboardType", "ELLAPSED")
             )
                     .andExpect(status().isFound())
                     .andExpect(header().string("Location", "/assignment/info/dummyAssignment8"))
+
+            // get edit form again
+            this.mvc.perform(get("/assignment/edit/dummyAssignment8"))
+                    .andExpect(status().isOk)
+                    .andExpect(model().hasNoErrors<String>())
+                    .andExpect(model().attribute("assignmentForm",
+                            AssignmentForm(assignmentId = "dummyAssignment8",
+                                    assignmentName = "New Name",
+                                    submissionMethod = SubmissionMethod.UPLOAD,
+                                    language = Language.JAVA,
+                                    gitRepositoryUrl = "git@github.com:palves-ulht/sampleJavaAssignment.git",
+                                    editMode = true,
+                                    leaderboardType = LeaderboardType.ELLAPSED)))
 
 
         } finally {

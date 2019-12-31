@@ -35,9 +35,7 @@ import org.springframework.web.bind.annotation.*
 import org.thymeleaf.TemplateEngine
 import org.thymeleaf.context.Context
 import org.dropProject.MAVEN_MAX_EXECUTION_TIME
-import org.dropProject.dao.BuildReport
-import org.dropProject.dao.Indicator
-import org.dropProject.dao.SubmissionStatus
+import org.dropProject.dao.*
 import org.dropProject.data.AuthorDetails
 import org.dropProject.data.TestType
 import org.dropProject.forms.SubmissionMethod
@@ -584,28 +582,39 @@ class ReportController(
 
     @RequestMapping(value = ["/leaderboard/{assignmentId}"], method = [(RequestMethod.GET)])
     fun getLeaderboard(@PathVariable assignmentId: String, model: ModelMap,
-                  principal: Principal, request: HttpServletRequest): String {
+                       principal: Principal, request: HttpServletRequest): String {
 
         val assignment = assignmentRepository.findOne(assignmentId)
         if (!assignment.showLeaderBoard) {
             throw AccessDeniedException("Leaderboard for this assignment is not turned on")
+        } else {
+            if (assignment.leaderboardType == null) {  // TODO: Remove this after making this field mandatory
+                assignment.leaderboardType = LeaderboardType.TESTS_OK
+            }
         }
 
         val submissionInfoList = submissionService.getSubmissionsList(assignment)
 
-        val sortedList =
-            submissionInfoList
-                .map { it.lastSubmission }
-                .filter { it.getStatus() in listOf(SubmissionStatus.VALIDATED, SubmissionStatus.VALIDATED_REBUILT) }
-                .filter { it.teacherTests?.progress ?: 0 > 0 }
-                // compare by progress descending and ellapsed ascending
-                .sortedWith( compareBy( { -it.teacherTests!!.progress }, { it.ellapsed } ))
-                .map {
-                    it.reportElements = it.reportElements?.filter { it.indicator == Indicator.TEACHER_UNIT_TESTS }
-                    it  // just return itself
+        val comparator: Comparator<Submission> =
+                when (assignment.leaderboardType ?: LeaderboardType.TESTS_OK) {
+                    LeaderboardType.TESTS_OK -> compareBy { -it.teacherTests!!.progress }
+                    LeaderboardType.ELLAPSED -> compareBy({ -it.teacherTests!!.progress }, { it.ellapsed })
+                    LeaderboardType.COVERAGE -> compareBy({ -it.teacherTests!!.progress }, { -(it.coverage ?: 0) })
                 }
 
-        model["assignmentId"] = assignmentId
+        val sortedList =
+                submissionInfoList
+                        .map { it.lastSubmission }
+                        .filter { it.getStatus() in listOf(SubmissionStatus.VALIDATED, SubmissionStatus.VALIDATED_REBUILT) }
+                        .filter { it.teacherTests?.progress ?: 0 > 0 }
+                        // compare by progress descending and ellapsed ascending
+                        .sortedWith( comparator )
+                        .map {
+                            it.reportElements = it.reportElements?.filter { it.indicator == Indicator.TEACHER_UNIT_TESTS }
+                            it  // just return itself
+                        }
+
+        model["assignment"] = assignment
         model["submissions"] = sortedList
 
         return "leaderboard"

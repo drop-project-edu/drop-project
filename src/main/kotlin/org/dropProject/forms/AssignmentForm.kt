@@ -23,6 +23,7 @@ import org.dropProject.Constants
 import org.hibernate.validator.constraints.NotEmpty
 import org.springframework.format.annotation.DateTimeFormat
 import org.dropProject.dao.Language
+import org.dropProject.dao.LeaderboardType
 import org.dropProject.dao.TestVisibility
 import java.time.LocalDateTime
 import javax.validation.constraints.Min
@@ -56,7 +57,7 @@ data class AssignmentForm(
         @field:Min(value=32, message="Error: Max memory must be >= 32")
         var maxMemoryMb: Int? = null,
 
-        var showLeaderBoard: Boolean = false,
+        var leaderboardType: LeaderboardType? = null,
 
         var assignees: String? = null,
 

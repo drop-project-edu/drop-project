@@ -150,8 +150,9 @@ class AssignmentController(
                     cooloffPeriod = assignmentForm.cooloffPeriod,
                     maxMemoryMb = assignmentForm.maxMemoryMb, submissionMethod = assignmentForm.submissionMethod!!,
                     gitRepositoryUrl = assignmentForm.gitRepositoryUrl!!, ownerUserId = principal.name,
-                    gitRepositoryFolder = assignmentForm.assignmentId!!, showLeaderBoard = assignmentForm.showLeaderBoard,
-                    hiddenTestsVisibility = assignmentForm.hiddenTestsVisibility)
+                    gitRepositoryFolder = assignmentForm.assignmentId!!, showLeaderBoard = assignmentForm.leaderboardType != null,
+                    hiddenTestsVisibility = assignmentForm.hiddenTestsVisibility,
+                    leaderboardType = assignmentForm.leaderboardType)
             assignmentRepository.save(newAssignment)
 
             assignment = newAssignment
@@ -186,8 +187,9 @@ class AssignmentController(
             existingAssignment.calculateStudentTestsCoverage = assignmentForm.calculateStudentTestsCoverage
             existingAssignment.cooloffPeriod = assignmentForm.cooloffPeriod
             existingAssignment.maxMemoryMb = assignmentForm.maxMemoryMb
-            existingAssignment.showLeaderBoard = assignmentForm.showLeaderBoard
+            existingAssignment.showLeaderBoard = assignmentForm.leaderboardType != null
             existingAssignment.hiddenTestsVisibility = assignmentForm.hiddenTestsVisibility
+            existingAssignment.leaderboardType = assignmentForm.leaderboardType
             assignmentRepository.save(existingAssignment)
 
             assignment = existingAssignment
@@ -284,8 +286,8 @@ class AssignmentController(
                 calculateStudentTestsCoverage = assignment.calculateStudentTestsCoverage,
                 cooloffPeriod = assignment.cooloffPeriod,
                 hiddenTestsVisibility = assignment.hiddenTestsVisibility,
-                showLeaderBoard = assignment.showLeaderBoard,
-                maxMemoryMb = assignment.maxMemoryMb
+                maxMemoryMb = assignment.maxMemoryMb,
+                leaderboardType = assignment.leaderboardType
         )
 
         val assignees = assigneeRepository.findByAssignmentIdOrderByAuthorUserId(assignmentId)
