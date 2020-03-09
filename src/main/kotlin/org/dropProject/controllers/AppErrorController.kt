@@ -19,14 +19,14 @@
  */
 package org.dropProject.controllers
 
-import org.springframework.boot.autoconfigure.web.ErrorAttributes
-import org.springframework.boot.autoconfigure.web.ErrorController
+import org.springframework.boot.web.servlet.error.ErrorAttributes
+import org.springframework.boot.web.servlet.error.ErrorController
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseBody
-import org.springframework.web.context.request.ServletRequestAttributes
+import org.springframework.web.context.request.WebRequest
 import org.springframework.web.servlet.ModelAndView
 import javax.servlet.http.HttpServletRequest
 
@@ -35,8 +35,8 @@ const val ERROR_PATH = "/error"
 @Controller
 class AppErrorController(var errorAttributes: ErrorAttributes) : ErrorController {
     @RequestMapping(value = [ERROR_PATH], produces = ["text/html"])
-    fun errorHtml(request: HttpServletRequest): ModelAndView {
-        return ModelAndView("exception", getErrorAttributes(request, false))
+    fun errorHtml(webRequest: WebRequest): ModelAndView {
+        return ModelAndView("exception", getErrorAttributes(webRequest, false))
     }
 
     /**
@@ -46,8 +46,8 @@ class AppErrorController(var errorAttributes: ErrorAttributes) : ErrorController
      */
     @RequestMapping(value = [ERROR_PATH])
     @ResponseBody
-    fun error(request: HttpServletRequest): ResponseEntity<Map<String, Any>> {
-        val body = getErrorAttributes(request, getTraceParameter(request))
+    fun error(request: HttpServletRequest, webRequest: WebRequest): ResponseEntity<Map<String, Any>> {
+        val body = getErrorAttributes(webRequest, getTraceParameter(request))
         val status = getStatus(request)
         return ResponseEntity(body, status)
     }
@@ -67,10 +67,9 @@ class AppErrorController(var errorAttributes: ErrorAttributes) : ErrorController
         return "false" != parameter.toLowerCase()
     }
 
-    private fun getErrorAttributes(request: HttpServletRequest,
+    private fun getErrorAttributes(webRequest: WebRequest,
                                    includeStackTrace: Boolean): Map<String, Any> {
-        val requestAttributes = ServletRequestAttributes(request)
-        return this.errorAttributes.getErrorAttributes(requestAttributes, includeStackTrace)
+        return this.errorAttributes.getErrorAttributes(webRequest, includeStackTrace)
     }
 
     private fun getStatus(request: HttpServletRequest): HttpStatus {

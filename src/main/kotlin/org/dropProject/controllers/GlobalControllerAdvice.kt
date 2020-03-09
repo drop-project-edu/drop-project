@@ -19,7 +19,7 @@
  */
 package org.dropProject.controllers
 
-import org.apache.tomcat.jdbc.pool.DataSource
+import com.zaxxer.hikari.HikariDataSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.info.BuildProperties
@@ -40,7 +40,7 @@ class GlobalControllerAdvice {
     lateinit var buildProperties: BuildProperties
 
     @Autowired
-    private val dataSource: DataSource? = null
+    private val dataSource: HikariDataSource? = null
 
     @Autowired
     private val userDetailsManager: UserDetailsManager? = null

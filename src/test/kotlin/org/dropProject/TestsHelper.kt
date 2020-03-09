@@ -171,7 +171,7 @@ class TestsHelper {
                 .with(SecurityMockMvcRequestPostProcessors.user(user)))
                 .andExpect(MockMvcResultMatchers.status().isFound())
                 .andExpect(MockMvcResultMatchers.header().string("Location", "/assignment/info/${assignmentId}"))
-                .andExpect(MockMvcResultMatchers.flash().attribute<String>("message", "Assignment was successfully created and connected to git repository"))
+                .andExpect(MockMvcResultMatchers.flash().attribute("message", "Assignment was successfully created and connected to git repository"))
     }
 
     fun connectToGitRepositoryAndBuildReport(mvc: MockMvc, gitSubmissionRepository: GitSubmissionRepository,
@@ -207,7 +207,7 @@ class TestsHelper {
                 .with(user(student)))
                 .andExpect(MockMvcResultMatchers.status().isFound())
                 .andExpect(MockMvcResultMatchers.header().string("Location", "/upload/${assignmentId}"))
-                .andExpect(MockMvcResultMatchers.flash().attribute<String>("message", "Ligado com sucesso ao repositório git"))
+                .andExpect(MockMvcResultMatchers.flash().attribute("message", "Ligado com sucesso ao repositório git"))
 
         val updatedGitSubmission = gitSubmissionRepository.getOne(id)
         Assert.assertTrue(updatedGitSubmission.connected)

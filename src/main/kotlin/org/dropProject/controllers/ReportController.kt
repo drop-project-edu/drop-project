@@ -90,7 +90,7 @@ class ReportController(
                   principal: Principal, request: HttpServletRequest): String {
         model["assignmentId"] = assignmentId
 
-        val assignment = assignmentRepository.findOne(assignmentId)
+        val assignment = assignmentRepository.findById(assignmentId).get()
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
         if (principal.name != assignment.ownerUserId && acl.find { it -> it.userId == principal.name } == null) {
@@ -115,7 +115,7 @@ class ReportController(
     fun getSubmissionReport(@PathVariable submissionId: Long, model: ModelMap, principal: Principal,
                             request: HttpServletRequest): String {
 
-        val submission = submissionRepository.findOne(submissionId)
+        val submission = submissionRepository.findById(submissionId).orElse(null)
 
         if (submission != null) {
 
@@ -133,7 +133,7 @@ class ReportController(
 
             model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.name, submission.assignmentId)
 
-            val assignment = assignmentRepository.findOne(submission.assignmentId)
+            val assignment = assignmentRepository.findById(submission.assignmentId).orElse(null)
 
             model["assignment"] = assignment
 
@@ -191,7 +191,7 @@ class ReportController(
     fun downloadMavenProject(@PathVariable submissionId: Long, principal: Principal,
                              request: HttpServletRequest, response: HttpServletResponse): FileSystemResource {
 
-        val submission = submissionRepository.findOne(submissionId)
+        val submission = submissionRepository.findById(submissionId).orElse(null)
         if (submission != null) {
 
             // check that principal belongs to the group that made this submission
@@ -224,7 +224,7 @@ class ReportController(
     fun downloadOriginalProject(@PathVariable submissionId: Long, principal: Principal,
                                 request: HttpServletRequest, response: HttpServletResponse): FileSystemResource {
 
-        val submission = submissionRepository.findOne(submissionId)
+        val submission = submissionRepository.findById(submissionId).orElse(null)
         if (submission != null) {
 
             // check that principal belongs to the group that made this submission
@@ -246,7 +246,7 @@ class ReportController(
 
                 return FileSystemResource(projectFile)
             } else {
-                val gitSubmission = gitSubmissionRepository.findOne(submission.gitSubmissionId)
+                val gitSubmission = gitSubmissionRepository.findById(submission.gitSubmissionId).orElse(null)
                         ?: throw IllegalArgumentException("git submission ${submissionId} is not registered")
                 val repositoryFolder = File(gitSubmissionsRootLocation, gitSubmission.getFolderRelativeToStorageRoot())
 
@@ -279,7 +279,7 @@ class ReportController(
     fun downloadOriginalAll(@PathVariable assignmentId: String, principal: Principal,
                             response: HttpServletResponse): FileSystemResource {
 
-        val assignment = assignmentRepository.findOne(assignmentId)
+        val assignment = assignmentRepository.findById(assignmentId).orElse(null)
                 ?: throw IllegalArgumentException("assignment ${assignmentId} is not registered")
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
@@ -344,7 +344,7 @@ class ReportController(
     fun downloadMavenizedAll(@PathVariable assignmentId: String, principal: Principal,
                              response: HttpServletResponse): FileSystemResource {
 
-        val assignment = assignmentRepository.findOne(assignmentId)
+        val assignment = assignmentRepository.findById(assignmentId).orElse(null)
                 ?: throw IllegalArgumentException("assignment ${assignmentId} is not registered")
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
@@ -407,7 +407,11 @@ class ReportController(
             ctx.setVariable("groupId", assignment.packageName)
             ctx.setVariable("artifactId", assignment.id)
             ctx.setVariable("modules", modulesList)
-            templateEngine.process("download-all-pom", ctx, FileWriter(File(tempFolder, "pom.xml")))
+            try {
+                templateEngine.process("download-all-pom", ctx, FileWriter(File(tempFolder, "pom.xml")))
+            } catch (e: Exception) {
+                println("e = ${e}")
+            }
 
             val zipFilename = tempFolder.name
             val zipFile = zipService.createZipFromFolder(zipFilename, tempFolder)
@@ -427,7 +431,7 @@ class ReportController(
     fun getMySubmissions(@RequestParam("assignmentId") assignmentId: String, model: ModelMap,
                          principal: Principal, request: HttpServletRequest): String {
 
-        val assignment = assignmentRepository.findOne(assignmentId)
+        val assignment = assignmentRepository.findById(assignmentId).orElse(null)
 
         model["assignment"] = assignment
         model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.name, assignment.id)
@@ -461,8 +465,8 @@ class ReportController(
                        model: ModelMap, principal: Principal,
                        request: HttpServletRequest): String {
 
-        val assignment = assignmentRepository.findOne(assignmentId)
-        val group = projectGroupRepository.findOne(groupId)
+        val assignment = assignmentRepository.findById(assignmentId).orElse(null)
+        val group = projectGroupRepository.findById(groupId).orElse(null)
 
         model["assignment"] = assignment
         model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.name, assignment.id)
@@ -505,7 +509,7 @@ class ReportController(
     fun exportCSV(@PathVariable assignmentId: String,
                   @RequestParam(name="ellapsed", defaultValue = "true") includeEllapsed: Boolean, principal: Principal): ResponseEntity<String> {
 
-        val assignment = assignmentRepository.findOne(assignmentId)
+        val assignment = assignmentRepository.findById(assignmentId).orElse(null)
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
         if (principal.name != assignment.ownerUserId && acl.find { it -> it.userId == principal.name } == null) {
@@ -584,7 +588,7 @@ class ReportController(
     fun getLeaderboard(@PathVariable assignmentId: String, model: ModelMap,
                        principal: Principal, request: HttpServletRequest): String {
 
-        val assignment = assignmentRepository.findOne(assignmentId)
+        val assignment = assignmentRepository.findById(assignmentId).orElse(null)
         if (!assignment.showLeaderBoard) {
             throw AccessDeniedException("Leaderboard for this assignment is not turned on")
         } else {

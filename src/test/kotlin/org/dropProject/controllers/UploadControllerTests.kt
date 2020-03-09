@@ -145,7 +145,7 @@ class UploadControllerTests {
         this.mvc.perform(fileUpload("/upload").file(multipartFile))
                 .andExpect(status().isFound())
                 .andExpect(header().string("Location", "/upload"))
-                .andExpect(flash().attribute<String>("error", "O ficheiro tem que ser um .zip"))
+                .andExpect(flash().attribute("error", "O ficheiro tem que ser um .zip"))
 
         verify(this.storageService, never()).store(multipartFile, "")
     }
@@ -159,7 +159,7 @@ class UploadControllerTests {
         this.mvc.perform(fileUpload("/upload").file(multipartFile))
                 .andExpect(status().isFound())
                 .andExpect(header().string("Location", "/upload"))
-                .andExpect(flash().attribute<String>("error", "Ficheiro excede o tamanho máximo permitido"))
+                .andExpect(flash().attribute("error", "Ficheiro excede o tamanho máximo permitido"))
 
         verify(this.storageService, never()).store(multipartFile, "")
     }
@@ -175,7 +175,7 @@ class UploadControllerTests {
                 .with(user(STUDENT_1)))
                 .andExpect(status().isOk())
                 .andExpect(view().name("student-upload-form"))
-                // .andExpect(model().attribute<String>("uploadSubmission", null))  ?????
+                // .andExpect(model().attribute("uploadSubmission", null))  ?????
 
 
     }
@@ -443,7 +443,7 @@ class UploadControllerTests {
             writer.close()
         }
 
-        val authors = authorRepository.findAll(Sort(Sort.Direction.ASC, "userId"))
+        val authors = authorRepository.findAll(Sort.by(Sort.Direction.ASC, "userId"))
         assertEquals(4, authors.size)
         assertEquals(authors[0].userId, "student1")
         assertEquals(authors[0].group.id, 1)

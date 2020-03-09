@@ -106,7 +106,7 @@ class AssignmentController(
         if (!assignmentForm.editMode) {   // create
 
             // check if it already exists an assignment with this id
-            if (assignmentRepository.exists(assignmentForm.assignmentId)) {
+            if (assignmentRepository.existsById(assignmentForm.assignmentId!!)) {
                 LOG.warning("An assignment already exists with this ID: ${assignmentForm.assignmentId}")
                 bindingResult.rejectValue("assignmentId", "assignment.duplicate", "Error: An assignment already exists with this ID")
                 return "assignment-form"
@@ -482,7 +482,7 @@ class AssignmentController(
             return "redirect:/assignment/my"
         }
 
-        assignmentRepository.delete(assignmentId)
+        assignmentRepository.deleteById(assignmentId)
         assignmentACLRepository.deleteByAssignmentId(assignmentId)
         assignmentReportRepository.deleteByAssignmentId(assignmentId)
 
@@ -561,7 +561,7 @@ class AssignmentController(
         val assignmentsACL = assignmentACLRepository.findByUserId(principal.name)
         val assignmentsAuthorized = ArrayList<Assignment>()
         for (assignmentACL in assignmentsACL) {
-            assignmentsAuthorized.add(assignmentRepository.findOne(assignmentACL.assignmentId))
+            assignmentsAuthorized.add(assignmentRepository.findById(assignmentACL.assignmentId).get())
         }
 
         val assignments = ArrayList<Assignment>()

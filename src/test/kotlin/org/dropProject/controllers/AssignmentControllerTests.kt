@@ -248,7 +248,7 @@ class AssignmentControllerTests {
             this.mvc.perform(post("/assignment/setup-git/dummyAssignment2"))
                     .andExpect(status().isFound())
                     .andExpect(header().string("Location", "/assignment/info/dummyAssignment2"))
-                    .andExpect(flash().attribute<String>("message","Assignment was successfully created and connected to git repository"))
+                    .andExpect(flash().attribute("message","Assignment was successfully created and connected to git repository"))
 
             val updatedAssignment = assignmentRepository.getOne("dummyAssignment2")
             assert(updatedAssignment.active == false)
@@ -300,7 +300,7 @@ class AssignmentControllerTests {
             this.mvc.perform(get("/assignment/my")
                     .with(SecurityMockMvcRequestPostProcessors.user(user)))
                     .andExpect(status().isOk())
-                    .andExpect(model().hasNoErrors<String>())
+                    .andExpect(model().hasNoErrors())
                     .andExpect(model().attribute("assignments", emptyList<Assignment>()))
 
             // create assignment
@@ -313,7 +313,7 @@ class AssignmentControllerTests {
             val mvcResult = this.mvc.perform(get("/assignment/my")
                     .with(SecurityMockMvcRequestPostProcessors.user(user)))
                     .andExpect(status().isOk())
-                    .andExpect(model().hasNoErrors<String>())
+                    .andExpect(model().hasNoErrors())
                     .andExpect(model().attribute("assignments", hasSize<Assignment>(1)))
                     .andReturn()
 
@@ -379,14 +379,14 @@ class AssignmentControllerTests {
             this.mvc.perform(get("/")
                     .with(SecurityMockMvcRequestPostProcessors.user("21800000")))
                     .andExpect(status().isOk)
-                    .andExpect(model().hasNoErrors<String>())
+                    .andExpect(model().hasNoErrors())
                     .andExpect(model().attribute("assignments", hasSize<Assignment>(0)))
 
             // mark the assignment as active
             this.mvc.perform(get("/assignment/toggle-status/dummyAssignment6"))
                     .andExpect(status().isFound)
                     .andExpect(header().string("Location", "/assignment/my"))
-                    .andExpect(flash().attribute<String>("message","Assignment was marked active"))
+                    .andExpect(flash().attribute("message","Assignment was marked active"))
 
             // login again as 21800000 and get a redirect to the assignment
             this.mvc.perform(get("/")
@@ -431,7 +431,7 @@ class AssignmentControllerTests {
             this.mvc.perform(get("/assignment/my")
                     .with(SecurityMockMvcRequestPostProcessors.user(user)))
                     .andExpect(status().isOk)
-                    .andExpect(model().hasNoErrors<String>())
+                    .andExpect(model().hasNoErrors())
                     .andExpect(model().attribute("assignments", hasSize<Assignment>(1)))
 
         } finally {
@@ -456,7 +456,7 @@ class AssignmentControllerTests {
             // get edit form
             this.mvc.perform(get("/assignment/edit/dummyAssignment8"))
                     .andExpect(status().isOk)
-                    .andExpect(model().hasNoErrors<String>())
+                    .andExpect(model().hasNoErrors())
                     .andExpect(model().attribute("assignmentForm",
                             AssignmentForm(assignmentId = "dummyAssignment8",
                                     assignmentName = "Dummy Assignment",
@@ -483,7 +483,7 @@ class AssignmentControllerTests {
             // get edit form again
             this.mvc.perform(get("/assignment/edit/dummyAssignment8"))
                     .andExpect(status().isOk)
-                    .andExpect(model().hasNoErrors<String>())
+                    .andExpect(model().hasNoErrors())
                     .andExpect(model().attribute("assignmentForm",
                             AssignmentForm(assignmentId = "dummyAssignment8",
                                     assignmentName = "New Name",
@@ -519,7 +519,7 @@ class AssignmentControllerTests {
         this.mvc.perform(get("/assignment/toggle-status/testJavaProj"))
                 .andExpect(status().isFound)
                 .andExpect(header().string("Location", "/assignment/my"))
-                .andExpect(flash().attribute<String>("message","Assignment was marked active"))
+                .andExpect(flash().attribute("message","Assignment was marked active"))
 
         // confirm it is now active
         val assignment = assignmentRepository.getOne("testJavaProj")
@@ -543,7 +543,7 @@ class AssignmentControllerTests {
         this.mvc.perform(get("/assignment/info/testJavaProj"))
                 .andExpect(status().isOk)
                 .andExpect(view().name("assignment-detail"))
-                .andExpect(model().hasNoErrors<String>())
+                .andExpect(model().hasNoErrors())
                 .andExpect(model().attribute("assignment", assignment))
                 .andExpect(content().string(containsString(assignment.id)))
 
@@ -574,17 +574,17 @@ class AssignmentControllerTests {
                 .with(user(TEACHER_1)))
                 .andExpect(status().isFound)
                 .andExpect(header().string("Location", "/assignment/my"))
-                .andExpect(flash().attribute<String>("error","Assignment can't be deleted because it has submissions"))
+                .andExpect(flash().attribute("error","Assignment can't be deleted because it has submissions"))
 
         // remove the submission
-        submissionRepository.delete(submissionId)
+        submissionRepository.deleteById(submissionId)
 
         // try to delete the assignment again, this time with success
         this.mvc.perform(post("/assignment/delete/testJavaProj")
                 .with(user(TEACHER_1)))
                 .andExpect(status().isFound)
                 .andExpect(header().string("Location", "/assignment/my"))
-                .andExpect(flash().attribute<String>("message","Assignment was successfully deleted"))
+                .andExpect(flash().attribute("message","Assignment was successfully deleted"))
 
     }
 
@@ -598,7 +598,7 @@ class AssignmentControllerTests {
             this.mvc.perform(get("/assignment/archived")
                     .with(SecurityMockMvcRequestPostProcessors.user(user)))
                     .andExpect(status().isOk())
-                    .andExpect(model().hasNoErrors<String>())
+                    .andExpect(model().hasNoErrors())
                     .andExpect(model().attribute("assignments", emptyList<Assignment>()))
 
             // create assignment
@@ -611,7 +611,7 @@ class AssignmentControllerTests {
             this.mvc.perform(get("/assignment/archived")
                     .with(SecurityMockMvcRequestPostProcessors.user(user)))
                     .andExpect(status().isOk())
-                    .andExpect(model().hasNoErrors<String>())
+                    .andExpect(model().hasNoErrors())
                     .andExpect(model().attribute("assignments", emptyList<Assignment>()))
 
             // archive assignment
@@ -619,13 +619,13 @@ class AssignmentControllerTests {
                     .with(SecurityMockMvcRequestPostProcessors.user(user)))
                     .andExpect(status().isFound)
                     .andExpect(header().string("Location", "/assignment/my"))
-                    .andExpect(flash().attribute<String>("message","Assignment was archived. You can now find it in the Archived assignments page"))
+                    .andExpect(flash().attribute("message","Assignment was archived. You can now find it in the Archived assignments page"))
 
             // list archived assignments should now return 1 assignment
             val mvcResult = this.mvc.perform(get("/assignment/archived")
                     .with(SecurityMockMvcRequestPostProcessors.user(user)))
                     .andExpect(status().isOk())
-                    .andExpect(model().hasNoErrors<String>())
+                    .andExpect(model().hasNoErrors())
                     .andExpect(model().attribute("assignments", hasSize<Assignment>(1)))
                     .andReturn()
 

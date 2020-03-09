@@ -143,7 +143,7 @@ class UploadController(
                       @PathVariable("assignmentId") assignmentId: String,
                       request: HttpServletRequest): String {
 
-        val assignment = assignmentRepository.findOne(assignmentId) ?: throw AssignmentNotFoundException(assignmentId)
+        val assignment = assignmentRepository.findById(assignmentId).orElse(null) ?: throw AssignmentNotFoundException(assignmentId)
 
         if (!request.isUserInRole("TEACHER")) {
 
@@ -226,7 +226,7 @@ class UploadController(
             throw IllegalArgumentException("assignmentId is null")
         }
 
-        val assignment = assignmentRepository.findOne(uploadForm.assignmentId) ?:
+        val assignment = assignmentRepository.findById(uploadForm.assignmentId).orElse(null) ?:
                 throw IllegalArgumentException("assignment ${uploadForm.assignmentId} is not registered")
 
         if (assignment.submissionMethod != SubmissionMethod.UPLOAD) {
@@ -490,7 +490,7 @@ class UploadController(
 
         LOG.info("Rebuilding ${submissionId}")
 
-        val submission = submissionRepository.findOne(submissionId)
+        val submission = submissionRepository.findById(submissionId).orElse(null)
         val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission, wasRebuilt = false)
 
         // TODO: This should go into submission
@@ -517,7 +517,7 @@ class UploadController(
 
         LOG.info("Rebuilding full ${submissionId}")
 
-        val submission = submissionRepository.findOne(submissionId) ?: throw SubmissionNotFoundException(submissionId)
+        val submission = submissionRepository.findById(submissionId).orElse(null) ?: throw SubmissionNotFoundException(submissionId)
 
         val assignment = assignmentRepository.getOne(submission.assignmentId)
 
@@ -551,7 +551,7 @@ class UploadController(
                 projectFolder
 
             } else if (submission.gitSubmissionId != null) {   // submission through git
-                val gitSubmission = gitSubmissionRepository.findOne(submission.gitSubmissionId) ?:
+                val gitSubmission = gitSubmissionRepository.findById(submission.gitSubmissionId).orElse(null) ?:
                                         throw SubmissionNotFoundException(submission.gitSubmissionId)
 
                 File(gitSubmissionsRootLocation, gitSubmission.getFolderRelativeToStorageRoot())
@@ -575,8 +575,8 @@ class UploadController(
                     redirectToSubmissionsList: Boolean,
                     principal: Principal) : String {
 
-        val submission = submissionRepository.findOne(submissionId)
-        val assignment = assignmentRepository.findOne(submission.assignmentId)
+        val submission = submissionRepository.findById(submissionId).orElse(null)
+        val assignment = assignmentRepository.findById(submission.assignmentId).orElse(null)
 
         val acl = assignmentACLRepository.findByAssignmentId(assignment.id)
         if (principal.name != assignment.ownerUserId && acl.find { it -> it.userId == principal.name } == null) {
@@ -813,9 +813,9 @@ class UploadController(
                principal: Principal,
                request: HttpServletRequest): ResponseEntity<String> {
 
-        val gitSubmission = gitSubmissionRepository.findOne(gitSubmissionId.toLong()) ?:
+        val gitSubmission = gitSubmissionRepository.findById(gitSubmissionId.toLong()).orElse(null) ?:
         throw IllegalArgumentException("git submission ${gitSubmissionId} is not registered")
-        val assignment = assignmentRepository.findOne(gitSubmission.assignmentId)
+        val assignment = assignmentRepository.findById(gitSubmission.assignmentId).orElse(null)
 
         // TODO: Validate assignment due date
 
@@ -899,8 +899,8 @@ class UploadController(
     fun deleteSubmission(@PathVariable submissionId: Long,
                          principal: Principal) : String {
 
-        val submission = submissionRepository.findOne(submissionId)
-        val assignment = assignmentRepository.findOne(submission.assignmentId)
+        val submission = submissionRepository.findById(submissionId).orElse(null)
+        val assignment = assignmentRepository.findById(submission.assignmentId).orElse(null)
 
         val acl = assignmentACLRepository.findByAssignmentId(assignment.id)
         if (principal.name != assignment.ownerUserId && acl.find { it -> it.userId == principal.name } == null) {

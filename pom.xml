@@ -5,7 +5,7 @@
 
 	<groupId>org.dropProject</groupId>
 	<artifactId>drop-project</artifactId>
-	<version>0.8.3</version>
+	<version>0.9.0</version>
 	<packaging>war</packaging>
 
 	<name>DropProject</name>
@@ -18,7 +18,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>1.5.9.RELEASE</version>
+		<version>2.2.5.RELEASE</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
@@ -27,7 +27,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>1.8</java.version>
-		<kotlin.version>1.3.11</kotlin.version>
+		<kotlin.version>1.3.61</kotlin.version>
 		<start-class>org.dropProject.DropProjectApplication</start-class>
 		<license.licenseName>apache_v2</license.licenseName>
 	</properties>
@@ -109,8 +109,8 @@
 		<!-- spring security for thymeleaf -->
 		<dependency>
 			<groupId>org.thymeleaf.extras</groupId>
-			<artifactId>thymeleaf-extras-springsecurity4</artifactId>
-			<version>2.1.3.RELEASE</version>
+			<artifactId>thymeleaf-extras-springsecurity5</artifactId>
+<!--			<version>2.1.3.RELEASE</version>-->
 		</dependency>
 
 		<!-- for parsing surefire (junit) test results -->
@@ -185,9 +185,8 @@
 				</executions>
 			</plugin>
 			<plugin>
-				<artifactId>kotlin-maven-plugin</artifactId>
 				<groupId>org.jetbrains.kotlin</groupId>
-				<version>${kotlin.version}</version>
+				<artifactId>kotlin-maven-plugin</artifactId>
 				<configuration>
 					<compilerPlugins>
 						<plugin>all-open</plugin>

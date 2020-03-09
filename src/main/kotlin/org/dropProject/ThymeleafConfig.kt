@@ -19,27 +19,28 @@
  */
 package org.dropProject
 
+import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Description
-import org.thymeleaf.extras.springsecurity4.dialect.SpringSecurityDialect
-import org.thymeleaf.spring4.SpringTemplateEngine
-import org.thymeleaf.templateresolver.TemplateResolver
-import org.dom4j.dom.DOMNodeHelper.setPrefix
-import org.springframework.context.ApplicationContext
-import org.thymeleaf.spring4.templateresolver.SpringResourceTemplateResolver
+import org.thymeleaf.extras.springsecurity5.dialect.SpringSecurityDialect
+import org.thymeleaf.spring5.SpringTemplateEngine
+import org.thymeleaf.spring5.templateresolver.SpringResourceTemplateResolver
+import org.thymeleaf.templatemode.TemplateMode
+import org.thymeleaf.templateresolver.ITemplateResolver
 
 @Configuration
 class ThymeleafConfig() {
 
     @Bean
     @Description("Thymeleaf template engine with Spring integration")
-    fun templateEngine(templateResolvers: Set<TemplateResolver>): SpringTemplateEngine {
+    fun templateEngine(appCtx: ApplicationContext): SpringTemplateEngine {
         val engine = SpringTemplateEngine()
-        engine.templateResolvers = templateResolvers
+        engine.addTemplateResolver(htmlTemplateResolver(appCtx))
+        engine.addTemplateResolver(xmlTemplateResolver(appCtx))
 
         engine.addDialect(SpringSecurityDialect())
-        engine.afterPropertiesSet()
+        // engine.afterPropertiesSet() TODO: is this needed?
         return engine
     }
 
@@ -50,9 +51,23 @@ class ThymeleafConfig() {
         templateResolver.setApplicationContext(appCtx)
         templateResolver.prefix = "classpath:/templatesXML/"
         templateResolver.suffix = ".xml"
-        templateResolver.templateMode = "XML"
+        templateResolver.templateMode = TemplateMode.XML
         templateResolver.characterEncoding = "UTF-8"
         templateResolver.isCacheable = true
+        templateResolver.checkExistence = true  // if it doesn't find the template check the next resolver
+        return templateResolver
+    }
+
+    @Bean
+    fun htmlTemplateResolver(appCtx: ApplicationContext): SpringResourceTemplateResolver {
+        val templateResolver = SpringResourceTemplateResolver()
+        templateResolver.setApplicationContext(appCtx)
+        templateResolver.prefix = "classpath:/templates/"
+        templateResolver.suffix = ".html"
+        templateResolver.templateMode = TemplateMode.HTML
+        templateResolver.characterEncoding = "UTF-8"
+        templateResolver.isCacheable = true
+        templateResolver.checkExistence = true  // if it doesn't find the template check the next resolver
         return templateResolver
     }
 }

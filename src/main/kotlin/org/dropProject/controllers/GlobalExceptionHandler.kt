@@ -19,7 +19,7 @@
  */
 package org.dropProject.controllers
 
-import org.apache.tomcat.util.http.fileupload.FileUploadBase
+import org.apache.tomcat.util.http.fileupload.impl.FileSizeLimitExceededException
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -30,7 +30,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes
 import java.util.logging.Level
 import java.util.logging.Logger
 import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
 
 
 @ControllerAdvice
@@ -47,7 +46,7 @@ class GlobalExceptionHandler {
             throw Exception("Was not expecting a multipart request that is not ajax...")
         }
 
-        if (exception.cause?.cause is FileUploadBase.FileSizeLimitExceededException) {
+        if (exception.cause?.cause is FileSizeLimitExceededException) {
             return ResponseEntity("{\"error\": \"Ficheiro excede o tamanho máximo permitido\"}", HttpStatus.INTERNAL_SERVER_ERROR);
         } else {
             return ResponseEntity("{\"error\": \"Erro genérico no upload\"}", HttpStatus.INTERNAL_SERVER_ERROR);

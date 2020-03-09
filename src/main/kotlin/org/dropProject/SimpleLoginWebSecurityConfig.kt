@@ -79,7 +79,7 @@ class SimpleLoginWebSecurityConfig : DropProjectSecurityConfig() {
                 if (it != "username;password;roles") {  // skip header
                     val (username, password, rolesStr) = it.split(";")
                     val roles = rolesStr.split(",").toTypedArray()
-                    usersList.add(User.withUsername(username).password(password).roles(*roles).build())
+                    usersList.add(User.withUsername(username).password("{noop}$password").roles(*roles).build())
                 }
             }
 
@@ -89,9 +89,9 @@ class SimpleLoginWebSecurityConfig : DropProjectSecurityConfig() {
 
             LOG.info("Didn't find users.csv file. Will create default users.")
 
-            usersList.add(User.withUsername("student1").password("123").roles("STUDENT").build())
-            usersList.add(User.withUsername("teacher1").password("123").roles("TEACHER").build())
-            usersList.add(User.withUsername("admin").password("123").roles("TEACHER", "DROP_PROJECT_ADMIN").build())
+            usersList.add(User.withUsername("student1").password("{noop}123").roles("STUDENT").build())
+            usersList.add(User.withUsername("teacher1").password("{noop}123").roles("TEACHER").build())
+            usersList.add(User.withUsername("admin").password("{noop}123").roles("TEACHER", "DROP_PROJECT_ADMIN").build())
         }
 
         return InMemoryUserDetailsManager(usersList)

@@ -56,7 +56,7 @@ class BuildWorker(
     fun checkProject(mavenizedProjectFolder: File, authorsStr: String, submission: Submission,
                           principalName: String?, dontChangeStatusDate: Boolean = false, rebuildByTeacher: Boolean = false) {
 
-        val assignment = assignmentRepository.findOne(submission.assignmentId)
+        val assignment = assignmentRepository.findById(submission.assignmentId).orElse(null)
 
         if (assignment.maxMemoryMb != null) {
             LOG.info("[${authorsStr}] Started maven invocation (max: ${assignment.maxMemoryMb}Mb)")

@@ -301,7 +301,7 @@ class GitSubmissionControllerTests {
                 .with(user(STUDENT_1)))
                 .andExpect(status().isFound())
                 .andExpect(header().string("Location", "/upload/${defaultAssignmentId}"))
-                .andExpect(flash().attribute<String>("message",
+                .andExpect(flash().attribute("message",
                         "Desligado com sucesso do repositório git@github.com:palves-ulht/sampleJavaSubmission.git"))
 
         assertEquals(0, gitSubmissionRepository.count())
