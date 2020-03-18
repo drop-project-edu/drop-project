@@ -38,6 +38,7 @@ import org.dropProject.MAVEN_MAX_EXECUTION_TIME
 import org.dropProject.dao.*
 import org.dropProject.data.AuthorDetails
 import org.dropProject.data.TestType
+import org.dropProject.extensions.realName
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.*
 import org.dropProject.services.*
@@ -93,7 +94,7 @@ class ReportController(
         val assignment = assignmentRepository.findById(assignmentId).get()
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
-        if (principal.name != assignment.ownerUserId && acl.find { it -> it.userId == principal.name } == null) {
+        if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
             throw IllegalAccessError("Assignment reports can only be accessed by their owner or authorized teachers")
         }
 
@@ -122,8 +123,8 @@ class ReportController(
             // check that principal belongs to the group that made this submission
             if (!request.isUserInRole("TEACHER")) {
                 val groupElements = submission.group.authors
-                if (groupElements.filter { it -> it.userId == principal.name }.isEmpty()) {
-                    throw org.springframework.security.access.AccessDeniedException("${principal.name} is not allowed to view this report")
+                if (groupElements.filter { it -> it.userId == principal.realName() }.isEmpty()) {
+                    throw org.springframework.security.access.AccessDeniedException("${principal.realName()} is not allowed to view this report")
                 }
             }
 
@@ -131,7 +132,7 @@ class ReportController(
                 throw AccessDeniedException("This submission was deleted")
             }
 
-            model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.name, submission.assignmentId)
+            model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.realName(), submission.assignmentId)
 
             val assignment = assignmentRepository.findById(submission.assignmentId).orElse(null)
 
@@ -196,12 +197,12 @@ class ReportController(
 
             // check that principal belongs to the group that made this submission
             if (!request.isUserInRole("TEACHER")) {
-                throw org.springframework.security.access.AccessDeniedException("${principal.name} is not allowed to view this report")
+                throw org.springframework.security.access.AccessDeniedException("${principal.realName()} is not allowed to view this report")
             }
 
             val projectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
                     wasRebuilt = submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
-            LOG.info("[${principal.name}] downloaded ${projectFolder.name}")
+            LOG.info("[${principal.realName()}] downloaded ${projectFolder.name}")
 
             val zipFilename = submission.group.authorsStr().replace(",", "_") + "_mavenized"
             val zipFile = zipService.createZipFromFolder(zipFilename, projectFolder)
@@ -230,8 +231,8 @@ class ReportController(
             // check that principal belongs to the group that made this submission
             if (!request.isUserInRole("TEACHER")) {
                 val groupElements = submission.group.authors
-                if (groupElements.filter { it -> it.userId == principal.name }.isEmpty()) {
-                    throw org.springframework.security.access.AccessDeniedException("${principal.name} is not allowed to view this report")
+                if (groupElements.filter { it -> it.userId == principal.realName() }.isEmpty()) {
+                    throw org.springframework.security.access.AccessDeniedException("${principal.realName()} is not allowed to view this report")
                 }
             }
 
@@ -239,7 +240,7 @@ class ReportController(
                 val projectFolder = File(uploadSubmissionsRootLocation, submission.submissionFolder)
                 val projectFile = File("${projectFolder.absolutePath}.zip")  // for every folder, there is a corresponding zip file with the same name
 
-                LOG.info("[${principal.name}] downloaded ${projectFile.name}")
+                LOG.info("[${principal.realName()}] downloaded ${projectFile.name}")
 
                 val filename = submission.group.authorsStr().replace(",", "_")
                 response.setHeader("Content-Disposition", "attachment; filename=${filename}.zip")
@@ -283,7 +284,7 @@ class ReportController(
                 ?: throw IllegalArgumentException("assignment ${assignmentId} is not registered")
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
-        if (principal.name != assignment.ownerUserId && acl.find { it -> it.userId == principal.name } == null) {
+        if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
             throw IllegalAccessError("Assignment reports can only be accessed by their owner or authorized teachers")
         }
 
@@ -348,7 +349,7 @@ class ReportController(
                 ?: throw IllegalArgumentException("assignment ${assignmentId} is not registered")
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
-        if (principal.name != assignment.ownerUserId && acl.find { it -> it.userId == principal.name } == null) {
+        if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
             throw IllegalAccessError("Assignment reports can only be accessed by their owner or authorized teachers")
         }
 
@@ -434,11 +435,11 @@ class ReportController(
         val assignment = assignmentRepository.findById(assignmentId).orElse(null)
 
         model["assignment"] = assignment
-        model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.name, assignment.id)
+        model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.realName(), assignment.id)
 
         // TODO this is similar to getSubmissions: refactor
         val submissions = submissionRepository
-                .findBySubmitterUserIdAndAssignmentId(principal.name, assignmentId)
+                .findBySubmitterUserIdAndAssignmentId(principal.realName(), assignmentId)
                 .filter { it.getStatus() != SubmissionStatus.DELETED }
         for (submission in submissions) {
             val reportElements = submissionReportRepository.findBySubmissionId(submission.id)
@@ -469,7 +470,7 @@ class ReportController(
         val group = projectGroupRepository.findById(groupId).orElse(null)
 
         model["assignment"] = assignment
-        model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.name, assignment.id)
+        model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.realName(), assignment.id)
 
         val submissions = submissionRepository
                 .findByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(group, assignmentId)
@@ -512,7 +513,7 @@ class ReportController(
         val assignment = assignmentRepository.findById(assignmentId).orElse(null)
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
-        if (principal.name != assignment.ownerUserId && acl.find { it -> it.userId == principal.name } == null) {
+        if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
             throw IllegalAccessError("Assignment reports can only be accessed by their owner or authorized teachers")
         }
 

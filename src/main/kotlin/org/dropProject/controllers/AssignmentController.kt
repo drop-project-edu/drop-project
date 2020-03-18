@@ -33,6 +33,7 @@ import org.dropProject.dao.Assignee
 import org.dropProject.dao.Assignment
 import org.dropProject.dao.AssignmentACL
 import org.dropProject.dao.AssignmentReport
+import org.dropProject.extensions.realName
 import org.dropProject.forms.AssignmentForm
 import org.dropProject.repository.*
 import org.dropProject.services.AssignmentTeacherFiles
@@ -149,7 +150,7 @@ class AssignmentController(
                     calculateStudentTestsCoverage = assignmentForm.calculateStudentTestsCoverage,
                     cooloffPeriod = assignmentForm.cooloffPeriod,
                     maxMemoryMb = assignmentForm.maxMemoryMb, submissionMethod = assignmentForm.submissionMethod!!,
-                    gitRepositoryUrl = assignmentForm.gitRepositoryUrl!!, ownerUserId = principal.name,
+                    gitRepositoryUrl = assignmentForm.gitRepositoryUrl!!, ownerUserId = principal.realName(),
                     gitRepositoryFolder = assignmentForm.assignmentId!!, showLeaderBoard = assignmentForm.leaderboardType != null,
                     hiddenTestsVisibility = assignmentForm.hiddenTestsVisibility,
                     leaderboardType = assignmentForm.leaderboardType)
@@ -169,8 +170,8 @@ class AssignmentController(
             }
 
             val acl = assignmentACLRepository.findByAssignmentId(existingAssignment.id)
-            if (principal.name != existingAssignment.ownerUserId && acl.find { it -> it.userId == principal.name } == null) {
-                LOG.warning("[${assignmentForm.assignmentId}][${principal.name}] Assignments can only be changed " +
+            if (principal.realName() != existingAssignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
+                LOG.warning("[${assignmentForm.assignmentId}][${principal.realName()}] Assignments can only be changed " +
                         "by their ownerUserId (${existingAssignment.ownerUserId}) or authorized teachers")
                 throw IllegalAccessError("Assignments can only be changed by their owner or authorized teachers")
             }
@@ -236,7 +237,7 @@ class AssignmentController(
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
         val assignmentReports = assignmentReportRepository.findByAssignmentId(assignmentId)
 
-        if (principal.name != assignment.ownerUserId && acl.find { it -> it.userId == principal.name } == null) {
+        if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
             throw IllegalAccessError("Assignments can only be accessed by their owner or authorized teachers")
         }
 
@@ -270,7 +271,7 @@ class AssignmentController(
         val assignment = assignmentRepository.getOne(assignmentId)
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
-        if (principal.name != assignment.ownerUserId && acl.find { it -> it.userId == principal.name } == null) {
+        if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
             throw IllegalAccessError("Assignments can only be changed by their owner or authorized teachers")
         }
 
@@ -316,7 +317,7 @@ class AssignmentController(
         val assignment = assignmentRepository.getOne(assignmentId)
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
-        if (principal.name != assignment.ownerUserId && acl.find { it -> it.userId == principal.name } == null) {
+        if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
             throw IllegalAccessError("Assignments can only be refreshed by their owner or authorized teachers")
         }
 
@@ -362,7 +363,7 @@ class AssignmentController(
 
         val assignment = assignmentRepository.getOne(assignmentId)
 
-        if (principal.name != assignment.ownerUserId) {
+        if (principal.realName() != assignment.ownerUserId) {
             throw IllegalAccessError("Assignments can only be changed by their owner")
         }
 
@@ -392,7 +393,7 @@ class AssignmentController(
 
         val assignment = assignmentRepository.getOne(assignmentId)
 
-        if (principal.name != assignment.ownerUserId) {
+        if (principal.realName() != assignment.ownerUserId) {
             throw IllegalAccessError("Assignments can only be changed by their owner")
         }
 
@@ -473,7 +474,7 @@ class AssignmentController(
 
         val assignment = assignmentRepository.getOne(assignmentId)
 
-        if (principal.name != assignment.ownerUserId) {
+        if (principal.realName() != assignment.ownerUserId) {
             throw IllegalAccessError("Assignments can only be changed by their owner")
         }
 
@@ -497,7 +498,7 @@ class AssignmentController(
         val assignment = assignmentRepository.getOne(assignmentId)
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
-        if (principal.name != assignment.ownerUserId && acl.find { it -> it.userId == principal.name } == null) {
+        if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
             throw IllegalAccessError("Assignments can only be changed by their owner or authorized teachers")
         }
 
@@ -543,7 +544,7 @@ class AssignmentController(
         val assignment = assignmentRepository.getOne(assignmentId)
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
-        if (principal.name != assignment.ownerUserId && acl.find { it -> it.userId == principal.name } == null) {
+        if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
             throw IllegalAccessError("Assignments can only be archived by their owner or authorized teachers")
         }
 
@@ -556,9 +557,9 @@ class AssignmentController(
     }
 
     private fun getMyAssignments(principal: Principal, archived: Boolean): List<Assignment> {
-        val assignmentsOwns = assignmentRepository.findByOwnerUserId(principal.name)
+        val assignmentsOwns = assignmentRepository.findByOwnerUserId(principal.realName())
 
-        val assignmentsACL = assignmentACLRepository.findByUserId(principal.name)
+        val assignmentsACL = assignmentACLRepository.findByUserId(principal.realName())
         val assignmentsAuthorized = ArrayList<Assignment>()
         for (assignmentACL in assignmentsACL) {
             assignmentsAuthorized.add(assignmentRepository.findById(assignmentACL.assignmentId).get())

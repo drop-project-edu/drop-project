@@ -127,6 +127,12 @@
 			<version>3.0.2</version>
 		</dependency>
 
+		<!-- for oauth authentication -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-oauth2-client</artifactId>
+		</dependency>
+
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>

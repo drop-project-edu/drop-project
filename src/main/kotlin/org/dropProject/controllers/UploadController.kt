@@ -48,6 +48,7 @@ import org.springframework.security.access.AccessDeniedException
 import org.dropProject.dao.*
 import org.dropProject.extensions.existsCaseSensitive
 import org.dropProject.extensions.sanitize
+import org.dropProject.extensions.realName
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.services.AssignmentTeacherFiles
 import org.dropProject.repository.*
@@ -108,7 +109,7 @@ class UploadController(
 
         val assignments = ArrayList<Assignment>()
 
-        val assignees = assigneeRepository.findByAuthorUserId(principal.name)
+        val assignees = assigneeRepository.findByAuthorUserId(principal.realName())
         for (assignee in assignees) {
             val assignment = assignmentRepository.getOne(assignee.assignmentId)
             if (assignment.active == true) {
@@ -117,7 +118,7 @@ class UploadController(
         }
 
         if (request.isUserInRole("TEACHER")) {
-            val assignmentsIOwn = assignmentRepository.findByOwnerUserId(principal.name)
+            val assignmentsIOwn = assignmentRepository.findByOwnerUserId(principal.realName())
 
             for (assignmentIOwn in assignmentsIOwn) {
                 if (!assignmentIOwn.archived) {
@@ -151,20 +152,20 @@ class UploadController(
                 throw org.springframework.security.access.AccessDeniedException("Submissions are not open to this assignment")
             }
 
-            checkAssignees(assignmentId, principal.name)
+            checkAssignees(assignmentId, principal.realName())
 
         } else {
 
             if (!assignment.active) {
                 val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
-                if (principal.name != assignment.ownerUserId && acl.find { it -> it.userId == principal.name } == null) {
+                if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
                     throw IllegalAccessError("Assignments can only be accessed by their owner or authorized teachers")
                 }
             }
         }
 
         model["assignment"] = assignment
-        model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.name, assignment.id)
+        model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.realName(), assignment.id)
         model["instructionsFragment"] = assignmentTeacherFiles.getHtmlInstructionsFragment(assignment)
         model["packageTree"] = assignmentTeacherFiles.buildPackageTree(
                 assignment.packageName, assignment.language, assignment.acceptsStudentTests)
@@ -175,14 +176,14 @@ class UploadController(
                 val nextSubmissionTime = calculateCoolOff(lastSubmission, assignment)
                 if (nextSubmissionTime != null) {
                     model["coolOffEnd"] = nextSubmissionTime.format(DateTimeFormatter.ofPattern("HH:mm"))
-                    LOG.info("[${principal.name}] can't submit because he is in cool-off period")
+                    LOG.info("[${principal.realName()}] can't submit because he is in cool-off period")
                 }
             }
         }
 
         if (assignment.submissionMethod == SubmissionMethod.UPLOAD) {
 
-            val submission = submissionRepository.findFirstBySubmitterUserIdAndAssignmentIdOrderBySubmissionDateDesc(principal.name, assignmentId)
+            val submission = submissionRepository.findFirstBySubmitterUserIdAndAssignmentIdOrderBySubmissionDateDesc(principal.realName(), assignmentId)
 
             model["uploadForm"] = UploadForm(assignment.id)
             model["uploadSubmission"] = submission
@@ -190,9 +191,9 @@ class UploadController(
         } else {
 
             val gitSubmission =
-                    gitSubmissionRepository.findBySubmitterUserIdAndAssignmentId(principal.name, assignmentId)
+                    gitSubmissionRepository.findBySubmitterUserIdAndAssignmentId(principal.realName(), assignmentId)
                     ?:
-                    gitSubmissionService.findGitSubmissionBy(principal.name, assignmentId) // check if it belongs to a group who has already a git submission
+                    gitSubmissionService.findGitSubmissionBy(principal.realName(), assignmentId) // check if it belongs to a group who has already a git submission
 
             if (gitSubmission?.connected == true) {
                 // get last commit info
@@ -241,7 +242,7 @@ class UploadController(
                 throw org.springframework.security.access.AccessDeniedException("Submissions are not open to this assignment")
             }
 
-            checkAssignees(uploadForm.assignmentId!!, principal.name)
+            checkAssignees(uploadForm.assignmentId!!, principal.realName())
         }
 
         if (assignment.cooloffPeriod != null  && !request.isUserInRole("TEACHER")) {
@@ -249,8 +250,8 @@ class UploadController(
             if (lastSubmission != null) {
                 val nextSubmissionTime = calculateCoolOff(lastSubmission, assignment)
                 if (nextSubmissionTime != null) {
-                    LOG.warning("[${principal.name}] can't submit because he is in cool-off period")
-                    throw org.springframework.security.access.AccessDeniedException("[${principal.name}] can't submit because he is in cool-off period")
+                    LOG.warning("[${principal.realName()}] can't submit because he is in cool-off period")
+                    throw org.springframework.security.access.AccessDeniedException("[${principal.realName()}] can't submit because he is in cool-off period")
                 }
             }
         }
@@ -259,7 +260,7 @@ class UploadController(
             return ResponseEntity("{\"error\": \"O ficheiro tem que ser um .zip\"}", HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        LOG.info("[${principal.name}] uploaded ${file.originalFilename}")
+        LOG.info("[${principal.realName()}] uploaded ${file.originalFilename}")
         val projectFolder : File? = storageService.store(file, assignment.id)
 
         if (projectFolder != null) {
@@ -267,7 +268,7 @@ class UploadController(
             LOG.info("[${authors.joinToString(separator = "|")}] Received ${file.originalFilename}")
 
             // check if the principal is one of group elements
-            if (authors.filter { it.number == principal.name }.isEmpty()) {
+            if (authors.filter { it.number == principal.realName() }.isEmpty()) {
                 throw InvalidProjectStructureException("O utilizador que está a submeter tem que ser um dos elementos do grupo.")
             }
 
@@ -286,7 +287,7 @@ class UploadController(
 
             val submission = Submission(submissionId = projectFolder.name, submissionDate = Date(),
                     status = SubmissionStatus.SUBMITTED.code, statusDate = Date(), assignmentId = assignment.id,
-                    submitterUserId = principal.name,
+                    submitterUserId = principal.realName(),
                     submissionFolder = projectFolder.relativeTo(storageService.rootFolder()).path)
             submission.group = group
             submissionRepository.save(submission)
@@ -505,7 +506,7 @@ class UploadController(
 
         buildWorker.checkProject(mavenizedProjectFolder, authors.joinToString(separator = "|"), submission,
                 dontChangeStatusDate = true,
-                principalName = principal.name)
+                principalName = principal.realName())
 
         return "redirect:/buildReport/${submissionId}";
     }
@@ -579,7 +580,7 @@ class UploadController(
         val assignment = assignmentRepository.findById(submission.assignmentId).orElse(null)
 
         val acl = assignmentACLRepository.findByAssignmentId(assignment.id)
-        if (principal.name != assignment.ownerUserId && acl.find { it -> it.userId == principal.name } == null) {
+        if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
             throw IllegalAccessError("Submissions can only be marked as final by the assignment owner or authorized teachers")
         }
 
@@ -652,11 +653,11 @@ class UploadController(
                 throw org.springframework.security.access.AccessDeniedException("Submissions are not open to this assignment")
             }
 
-            checkAssignees(assignmentId, principal.name)
+            checkAssignees(assignmentId, principal.realName())
         }
 
         model["assignment"] = assignment
-        model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.name, assignment.id)
+        model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.realName(), assignment.id)
         model["instructionsFragment"] = assignmentTeacherFiles.getHtmlInstructionsFragment(assignment)
         model["packageTree"] = assignmentTeacherFiles.buildPackageTree(
                 assignment.packageName, assignment.language, assignment.acceptsStudentTests)
@@ -673,9 +674,9 @@ class UploadController(
 
 
         var gitSubmission =
-                gitSubmissionRepository.findBySubmitterUserIdAndAssignmentId(principal.name, assignmentId)
+                gitSubmissionRepository.findBySubmitterUserIdAndAssignmentId(principal.realName(), assignmentId)
                 ?:
-                gitSubmissionService.findGitSubmissionBy(principal.name, assignmentId) // check if it belongs to a group who has already a git submission
+                gitSubmissionService.findGitSubmissionBy(principal.realName(), assignmentId) // check if it belongs to a group who has already a git submission
 
 
         if (gitSubmission == null || gitSubmission.gitRepositoryPubKey == null) {
@@ -684,7 +685,7 @@ class UploadController(
             val (privKey, pubKey) = gitClient.generateKeyPair()
 
             gitSubmission = GitSubmission(assignmentId = assignmentId,
-                    submitterUserId = principal.name, gitRepositoryUrl = gitRepositoryUrl)
+                    submitterUserId = principal.realName(), gitRepositoryUrl = gitRepositoryUrl)
             gitSubmission.gitRepositoryPrivKey = String(privKey)
             gitSubmission.gitRepositoryPubKey = String(pubKey)
             gitSubmissionRepository.save(gitSubmission)
@@ -727,7 +728,7 @@ class UploadController(
                 LOG.info("[${authors.joinToString(separator = "|")}] Connected DP to ${gitSubmission.gitRepositoryUrl}")
 
                 // check if the principal is one of group elements
-                if (authors.filter { it.number == principal.name }.isEmpty()) {
+                if (authors.filter { it.number == principal.realName() }.isEmpty()) {
                     throw InvalidProjectStructureException("O utilizador que está a submeter tem que ser um dos elementos do grupo.")
                 }
 
@@ -782,7 +783,7 @@ class UploadController(
         // check that it exists
         val gitSubmission = gitSubmissionRepository.getOne(submissionId.toLong())
 
-        if (!gitSubmission.group.contains(principal.name)) {
+        if (!gitSubmission.group.contains(principal.realName())) {
             throw IllegalAccessError("Submissions can only be refreshed by their owners")
         }
 
@@ -825,7 +826,7 @@ class UploadController(
                 throw org.springframework.security.access.AccessDeniedException("Submissions are not open to this assignment")
             }
 
-            checkAssignees(assignment.id, principal.name)
+            checkAssignees(assignment.id, principal.realName())
         }
 
         if (assignment.cooloffPeriod != null) {
@@ -833,8 +834,8 @@ class UploadController(
             if (lastSubmission != null) {
                 val nextSubmissionTime = calculateCoolOff(lastSubmission, assignment)
                 if (nextSubmissionTime != null) {
-                    LOG.warning("[${principal.name}] can't submit because he is in cool-off period")
-                    throw org.springframework.security.access.AccessDeniedException("[${principal.name}] can't submit because he is in cool-off period")
+                    LOG.warning("[${principal.realName()}] can't submit because he is in cool-off period")
+                    throw org.springframework.security.access.AccessDeniedException("[${principal.realName()}] can't submit because he is in cool-off period")
                 }
             }
         }
@@ -853,7 +854,7 @@ class UploadController(
 
         val submission = Submission(gitSubmissionId = gitSubmission.id, submissionDate = Date(),
                 status = SubmissionStatus.SUBMITTED.code, statusDate = Date(), assignmentId = assignment.id,
-                submitterUserId = principal.name)
+                submitterUserId = principal.realName())
         submission.group = gitSubmission.group
         submissionRepository.save(submission)
 
@@ -869,13 +870,13 @@ class UploadController(
                                             redirectAttributes: RedirectAttributes,
                                             principal: Principal): String {
 
-        LOG.info("[${principal.name}] Reset git connection")
+        LOG.info("[${principal.realName()}] Reset git connection")
 
         val gitSubmission = gitSubmissionRepository.getOne(gitSubmissionId.toLong())
         val assignment = assignmentRepository.getOne(gitSubmission.assignmentId)
         val repositoryUrl = gitSubmission.gitRepositoryUrl
 
-        if (!principal.name.equals(gitSubmission.submitterUserId)) {
+        if (!principal.realName().equals(gitSubmission.submitterUserId)) {
             redirectAttributes.addFlashAttribute("error", "Apenas o utilizador que fez a ligação (${gitSubmission.submitterUserId}) é que pode remover a ligação")
             return "redirect:/upload/${assignment.id}"
         }
@@ -883,13 +884,13 @@ class UploadController(
         if (gitSubmission.connected) {
             val submissionFolder = File(gitSubmissionsRootLocation, gitSubmission.getFolderRelativeToStorageRoot())
             if (submissionFolder.exists()) {
-                LOG.info("[${principal.name}] Removing ${submissionFolder.absolutePath}")
+                LOG.info("[${principal.realName()}] Removing ${submissionFolder.absolutePath}")
                 submissionFolder.deleteRecursively()
             }
         }
 
         gitSubmissionService.deleteGitSubmission(gitSubmission)
-        LOG.info("[${principal.name}] Removed submission from the DB")
+        LOG.info("[${principal.realName()}] Removed submission from the DB")
 
         redirectAttributes.addFlashAttribute("message", "Desligado com sucesso do repositório ${repositoryUrl}")
         return "redirect:/upload/${assignment.id}"
@@ -903,14 +904,14 @@ class UploadController(
         val assignment = assignmentRepository.findById(submission.assignmentId).orElse(null)
 
         val acl = assignmentACLRepository.findByAssignmentId(assignment.id)
-        if (principal.name != assignment.ownerUserId && acl.find { it -> it.userId == principal.name } == null) {
+        if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
             throw IllegalAccessError("Submissions can only be deleted by the assignment owner or authorized teachers")
         }
 
         submission.setStatus(SubmissionStatus.DELETED)
         submissionRepository.save(submission)
 
-        LOG.info("[${principal.name}] deleted submission $submissionId")
+        LOG.info("[${principal.realName()}] deleted submission $submissionId")
 
         return "redirect:/report/${assignment.id}"
     }
@@ -927,7 +928,7 @@ class UploadController(
 
     private fun getLastSubmission(principal: Principal, assignmentId: String): Submission? {
 
-        val groupsToWhichThisStudentBelongs = projectGroupRepository.getGroupsForAuthor(principal.name)
+        val groupsToWhichThisStudentBelongs = projectGroupRepository.getGroupsForAuthor(principal.realName())
         var lastSubmission: Submission? = null
 
         // TODO: This is ugly - should rethink data model for groups
