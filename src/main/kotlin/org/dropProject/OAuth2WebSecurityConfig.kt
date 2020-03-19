@@ -49,7 +49,6 @@ class OAuth2WebSecurityConfig : DropProjectSecurityConfig() {
 
             val rolesFile = resourceLoader.getResource("classpath:oauth-roles.csv").file
             rolesFile.readLines().forEachIndexed { index, line ->
-
                 if (index == 0) {
                     idKey = line.split(";")[0]
                 } else {
