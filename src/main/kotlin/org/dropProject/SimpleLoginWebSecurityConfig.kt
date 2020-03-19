@@ -35,7 +35,7 @@ import java.util.*
 import java.util.logging.Logger
 
 
-@Profile("!deisi")
+@Profile("!deisi & !oauth2")
 @Configuration
 @EnableWebSecurity
 class SimpleLoginWebSecurityConfig : DropProjectSecurityConfig() {

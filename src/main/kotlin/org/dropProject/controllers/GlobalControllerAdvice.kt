@@ -20,6 +20,7 @@
 package org.dropProject.controllers
 
 import com.zaxxer.hikari.HikariDataSource
+import org.dropProject.extensions.realName
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.info.BuildProperties
@@ -48,7 +49,7 @@ class GlobalControllerAdvice {
     @ModelAttribute("username")
     fun getUsername(principal: Principal?) : String {
         if (principal != null) {
-            return principal.name
+            return principal.realName()
         } else {
             return ""
         }
