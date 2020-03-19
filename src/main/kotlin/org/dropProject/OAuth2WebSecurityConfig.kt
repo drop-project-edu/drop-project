@@ -51,7 +51,7 @@ class OAuth2WebSecurityConfig : DropProjectSecurityConfig() {
             rolesFile.readLines().forEachIndexed { index, line ->
 
                 if (index == 0) {
-                    val idKey = line.split(";")[0]
+                    idKey = line.split(";")[0]
                 } else {
                     val (idValue, rolesStr) = line.split(";")
                     val roles = rolesStr.split(",").toTypedArray()
