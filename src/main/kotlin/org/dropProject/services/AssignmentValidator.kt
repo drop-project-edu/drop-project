@@ -19,6 +19,8 @@
  */
 package org.dropProject.services
 
+import com.thoughtworks.qdox.JavaProjectBuilder
+import com.thoughtworks.qdox.model.impl.DefaultJavaMethod
 import org.apache.maven.model.Model
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader
 import org.dropProject.Constants
@@ -27,7 +29,9 @@ import org.dropProject.dao.TestVisibility
 import org.dropProject.extensions.toEscapedHtml
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Service
-import java.io.*
+import java.io.File
+import java.io.FileReader
+
 
 @Service
 @Scope("prototype")
@@ -233,13 +237,29 @@ class AssignmentValidator {
         } else {
             report.add(Info(InfoType.INFO, "Found ${testClasses.size} test classes"))
 
+            val builder = JavaProjectBuilder()
+
             // for each test class, check if all the @Test define a timeout
             var invalidTestMethods = 0
             var validTestMethods = 0
+            val testMethods = mutableListOf<String>()
             for (testClass in testClasses) {
-                val content = testClass.readLines()
-                invalidTestMethods += content.filter { it.contains("@Test") && !it.contains("@Test(timeout=") }.count()
-                validTestMethods += content.filter { it.contains("@Test(timeout=") }.count()
+                val testClassSource = builder.addSource(testClass)
+                testClassSource.classes.forEach {
+                    it.methods.forEach {
+                        val methodName = it.name
+                        it.annotations.forEach {
+                            if (it.type.fullyQualifiedName == "org.junit.Test") {
+                                if (it.getNamedParameter("timeout") == null) {
+                                    invalidTestMethods++
+                                } else {
+                                    validTestMethods++
+                                }
+                                testMethods.add(methodName)
+                            }
+                        }
+                    }
+                }
             }
 
 

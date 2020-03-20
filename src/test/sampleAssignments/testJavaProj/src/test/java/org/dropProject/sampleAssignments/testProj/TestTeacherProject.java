@@ -5,7 +5,7 @@ import static org.junit.Assert.assertEquals;
 
 public class TestTeacherProject {
 
-    @Test
+    @Test(timeout=500)
     public void testFuncaoParaTestar() {
         assertEquals(3, Main.funcaoParaTestar());
     }
@@ -14,4 +14,18 @@ public class TestTeacherProject {
     public void testFuncaoLentaParaTestar() {
         assertEquals(3, Main.funcaoLentaParaTestar());
     }
+
+    // @Test
+    public void testFuncaoIgnorada1() {
+
+    }
+
+    /*
+
+     @Test
+    public void testFuncaoIgnorada2() {
+
+    }
+
+     */
 }

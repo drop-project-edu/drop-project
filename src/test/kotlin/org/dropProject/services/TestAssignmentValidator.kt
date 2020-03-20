@@ -63,6 +63,10 @@ class TestAssignmentValidator {
         assertTrue("report list should not be empty", !report.isEmpty())
         assertTrue(report.any { it.type == AssignmentValidator.InfoType.INFO  &&
                 it.message == "You have hidden tests. The results will be completely hidden from the students." })
+        assertTrue(report.any { it.type == AssignmentValidator.InfoType.INFO  &&
+                it.message == "Found 2 test classes" })
+        assertTrue(report.any { it.type == AssignmentValidator.InfoType.WARNING  &&
+                it.message == "You haven't defined a timeout for 2 test methods." })
     }
 
 
