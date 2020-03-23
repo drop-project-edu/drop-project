@@ -24,7 +24,7 @@
     </h6>
 
     <h6 th:if="${gitSubmission} != null">
-        Git repository: <span th:text="${gitSubmission.gitRepositoryUrl}"></span> |
+        Git repository: <a th:href="${gitRepository}" th:text="${gitRepository}">link</a> |
         Last commit: <span th:text="${#dates.format(gitSubmission.lastCommitDate, 'dd-MM HH:mm:ss')}"></span>
     </h6>
 
@@ -234,9 +234,26 @@
 
     <a th:href="@{'/upload/' + ${assignment.id}}" th:if="${submission.getStatus() == T(org.dropProject.dao.SubmissionStatus).VALIDATED}" class="btn btn-default">Submit new project</a>
 
+    <div>&nbsp;</div>
+
     <!--/*@thymesVar id="buildReport" type="org.dropProject.data.BuildReport"*/-->
-    <h2 th:if="${buildReport != null and isTeacher}">Full report</h2>
-    <pre th:if="${buildReport != null and isTeacher}" th:text="${buildReport.mavenOutput()}"></pre>
+    <div class="panel panel-default" th:if="${buildReport != null and readmeHTML != null and isTeacher}">
+        <div class="panel-heading">
+        <a data-toggle="collapse" href="#collapseReadme"
+               aria-expanded="false" aria-controls="collapseReadme" title="Click to expand/collapse">README (only visible to teachers)</a>
+        </div>
+
+        <div class="panel-body" th:utext="${readmeHTML}" id="collapseReadme"></div>
+    </div>
+    <div class="panel panel-default" th:if="${buildReport != null and isTeacher}">
+        <div class="panel-heading">
+            <a data-toggle="collapse" href="#collapseFullReport"
+               aria-expanded="false" aria-controls="collapseFullReport" title="Click to expand/collapse">Full report (only visible to teachers)</a>
+        </div>
+        <div class="panel-body" id="collapseFullReport">
+            <pre th:text="${buildReport.mavenOutput()}"></pre>
+        </div>
+    </div>
 </div>
 
 <div th:replace="layout/layout :: footer"></div>

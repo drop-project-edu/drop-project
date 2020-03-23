@@ -23,6 +23,9 @@ import net.lingala.zip4j.core.ZipFile
 import net.lingala.zip4j.model.ZipParameters
 import net.lingala.zip4j.util.Zip4jConstants
 import org.apache.commons.io.FileUtils
+import org.commonmark.ext.autolink.AutolinkExtension
+import org.commonmark.parser.Parser
+import org.commonmark.renderer.html.HtmlRenderer
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.io.FileSystemResource
 import org.springframework.http.HttpHeaders
@@ -139,13 +142,24 @@ class ReportController(
             model["assignment"] = assignment
 
             model["submission"] = submission
-            model["gitSubmission"] =
-                    if (submission.gitSubmissionId != null) {
-                        gitSubmissionRepository.getOne(submission.gitSubmissionId)
-                    } else {
-                        null
-                    }
+            if (submission.gitSubmissionId != null) {
+                val gitSubmission = gitSubmissionRepository.getOne(submission.gitSubmissionId)
+                model["gitSubmission"] = gitSubmission
+                model["gitRepository"] = gitClient.convertSSHGithubURLtoHttpURL(gitSubmission.gitRepositoryUrl)
+            }
 
+            // check README
+            val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
+                    submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
+            if (File(mavenizedProjectFolder, "README.md").exists()) {
+                val readmeContent = File(mavenizedProjectFolder, "README.md").readText()
+                val parser = Parser.builder()
+                        .extensions(listOf(AutolinkExtension.create()))
+                        .build()
+                val document = parser.parse(readmeContent)
+                val renderer = HtmlRenderer.builder().build()
+                model["readmeHTML"] = "<hr/>\n" + renderer.render(document) + "<hr/>\n"
+            }
 
             // check the submission status
             when (submission.getStatus()) {

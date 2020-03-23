@@ -127,6 +127,18 @@
 			<version>3.0.2</version>
 		</dependency>
 
+		<!-- for parsing markdown file -->
+		<dependency>
+			<groupId>com.atlassian.commonmark</groupId>
+			<artifactId>commonmark</artifactId>
+			<version>0.14.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.atlassian.commonmark</groupId>
+			<artifactId>commonmark-ext-autolink</artifactId>
+			<version>0.14.0</version>
+		</dependency>
+
 		<!-- for oauth authentication -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

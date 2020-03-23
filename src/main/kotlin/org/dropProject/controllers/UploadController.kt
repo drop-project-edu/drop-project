@@ -421,6 +421,11 @@ class UploadController(
         // next, copy the project files submitted by the teachers (will override eventually the student files)
         assignmentTeacherFiles.copyTeacherFilesTo(assignment, mavenizedProjectFolder)
 
+        // if the students have a README file, copy it over the teacher's README
+        if (File(projectFolder, "README.md").exists()) {
+            FileUtils.copyFile(File(projectFolder, "README.md"), File(mavenizedProjectFolder, "README.md"))
+        }
+
         // finally remove the original project folder (the zip file is still kept)
         if (!(assignment.id.startsWith("testJavaProj") ||
                         assignment.id.startsWith("sample") ||
