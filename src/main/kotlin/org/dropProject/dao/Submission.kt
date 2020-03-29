@@ -61,7 +61,7 @@ data class Submission(
         val submissionFolder: String? = null,  // TODO: For now, this is null for git submissions
 
         @Column(nullable = false)
-        val submissionDate: Date,
+        var submissionDate: Date,
 
         @Column(nullable = false)
         val submitterUserId: String,

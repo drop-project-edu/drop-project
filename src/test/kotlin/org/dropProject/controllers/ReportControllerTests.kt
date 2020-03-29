@@ -49,11 +49,13 @@ import java.nio.file.Files
 import org.dropProject.TestsHelper
 import org.dropProject.dao.Assignment
 import org.dropProject.dao.LeaderboardType
+import org.dropProject.extensions.formatDefault
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.AssignmentRepository
 import org.dropProject.repository.GitSubmissionRepository
 import org.dropProject.repository.SubmissionRepository
 import org.dropProject.services.ZipService
+import java.util.*
 
 
 @RunWith(SpringRunner::class)
@@ -402,7 +404,10 @@ class ReportControllerTests {
     @DirtiesContext
     fun exportCSV() {
 
-        testsHelper.makeSeveralSubmissions("projectInvalidStructure1", mvc)
+        val now = Date()
+        val nowStr = now.formatDefault()
+
+        testsHelper.makeSeveralSubmissions("projectInvalidStructure1", mvc, now)
 
         // mark all as final, otherwise the export will be empty
         val submissions = submissionRepository.findAll()
@@ -418,11 +423,12 @@ class ReportControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/csv"))
                 .andExpect(content().string(
-                        "1;student1;Student 1;NOK;;;\n" +
-                        "1;student2;Student 2;NOK;;;\n" +
-                        "2;student2;Student 2;NOK;;;\n" +
-                        "3;student3;Student 3;NOK;;;\n" +
-                        "4;student1;Student 3;NOK;;;\n"))
+                        "submission id;student id;student name;project structure;compilation;code quality;ellapsed;submission date\n" +
+                        "1;student1;Student 1;NOK;;;;${nowStr}\n" +
+                        "1;student2;Student 2;NOK;;;;${nowStr}\n" +
+                        "2;student2;Student 2;NOK;;;;${nowStr}\n" +
+                        "3;student3;Student 3;NOK;;;;${nowStr}\n" +
+                        "4;student1;Student 3;NOK;;;;${nowStr}\n"))
 
     }
 
@@ -435,7 +441,10 @@ class ReportControllerTests {
         assignment.minStudentTests = 2
         assignmentRepository.save(assignment)
 
-        testsHelper.makeSeveralSubmissions("projectWith1StudentTest", mvc)
+        val now = Date()
+        val nowStr = now.formatDefault()
+
+        testsHelper.makeSeveralSubmissions("projectWith1StudentTest", mvc, now)
 
         // mark all as final, otherwise the export will be empty
         val submissions = submissionRepository.findAll()
@@ -452,11 +461,12 @@ class ReportControllerTests {
                 .andExpect(content().contentType("application/csv"))
                 .andExpect(content().string(
                         """
-                            |1;student1;Student 1;OK;OK;OK;1;2;1;
-                            |1;student2;Student 2;OK;OK;OK;1;2;1;
-                            |2;student2;Student 2;OK;OK;OK;1;2;1;
-                            |3;student3;Student 3;OK;OK;OK;1;2;1;
-                            |4;student1;Student 3;OK;OK;OK;1;2;1;
+                            |submission id;student id;student name;project structure;compilation;code quality;student tests;teacher tests;hidden tests;submission date
+                            |1;student1;Student 1;OK;OK;OK;1;2;1;;${nowStr}
+                            |1;student2;Student 2;OK;OK;OK;1;2;1;;${nowStr}
+                            |2;student2;Student 2;OK;OK;OK;1;2;1;;${nowStr}
+                            |3;student3;Student 3;OK;OK;OK;1;2;1;;${nowStr}
+                            |4;student1;Student 3;OK;OK;OK;1;2;1;;${nowStr}
                             |
                         """.trimMargin()))
 

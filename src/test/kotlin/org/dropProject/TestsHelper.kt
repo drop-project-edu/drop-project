@@ -21,6 +21,7 @@ package org.dropProject
 
 import org.dropProject.repository.AssignmentRepository
 import org.dropProject.repository.GitSubmissionRepository
+import org.dropProject.repository.SubmissionRepository
 import org.dropProject.services.ZipService
 import org.json.JSONObject
 import org.junit.Assert
@@ -38,6 +39,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import java.io.File
 import java.nio.file.Files
+import java.util.*
 
 @Service
 @ActiveProfiles("test")
@@ -48,6 +50,9 @@ class TestsHelper {
 
     @Autowired
     lateinit var resourceLoader: ResourceLoader
+
+    @Autowired
+    lateinit var submissionRepository: SubmissionRepository
 
     companion object {
         const val sampleJavaAssignmentPrivateKey = "-----BEGIN RSA PRIVATE KEY-----\n" +
@@ -276,7 +281,7 @@ class TestsHelper {
         return contentJSON.getInt("submissionId")
     }
 
-    fun makeSeveralSubmissions(projectName: String, mvc: MockMvc) {
+    fun makeSeveralSubmissions(projectName: String, mvc: MockMvc, submissionDate: Date? = null) {
         // we start with two authors
         val projectRoot = resourceLoader.getResource("file:src/test/sampleProjects/$projectName").file
         val path = File(projectRoot, "AUTHORS.txt").toPath()
@@ -297,6 +302,14 @@ class TestsHelper {
                     authors = listOf(STUDENT_2.username to "Student 2"))
             uploadProject(mvc, projectName, defaultAssignmentId, STUDENT_1,
                     authors = listOf(STUDENT_1.username to "Student 3"))
+
+            // force submissionDate
+            if (submissionDate != null) {
+                submissionRepository.findAll().forEach {
+                    it.submissionDate = submissionDate
+                    submissionRepository.save(it)
+                }
+            }
 
         } finally {
             // restore original AUTHORS.txt

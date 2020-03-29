@@ -41,6 +41,7 @@ import org.dropProject.MAVEN_MAX_EXECUTION_TIME
 import org.dropProject.dao.*
 import org.dropProject.data.AuthorDetails
 import org.dropProject.data.TestType
+import org.dropProject.extensions.formatDefault
 import org.dropProject.extensions.realName
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.*
@@ -531,6 +532,7 @@ class ReportController(
             throw IllegalAccessError("Assignment reports can only be accessed by their owner or authorized teachers")
         }
 
+        var headersCSV = mutableSetOf("submission id","student id","student name","project structure", "compilation", "code quality")
         var resultCSV = ""
 
         val submissions = submissionRepository.findByAssignmentIdAndMarkedAsFinal(assignmentId, true)
@@ -567,6 +569,7 @@ class ReportController(
                 resultCSV += "${submission.group.id};${author.userId};${author.name};${r1};${r2};${r3};"
 
                 if (assignment.acceptsStudentTests) {
+                    headersCSV.add("student tests")
                     if (submission.studentTests != null) {
                         resultCSV += "${submission.studentTests!!.progress};"
                     } else {
@@ -575,23 +578,34 @@ class ReportController(
                 }
 
                 if (submission.teacherTests != null) {
+                    headersCSV.add("teacher tests")
                     resultCSV += "${submission.teacherTests!!.progress};"
                 }
 
                 if (submission.hiddenTests != null) {
+                    headersCSV.add("hidden tests")
                     resultCSV += "${submission.hiddenTests!!.progress};"
                 }
 
                 if (submission.coverage != null) {
+                    headersCSV.add("coverage")
                     resultCSV += "${submission.coverage};"
                 }
                 if (includeEllapsed) {
-                    resultCSV += "${ellapsed?.toPlainString().orEmpty()}\n"
+                    headersCSV.add("ellapsed")
+                    resultCSV += "${ellapsed?.toPlainString().orEmpty()};"
                 } else {
-                    resultCSV += "\n"
+                    resultCSV += ";"
                 }
+
+                headersCSV.add("submission date")
+                resultCSV += submission.submissionDate.formatDefault()
+
+                resultCSV += "\n"
             }
         }
+
+        resultCSV = headersCSV.joinToString(";") + "\n" + resultCSV
 
         val headers = HttpHeaders()
         headers.contentType = MediaType("application", "csv")
