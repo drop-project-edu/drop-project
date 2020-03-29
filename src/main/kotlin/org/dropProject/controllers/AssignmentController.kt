@@ -105,6 +105,13 @@ class AssignmentController(
             return "assignment-form"
         }
 
+        if (assignmentForm.acl?.split(",")?.contains(principal.realName()) == true) {
+            LOG.warning("Assignment ACL should not include the owner")
+            bindingResult.rejectValue("acl", "acl.includeOwner",
+                    "Error: You don't need to give autorization to yourself, only other teachers")
+            return "assignment-form"
+        }
+
         var assignment : Assignment
         if (!assignmentForm.editMode) {   // create
 

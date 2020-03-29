@@ -150,6 +150,22 @@ class AssignmentControllerTests {
                 .param("assignmentPackage", "assignmentPackage")
                 .param("language", "JAVA")
                 .param("submissionMethod", "UPLOAD")
+                .param("gitRepositoryUrl", "git://dummy")
+                .param("acceptsStudentTests", "true")
+                .param("calculateStudentTestsCoverage", "true")
+                .param("minStudentTests", "1")
+                .param("acl", "teacher1,teacher2")  // <<<<< acl should not include the session owner (teacher1)
+        )
+                .andExpect(status().isOk())
+                .andExpect(view().name("assignment-form"))
+                .andExpect(model().attributeHasFieldErrors("assignmentForm","acl"))
+
+        mvc.perform(post("/assignment/new")
+                .param("assignmentId", "assignmentId")
+                .param("assignmentName", "assignmentName")
+                .param("assignmentPackage", "assignmentPackage")
+                .param("language", "JAVA")
+                .param("submissionMethod", "UPLOAD")
                 .param("gitRepositoryUrl", "git@github.com:palves-ulht/sampleJavaAssignment.git")
                 .param("acceptsStudentTests", "true")    // <<<<
                 .param("calculateStudentTestsCoverage", "true")  // <<<<
