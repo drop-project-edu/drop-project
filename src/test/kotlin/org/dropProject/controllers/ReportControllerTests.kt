@@ -135,7 +135,7 @@ class ReportControllerTests {
     @DirtiesContext
     fun reportForMultipleSubmissions() {
 
-        makeSeveralSubmissions("projectInvalidStructure1")
+        testsHelper.makeSeveralSubmissions("projectInvalidStructure1", mvc)
 
         val reportResult = this.mvc.perform(get("/report/testJavaProj")
                 .with(user(TEACHER_1)))
@@ -402,7 +402,7 @@ class ReportControllerTests {
     @DirtiesContext
     fun exportCSV() {
 
-        makeSeveralSubmissions("projectInvalidStructure1")
+        testsHelper.makeSeveralSubmissions("projectInvalidStructure1", mvc)
 
         // mark all as final, otherwise the export will be empty
         val submissions = submissionRepository.findAll()
@@ -435,7 +435,7 @@ class ReportControllerTests {
         assignment.minStudentTests = 2
         assignmentRepository.save(assignment)
 
-        makeSeveralSubmissions("projectWith1StudentTest")
+        testsHelper.makeSeveralSubmissions("projectWith1StudentTest", mvc)
 
         // mark all as final, otherwise the export will be empty
         val submissions = submissionRepository.findAll()
@@ -460,38 +460,6 @@ class ReportControllerTests {
                             |
                         """.trimMargin()))
 
-    }
-
-    private fun makeSeveralSubmissions(projectName: String) {
-        // we start with two authors
-        val projectRoot = resourceLoader.getResource("file:src/test/sampleProjects/$projectName").file
-        val path = File(projectRoot, "AUTHORS.txt").toPath()
-        val lines = Files.readAllLines(path)
-        assertEquals("student1;Student 1", lines[0])
-        assertEquals("student2;Student 2", lines[1])
-
-        val student3 = User("student3", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
-
-        try {
-            // upload five times, each time with a different author
-            testsHelper.uploadProject(this.mvc, projectName, defaultAssignmentId, STUDENT_1)
-            testsHelper.uploadProject(this.mvc, projectName, defaultAssignmentId, STUDENT_2,
-                    authors = listOf(STUDENT_2.username to "Student 2"))
-            testsHelper.uploadProject(this.mvc, projectName, defaultAssignmentId, student3,
-                    authors = listOf(student3.username to "Student 3"))
-            testsHelper.uploadProject(this.mvc, projectName, defaultAssignmentId, STUDENT_2,
-                    authors = listOf(STUDENT_2.username to "Student 2"))
-            testsHelper.uploadProject(this.mvc, projectName, defaultAssignmentId, STUDENT_1,
-                    authors = listOf(STUDENT_1.username to "Student 3"))
-
-        } finally {
-            // restore original AUTHORS.txt
-            val writer = Files.newBufferedWriter(path)
-            writer.write(lines[0])
-            writer.newLine()
-            writer.write(lines[1])
-            writer.close()
-        }
     }
 
 }

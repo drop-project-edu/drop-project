@@ -39,6 +39,7 @@ import org.dropProject.repository.*
 import org.dropProject.services.AssignmentTeacherFiles
 import org.dropProject.services.AssignmentValidator
 import org.dropProject.services.GitClient
+import org.dropProject.services.SubmissionService
 import java.io.File
 import java.security.Principal
 import java.util.logging.Level
@@ -57,7 +58,8 @@ class AssignmentController(
         val submissionRepository: SubmissionRepository,
         val gitSubmissionRepository: GitSubmissionRepository,
         val gitClient: GitClient,
-        val assignmentTeacherFiles: AssignmentTeacherFiles) {
+        val assignmentTeacherFiles: AssignmentTeacherFiles,
+        val submissionService: SubmissionService) {
 
     @Value("\${assignments.rootLocation}")
     val assignmentsRootLocation: String = ""
@@ -554,6 +556,34 @@ class AssignmentController(
         redirectAttributes.addFlashAttribute("message", "Assignment was archived. You can now find it in the Archived assignments page")
         return "redirect:/assignment/my"
 
+    }
+
+    @RequestMapping(value = ["/markAllAsFinal/{assignmentId}"], method = [(RequestMethod.POST)])
+    fun markAllSubmissionsAsFinal(@PathVariable assignmentId: String,
+                                  redirectAttributes: RedirectAttributes,
+                                  principal: Principal) : String {
+
+        val assignment = assignmentRepository.getOne(assignmentId)
+        val acl = assignmentACLRepository.findByAssignmentId(assignment.id)
+
+        if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
+            throw IllegalAccessError("Submissions can only be marked as final by the assignment owner or authorized teachers")
+        }
+
+        val submissionInfoList = submissionService.getSubmissionsList(assignment)
+        submissionInfoList.forEach {
+            val lastSubmission = it.lastSubmission
+            if (!lastSubmission.markedAsFinal) {
+                submissionService.markAsFinal(lastSubmission)
+                submissionRepository.save(lastSubmission)
+            }
+        }
+
+        LOG.info("[${principal.realName()}] marked all ${assignmentId} submissions as final (${submissionInfoList.count()} submissions)")
+
+        redirectAttributes.addFlashAttribute("message", "All submissions for ${assignmentId} marked as final. " +
+                "Notice that these may not be their best submissions, just the last ones. You may now review each one individually.")
+        return "redirect:/report/${assignmentId}"
     }
 
     private fun getMyAssignments(principal: Principal, archived: Boolean): List<Assignment> {

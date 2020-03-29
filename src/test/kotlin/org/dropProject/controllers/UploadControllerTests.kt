@@ -20,7 +20,6 @@
 package org.dropProject.controllers
 
 import org.hamcrest.CoreMatchers
-import org.hamcrest.CoreMatchers.containsString
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
@@ -56,7 +55,8 @@ import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.*
 import org.dropProject.services.ZipService
 import org.dropProject.storage.StorageService
-import org.hamcrest.CoreMatchers.not
+import org.hamcrest.CoreMatchers.*
+import org.hamcrest.Matchers.hasProperty
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers
 import java.io.File
 import java.nio.file.Files
@@ -776,6 +776,30 @@ class UploadControllerTests {
                 .andExpect(status().isForbidden())
     }
 
+    @Test
+    @DirtiesContext
+    fun markAsFinal() {
+
+        testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
+        testsHelper.uploadProject(this.mvc, "projectCheckstyleErrors", "testJavaProj", STUDENT_1)
+
+        // mark second submission as final
+        this.mvc.perform(post("/markAsFinal/2")
+                .with(user(TEACHER_1)))
+                .andExpect(redirectedUrl("/buildReport/2"))
+                .andExpect(status().isFound())
+
+        // check if it was not marked as final
+        this.mvc.perform(get("/buildReport/1"))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute<Submission>("submission", hasProperty("markedAsFinal", equalTo(false))))
+
+        // check if it was not marked as final
+        this.mvc.perform(get("/buildReport/2"))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute<Submission>("submission", hasProperty("markedAsFinal", equalTo(true))))
+
+    }
 
     @Test
     @DirtiesContext

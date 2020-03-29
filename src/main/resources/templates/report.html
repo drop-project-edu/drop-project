@@ -8,6 +8,13 @@
 
 <div th:replace="layout/layout :: header"></div>
 
+<!-- override popover default size because of "mark all as final" explanation -->
+<style>
+    .popover{
+        width:400px;
+    }
+</style>
+
 <!--/*@thymesVar id="submissions" type="java.util.ArrayList<org.dropProject.data.SubmissionInfo>"*/-->
 <div class="container" style="max-width: 900px; margin-bottom: 65px">
 
@@ -20,6 +27,7 @@
     <div class="btn-group" role="group">
         <a th:href="@{'/exportCSV/' + ${assignmentId}}"
            class="btn btn-default"
+           data-placement="bottom"
            data-toggle="confirmation" data-title="Export"
            data-content="This will export only submissions marked as final"
            data-btn-ok-label="Continue" data-btn-cancel-label="Cancel">Export as CSV</a>
@@ -39,6 +47,16 @@
                    class="btn-group" title="Download all the mavenized submissions in this page in a single zip file">Mavenized</a>
             </li>
         </ul>
+    </div>
+
+    <div class="btn-group" role="group">
+        <form class="inline btn-group" method="post" th:action="@{'/assignment/markAllAsFinal/' + ${assignmentId}}" >
+            <input type="submit" value="Mark All as Final" class="btn btn-default" data-toggle="confirmation"
+                   data-title="Mark All as Final"
+                   data-placement="bottom"
+                   data-content="This will mark the last submission of each student as final (existing already final submissions will be preserved). This operation is not undoable but you can change individual cases afterwords. WARN: These may not be their best submissions, just the last ones."
+                   data-btn-ok-label="Continue" data-btn-cancel-label="Cancel" />
+        </form>
     </div>
 
     <div class="btn-group" role="group" th:if="${isAdmin}">

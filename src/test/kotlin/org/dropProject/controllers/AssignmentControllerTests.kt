@@ -21,6 +21,7 @@ package org.dropProject.controllers
 
 import org.dropProject.TestsHelper
 import org.dropProject.dao.*
+import org.dropProject.data.SubmissionInfo
 import org.dropProject.forms.AssignmentForm
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.AssigneeRepository
@@ -670,6 +671,42 @@ class AssignmentControllerTests {
                 File(assignmentsRootLocation,"dummyAssignment1").deleteRecursively()
             }
         }
+    }
+
+    @Test
+    @DirtiesContext
+    fun markAllAsFinal() {
+
+        val assignmentId = testsHelper.defaultAssignmentId
+
+        // create assignment
+        val assignment01 = Assignment(id = assignmentId, name = "Test Project (for automatic tests)",
+                packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = testsHelper.TEACHER_1.username,
+                submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
+                gitRepositoryFolder = "testJavaProj")
+        assignmentRepository.save(assignment01)
+
+        // make several submissions for that assignment
+        testsHelper.makeSeveralSubmissions("projectInvalidStructure1", mvc)
+
+        // mark all as final
+        this.mvc.perform(post("/assignment/markAllAsFinal/${assignmentId}")
+                .with(user(testsHelper.TEACHER_1)))
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", "/report/${assignmentId}"))
+
+        // check results
+        val reportResult = this.mvc.perform(get("/report/testJavaProj")
+                .with(user(testsHelper.TEACHER_1)))
+                .andExpect(status().isOk())
+                .andReturn()
+
+        @Suppress("UNCHECKED_CAST")
+        val report = reportResult.modelAndView.modelMap["submissions"] as List<SubmissionInfo>
+        report.forEach {
+            assertTrue(it.lastSubmission.markedAsFinal)
+        }
+
     }
 
 

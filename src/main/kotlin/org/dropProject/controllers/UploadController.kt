@@ -39,7 +39,6 @@ import java.util.*
 import java.util.logging.Logger
 import org.springframework.http.HttpStatus
 import org.springframework.scheduling.annotation.EnableAsync
-import org.dropProject.services.BuildWorker
 import org.apache.any23.encoding.TikaEncodingDetector
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.RefNotAdvertisedException
@@ -50,10 +49,8 @@ import org.dropProject.extensions.existsCaseSensitive
 import org.dropProject.extensions.sanitize
 import org.dropProject.extensions.realName
 import org.dropProject.forms.SubmissionMethod
-import org.dropProject.services.AssignmentTeacherFiles
 import org.dropProject.repository.*
-import org.dropProject.services.GitClient
-import org.dropProject.services.GitSubmissionService
+import org.dropProject.services.*
 import org.dropProject.storage.unzip
 import java.io.IOException
 import java.io.InputStream
@@ -86,7 +83,8 @@ class UploadController(
         val asyncExecutor: Executor,
         val assignmentTeacherFiles: AssignmentTeacherFiles,
         val gitClient: GitClient,
-        val gitSubmissionService: GitSubmissionService
+        val gitSubmissionService: GitSubmissionService,
+        val submissionService: SubmissionService
         ) {
 
     @Value("\${storage.rootLocation}/git")
@@ -598,14 +596,8 @@ class UploadController(
 
             LOG.info("Marking as final: ${submissionId}")
 
-            // find all other submissions from this group and assignment
-            val otherSubmissions = submissionRepository.findByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(submission.group, submission.assignmentId)
-            for (otherSubmission in otherSubmissions) {
-                otherSubmission.markedAsFinal = false
-                submissionRepository.save(submission)
-            }
-
-            submission.markedAsFinal = true
+            // marks this submission as final, and all other submissions for the same group and assignment as not final
+            submissionService.markAsFinal(submission)
         }
 
         submissionRepository.save(submission)
