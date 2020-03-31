@@ -43,6 +43,7 @@ import java.util.logging.Logger
 @Transactional
 @Profile("!test")
 class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
+                                 val assignmentTagRepository: AssignmentTagRepository,
                                  val assigneeRepository: AssigneeRepository,
                                  val submissionRepository: SubmissionRepository,
                                  val submissionReportRepository: SubmissionReportRepository,
@@ -124,6 +125,8 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
                     gitRepositoryPubKey = sampleJavaAssignmentPublicKey,
                     gitRepositoryFolder = "sampleJavaProject",
                     active = true)
+
+            assignment.tags.add(AssignmentTag(name="sample"))
 
             val gitRepository = assignment.gitRepositoryUrl
             var connected = false

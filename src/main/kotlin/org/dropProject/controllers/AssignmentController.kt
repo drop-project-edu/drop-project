@@ -19,6 +19,7 @@
  */
 package org.dropProject.controllers
 
+import org.dropProject.dao.*
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.RefNotAdvertisedException
 import org.springframework.beans.factory.annotation.Value
@@ -29,10 +30,6 @@ import org.springframework.ui.ModelMap
 import org.springframework.validation.BindingResult
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.mvc.support.RedirectAttributes
-import org.dropProject.dao.Assignee
-import org.dropProject.dao.Assignment
-import org.dropProject.dao.AssignmentACL
-import org.dropProject.dao.AssignmentReport
 import org.dropProject.extensions.realName
 import org.dropProject.forms.AssignmentForm
 import org.dropProject.repository.*
@@ -40,6 +37,7 @@ import org.dropProject.services.AssignmentTeacherFiles
 import org.dropProject.services.AssignmentValidator
 import org.dropProject.services.GitClient
 import org.dropProject.services.SubmissionService
+import org.springframework.http.MediaType
 import java.io.File
 import java.security.Principal
 import java.util.logging.Level
@@ -53,6 +51,7 @@ import kotlin.collections.ArrayList
 class AssignmentController(
         val assignmentRepository: AssignmentRepository,
         val assignmentReportRepository: AssignmentReportRepository,
+        val assignmentTagRepository: AssignmentTagRepository,
         val assigneeRepository: AssigneeRepository,
         val assignmentACLRepository: AssignmentACLRepository,
         val submissionRepository: SubmissionRepository,
@@ -163,6 +162,13 @@ class AssignmentController(
                     gitRepositoryFolder = assignmentForm.assignmentId!!, showLeaderBoard = assignmentForm.leaderboardType != null,
                     hiddenTestsVisibility = assignmentForm.hiddenTestsVisibility,
                     leaderboardType = assignmentForm.leaderboardType)
+
+            // associate tags
+            val tagNames = assignmentForm.assignmentTags.orEmpty().toLowerCase().split(",")
+            tagNames.forEach {
+                newAssignment.tags.add(assignmentTagRepository.findByName(it) ?: AssignmentTag(name = it))
+            }
+
             assignmentRepository.save(newAssignment)
 
             assignment = newAssignment
@@ -200,6 +206,14 @@ class AssignmentController(
             existingAssignment.showLeaderBoard = assignmentForm.leaderboardType != null
             existingAssignment.hiddenTestsVisibility = assignmentForm.hiddenTestsVisibility
             existingAssignment.leaderboardType = assignmentForm.leaderboardType
+
+            // associate tags
+            val tagNames = assignmentForm.assignmentTags.orEmpty().toLowerCase().split(",")
+            existingAssignment.tags.clear()
+            tagNames.forEach {
+                existingAssignment.tags.add(assignmentTagRepository.findByName(it) ?: AssignmentTag(name = it))
+            }
+
             assignmentRepository.save(existingAssignment)
 
             assignment = existingAssignment
@@ -286,6 +300,7 @@ class AssignmentController(
 
         val assignmentForm = AssignmentForm(assignmentId = assignment.id,
                 assignmentName = assignment.name,
+                assignmentTags = assignment.tags.joinToString { t -> t.name },
                 assignmentPackage = assignment.packageName,
                 language = assignment.language,
                 dueDate = assignment.dueDate,
@@ -617,6 +632,12 @@ class AssignmentController(
             assignment.public = !assigneeRepository.existsByAssignmentId(assignment.id)
         }
         return filteredAssigments
+    }
+
+    @GetMapping(path = ["/api/allTags"], produces = [MediaType.APPLICATION_JSON_VALUE])
+    @ResponseBody
+    fun getAllTagsJson() : List<String> {
+        return assignmentTagRepository.findAll().map { it.name }
     }
 }
     
