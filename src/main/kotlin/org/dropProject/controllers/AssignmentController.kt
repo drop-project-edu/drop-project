@@ -105,15 +105,15 @@ class AssignmentController(
             return "assignment-form"
         }
 
+        var assignment : Assignment
+        if (!assignmentForm.editMode) {   // create
+
         if (assignmentForm.acl?.split(",")?.contains(principal.realName()) == true) {
             LOG.warning("Assignment ACL should not include the owner")
             bindingResult.rejectValue("acl", "acl.includeOwner",
                     "Error: You don't need to give autorization to yourself, only other teachers")
             return "assignment-form"
         }
-
-        var assignment : Assignment
-        if (!assignmentForm.editMode) {   // create
 
             // check if it already exists an assignment with this id
             if (assignmentRepository.existsById(assignmentForm.assignmentId!!)) {
@@ -183,6 +183,13 @@ class AssignmentController(
                 LOG.warning("[${assignmentForm.assignmentId}][${principal.realName()}] Assignments can only be changed " +
                         "by their ownerUserId (${existingAssignment.ownerUserId}) or authorized teachers")
                 throw IllegalAccessError("Assignments can only be changed by their owner or authorized teachers")
+            }
+
+            if (assignmentForm.acl?.split(",")?.contains(existingAssignment.ownerUserId) == true) {
+                LOG.warning("Assignment ACL should not include the owner")
+                bindingResult.rejectValue("acl", "acl.includeOwner",
+                        "Error: You don't need to include the assignment owner, only other teachers")
+                return "assignment-form"
             }
 
             // TODO: check again for assignment integrity

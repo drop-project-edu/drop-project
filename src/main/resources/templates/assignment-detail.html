@@ -35,7 +35,7 @@
             <form class="form-horizontal">
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Name:</label>
-                    <div class="col-sm-9 read-row" th:text="${assignment.name}"></div>
+                    <div class="col-sm-9 read-row" th:text="${assignment.name + ' (created by ' + assignment.ownerUserId + ')'}"></div>
                 </div>
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Submission link:</label>
