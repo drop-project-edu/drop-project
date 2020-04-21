@@ -26,7 +26,7 @@ fun String.sanitize(): String {
 
     var sanitized = ""
     for (c in this) {
-        if (c.isLetterOrDigit()) {
+        if (c.isLetterOrDigit() || c == '_') {
             sanitized += c
         }
     }
