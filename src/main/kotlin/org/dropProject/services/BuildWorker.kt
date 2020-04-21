@@ -26,6 +26,7 @@ import org.dropProject.dao.*
 import org.dropProject.data.BuildReport
 import org.dropProject.data.TestType
 import org.dropProject.repository.*
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.charset.Charset
 import java.nio.file.Files
@@ -49,7 +50,7 @@ class BuildWorker(
         val jacocoReportRepository: JacocoReportRepository,
         val buildReportBuilder: BuildReportBuilder) {
 
-    val LOG = Logger.getLogger(this.javaClass.name)
+    val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
     @Async
     @Transactional
@@ -181,7 +182,7 @@ class BuildWorker(
                     val buildReportCoverage = buildReportBuilder.build(mavenResult.outputLines, mavenizedProjectFolder.absolutePath,
                             assignment, submission)
                     if (buildReportCoverage.hasJUnitErrors(TestType.STUDENT) == true) {
-                        LOG.warning("Submission ${submission.id} failed executing student tests when isolated from teacher tests")
+                        LOG.warn("Submission ${submission.id} failed executing student tests when isolated from teacher tests")
                     } else {
                         if (File("${mavenizedProjectFolder}/target/site/jacoco").exists()) {
                             // store the jacoco reports in the DB
@@ -194,7 +195,7 @@ class BuildWorker(
                                         jacocoReportRepository.save(report)
                                     }
                         } else {
-                            LOG.warning("Submission ${submission.id} failed measuring coverage because the folder " +
+                            LOG.warn("Submission ${submission.id} failed measuring coverage because the folder " +
                                     "[${mavenizedProjectFolder}/target/site/jacoco] doesn't exist")
                         }
                     }

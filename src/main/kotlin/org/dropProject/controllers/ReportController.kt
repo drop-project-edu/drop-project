@@ -26,19 +26,11 @@ import org.apache.commons.io.FileUtils
 import org.commonmark.ext.autolink.AutolinkExtension
 import org.commonmark.parser.Parser
 import org.commonmark.renderer.html.HtmlRenderer
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.core.io.FileSystemResource
-import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
-import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Controller
-import org.springframework.ui.ModelMap
-import org.springframework.web.bind.annotation.*
-import org.thymeleaf.TemplateEngine
-import org.thymeleaf.context.Context
 import org.dropProject.MAVEN_MAX_EXECUTION_TIME
-import org.dropProject.dao.*
+import org.dropProject.dao.Indicator
+import org.dropProject.dao.LeaderboardType
+import org.dropProject.dao.Submission
+import org.dropProject.dao.SubmissionStatus
 import org.dropProject.data.AuthorDetails
 import org.dropProject.data.TestType
 import org.dropProject.extensions.formatDefault
@@ -48,7 +40,19 @@ import org.dropProject.repository.*
 import org.dropProject.services.*
 import org.dropProject.storage.StorageService
 import org.dropProject.storage.unzip
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.core.io.FileSystemResource
+import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
 import org.springframework.security.access.AccessDeniedException
+import org.springframework.stereotype.Controller
+import org.springframework.ui.ModelMap
+import org.springframework.web.bind.annotation.*
+import org.thymeleaf.TemplateEngine
+import org.thymeleaf.context.Context
 import java.io.File
 import java.io.FileWriter
 import java.math.RoundingMode
@@ -56,7 +60,6 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.security.Principal
 import java.util.*
-import java.util.logging.Logger
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
@@ -88,7 +91,7 @@ class ReportController(
     @Value("\${storage.rootLocation}/git")
     val gitSubmissionsRootLocation: String = "submissions/git"
 
-    val LOG = Logger.getLogger(this.javaClass.name)
+    val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
     @RequestMapping(value = ["/report/{assignmentId}"], method = [(RequestMethod.GET)])
     fun getReport(@PathVariable assignmentId: String, model: ModelMap,
@@ -381,7 +384,7 @@ class ReportController(
                         wasRebuilt = submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
 
                 if (!originalProjectFolder.exists()) {
-                    LOG.warning("${originalProjectFolder.absolutePath} doesn't exist. " +
+                    LOG.warn("${originalProjectFolder.absolutePath} doesn't exist. " +
                             "Probably, it has structure errors. This submission will not be included in the zip file.")
                 } else {
 

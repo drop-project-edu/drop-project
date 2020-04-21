@@ -28,6 +28,7 @@ import org.dropProject.dao.Submission
 import org.dropProject.data.BuildReport
 import org.dropProject.repository.JUnitReportRepository
 import org.dropProject.repository.JacocoReportRepository
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileNotFoundException
 import java.util.logging.Logger
@@ -35,7 +36,7 @@ import java.util.logging.Logger
 @Service
 class BuildReportBuilder {
 
-    val LOG = Logger.getLogger(this.javaClass.name)
+    val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
     @Autowired
     lateinit var junitResultsParser: JunitResultsParser

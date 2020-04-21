@@ -20,6 +20,7 @@
 package org.dropProject.controllers
 
 import org.apache.tomcat.util.http.fileupload.impl.FileSizeLimitExceededException
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -35,7 +36,7 @@ import javax.servlet.http.HttpServletRequest
 @ControllerAdvice
 class GlobalExceptionHandler {
 
-    val LOG = Logger.getLogger(this.javaClass.name)
+    val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
     @ExceptionHandler(MultipartException::class)
     fun myError(exception: Exception, redirectAttributes: RedirectAttributes, request: HttpServletRequest): ResponseEntity<String> {
@@ -58,14 +59,14 @@ class GlobalExceptionHandler {
     // TODO: This assumes a REST response, But what about HTML responses?...
     @ExceptionHandler(RuntimeException::class)
     fun genericException(exception: Exception): ResponseEntity<String> {
-        LOG.log(Level.SEVERE, "Generic exception", exception)
+        LOG.error("Generic exception", exception)
         exception.printStackTrace()  // TODO For same reason, the above line doesn't print the stacktrace
         return ResponseEntity("{\"error\": \"${exception}\"}", HttpStatus.INTERNAL_SERVER_ERROR)
     }
 
     @ExceptionHandler(org.springframework.security.access.AccessDeniedException::class)
     fun accessDeniedException(exception: Exception): ResponseEntity<Any> {
-        LOG.warning("Access denied: ${exception.message}")
+        LOG.warn("Access denied: ${exception.message}")
         return ResponseEntity("Access denied: ${exception.message}", HttpHeaders(), HttpStatus.FORBIDDEN)
     }
 }

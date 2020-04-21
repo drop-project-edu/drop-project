@@ -42,12 +42,13 @@ import org.eclipse.jgit.treewalk.CanonicalTreeParser
 import org.dropProject.dao.formatter
 import org.eclipse.jgit.patch.HunkHeader
 import org.eclipse.jgit.util.io.DisabledOutputStream
+import org.slf4j.LoggerFactory
 import java.util.logging.Logger
 
 @Service
 class GitClient {
 
-    val LOG = Logger.getLogger(this.javaClass.name)
+    val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
     val githubSshUrlRegex = """git@github.com:(.+)/(.+).git""".toRegex()
 
@@ -147,9 +148,9 @@ class GitClient {
         val publicKeyOutputStream = ByteArrayOutputStream()
         kpair.writePrivateKey(privKeyOutputStream)
         kpair.writePublicKey(publicKeyOutputStream, "")
-        LOG.fine("Finger print: " + kpair.getFingerPrint())
-        LOG.fine("PrivKey:" + privKeyOutputStream.toString())
-        LOG.fine("PubKey:" + publicKeyOutputStream.toString())
+        LOG.trace("Finger print: " + kpair.getFingerPrint())
+        LOG.trace("PrivKey:" + privKeyOutputStream.toString())
+        LOG.trace("PubKey:" + publicKeyOutputStream.toString())
         kpair.dispose()
 
         return privKeyOutputStream.toByteArray() to publicKeyOutputStream.toByteArray()

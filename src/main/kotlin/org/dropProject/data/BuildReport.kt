@@ -23,8 +23,8 @@ import org.dropProject.dao.Assignment
 import org.dropProject.dao.Language
 import org.dropProject.services.JUnitResults
 import org.dropProject.services.JacocoResults
+import org.slf4j.LoggerFactory
 import java.math.BigDecimal
-import java.util.logging.Logger
 
 enum class TestType {
     STUDENT, TEACHER, HIDDEN
@@ -36,7 +36,7 @@ data class BuildReport(val mavenOutputLines: List<String>,
                        val junitResults: List<JUnitResults>,
                        val jacocoResults: List<JacocoResults>) {
 
-    val LOG = Logger.getLogger(this.javaClass.name)
+    val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
     fun mavenOutput() : String {
         return mavenOutputLines.joinToString(separator = "\n")
@@ -76,12 +76,12 @@ data class BuildReport(val mavenOutputLines: List<String>,
             for ((idx, mavenOutputLine) in mavenOutputLines.withIndex()) {
                 if (triggerStartOfCompilationOutput.matches(mavenOutputLine)) {
                     startIdx = idx + 1
-                    LOG.fine("Found start of compilation output (line $idx)")
+                    LOG.trace("Found start of compilation output (line $idx)")
                 } else if (startIdx > 0) {
                     if (mavenOutputLine.startsWith("[INFO] BUILD FAILURE") ||
                             mavenOutputLine.startsWith("[INFO] --- ")) {    // no compilation errors on Kotlin
                         endIdx = idx
-                        LOG.fine("Found end of compilation output (line $idx)")
+                        LOG.trace("Found end of compilation output (line $idx)")
                         break
                     }
                 }

@@ -19,16 +19,6 @@
  */
 package org.dropProject.controllers
 
-import org.eclipse.jgit.api.Git
-import org.eclipse.jgit.api.errors.RefNotAdvertisedException
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Controller
-import org.springframework.ui.ModelMap
-import org.springframework.validation.BindingResult
-import org.springframework.web.bind.annotation.*
-import org.springframework.web.servlet.mvc.support.RedirectAttributes
 import org.dropProject.dao.Assignee
 import org.dropProject.dao.Assignment
 import org.dropProject.dao.AssignmentACL
@@ -40,12 +30,24 @@ import org.dropProject.services.AssignmentTeacherFiles
 import org.dropProject.services.AssignmentValidator
 import org.dropProject.services.GitClient
 import org.dropProject.services.SubmissionService
+import org.eclipse.jgit.api.Git
+import org.eclipse.jgit.api.errors.RefNotAdvertisedException
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
+import org.springframework.stereotype.Controller
+import org.springframework.ui.ModelMap
+import org.springframework.validation.BindingResult
+import org.springframework.web.bind.annotation.ModelAttribute
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestMethod
+import org.springframework.web.servlet.mvc.support.RedirectAttributes
 import java.io.File
 import java.security.Principal
 import java.util.logging.Level
-import java.util.logging.Logger
 import javax.validation.Valid
-import kotlin.collections.ArrayList
 
 
 @Controller
@@ -64,7 +66,7 @@ class AssignmentController(
     @Value("\${assignments.rootLocation}")
     val assignmentsRootLocation: String = ""
 
-    val LOG = Logger.getLogger(this.javaClass.name)
+    val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
     @RequestMapping(value = ["/new"], method = [(RequestMethod.GET)])
     fun getNewAssignmentForm(model: ModelMap): String {
@@ -86,20 +88,20 @@ class AssignmentController(
 
         if (assignmentForm.acceptsStudentTests &&
                 (assignmentForm.minStudentTests == null || assignmentForm.minStudentTests!! < 1)) {
-            LOG.warning("Error: You must require at least one student test")
+            LOG.warn("Error: You must require at least one student test")
             bindingResult.rejectValue("acceptsStudentTests", "acceptsStudentTests.atLeastOne", "Error: You must require at least one student test")
             return "assignment-form"
         }
 
         if (!assignmentForm.acceptsStudentTests && assignmentForm.minStudentTests != null) {
-            LOG.warning("If you require ${assignmentForm.minStudentTests} student tests, you must check 'Accepts student tests'")
+            LOG.warn("If you require ${assignmentForm.minStudentTests} student tests, you must check 'Accepts student tests'")
             bindingResult.rejectValue("acceptsStudentTests", "acceptsStudentTests.mustCheck",
                     "Error: If you require ${assignmentForm.minStudentTests} student tests, you must check 'Accepts student tests'")
             return "assignment-form"
         }
 
         if (!assignmentForm.acceptsStudentTests && assignmentForm.calculateStudentTestsCoverage) {
-            LOG.warning("If you want to calculate coverage of student tests, you must check 'Accepts student tests'")
+            LOG.warn("If you want to calculate coverage of student tests, you must check 'Accepts student tests'")
             bindingResult.rejectValue("acceptsStudentTests", "acceptsStudentTests.mustCheck",
                     "Error: If you want to calculate coverage of student tests, you must check 'Accepts student tests'")
             return "assignment-form"
@@ -109,7 +111,7 @@ class AssignmentController(
         if (!assignmentForm.editMode) {   // create
 
         if (assignmentForm.acl?.split(",")?.contains(principal.realName()) == true) {
-            LOG.warning("Assignment ACL should not include the owner")
+            LOG.warn("Assignment ACL should not include the owner")
             bindingResult.rejectValue("acl", "acl.includeOwner",
                     "Error: You don't need to give autorization to yourself, only other teachers")
             return "assignment-form"
@@ -117,7 +119,7 @@ class AssignmentController(
 
             // check if it already exists an assignment with this id
             if (assignmentRepository.existsById(assignmentForm.assignmentId!!)) {
-                LOG.warning("An assignment already exists with this ID: ${assignmentForm.assignmentId}")
+                LOG.warn("An assignment already exists with this ID: ${assignmentForm.assignmentId}")
                 bindingResult.rejectValue("assignmentId", "assignment.duplicate", "Error: An assignment already exists with this ID")
                 return "assignment-form"
             }
@@ -126,7 +128,7 @@ class AssignmentController(
 
             val gitRepository = assignmentForm.gitRepositoryUrl!!
             if (!gitRepository.startsWith("git@")) {
-                LOG.warning("Invalid git repository url: ${assignmentForm.gitRepositoryUrl}")
+                LOG.warn("Invalid git repository url: ${assignmentForm.gitRepositoryUrl}")
                 bindingResult.rejectValue("gitRepositoryUrl", "repository.notSSh", "Error: Only SSH style urls are accepted (must start with 'git@')")
                 return "assignment-form"
             }
@@ -137,14 +139,14 @@ class AssignmentController(
                 gitClient.clone(gitRepository, directory)
                 LOG.info("[${assignmentForm.assignmentId}] Successfuly cloned ${gitRepository} to ${directory}")
             } catch (e: Exception) {
-                LOG.severe("[${assignmentForm.assignmentId}] Error cloning ${gitRepository} - ${e}")
+                LOG.error("[${assignmentForm.assignmentId}] Error cloning ${gitRepository} - ${e}")
                 if (e.message.orEmpty().contains("Invalid remote: origin") || e.message.orEmpty().contains("Auth fail")) {
                     // probably will need authentication
                     mustSetupGitConnection = true
                     LOG.info("[${assignmentForm.assignmentId}] will redirect to setup-git")
 //                    bindingResult.rejectValue("gitRepositoryUrl", "repository.invalid", "Error: Git repository is invalid or inexistent")
                 } else {
-                    LOG.warning("[${assignmentForm.assignmentId}] Cloning error is neither 'Invalid remote: origin' " +
+                    LOG.warn("[${assignmentForm.assignmentId}] Cloning error is neither 'Invalid remote: origin' " +
                             "or 'Auth fail' : [${e.message.orEmpty()}]")
                     bindingResult.rejectValue("gitRepositoryUrl", "repository.genericError", "Error cloning git repository. " +
                             "Are you sure the url is right?")
@@ -173,20 +175,20 @@ class AssignmentController(
                     ?: throw IllegalArgumentException("Trying to update an inexistent assignment")
 
             if (existingAssignment.gitRepositoryUrl != assignmentForm.gitRepositoryUrl) {
-                LOG.warning("[${assignmentForm.assignmentId}] Git repository cannot be changed")
+                LOG.warn("[${assignmentForm.assignmentId}] Git repository cannot be changed")
                 bindingResult.rejectValue("gitRepositoryUrl", "repository.not-updateable", "Error: Git repository cannot be changed.")
                 return "assignment-form"
             }
 
             val acl = assignmentACLRepository.findByAssignmentId(existingAssignment.id)
             if (principal.realName() != existingAssignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
-                LOG.warning("[${assignmentForm.assignmentId}][${principal.realName()}] Assignments can only be changed " +
+                LOG.warn("[${assignmentForm.assignmentId}][${principal.realName()}] Assignments can only be changed " +
                         "by their ownerUserId (${existingAssignment.ownerUserId}) or authorized teachers")
                 throw IllegalAccessError("Assignments can only be changed by their owner or authorized teachers")
             }
 
             if (assignmentForm.acl?.split(",")?.contains(existingAssignment.ownerUserId) == true) {
-                LOG.warning("Assignment ACL should not include the owner")
+                LOG.warn("Assignment ACL should not include the owner")
                 bindingResult.rejectValue("acl", "acl.includeOwner",
                         "Error: You don't need to include the assignment owner, only other teachers")
                 return "assignment-form"
@@ -364,10 +366,10 @@ class AssignmentController(
             }
 
         } catch (re: RefNotAdvertisedException) {
-            LOG.warning("Couldn't pull git repository for ${assignmentId}: head is invalid")
+            LOG.warn("Couldn't pull git repository for ${assignmentId}: head is invalid")
             return ResponseEntity("{ \"error\": \"Error pulling from ${assignment.gitRepositoryUrl}. Probably you don't have any commits yet.\"}", HttpStatus.INTERNAL_SERVER_ERROR)
         } catch (e: Exception) {
-            LOG.log(Level.WARNING, "Couldn't pull git repository for ${assignmentId}", e)
+            LOG.warn("Couldn't pull git repository for ${assignmentId}", e)
             return ResponseEntity("{ \"error\": \"Error pulling from ${assignment.gitRepositoryUrl}\"}", HttpStatus.INTERNAL_SERVER_ERROR)
         }
 
@@ -414,7 +416,7 @@ class AssignmentController(
         }
 
         if (assignment.gitRepositoryPrivKey == null) {
-            LOG.warning("gitRepositoryUrl is null???")
+            LOG.warn("gitRepositoryUrl is null???")
             redirectAttributes.addFlashAttribute("error", "Something went wrong with the credentials generation. Please try again")
             return "redirect:/assignment/setup-git/${assignment.id}"
         }

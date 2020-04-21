@@ -20,6 +20,7 @@
 package org.dropProject
 
 import org.dropProject.services.MyAsyncUncaughtExceptionHandler
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -28,7 +29,6 @@ import org.springframework.scheduling.annotation.AsyncConfigurer
 import org.springframework.scheduling.annotation.EnableAsync
 import org.springframework.scheduling.annotation.EnableScheduling
 import java.util.concurrent.Executor
-import java.util.logging.Logger
 
 val MAVEN_MAX_EXECUTION_TIME = 180  // TODO: timeout = 180 sec
 
@@ -38,7 +38,7 @@ val MAVEN_MAX_EXECUTION_TIME = 180  // TODO: timeout = 180 sec
 @Profile("!test")
 class AsyncConfig() : AsyncConfigurer {
 
-    val LOG = Logger.getLogger(this.javaClass.name)
+    val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
     @Autowired
     private val asyncUncaughtExceptionHandler : MyAsyncUncaughtExceptionHandler? = null

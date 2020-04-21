@@ -24,21 +24,19 @@ import org.apache.maven.model.io.xpp3.MavenXpp3Reader
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer
 import org.apache.maven.shared.invoker.DefaultInvocationRequest
 import org.apache.maven.shared.invoker.DefaultInvoker
-import org.codehaus.plexus.util.cli.CommandLineTimeOutException
+import org.dropProject.data.MavenResult
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import org.dropProject.data.MavenResult
 import java.io.File
 import java.io.FileReader
 import java.io.StringWriter
-import java.security.Principal
 import java.util.*
-import java.util.logging.Logger
 
 @Service
 class MavenInvoker {
 
-    val LOG = Logger.getLogger(this.javaClass.name)
+    val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
     @Value("\${dropProject.maven.home}")
     val mavenHome : String = ""
@@ -57,7 +55,7 @@ class MavenInvoker {
         if (!File(mavenRepository).exists()) {
             val success = File(mavenRepository).mkdirs()
             if (!success) {
-                LOG.severe("Couldn't create the maven repository folder: $mavenRepository")
+                LOG.error("Couldn't create the maven repository folder: $mavenRepository")
             }
         }
 
@@ -117,13 +115,13 @@ class MavenInvoker {
         if (result.exitCode != 0) {
             if (result.executionException != null) {
                 if (result.executionException is org.apache.maven.shared.utils.cli.CommandLineTimeOutException) {
-                    LOG.severe("Maven execution too long. Aborting...")
+                    LOG.error("Maven execution too long. Aborting...")
                     return MavenResult(resultCode = result.exitCode, outputLines = outputLines, expiredByTimeout = true)
                 } else {
-                    LOG.severe("Error: ${result.executionException}")
+                    LOG.error("Error: ${result.executionException}")
                 }
             } else {
-                LOG.warning("Maven invoker ended with result code ${result.exitCode}")
+                LOG.warn("Maven invoker ended with result code ${result.exitCode}")
             }
         }
 

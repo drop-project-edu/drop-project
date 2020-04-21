@@ -21,22 +21,20 @@ package org.dropProject.controllers
 
 
 import org.dropProject.dao.*
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.context.ApplicationListener
-import org.springframework.context.event.ContextRefreshedEvent
-import org.springframework.stereotype.Component
-import org.springframework.transaction.annotation.Transactional
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.*
 import org.dropProject.services.GitClient
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.ApplicationListener
 import org.springframework.context.annotation.Profile
+import org.springframework.context.event.ContextRefreshedEvent
 import org.springframework.core.io.ResourceLoader
+import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
 import java.io.File
-import java.sql.Date
 import java.sql.Timestamp
-import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.logging.Logger
 
 
 @Component
@@ -90,7 +88,7 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
                 "bUulg6laTAM/NMSx64IXp8n9hWDaKIqew7s6e69+gLM3h6b82FlacupJUp"
     }
 
-    val LOG = Logger.getLogger(this.javaClass.name)
+    val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
     @Value("\${dropProject.maven.home}")
     val mavenHome : String = ""
@@ -143,7 +141,7 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
                 connected = true
 
             } catch (e: Exception) {
-                LOG.severe("Error cloning ${gitRepository} - ${e}")
+                LOG.error("Error cloning ${gitRepository} - ${e}")
             }
 
             if (connected) {

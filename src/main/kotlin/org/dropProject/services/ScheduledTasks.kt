@@ -23,6 +23,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import org.dropProject.dao.SubmissionStatus
 import org.dropProject.repository.SubmissionRepository
+import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.logging.Logger
 
@@ -32,7 +33,7 @@ class ScheduledTasks(
         val submissionRepository: SubmissionRepository
 ) {
 
-    val LOG = Logger.getLogger(this.javaClass.name)
+    val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
     @Scheduled(fixedRate = 6_000_000)
     fun cleanExpiredSubmissions() {

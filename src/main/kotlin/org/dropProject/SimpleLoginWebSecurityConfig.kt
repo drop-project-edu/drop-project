@@ -20,6 +20,7 @@
 package org.dropProject
 
 import org.dropProject.security.DropProjectSecurityConfig
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -40,7 +41,7 @@ import java.util.logging.Logger
 @EnableWebSecurity
 class SimpleLoginWebSecurityConfig : DropProjectSecurityConfig() {
 
-    val LOG = Logger.getLogger(this.javaClass.name)
+    val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
     @Autowired
     lateinit var resourceLoader: ResourceLoader
