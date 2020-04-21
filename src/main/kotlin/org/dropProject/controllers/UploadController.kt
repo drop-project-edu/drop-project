@@ -52,6 +52,7 @@ import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.*
 import org.dropProject.services.*
 import org.dropProject.storage.unzip
+import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.io.InputStream
 import java.lang.IllegalStateException
@@ -96,7 +97,7 @@ class UploadController(
     @Value("\${delete.original.projectFolder:true}")
     val deleteOriginalProjectFolder : Boolean = true
 
-    val LOG = Logger.getLogger(this.javaClass.name)
+    val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
     init {
         storageService.init()
@@ -248,7 +249,7 @@ class UploadController(
             if (lastSubmission != null) {
                 val nextSubmissionTime = calculateCoolOff(lastSubmission, assignment)
                 if (nextSubmissionTime != null) {
-                    LOG.warning("[${principal.realName()}] can't submit because he is in cool-off period")
+                    LOG.warn("[${principal.realName()}] can't submit because he is in cool-off period")
                     throw org.springframework.security.access.AccessDeniedException("[${principal.realName()}] can't submit because he is in cool-off period")
                 }
             }
@@ -474,7 +475,7 @@ class UploadController(
             when(e) {
                 is InvalidProjectStructureException -> throw  e
                 else -> {
-                    LOG.log(Level.FINE, "Error parsing AUTHORS.txt", e)
+                    LOG.debug("Error parsing AUTHORS.txt", e)
                     authors.clear()
                 }
             }
@@ -796,10 +797,10 @@ class UploadController(
             }
 
         } catch (re: RefNotAdvertisedException) {
-            LOG.warning("Couldn't pull git repository for ${submissionId}: head is invalid")
+            LOG.warn("Couldn't pull git repository for ${submissionId}: head is invalid")
             return ResponseEntity("{ \"error\": \"Error pulling from ${gitSubmission.gitRepositoryUrl}. Probably you don't have any commits yet.\"}", HttpStatus.INTERNAL_SERVER_ERROR)
         } catch (e: Exception) {
-            LOG.warning("Couldn't pull git repository for ${submissionId}")
+            LOG.warn("Couldn't pull git repository for ${submissionId}")
             return ResponseEntity("{ \"error\": \"Error pulling from ${gitSubmission.gitRepositoryUrl}\"}", HttpStatus.INTERNAL_SERVER_ERROR)
         }
 
@@ -831,7 +832,7 @@ class UploadController(
             if (lastSubmission != null) {
                 val nextSubmissionTime = calculateCoolOff(lastSubmission, assignment)
                 if (nextSubmissionTime != null) {
-                    LOG.warning("[${principal.realName()}] can't submit because he is in cool-off period")
+                    LOG.warn("[${principal.realName()}] can't submit because he is in cool-off period")
                     throw org.springframework.security.access.AccessDeniedException("[${principal.realName()}] can't submit because he is in cool-off period")
                 }
             }
@@ -956,46 +957,45 @@ class UploadController(
         return null
     }
 
-
     @Throws(IOException::class)
     private fun guessCharset(inputStream: InputStream): Charset {
         try {
             return Charset.forName(TikaEncodingDetector().guessEncoding(inputStream))
         } catch (e: UnsupportedCharsetException) {
-            LOG.warning("Unsupported Charset: ${e.charsetName}. Falling back to default")
+            LOG.warn("Unsupported Charset: ${e.charsetName}. Falling back to default")
             return Charset.defaultCharset()
         }
     }
 
     @ExceptionHandler(StorageException::class)
     fun handleStorageError(e: StorageException): ResponseEntity<String> {
-        LOG.severe(e.message)
+        LOG.error(e.message)
         return ResponseEntity("{\"error\": \"Falha a gravar ficheiro => ${e.message}\"}", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(InvalidProjectStructureException::class)
     fun handleStorageError(e: InvalidProjectStructureException): ResponseEntity<String> {
-        LOG.warning(e.message)
+        LOG.warn(e.message)
         return ResponseEntity("{\"error\": \"${e.message}\"}", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Inexistent assignment")
     class AssignmentNotFoundException(assignmentId: String) : Exception("Inexistent assignment ${assignmentId}") {
 
-        val LOG = Logger.getLogger(this.javaClass.name)
+        val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
         init {
-            LOG.warning("Inexistent assignment ${assignmentId}")
+            LOG.warn("Inexistent assignment ${assignmentId}")
         }
     }
 
     @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Inexistent submission")
     class SubmissionNotFoundException(submissionId: Long) : Exception("Inexistent submission ${submissionId}") {
 
-        val LOG = Logger.getLogger(this.javaClass.name)
+        val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
         init {
-            LOG.warning("Inexistent submission ${submissionId}")
+            LOG.warn("Inexistent submission ${submissionId}")
         }
     }
 
