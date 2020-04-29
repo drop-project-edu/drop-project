@@ -19,14 +19,24 @@
  */
 package org.dropProject.controllers
 
+import org.dropProject.TestsHelper
+import org.dropProject.dao.*
+import org.dropProject.data.BuildReport
+import org.dropProject.data.SubmissionInfo
+import org.dropProject.data.TestType
+import org.dropProject.forms.SubmissionMethod
+import org.dropProject.repository.*
+import org.dropProject.services.ZipService
+import org.dropProject.storage.StorageService
 import org.hamcrest.CoreMatchers
+import org.hamcrest.CoreMatchers.*
+import org.hamcrest.Matchers.hasProperty
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.BDDMockito.*
+import org.mockito.BDDMockito.verify
 import org.mockito.Mockito.never
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -46,25 +56,10 @@ import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
-import org.dropProject.TestsHelper
-import org.dropProject.dao.*
-import org.dropProject.data.BuildReport
-import org.dropProject.data.SubmissionInfo
-import org.dropProject.data.TestType
-import org.dropProject.extensions.formatHHmm
-import org.dropProject.forms.SubmissionMethod
-import org.dropProject.repository.*
-import org.dropProject.services.ZipService
-import org.dropProject.storage.StorageService
-import org.hamcrest.CoreMatchers.*
-import org.hamcrest.Matchers.hasProperty
-import org.springframework.test.web.servlet.result.MockMvcResultHandlers
 import java.io.File
 import java.nio.file.Files
-import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
-import java.util.*
 
 @RunWith(SpringRunner::class)
 @AutoConfigureMockMvc
