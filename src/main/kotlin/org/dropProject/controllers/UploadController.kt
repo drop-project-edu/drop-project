@@ -40,6 +40,7 @@ import java.util.logging.Logger
 import org.springframework.http.HttpStatus
 import org.springframework.scheduling.annotation.EnableAsync
 import org.apache.any23.encoding.TikaEncodingDetector
+import org.dropProject.Constants
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.RefNotAdvertisedException
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
@@ -950,8 +951,20 @@ class UploadController(
         val lastSubmissionDate = Timestamp(lastSubmission.submissionDate.time).toLocalDateTime()
         val now = LocalDateTime.now()
         val delta = ChronoUnit.MINUTES.between(lastSubmissionDate, now)
-        if (delta < assignment.cooloffPeriod!!) {
-            return lastSubmissionDate.plusMinutes(assignment.cooloffPeriod!!.toLong())
+
+        val reportElements = submissionReportRepository.findBySubmissionId(lastSubmission.id)
+        val cooloffPeriod =
+            if (reportElements.any {
+                        (it.reportValue == "NOK" &&
+                                (it.reportKey == Indicator.PROJECT_STRUCTURE.code ||
+                                        it.reportKey == Indicator.COMPILATION.code)) } ) {
+                Math.min(Constants.COOLOFF_FOR_STRUCTURE_OR_COMPILATION, assignment.cooloffPeriod!!)
+            } else {
+                assignment.cooloffPeriod!!
+            }
+
+        if (delta < cooloffPeriod) {
+            return lastSubmissionDate.plusMinutes(cooloffPeriod.toLong())
         }
 
         return null

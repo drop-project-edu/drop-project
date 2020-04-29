@@ -51,6 +51,7 @@ import org.dropProject.dao.*
 import org.dropProject.data.BuildReport
 import org.dropProject.data.SubmissionInfo
 import org.dropProject.data.TestType
+import org.dropProject.extensions.formatHHmm
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.*
 import org.dropProject.services.ZipService
@@ -60,6 +61,10 @@ import org.hamcrest.Matchers.hasProperty
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers
 import java.io.File
 import java.nio.file.Files
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.util.*
 
 @RunWith(SpringRunner::class)
 @AutoConfigureMockMvc
@@ -262,19 +267,40 @@ class UploadControllerTests {
 
     @Test
     @DirtiesContext
-    fun uploadProjectThenCooloff() {
+    fun uploadProjectWithCompilationErrorsThenCooloff() { // cooloff is reduced for structure or compilation errors
 
         val assignment = assignmentRepository.getOne("testJavaProj")
         assignment.cooloffPeriod = 10
         assignmentRepository.save(assignment)
 
         testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
+        val now = LocalTime.now()
 
         this.mvc.perform(get("/upload/testJavaProj")
                 .with(user(STUDENT_1)))
                 .andExpect(status().isOk)
                 .andExpect(view().name("student-upload-form"))
-                .andExpect(model().attributeExists("coolOffEnd"))
+                .andExpect(model().attribute("coolOffEnd",
+                        now.plusMinutes(2).format(DateTimeFormatter.ofPattern("HH:mm"))))
+    }
+
+    @Test
+    @DirtiesContext
+    fun uploadProjectThenCooloff() {
+
+        val assignment = assignmentRepository.getOne("testJavaProj")
+        assignment.cooloffPeriod = 10
+        assignmentRepository.save(assignment)
+
+        testsHelper.uploadProject(this.mvc, "projectCheckstyleErrors", "testJavaProj", STUDENT_1)
+        val now = LocalTime.now()
+
+        this.mvc.perform(get("/upload/testJavaProj")
+                .with(user(STUDENT_1)))
+                .andExpect(status().isOk)
+                .andExpect(view().name("student-upload-form"))
+                .andExpect(model().attribute("coolOffEnd",
+                        now.plusMinutes(10).format(DateTimeFormatter.ofPattern("HH:mm"))))
     }
 
     @Test

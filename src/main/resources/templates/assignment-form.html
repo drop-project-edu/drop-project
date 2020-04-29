@@ -160,7 +160,8 @@
             <div class="col-sm-3" th:classappend="${#fields.hasErrors('cooloffPeriod')} ? 'has-error' : ''">
                 <input th:field="*{cooloffPeriod}" type="number" class="form-control" id="cooloffPeriod" />
                 <p class="help-block" th:if="${#fields.hasErrors('cooloffPeriod')}" th:errors="*{cooloffPeriod}">Error</p>
-                <p class="help-block" th:if="${!#fields.hasErrors('cooloffPeriod')}">Minimum time between student submissions (in minutes)</p>
+                <p class="help-block" th:if="${!#fields.hasErrors('cooloffPeriod')}">Minimum time between student submissions (in minutes).
+                    For structure or compilation errors, cooloff is reduced</p>
             </div>
         </div>
 

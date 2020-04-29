@@ -25,6 +25,8 @@ object Constants {
     const val TEACHER_HIDDEN_TEST_NAME_PREFIX = "TestTeacherHidden"
 
     const val DEFAULT_MAX_MEMORY_MB = 512  // max memory (in Mb) that is given to each submission to run their tests
+
+    const val COOLOFF_FOR_STRUCTURE_OR_COMPILATION = 2 // minutes
 }
     
     
