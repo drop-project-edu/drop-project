@@ -52,6 +52,7 @@ data class JUnitResults(val testClassName: String,
                         val numTests: Int,
                         val numErrors: Int,
                         val numFailures: Int,
+                        val numSkipped: Int,
                         val timeEllapsed: Float,
                         val junitMethodResults: List<JUnitMethodResult>) {
 
@@ -99,8 +100,9 @@ class JunitResultsParser {
                 it.failureType, it.failureErrorLine,
                 it.failureDetail) }.toList()
 
-        return JUnitResults(parseResult.name, parseResult.fullClassName, parseResult.numberOfTests,
-                parseResult.numberOfErrors, parseResult.numberOfFailures, parseResult.timeElapsed,
-                junitMethodResults)
+        return JUnitResults(parseResult.name, parseResult.fullClassName,
+                parseResult.numberOfTests - parseResult.numberOfSkipped,
+                parseResult.numberOfErrors, parseResult.numberOfFailures, parseResult.numberOfSkipped,
+                parseResult.timeElapsed, junitMethodResults)
     }
 }

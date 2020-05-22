@@ -23,6 +23,7 @@ data class JUnitSummary(
         val numTests: Int,
         val numFailures: Int,
         val numErrors: Int,
+        val numSkipped: Int,
         val ellapsed: Float
 ) {
 

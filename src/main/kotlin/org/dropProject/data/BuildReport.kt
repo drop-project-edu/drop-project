@@ -233,6 +233,7 @@ data class BuildReport(val mavenOutputLines: List<String>,
         var totalTests = 0
         var totalErrors = 0
         var totalFailures = 0
+        var totalSkipped = 0
         var totalElapsed = 0.0f
 
         for (junitResult in junitResults) {
@@ -243,11 +244,12 @@ data class BuildReport(val mavenOutputLines: List<String>,
                 totalTests += junitResult.numTests
                 totalErrors += junitResult.numErrors
                 totalFailures += junitResult.numFailures
+                totalSkipped += junitResult.numSkipped
                 totalElapsed += junitResult.timeEllapsed
             }
         }
 
-        return JUnitSummary(totalTests, totalFailures, totalErrors, totalElapsed)
+        return JUnitSummary(totalTests, totalFailures, totalErrors, totalSkipped, totalElapsed)
 
     }
 

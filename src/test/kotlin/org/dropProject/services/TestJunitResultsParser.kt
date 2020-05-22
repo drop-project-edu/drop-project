@@ -72,6 +72,21 @@ class TestJunitResultsParser {
     }
 
     @Test
+    fun testParseReportWithSkippedErrors() {
+
+        val xmlFile = resourceLoader.getResource("file:${junitXmlReportsRoot}/testSkipped.xml").file.readText()
+
+        val junitResult = junitResultsParser.parseXml(xmlFile)
+
+        assertEquals("TestTeacherProject", junitResult.testClassName)
+        assertEquals("org.dropProject.sampleAssignments.testProj.TestTeacherProject", junitResult.fullTestClassName)
+        assertEquals(1, junitResult.numTests)
+        assertEquals(0, junitResult.numErrors)
+        assertEquals(1, junitResult.numFailures)
+        assertEquals(1, junitResult.numSkipped)
+    }
+
+    @Test
     fun testParseCoverageReport() {
 
         val csvFile = resourceLoader.getResource("file:${jacocoReportsRoot}/jacoco-testProj.csv").file.readText()
