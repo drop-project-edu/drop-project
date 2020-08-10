@@ -141,7 +141,8 @@ class TestsHelper {
                                  assignees: String? = null, acl: String? = null,
                                  teacherId: String = "teacher1", language: String = "JAVA",
                                  activateRightAfterCloning: Boolean = false,
-                                 hiddenTestsVisibility: String = "SHOW_PROGRESS") {
+                                 hiddenTestsVisibility: String = "SHOW_PROGRESS",
+                                 tags: String? = null) {
 
         val user = User(teacherId, "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
 
@@ -157,6 +158,7 @@ class TestsHelper {
                 .param("assignees", assignees)
                 .param("acl", acl)
                 .param("hiddenTestsVisibility", hiddenTestsVisibility)
+                .param("assignmentTags", tags)
         )
                 .andExpect(MockMvcResultMatchers.status().isFound())
                 .andExpect(MockMvcResultMatchers.header().string("Location", "/assignment/setup-git/${assignmentId}"))

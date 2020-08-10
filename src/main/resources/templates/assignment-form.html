@@ -203,7 +203,7 @@
 <script th:inline="javascript">
     /*<![CDATA[*/
     var tagNames = new Bloodhound({
-        local: ['sample1','sample2'],
+        local: [(${allTags})],
         datumTokenizer: Bloodhound.tokenizers.whitespace,
         queryTokenizer: Bloodhound.tokenizers.whitespace,
     });

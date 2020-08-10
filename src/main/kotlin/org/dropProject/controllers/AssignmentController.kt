@@ -68,6 +68,9 @@ class AssignmentController(
     @RequestMapping(value = ["/new"], method = [(RequestMethod.GET)])
     fun getNewAssignmentForm(model: ModelMap): String {
         model["assignmentForm"] = AssignmentForm()
+        model["allTags"] = assignmentTagRepository.findAll()
+                .map { "'" + it.name + "'" }
+                .joinToString(separator = ",", prefix = "[", postfix = "]")
         return "assignment-form"
     }
 
@@ -164,7 +167,7 @@ class AssignmentController(
                     leaderboardType = assignmentForm.leaderboardType)
 
             // associate tags
-            val tagNames = assignmentForm.assignmentTags.orEmpty().toLowerCase().split(",")
+            val tagNames = assignmentForm.assignmentTags?.toLowerCase()?.split(",") ?: emptyList()
             tagNames.forEach {
                 newAssignment.tags.add(assignmentTagRepository.findByName(it) ?: AssignmentTag(name = it))
             }
@@ -329,6 +332,9 @@ class AssignmentController(
         assignmentForm.editMode = true
 
         model["assignmentForm"] = assignmentForm
+        model["allTags"] = assignmentTagRepository.findAll()
+                .map { "'" + it.name + "'" }
+                .joinToString(separator = ",", prefix = "[", postfix = "]")
 
         return "assignment-form";
     }
