@@ -52,9 +52,11 @@ span.twitter-typeahead .tt-suggestion:focus {
     line-height: 1.5;
     border-radius: 3px;
 }
+/*
+palves: está a passar para a linha seguinte no typeahead
 span.twitter-typeahead {
     width: 100%;
-}
+}*/
 .input-group span.twitter-typeahead {
     display: block !important;
     height: 34px;

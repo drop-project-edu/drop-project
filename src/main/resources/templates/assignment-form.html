@@ -203,24 +203,15 @@
 <script th:inline="javascript">
     /*<![CDATA[*/
     var tagNames = new Bloodhound({
-        datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+        local: ['sample1','sample2'],
+        datumTokenizer: Bloodhound.tokenizers.whitespace,
         queryTokenizer: Bloodhound.tokenizers.whitespace,
-        prefetch: {
-            // url: '[[@{/api/allTags}]]',
-            url: 'api/allTags',
-            filter: function(list) {
-                return $.map(list, function(tagName) {
-                    return { name: tagName }; });
-            }
-        }
     });
     tagNames.initialize();
 
     $('#assignmentTags').tagsinput({
+        cancelConfirmKeysOnEmpty: false,  // to avoid an extra comma
         typeaheadjs: {
-            name: 'tagNames',
-            displayKey: 'name',
-            valueKey: 'name',
             source: tagNames.ttAdapter()
         }
     });
