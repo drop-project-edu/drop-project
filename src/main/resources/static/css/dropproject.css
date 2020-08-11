@@ -49,3 +49,7 @@ pre {
 .bootstrap-tagsinput {
     width: 100%;
 }
+
+.space-between .label {
+    margin-right: 4px;
+}

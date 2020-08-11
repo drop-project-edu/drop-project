@@ -99,7 +99,7 @@ data class Assignment(
         var lastSubmissionDate: Date? = null
 ) {
 
-    @OneToMany(cascade = [CascadeType.ALL])
+    @ManyToMany(cascade = [CascadeType.ALL])
     val tags = mutableSetOf<AssignmentTag>()
 
     fun dueDateFormatted(): String? {

@@ -27,5 +27,9 @@ data class AssignmentTag(
     @GeneratedValue
     val id: Long = 0,
 
-    val name: String  // tag name
+    @Column(unique = true)
+    val name: String,  // tag name
+
+    @Transient
+    var selected: Boolean = false  // used for the filter in the assignments' list
 )

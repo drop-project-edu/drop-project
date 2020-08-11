@@ -7,7 +7,7 @@
 </head>
 
 <body>
-
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.2/css/bootstrap-select.css">
 <div th:replace="layout/layout :: header"></div>
 
 <div class="container" style="max-width: 900px">
@@ -27,7 +27,9 @@
         <thead>
         <tr>
             <th>Assignment ID</th>
-            <th>Name</th>
+            <th><select class="selectpicker" multiple data-live-search="true" title="Tags">
+                <option th:each="tag: ${allTags}" th:text="${tag.name}" th:selected="${tag.selected}">
+            </select></th>
             <th>Last submission</th>
             <th th:if="${!archived}">Active?</th>
             <th th:if="${!archived}">Private?</th>
@@ -38,8 +40,10 @@
         <tbody>
         <!--/*@thymesVar id="assignments" type="java.util.ArrayList<org.dropProject.dao.Assignment>"*/-->
         <tr th:each="assignment : ${assignments}">
-            <td th:text="${assignment.id}"></td>
-            <td th:text="${assignment.name}"></td>
+            <td th:text="${assignment.id}" th:title="${assignment.name}"></td>
+            <td class="space-between">
+                <span th:each="tag: ${assignment.tags}" th:text="${tag.name}" class="label label-info" />
+            </td>
             <td th:if="${assignment.lastSubmissionDate != null}" th:text="${#dates.format(assignment.lastSubmissionDate, 'dd/MMM HH:mm')}"></td>
             <td th:if="${assignment.lastSubmissionDate == null}">-</td>
             <td th:if="${!archived}" class="text-center">
@@ -82,7 +86,8 @@
 
 <div th:replace="layout/layout :: footer"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap-confirmation2@2.4.2/bootstrap-confirmation.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/bootstrap-confirmation2@2.4.2/bootstrap-confirmation.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.2/js/bootstrap-select.js"></script>
 <script th:if="${!assignments.isEmpty()}">
     $('[data-toggle=confirmation]').confirmation({
         rootSelector: '[data-toggle=confirmation]'
@@ -107,6 +112,13 @@
                 }
             ]
         });
+
+        $('.selectpicker').on('changed.bs.select', function (e, clickedIndex, isSelected, previousValue) {
+            console.log($('.selectpicker').val().join())
+            var tagsStr = $('.selectpicker').val().join()
+            window.location.replace('?tags=' + tagsStr);
+        });
+
     });
 </script>
 

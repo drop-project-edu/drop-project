@@ -475,25 +475,43 @@ class AssignmentController(
     }
 
     @RequestMapping(value = ["/my"], method = [(RequestMethod.GET)])
-    fun listMyAssignments(model: ModelMap, principal: Principal): String {
+    fun listMyAssignments(@RequestParam(name="tags", required = false) tags: String?,
+                          model: ModelMap, principal: Principal): String {
 
-        val assigments = getMyAssignments(principal, archived = false)
+        var assignments = getMyAssignments(principal, archived = false)
 
-        model["assignments"] = assigments
+        if (tags != null) {
+            val tagsDB = tags.split(",").map { assignmentTagRepository.findByName(it) }
+            assignments = assignments.filter { it.tags.intersect(tagsDB).isNotEmpty() }
+        }
+
+        model["assignments"] = assignments
         model["archived"] = false
+        model["allTags"] = assignmentTagRepository.findAll()
+                .map { it.selected = tags?.split(",")?.contains(it.name) ?: false; it }
+                .sortedBy { it.name }
 
         return "teacher-assignments-list"
     }
 
 
-
+    // TODO remove the duplication between this and /my
     @RequestMapping(value = ["/archived"], method = [(RequestMethod.GET)])
-    fun listMyArchivedAssignments(model: ModelMap, principal: Principal): String {
+    fun listMyArchivedAssignments(@RequestParam(name="tags", required = false) tags: String?,
+                                  model: ModelMap, principal: Principal): String {
 
-        val assigments = getMyAssignments(principal, archived = true)
+        var assignments = getMyAssignments(principal, archived = true)
 
-        model["assignments"] = assigments
+        if (tags != null) {
+            val tagsDB = tags.split(",").map { assignmentTagRepository.findByName(it) }
+            assignments = assignments.filter { it.tags.intersect(tagsDB).isNotEmpty() }
+        }
+
+        model["assignments"] = assignments
         model["archived"] = true
+        model["allTags"] = assignmentTagRepository.findAll()
+                .map { it.selected = tags?.split(",")?.contains(it.name) ?: false; it }
+                .sortedBy { it.name }
 
         return "teacher-assignments-list"
     }
