@@ -19,14 +19,13 @@
  */
 package org.dropProject.forms
 
-import org.dropProject.Constants
-import org.hibernate.validator.constraints.NotEmpty
-import org.springframework.format.annotation.DateTimeFormat
 import org.dropProject.dao.Language
 import org.dropProject.dao.LeaderboardType
 import org.dropProject.dao.TestVisibility
+import org.springframework.format.annotation.DateTimeFormat
 import java.time.LocalDateTime
 import javax.validation.constraints.Min
+import javax.validation.constraints.NotEmpty
 import javax.validation.constraints.NotNull
 
 enum class SubmissionMethod {
@@ -39,6 +38,8 @@ data class AssignmentForm(
 
         @field:NotEmpty(message = "Error: Assignment Name must not be empty")
         var assignmentName: String? = null,
+
+        var assignmentTags: String? = null,  // comma separated list. e.g. "project,18/19"
 
         var assignmentPackage: String? = null,
 

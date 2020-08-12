@@ -23,6 +23,17 @@ import org.dropProject.dao.Assignee
 import org.dropProject.dao.Assignment
 import org.dropProject.dao.AssignmentACL
 import org.dropProject.dao.AssignmentReport
+import org.dropProject.dao.*
+import org.eclipse.jgit.api.Git
+import org.eclipse.jgit.api.errors.RefNotAdvertisedException
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
+import org.springframework.stereotype.Controller
+import org.springframework.ui.ModelMap
+import org.springframework.validation.BindingResult
+import org.springframework.web.bind.annotation.*
+import org.springframework.web.servlet.mvc.support.RedirectAttributes
 import org.dropProject.extensions.realName
 import org.dropProject.forms.AssignmentForm
 import org.dropProject.repository.*
@@ -30,6 +41,7 @@ import org.dropProject.services.AssignmentTeacherFiles
 import org.dropProject.services.AssignmentValidator
 import org.dropProject.services.GitClient
 import org.dropProject.services.SubmissionService
+import org.springframework.http.MediaType
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.RefNotAdvertisedException
 import org.slf4j.LoggerFactory
@@ -55,6 +67,7 @@ import javax.validation.Valid
 class AssignmentController(
         val assignmentRepository: AssignmentRepository,
         val assignmentReportRepository: AssignmentReportRepository,
+        val assignmentTagRepository: AssignmentTagRepository,
         val assigneeRepository: AssigneeRepository,
         val assignmentACLRepository: AssignmentACLRepository,
         val submissionRepository: SubmissionRepository,
@@ -71,6 +84,9 @@ class AssignmentController(
     @RequestMapping(value = ["/new"], method = [(RequestMethod.GET)])
     fun getNewAssignmentForm(model: ModelMap): String {
         model["assignmentForm"] = AssignmentForm()
+        model["allTags"] = assignmentTagRepository.findAll()
+                .map { "'" + it.name + "'" }
+                .joinToString(separator = ",", prefix = "[", postfix = "]")
         return "assignment-form"
     }
 
@@ -165,6 +181,13 @@ class AssignmentController(
                     gitRepositoryFolder = assignmentForm.assignmentId!!, showLeaderBoard = assignmentForm.leaderboardType != null,
                     hiddenTestsVisibility = assignmentForm.hiddenTestsVisibility,
                     leaderboardType = assignmentForm.leaderboardType)
+
+            // associate tags
+            val tagNames = assignmentForm.assignmentTags?.toLowerCase()?.split(",")
+            tagNames?.forEach {
+                newAssignment.tags.add(assignmentTagRepository.findByName(it) ?: AssignmentTag(name = it))
+            }
+
             assignmentRepository.save(newAssignment)
 
             assignment = newAssignment
@@ -209,6 +232,14 @@ class AssignmentController(
             existingAssignment.showLeaderBoard = assignmentForm.leaderboardType != null
             existingAssignment.hiddenTestsVisibility = assignmentForm.hiddenTestsVisibility
             existingAssignment.leaderboardType = assignmentForm.leaderboardType
+
+            // update tags
+            val tagNames = assignmentForm.assignmentTags?.toLowerCase()?.split(",")
+            existingAssignment.tags.clear()
+            tagNames?.forEach {
+                existingAssignment.tags.add(assignmentTagRepository.findByName(it) ?: AssignmentTag(name = it))
+            }
+
             assignmentRepository.save(existingAssignment)
 
             assignment = existingAssignment
@@ -295,6 +326,7 @@ class AssignmentController(
 
         val assignmentForm = AssignmentForm(assignmentId = assignment.id,
                 assignmentName = assignment.name,
+                assignmentTags = if (assignment.tags.isEmpty()) null else assignment.tags.joinToString { t -> t.name },
                 assignmentPackage = assignment.packageName,
                 language = assignment.language,
                 dueDate = assignment.dueDate,
@@ -323,6 +355,9 @@ class AssignmentController(
         assignmentForm.editMode = true
 
         model["assignmentForm"] = assignmentForm
+        model["allTags"] = assignmentTagRepository.findAll()
+                .map { "'" + it.name + "'" }
+                .joinToString(separator = ",", prefix = "[", postfix = "]")
 
         return "assignment-form";
     }
@@ -463,25 +498,43 @@ class AssignmentController(
     }
 
     @RequestMapping(value = ["/my"], method = [(RequestMethod.GET)])
-    fun listMyAssignments(model: ModelMap, principal: Principal): String {
+    fun listMyAssignments(@RequestParam(name="tags", required = false) tags: String?,
+                          model: ModelMap, principal: Principal): String {
 
-        val assigments = getMyAssignments(principal, archived = false)
+        var assignments = getMyAssignments(principal, archived = false)
 
-        model["assignments"] = assigments
+        if (tags != null) {
+            val tagsDB = tags.split(",").map { assignmentTagRepository.findByName(it) }
+            assignments = assignments.filter { it.tags.intersect(tagsDB).isNotEmpty() }
+        }
+
+        model["assignments"] = assignments
         model["archived"] = false
+        model["allTags"] = assignmentTagRepository.findAll()
+                .map { it.selected = tags?.split(",")?.contains(it.name) ?: false; it }
+                .sortedBy { it.name }
 
         return "teacher-assignments-list"
     }
 
 
-
+    // TODO remove the duplication between this and /my
     @RequestMapping(value = ["/archived"], method = [(RequestMethod.GET)])
-    fun listMyArchivedAssignments(model: ModelMap, principal: Principal): String {
+    fun listMyArchivedAssignments(@RequestParam(name="tags", required = false) tags: String?,
+                                  model: ModelMap, principal: Principal): String {
 
-        val assigments = getMyAssignments(principal, archived = true)
+        var assignments = getMyAssignments(principal, archived = true)
 
-        model["assignments"] = assigments
+        if (tags != null) {
+            val tagsDB = tags.split(",").map { assignmentTagRepository.findByName(it) }
+            assignments = assignments.filter { it.tags.intersect(tagsDB).isNotEmpty() }
+        }
+
+        model["assignments"] = assignments
         model["archived"] = true
+        model["allTags"] = assignmentTagRepository.findAll()
+                .map { it.selected = tags?.split(",")?.contains(it.name) ?: false; it }
+                .sortedBy { it.name }
 
         return "teacher-assignments-list"
     }

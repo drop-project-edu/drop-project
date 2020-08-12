@@ -26,8 +26,10 @@ import org.dropProject.forms.AssignmentForm
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.AssigneeRepository
 import org.dropProject.repository.AssignmentRepository
+import org.dropProject.repository.AssignmentTagRepository
 import org.dropProject.repository.SubmissionRepository
 import org.hamcrest.CoreMatchers.containsString
+import org.hamcrest.Matchers
 import org.hamcrest.collection.IsCollectionWithSize.hasSize
 import org.json.JSONObject
 import org.junit.Assert.*
@@ -78,6 +80,9 @@ class AssignmentControllerTests {
 
     @Autowired
     lateinit var submissionRepository: SubmissionRepository
+
+    @Autowired
+    lateinit var assignmentTagRepository: AssignmentTagRepository
 
     @Autowired
     lateinit var testsHelper: TestsHelper
@@ -691,7 +696,7 @@ class AssignmentControllerTests {
 
     @Test
     @DirtiesContext
-    fun markAllAsFinal() {
+    fun test_15_markAllAsFinal() {
 
         val assignmentId = testsHelper.defaultAssignmentId
 
@@ -725,7 +730,96 @@ class AssignmentControllerTests {
 
     }
 
+    @Test
+    @WithMockUser("teacher1",roles=["TEACHER"])
+    @DirtiesContext
+    fun test_16_createNewAssignmentWithTags() {
 
+        // check available tags
+        // it shouldn't exist none
+        var globalTags = assignmentTagRepository.findAll()
+        assertEquals(0, globalTags.size)
+
+        // post form
+        this.mvc.perform(post("/assignment/new")
+                .param("assignmentId", "dummyAssignmentTags")
+                .param("assignmentName", "Dummy Assignment")
+                .param("assignmentPackage", "org.dummy")
+                .param("submissionMethod", "UPLOAD")
+                .param("language", "JAVA")
+                .param("gitRepositoryUrl", "git@github.com:palves-ulht/sampleJavaAssignment.git")
+                .param("assignmentTags", "sample,test,simple")
+        )
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", "/assignment/setup-git/dummyAssignmentTags"))
+
+        // get assignment detail
+        val mvcResult = this.mvc.perform(get("/assignment/info/dummyAssignmentTags"))
+                .andExpect(status().isOk)
+                .andReturn()
+
+        @Suppress("UNCHECKED_CAST")
+        val assignment = mvcResult.modelAndView.modelMap["assignment"] as Assignment
+        val tagNames = assignment.tags.map { it.name }
+        assertThat(tagNames, Matchers.containsInAnyOrder("sample", "test", "simple"))
+
+        // check available tags
+        // it should now return 'sample','test','simple'
+        globalTags = assignmentTagRepository.findAll()
+        assertEquals(3, globalTags.size)
+        assertThat(tagNames, Matchers.containsInAnyOrder("sample", "test", "simple"))
+    }
+
+    @Test
+    @WithMockUser("teacher1", roles = ["TEACHER"])
+    @DirtiesContext
+    fun test_17_updateAssignmentWithTags() {
+
+        try {
+            testsHelper.createAndSetupAssignment(mvc, assignmentRepository, "dummyAssignmentTags", "Dummy Assignment",
+                    "org.dummy",
+                    "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git",
+                    tags = "sample,test,simple")  // <<<<
+
+            // add one tag and remove 2 tags
+            mvc.perform(post("/assignment/new")
+                    .param("assignmentId", "dummyAssignmentTags")
+                    .param("assignmentName", "Dummy Assignment")
+                    .param("assignmentPackage", "org.dummy")
+                    .param("submissionMethod", "UPLOAD")
+                    .param("language", "JAVA")
+                    .param("gitRepositoryUrl", "git@github.com:palves-ulht/sampleJavaAssignment.git")
+                    .param("editMode", "true")
+                    .param("assignmentTags", "sample,complex") // <<<<
+            )
+                    .andExpect(status().isFound())
+                    .andExpect(header().string("Location", "/assignment/info/dummyAssignmentTags"))
+
+            // get assignment detail
+            val mvcResult = this.mvc.perform(get("/assignment/info/dummyAssignmentTags"))
+                    .andExpect(status().isOk)
+                    .andReturn()
+
+            @Suppress("UNCHECKED_CAST")
+            val assignment = mvcResult.modelAndView.modelMap["assignment"] as Assignment
+            val tagNames = assignment.tags.map { it.name }
+            assertEquals(2, tagNames.size)
+            assertThat(tagNames, Matchers.containsInAnyOrder("sample", "complex"))
+
+            // check available tags
+            // it should now return 'sample','complex'
+            val globalTags = assignmentTagRepository.findAll().map { it.name }
+            assertEquals(4, globalTags.size)
+            assertThat(globalTags, Matchers.containsInAnyOrder("sample", "complex", "test", "simple"))
+
+        } finally {
+
+            // cleanup assignment files
+            if (File(assignmentsRootLocation, "dummyAssignmentTags").exists()) {
+                File(assignmentsRootLocation, "dummyAssignmentTags").deleteRecursively()
+            }
+        }
+    }
 
 }
     

@@ -2,7 +2,7 @@
  * ========================LICENSE_START=================================
  * DropProject
  * %%
- * Copyright (C) 2019 - 2020 Pedro Alves
+ * Copyright (C) 2019 Pedro Alves
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,16 +17,14 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.extensions
+package org.dropProject.repository
 
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken
-import java.security.Principal
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.transaction.annotation.Transactional
+import org.dropProject.dao.Assignee
+import org.dropProject.dao.AssignmentACL
+import org.dropProject.dao.AssignmentTag
 
-fun Principal.realName(): String {
-    if (this is OAuth2AuthenticationToken) {
-        return this.principal.attributes["login"].toString()  // this only works for github
-    }
-    return this.name
+interface AssignmentTagRepository : JpaRepository<AssignmentTag, Long> {
+    fun findByName(name: String): AssignmentTag?
 }
-    
-    

@@ -99,6 +99,9 @@ data class Assignment(
         var lastSubmissionDate: Date? = null
 ) {
 
+    @ManyToMany(cascade = [CascadeType.ALL])
+    val tags = mutableSetOf<AssignmentTag>()
+
     fun dueDateFormatted(): String? {
         return dueDate?.format(formatter)
     }

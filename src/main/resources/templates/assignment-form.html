@@ -27,9 +27,17 @@
         <div class="form-group" th:classappend="${#fields.hasErrors('assignmentName')} ? 'has-error' : ''">
             <label for="assignmentName" class="col-sm-3 control-label">Name</label>
             <div class="col-sm-9">
-                <input th:field="*{assignmentName}" type="text" class="form-control" id="assignmentName" placeholder="CS1 Main Project for 2018"/>
+                <input th:field="*{assignmentName}" type="text" class="form-control" id="assignmentName" placeholder="CS1 Main Project for 2018" />
                 <p class="help-block" th:if="${#fields.hasErrors('assignmentName')}" th:errors="*{assignmentName}">Error</p>
                 <p class="help-block" th:if="${!#fields.hasErrors('assignmentName')}">A longer human-friendly name (e.g., CS1 Main Project for 2018)</p>
+            </div>
+        </div>
+        <div class="form-group" th:classappend="${#fields.hasErrors('assignmentTags')} ? 'has-error' : ''">
+            <label for="assignmentTags" class="col-sm-3 control-label">Tags</label>
+            <div class="col-sm-9">
+                <input th:field="*{assignmentTags}" type="text" class="form-control" id="assignmentTags" data-role="tagsinput" />
+                <p class="help-block" th:if="${#fields.hasErrors('assignmentTags')}" th:errors="*{assignmentTags}">Error</p>
+                <p class="help-block" th:if="${!#fields.hasErrors('assignmentTags')}">Several lower-case tags, separated by commas (,)</p>
             </div>
         </div>
         <div class="form-group" th:classappend="${#fields.hasErrors('assignmentPackage')} ? 'has-error' : ''">
@@ -191,6 +199,25 @@
 <div th:replace="layout/layout :: footer"></div>
 
 <script th:src="@{/js/dropproject.js}"></script>
+<script th:src="@{/js/bootstrap-tagsinput.min.js}"></script>
+<script th:src="@{/js/typeahead.bundle.js}"></script>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var tagNames = new Bloodhound({
+        local: [(${allTags})],
+        datumTokenizer: Bloodhound.tokenizers.whitespace,
+        queryTokenizer: Bloodhound.tokenizers.whitespace,
+    });
+    tagNames.initialize();
+
+    $('#assignmentTags').tagsinput({
+        cancelConfirmKeysOnEmpty: false,  // to avoid an extra comma
+        typeaheadjs: {
+            source: tagNames.ttAdapter()
+        }
+    });
+    /*]]>*/
+</script>
 
 </body>
 </html>

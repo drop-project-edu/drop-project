@@ -43,6 +43,12 @@
                         <a th:href="@{'/upload/' + ${assignment.id}}" th:text="@{'/upload/' + ${assignment.id}}">link</a>
                     </div>
                 </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Tags:</label>
+                    <div class="col-sm-9 read-row space-between">
+                        <span th:each="tag: ${assignment.tags}" th:text="${tag.name}" class="label label-info" />
+                    </div>
+                </div>
                 <div class="form-group" >
                     <label class="col-sm-3 control-label">Connected to:</label>
                     <div th:if="${assignment.gitRepositoryPrivKey != null}" class="col-sm-9 read-row" th:text="${assignment.gitRepositoryUrl}"></div>

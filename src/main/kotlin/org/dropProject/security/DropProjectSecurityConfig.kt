@@ -29,7 +29,7 @@ open class DropProjectSecurityConfig : WebSecurityConfigurerAdapter() {
     override fun configure(http: HttpSecurity) {
         http
                 .authorizeRequests()
-                    .antMatchers("/public", "/login", "/loginFromDEISI", "/access-denied", "/error").permitAll()
+                    .antMatchers("/public", "/login", "/loginFromDEISI", "/access-denied", "/error", "/h2-console/**").permitAll()
                     .antMatchers(HttpMethod.GET, "/assignment/**").hasRole("TEACHER")
                     .antMatchers(HttpMethod.POST, "/assignment/**").hasRole("TEACHER")
                     .antMatchers(
@@ -51,6 +51,8 @@ open class DropProjectSecurityConfig : WebSecurityConfigurerAdapter() {
                 .and()
                     .exceptionHandling()
                     .accessDeniedPage("/access-denied.html")
+
+        http.headers().frameOptions().sameOrigin()  // this is needed for h2-console
 
     }
 
