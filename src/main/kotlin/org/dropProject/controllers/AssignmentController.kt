@@ -167,8 +167,8 @@ class AssignmentController(
                     leaderboardType = assignmentForm.leaderboardType)
 
             // associate tags
-            val tagNames = assignmentForm.assignmentTags?.toLowerCase()?.split(",") ?: emptyList()
-            tagNames.forEach {
+            val tagNames = assignmentForm.assignmentTags?.toLowerCase()?.split(",")
+            tagNames?.forEach {
                 newAssignment.tags.add(assignmentTagRepository.findByName(it) ?: AssignmentTag(name = it))
             }
 
@@ -210,10 +210,10 @@ class AssignmentController(
             existingAssignment.hiddenTestsVisibility = assignmentForm.hiddenTestsVisibility
             existingAssignment.leaderboardType = assignmentForm.leaderboardType
 
-            // associate tags
-            val tagNames = assignmentForm.assignmentTags.orEmpty().toLowerCase().split(",")
+            // update tags
+            val tagNames = assignmentForm.assignmentTags?.toLowerCase()?.split(",")
             existingAssignment.tags.clear()
-            tagNames.forEach {
+            tagNames?.forEach {
                 existingAssignment.tags.add(assignmentTagRepository.findByName(it) ?: AssignmentTag(name = it))
             }
 
@@ -303,7 +303,7 @@ class AssignmentController(
 
         val assignmentForm = AssignmentForm(assignmentId = assignment.id,
                 assignmentName = assignment.name,
-                assignmentTags = assignment.tags.joinToString { t -> t.name },
+                assignmentTags = if (assignment.tags.isEmpty()) null else assignment.tags.joinToString { t -> t.name },
                 assignmentPackage = assignment.packageName,
                 language = assignment.language,
                 dueDate = assignment.dueDate,
