@@ -33,6 +33,7 @@ import org.springframework.context.ApplicationContext
 import java.io.File
 import java.io.FileNotFoundException
 import java.security.Principal
+import java.util.*
 
 @Service
 class AssignmentTeacherFiles(val buildWorker: BuildWorker,
@@ -145,6 +146,11 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
                 else submission.gitSubmissionId!!.toString()
 
         val suffix = if (wasRebuilt) "-mavenized-for-rebuild" else "-mavenized"
-        return File(mavenizedProjectsRootLocation, projectFolder + suffix)
+
+        val destinationPartialFolder = File(mavenizedProjectsRootLocation,
+                Submission.relativeUploadFolder(submission.assignmentId, Date()))
+        destinationPartialFolder.mkdirs()
+
+        return File(destinationPartialFolder, projectFolder + suffix)
     }
 }

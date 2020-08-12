@@ -60,6 +60,7 @@ import java.io.File
 import java.nio.file.Files
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import java.util.*
 
 @RunWith(SpringRunner::class)
 @AutoConfigureMockMvc
@@ -877,7 +878,8 @@ class UploadControllerTests {
                 .andExpect(redirectedUrl("/buildReport/2"))
                 .andExpect(status().isFound())
 
-        var mavenizedProjectsFolder = File(mavenizedProjectsRootLocation)
+        var mavenizedProjectsFolder = File(mavenizedProjectsRootLocation,
+                                            Submission.relativeUploadFolder("testJavaProj", Date()))
         assertEquals(2, mavenizedProjectsFolder.list().size)
 
         val admin = User("admin", "", mutableListOf(SimpleGrantedAuthority("ROLE_DROP_PROJECT_ADMIN")))
