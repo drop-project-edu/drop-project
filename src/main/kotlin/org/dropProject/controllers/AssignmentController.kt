@@ -19,21 +19,7 @@
  */
 package org.dropProject.controllers
 
-import org.dropProject.dao.Assignee
-import org.dropProject.dao.Assignment
-import org.dropProject.dao.AssignmentACL
-import org.dropProject.dao.AssignmentReport
 import org.dropProject.dao.*
-import org.eclipse.jgit.api.Git
-import org.eclipse.jgit.api.errors.RefNotAdvertisedException
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Controller
-import org.springframework.ui.ModelMap
-import org.springframework.validation.BindingResult
-import org.springframework.web.bind.annotation.*
-import org.springframework.web.servlet.mvc.support.RedirectAttributes
 import org.dropProject.extensions.realName
 import org.dropProject.forms.AssignmentForm
 import org.dropProject.repository.*
@@ -41,7 +27,6 @@ import org.dropProject.services.AssignmentTeacherFiles
 import org.dropProject.services.AssignmentValidator
 import org.dropProject.services.GitClient
 import org.dropProject.services.SubmissionService
-import org.springframework.http.MediaType
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.RefNotAdvertisedException
 import org.slf4j.LoggerFactory
@@ -51,14 +36,10 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
 import org.springframework.ui.ModelMap
 import org.springframework.validation.BindingResult
-import org.springframework.web.bind.annotation.ModelAttribute
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestMethod
+import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.mvc.support.RedirectAttributes
 import java.io.File
 import java.security.Principal
-import java.util.logging.Level
 import javax.validation.Valid
 
 

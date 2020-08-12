@@ -31,6 +31,7 @@ import org.dropProject.dao.Assignment
 import org.dropProject.dao.Language
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.services.BuildReportBuilder
+import org.junit.Ignore
 import org.springframework.test.context.ActiveProfiles
 
 
@@ -194,5 +195,19 @@ class TestBuildReport {
         assertTrue(!buildReport.mavenExecutionFailed())
         assertEquals(0, buildReport.compilationErrors().size)
         assertEquals(0, buildReport.checkstyleErrors().size)
+    }
+
+    @Ignore
+    @Test
+    fun testPluginError() {
+        val mavenOutputLines = resourceLoader.getResource("file:src/test/sampleMavenOutputs/pluginError.txt").file.readLines()
+
+        val buildReport = buildReportBuilder.build(mavenOutputLines,
+                "/srv/drop-project/mavenized-projects/1592587286410-Pedra, Papel, Tesoura-mavenized-for-rebuild",
+                dummyKotlinAssignment)
+
+        assertTrue(buildReport.mavenExecutionFailed())
+
+        // TODO: devia ter uma flag "fatalError" quando um plugin rebenta
     }
 }
