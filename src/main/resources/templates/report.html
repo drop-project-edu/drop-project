@@ -92,8 +92,9 @@
             <td th:text="${submissionInfo.projectGroup.authorsStr(', ')}" th:title="${submissionInfo.projectGroup.authorsNameStr()}"></td>
             <td th:text="${submissionInfo.projectGroup.authorsNameStr()}" th:title="${submissionInfo.projectGroup.authorsStr(', ')}"></td>
             <td class="text-center"><a class="btn btn-default btn-sm" th:href="@{/submissions/(assignmentId=${submissionInfo.lastSubmission.assignmentId},groupId=${submissionInfo.projectGroup.id})}"
-                   th:text="${submissionInfo.allSubmissions.size()}"></a></td>
-            <td th:text="${#dates.format(submissionInfo.lastSubmission.submissionDate, 'dd/MMM HH:mm:ss')}"></td>
+                                       th:text="${submissionInfo.allSubmissions.size()}"></a></td>
+            <td th:text="${#dates.format(submissionInfo.lastSubmission.submissionDate, 'dd/MMM HH:mm:ss')}"
+                th:data-order="${submissionInfo.lastSubmission.submissionDate.time}"></td>
             <td th:text="${submissionInfo.lastSubmission.getStatus().description}"></td>
             <td class="text-nowrap">
                 <span th:each="report : ${submissionInfo.lastSubmission.reportElements}">
@@ -103,9 +104,9 @@
                         <img src="../img/if_sign-question-mark.png" th:if="${report.reportValue == 'Not Enough Tests'}" th:alt="${report.indicator.description}" th:title="${report.indicator.description}" width="16" height="16" />
                     </span>
                     <span class="label" th:if="${report.progressSummary(true) != null}"
-                      th:classappend="${report.cssLabel}"
-                      th:title="${report.indicator.description}"
-                      th:text="${report.progressSummary(true)}">14/14</span>
+                          th:classappend="${report.cssLabel}"
+                          th:title="${report.indicator.description}"
+                          th:text="${report.progressSummary(true)}">14/14</span>
                 </span>
             </td>
 
@@ -135,7 +136,7 @@
     </table>
 
     <!--<form th:action="'../cleanup/' + ${assignmentId}" method="post">-->
-        <!--<input type="submit" value="Cleanup non-final submissions"/>-->
+    <!--<input type="submit" value="Cleanup non-final submissions"/>-->
     <!--</form>-->
 
 </div>
@@ -158,7 +159,7 @@
             "order": [],
             "columnDefs": [
                 {
-                    "targets": [ 0, 2, 4, 5, 6, 7, 8 ],
+                    "targets": [ 0, 1, 2, 4, 5, 6, 7, 8, 9 ],
                     "orderable": false
                 },
                 {

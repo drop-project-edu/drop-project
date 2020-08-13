@@ -44,7 +44,13 @@
             <td class="space-between">
                 <span th:each="tag: ${assignment.tags}" th:text="${tag.name}" class="label label-info" />
             </td>
-            <td th:if="${assignment.lastSubmissionDate != null}" th:text="${#dates.format(assignment.lastSubmissionDate, 'dd/MMM HH:mm')}"></td>
+
+            <td th:if="${!archived and assignment.lastSubmissionDate != null}" th:text="${#dates.format(assignment.lastSubmissionDate, 'dd/MMM HH:mm')}"
+                th:data-order="${assignment.lastSubmissionDate.time}" class="text-center"></td>
+
+            </td><td th:if="${archived and assignment.lastSubmissionDate != null}" th:text="${#dates.format(assignment.lastSubmissionDate, 'dd/MM/yy')}"
+                     th:data-order="${assignment.lastSubmissionDate.time}" class="text-center"></td>
+
             <td th:if="${assignment.lastSubmissionDate == null}">-</td>
             <td th:if="${!archived}" class="text-center">
                 <form th:action="@{'/assignment/toggle-status/' + ${assignment.id}}" method="post" style="display: inline;">
@@ -89,36 +95,61 @@
 <script src="//cdn.jsdelivr.net/npm/bootstrap-confirmation2@2.4.2/bootstrap-confirmation.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.2/js/bootstrap-select.js"></script>
 <script th:if="${!assignments.isEmpty()}">
-    $('[data-toggle=confirmation]').confirmation({
-        rootSelector: '[data-toggle=confirmation]'
-        // other options
+    $(document).ready(function() {
+        $('[data-toggle=confirmation]').confirmation({
+            rootSelector: '[data-toggle=confirmation]'
+            // other options
+        });
+
+        $('.selectpicker').on('changed.bs.select', function (e, clickedIndex, isSelected, previousValue) {
+            if ($('.selectpicker').val() != null) {
+                var tagsStr = $('.selectpicker').val().join()
+                window.location.replace('?tags=' + tagsStr);
+            } else {
+                window.location.replace('?');
+            }
+        });
+
+
     });
+</script>
+
+<script th:if="${!assignments.isEmpty() and !archived}" th:inline="none">
 
     $(document).ready(function() {
         var table = $('.myDataTable').DataTable({
             "paging": false,
             "ordering": true,
+            "order": [[2, 'desc']],
             "info": false,
-            "searching": true,
-            "order": [],
+            "searching": false,
             "columnDefs": [
-                {
-                    "targets": [2, 3, 4, 5, 6],
-                    "searchable": false
-                },
                 {
                     "targets": [0, 1, 3, 4, 5, 6],
                     "orderable": false
                 }
             ]
         });
+    });
+</script>
 
-        $('.selectpicker').on('changed.bs.select', function (e, clickedIndex, isSelected, previousValue) {
-            console.log($('.selectpicker').val().join())
-            var tagsStr = $('.selectpicker').val().join()
-            window.location.replace('?tags=' + tagsStr);
+<script th:if="${!assignments.isEmpty() and archived}" th:inline="none">
+
+    $(document).ready(function() {
+        var table = $('.myDataTable').DataTable({
+            "paging": true,
+            "pageLength": 25,
+            "ordering": true,
+            "order": [[2, 'desc']],
+            "info": false,
+            "searching": false,
+            "columnDefs": [
+                {
+                    "targets": [0, 1, 3, 4],
+                    "orderable": false
+                }
+            ]
         });
-
     });
 </script>
 

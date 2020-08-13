@@ -23,14 +23,13 @@ import org.dropProject.dao.*
 import org.dropProject.extensions.realName
 import org.dropProject.forms.AssignmentForm
 import org.dropProject.repository.*
-import org.dropProject.services.AssignmentTeacherFiles
-import org.dropProject.services.AssignmentValidator
-import org.dropProject.services.GitClient
-import org.dropProject.services.SubmissionService
+import org.dropProject.services.*
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.RefNotAdvertisedException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.cache.CacheManager
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
@@ -55,7 +54,9 @@ class AssignmentController(
         val gitSubmissionRepository: GitSubmissionRepository,
         val gitClient: GitClient,
         val assignmentTeacherFiles: AssignmentTeacherFiles,
-        val submissionService: SubmissionService) {
+        val submissionService: SubmissionService,
+        val assignmentService: AssignmentService,
+        val cacheManager: CacheManager) {
 
     @Value("\${assignments.rootLocation}")
     val assignmentsRootLocation: String = ""
@@ -107,12 +108,12 @@ class AssignmentController(
         var assignment : Assignment
         if (!assignmentForm.editMode) {   // create
 
-        if (assignmentForm.acl?.split(",")?.contains(principal.realName()) == true) {
-            LOG.warn("Assignment ACL should not include the owner")
-            bindingResult.rejectValue("acl", "acl.includeOwner",
-                    "Error: You don't need to give autorization to yourself, only other teachers")
-            return "assignment-form"
-        }
+            if (assignmentForm.acl?.split(",")?.contains(principal.realName()) == true) {
+                LOG.warn("Assignment ACL should not include the owner")
+                bindingResult.rejectValue("acl", "acl.includeOwner",
+                        "Error: You don't need to give autorization to yourself, only other teachers")
+                return "assignment-form"
+            }
 
             // check if it already exists an assignment with this id
             if (assignmentRepository.existsById(assignmentForm.assignmentId!!)) {
@@ -166,7 +167,8 @@ class AssignmentController(
             // associate tags
             val tagNames = assignmentForm.assignmentTags?.toLowerCase()?.split(",")
             tagNames?.forEach {
-                newAssignment.tags.add(assignmentTagRepository.findByName(it) ?: AssignmentTag(name = it))
+                newAssignment.tags.add(assignmentTagRepository.findByName(it.trim().toLowerCase()) ?:
+                AssignmentTag(name = it.trim().toLowerCase()))
             }
 
             assignmentRepository.save(newAssignment)
@@ -218,7 +220,8 @@ class AssignmentController(
             val tagNames = assignmentForm.assignmentTags?.toLowerCase()?.split(",")
             existingAssignment.tags.clear()
             tagNames?.forEach {
-                existingAssignment.tags.add(assignmentTagRepository.findByName(it) ?: AssignmentTag(name = it))
+                existingAssignment.tags.add(assignmentTagRepository.findByName(it.trim().toLowerCase()) ?:
+                AssignmentTag(name = it.trim().toLowerCase()))
             }
 
             assignmentRepository.save(existingAssignment)
@@ -482,7 +485,7 @@ class AssignmentController(
     fun listMyAssignments(@RequestParam(name="tags", required = false) tags: String?,
                           model: ModelMap, principal: Principal): String {
 
-        var assignments = getMyAssignments(principal, archived = false)
+        var assignments = assignmentService.getMyAssignments(principal, archived = false)
 
         if (tags != null) {
             val tagsDB = tags.split(",").map { assignmentTagRepository.findByName(it) }
@@ -504,7 +507,7 @@ class AssignmentController(
     fun listMyArchivedAssignments(@RequestParam(name="tags", required = false) tags: String?,
                                   model: ModelMap, principal: Principal): String {
 
-        var assignments = getMyAssignments(principal, archived = true)
+        var assignments = assignmentService.getMyAssignments(principal, archived = true)
 
         if (tags != null) {
             val tagsDB = tags.split(",").map { assignmentTagRepository.findByName(it) }
@@ -603,6 +606,9 @@ class AssignmentController(
         assignment.archived = true
         assignmentRepository.save(assignment)
 
+        // evict the "archiveAssignmentsCache" cache
+        cacheManager.getCache("archivedAssignmentsCache").clear()
+
         redirectAttributes.addFlashAttribute("message", "Assignment was archived. You can now find it in the Archived assignments page")
         return "redirect:/assignment/my"
 
@@ -635,31 +641,4 @@ class AssignmentController(
                 "Notice that these may not be their best submissions, just the last ones. You may now review each one individually.")
         return "redirect:/report/${assignmentId}"
     }
-
-    private fun getMyAssignments(principal: Principal, archived: Boolean): List<Assignment> {
-        val assignmentsOwns = assignmentRepository.findByOwnerUserId(principal.realName())
-
-        val assignmentsACL = assignmentACLRepository.findByUserId(principal.realName())
-        val assignmentsAuthorized = ArrayList<Assignment>()
-        for (assignmentACL in assignmentsACL) {
-            assignmentsAuthorized.add(assignmentRepository.findById(assignmentACL.assignmentId).get())
-        }
-
-        val assignments = ArrayList<Assignment>()
-        assignments.addAll(assignmentsOwns)
-        assignments.addAll(assignmentsAuthorized)
-
-        val filteredAssigments = assignments.filter { it.archived == archived }
-
-        for (assignment in filteredAssigments) {
-            assignment.numSubmissions = submissionRepository.countByAssignmentId(assignment.id).toInt()
-            if (assignment.numSubmissions > 0) {
-                assignment.lastSubmissionDate = submissionRepository.findFirstByAssignmentIdOrderBySubmissionDateDesc(assignment.id).submissionDate
-            }
-            assignment.numUniqueSubmitters = submissionRepository.findUniqueSubmittersByAssignmentId(assignment.id).toInt()
-            assignment.public = !assigneeRepository.existsByAssignmentId(assignment.id)
-        }
-        return filteredAssigments
-    }
 }
-    
