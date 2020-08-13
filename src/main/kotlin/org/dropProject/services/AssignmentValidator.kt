@@ -43,6 +43,7 @@ class AssignmentValidator {
     data class Info(val type: InfoType, val message: String, val description: String = "")
 
     val report = mutableListOf<Info>()
+    val testMethods = mutableListOf<String>()
 
     fun validate(assignmentFolder: File, assignment: Assignment) {
 
@@ -244,7 +245,6 @@ class AssignmentValidator {
                 // for each test class, check if all the @Test define a timeout
                 var invalidTestMethods = 0
                 var validTestMethods = 0
-                val testMethods = mutableListOf<String>()
                 for (testClass in testClasses) {
                     val testClassSource = builder.addSource(testClass)
                     testClassSource.classes.forEach {
@@ -257,7 +257,7 @@ class AssignmentValidator {
                                     } else {
                                         validTestMethods++
                                     }
-                                    testMethods.add(methodName)
+                                    testMethods.add(testClassSource.classes.get(0).name + ":" + methodName)
                                 }
                             }
                         }

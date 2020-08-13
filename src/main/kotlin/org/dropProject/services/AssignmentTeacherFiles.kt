@@ -23,10 +23,8 @@ import org.apache.commons.io.FileUtils
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.dropProject.Constants
-import org.dropProject.dao.Assignment
-import org.dropProject.dao.BuildReport
-import org.dropProject.dao.Language
-import org.dropProject.dao.Submission
+import org.dropProject.dao.*
+import org.dropProject.repository.AssignmentTestMethodRepository
 import org.dropProject.repository.BuildReportRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.ApplicationContext
@@ -38,6 +36,7 @@ import java.util.*
 @Service
 class AssignmentTeacherFiles(val buildWorker: BuildWorker,
                              val buildReportRepository: BuildReportRepository,
+                             val assignmentTestMethodRepository: AssignmentTestMethodRepository,
                              val applicationContext: ApplicationContext) {
 
     @Value("\${assignments.rootLocation}")
@@ -116,6 +115,15 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
 
         val buildReportDB = buildReportRepository.save(BuildReport(buildReport = buildReport.mavenOutput()))
         assignment.buildReportId = buildReportDB.id
+
+        // let's update the test methods associated with this assignment
+        // but first clear current test methods
+        assignmentTestMethodRepository.deleteAllByAssignmentId(assignment.id)
+        for (testMethod in assignmentValidator.testMethods) {
+            val parts = testMethod.split(":")
+            assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = assignment.id,
+                                                                     testClass = parts[0], testMethod = parts[1]))
+        }
 
         if (!buildReport.compilationErrors().isEmpty()) {
             report.add(AssignmentValidator.Info(AssignmentValidator.InfoType.ERROR,

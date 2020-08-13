@@ -42,6 +42,7 @@ import java.time.LocalDateTime
 @Profile("!test")
 class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
                                  val assignmentTagRepository: AssignmentTagRepository,
+                                 val assignmentTestMethodRepository: AssignmentTestMethodRepository,
                                  val assigneeRepository: AssigneeRepository,
                                  val submissionRepository: SubmissionRepository,
                                  val submissionReportRepository: SubmissionReportRepository,
@@ -125,6 +126,11 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
                     active = true)
 
             assignment.tags.add(AssignmentTag(name="sample"))
+
+            assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "sampleJavaProject",
+                    testClass = "TestTeacherProject", testMethod = "testFindMax"))
+            assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "sampleJavaProject",
+                    testClass = "TestTeacherProject", testMethod = "testFindMaxWithNull"))
 
             val gitRepository = assignment.gitRepositoryUrl
             var connected = false

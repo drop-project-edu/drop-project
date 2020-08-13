@@ -48,6 +48,7 @@ class AssignmentController(
         val assignmentRepository: AssignmentRepository,
         val assignmentReportRepository: AssignmentReportRepository,
         val assignmentTagRepository: AssignmentTagRepository,
+        val assignmentTestMethodRepository: AssignmentTestMethodRepository,
         val assigneeRepository: AssigneeRepository,
         val assignmentACLRepository: AssignmentACLRepository,
         val submissionRepository: SubmissionRepository,
@@ -277,6 +278,7 @@ class AssignmentController(
         model["assignment"] = assignment
         model["assignees"] = assignees
         model["acl"] = acl
+        model["tests"] = assignmentTestMethodRepository.findByAssignmentId(assignmentId)
         model["report"] = assignmentReports
         model["reportMsg"] = if (assignmentReports.any { it.type != AssignmentValidator.InfoType.INFO }) {
             "Assignment has errors! You have to fix them before activating it."

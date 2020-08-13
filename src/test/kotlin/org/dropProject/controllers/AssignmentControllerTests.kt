@@ -569,7 +569,6 @@ class AssignmentControllerTests {
                 .andExpect(model().attribute("assignment", assignment))
                 .andExpect(content().string(containsString(assignment.id)))
 
-
     }
 
     @Test
@@ -817,6 +816,34 @@ class AssignmentControllerTests {
             // cleanup assignment files
             if (File(assignmentsRootLocation, "dummyAssignmentTags").exists()) {
                 File(assignmentsRootLocation, "dummyAssignmentTags").deleteRecursively()
+            }
+        }
+    }
+
+    @Test
+    @WithMockUser("teacher1",roles=["TEACHER"])
+    @DirtiesContext
+    fun test_18_createNewAssignmentAndInfoWithTestMethods() {
+
+        try {
+            testsHelper.createAndSetupAssignment(mvc, assignmentRepository, "dummyAssignmentTests", "Dummy Assignment",
+                    "org.dummy",
+                    "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git")
+
+            val mvcResult = this.mvc.perform(get("/assignment/info/dummyAssignmentTests"))
+                    .andExpect(status().isOk)
+                    .andReturn()
+
+            @Suppress("UNCHECKED_CAST")
+            val testMethods = mvcResult.modelAndView.modelMap["tests"] as List<AssignmentTestMethod>
+            assertEquals(2, testMethods.size)
+            assertThat(testMethods.map { it.testMethod }, Matchers.contains("testFindMax", "testFindMaxWithNull"))
+
+        } finally {
+
+            // cleanup assignment files
+            if (File(assignmentsRootLocation, "dummyAssignmentTests").exists()) {
+                File(assignmentsRootLocation, "dummyAssignmentTests").deleteRecursively()
             }
         }
     }

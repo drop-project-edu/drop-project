@@ -26,7 +26,11 @@
         <li class="active">
             <a href="#1" data-toggle="tab">Overview</a>
         </li>
-        <li><a href="#2" data-toggle="tab">Validation Report</a>
+        <li>
+            <a href="#2" data-toggle="tab">Validation Report</a>
+        </li>
+        <li>
+            <a href="#3" data-toggle="tab">Tests</a>
         </li>
     </ul>
 
@@ -155,6 +159,24 @@
                         <strong th:text="${reportLine.message}">Some error message</strong><br/>
                         <div th:utext="${reportLine.description}">Some error description</div>
                     </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="tab-pane" id="3">
+            <p>&nbsp;</p>
+            <div class="alert alert-info" th:if="${tests.isEmpty()}">Sorry. No tests information.</div>
+            <table class="table" th:if="${!tests.isEmpty()}">
+                <thead>
+                <tr>
+                    <th>Test class</th>
+                    <th>Test method</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="test : ${tests}">
+                    <td th:text="${test.testClass}"></td>
+                    <td th:text="${test.testMethod}"></td>
                 </tr>
                 </tbody>
             </table>
