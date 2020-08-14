@@ -20,7 +20,9 @@
 package org.dropProject.data
 
 import org.dropProject.dao.Assignment
+import org.dropProject.dao.AssignmentTestMethod
 import org.dropProject.dao.Language
+import org.dropProject.services.JUnitMethodResult
 import org.dropProject.services.JUnitResults
 import org.dropProject.services.JacocoResults
 import org.slf4j.LoggerFactory
@@ -34,7 +36,8 @@ data class BuildReport(val mavenOutputLines: List<String>,
                        val mavenizedProjectFolder: String,
                        val assignment: Assignment,
                        val junitResults: List<JUnitResults>,
-                       val jacocoResults: List<JacocoResults>) {
+                       val jacocoResults: List<JacocoResults>,
+                       val assignmentTestMethods: List<AssignmentTestMethod>) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
@@ -330,6 +333,40 @@ data class BuildReport(val mavenOutputLines: List<String>,
         }
 
         return null
+    }
+
+    fun testResults() : List<JUnitMethodResult>? {
+
+        if (assignmentTestMethods.isEmpty()) {
+            return null  // assignment is not properly configured
+        }
+
+        var globalMethodResults = mutableListOf<JUnitMethodResult>()
+        for (junitResult in junitResults) {
+            if (junitResult.isTeacherPublic(assignment) || junitResult.isTeacherHidden()) {
+                globalMethodResults.addAll(junitResult.junitMethodResults)
+            }
+        }
+
+        var result = mutableListOf<JUnitMethodResult>()
+        for (assignmentTest in assignmentTestMethods) {
+            var found = false
+            for (submissionTest in globalMethodResults) {
+                if (submissionTest.methodName.equals(assignmentTest.testMethod) &&
+                        submissionTest.getClassName().equals(assignmentTest.testClass)) {
+                    result.add(submissionTest)
+                    found = true
+                    break
+                }
+            }
+
+            // make sure there are no holes in the tests "matrix"
+            if (!found) {
+                result.add(JUnitMethodResult.empty())
+            }
+        }
+
+        return result
     }
 
     private fun translateDetektError(originalError: String) : String {

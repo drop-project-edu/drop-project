@@ -36,10 +36,20 @@ data class JUnitMethodResult(val methodName: String,
                              val failureErrorLine: String?,
                              val failureDetail: String?) {
 
+    companion object {
+        fun empty(): JUnitMethodResult {
+            return JUnitMethodResult("", "", "Empty", null, null, null)
+        }
+    }
+
     internal val failureDetailLines = failureDetail?.lines()?.toMutableList()
 
     fun filterStacktrace(packageName: String) {
         failureDetailLines?.removeIf { it.startsWith("\tat") && !it.contains(packageName) }
+    }
+
+    fun getClassName(): String {
+        return fullMethodName.removeSuffix(".${methodName}").split(".").last()
     }
 
     override fun toString(): String {

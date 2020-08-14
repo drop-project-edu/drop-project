@@ -26,6 +26,7 @@ import org.dropProject.dao.JUnitReport
 import org.dropProject.dao.JacocoReport
 import org.dropProject.dao.Submission
 import org.dropProject.data.BuildReport
+import org.dropProject.repository.AssignmentTestMethodRepository
 import org.dropProject.repository.JUnitReportRepository
 import org.dropProject.repository.JacocoReportRepository
 import org.slf4j.LoggerFactory
@@ -49,6 +50,9 @@ class BuildReportBuilder {
 
     @Autowired
     lateinit var jacocoReportRepository: JacocoReportRepository
+
+    @Autowired
+    lateinit var assignmentTestMethodRepository: AssignmentTestMethodRepository
 
     fun build(mavenOutputLines: List<String>,
               mavenizedProjectFolder: String,
@@ -94,6 +98,14 @@ class BuildReportBuilder {
                 emptyList<JacocoResults>()
             }
 
-        return BuildReport(mavenOutputLines, mavenizedProjectFolder, assignment, jUnitResults, jacocoResults)
+        val assignmentTestMethods =
+                if (submission != null) {
+                    assignmentTestMethodRepository.findByAssignmentId(assignment.id)
+                } else {
+                    emptyList()
+                }
+
+        return BuildReport(mavenOutputLines, mavenizedProjectFolder, assignment, jUnitResults, jacocoResults,
+                assignmentTestMethods)
     }
 }

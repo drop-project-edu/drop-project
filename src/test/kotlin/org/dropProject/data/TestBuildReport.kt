@@ -30,8 +30,10 @@ import org.springframework.test.context.junit4.SpringRunner
 import org.dropProject.dao.Assignment
 import org.dropProject.dao.Language
 import org.dropProject.forms.SubmissionMethod
+import org.dropProject.repository.AssignmentTestMethodRepository
 import org.dropProject.services.BuildReportBuilder
 import org.junit.Ignore
+import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 
 

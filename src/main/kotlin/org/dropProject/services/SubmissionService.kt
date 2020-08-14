@@ -78,6 +78,8 @@ class SubmissionService(
                 if (buildReport.jacocoResults.isNotEmpty()) {
                     lastSubmission.coverage = buildReport.jacocoResults[0].lineCoveragePercent
                 }
+
+                lastSubmission.testResults = buildReport.testResults()
             }
 
             submissionInfoList.add(SubmissionInfo(group, lastSubmission, sortedSubmissionList))

@@ -69,6 +69,7 @@ class ReportController(
         val projectGroupRepository: ProjectGroupRepository,
         val assignmentRepository: AssignmentRepository,
         val assignmentACLRepository: AssignmentACLRepository,
+        val assignmentTestMethodRepository: AssignmentTestMethodRepository,
         val submissionRepository: SubmissionRepository,
         val gitSubmissionRepository: GitSubmissionRepository,
         val submissionReportRepository: SubmissionReportRepository,
@@ -114,6 +115,7 @@ class ReportController(
         model["submissions"] = submissionInfoList
         model["countMarkedAsFinal"] = submissionInfoList.asSequence().filter { it.lastSubmission.markedAsFinal }.count()
         model["isAdmin"] = request.isUserInRole("DROP_PROJECT_ADMIN")
+        model["tests"] = assignmentTestMethodRepository.findByAssignmentId(assignmentId).map { "${it.testMethod}:${it.testClass}" }
 
         return "report"
     }

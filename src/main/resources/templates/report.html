@@ -80,6 +80,13 @@
             <th>Last Submission Date</th>
             <th>Status</th>
             <th class="text-center">Indicators</th>
+            <th>Tests details<br/>
+                <span class="text-nowrap">
+                    <span th:each="test: ${tests}">
+                        <img width="16" height="16" th:src="@{/img/if-information_2867914.png}" th:alt="${test}" th:title="${test}" />
+                    </span>
+                </span>
+            </th>
             <th class="text-center" th:if="${hasCoverage}"><span class="glyphicon glyphicon-signal" aria-hidden="true" title="Coverage of student tests"></span></th>
             <th class="text-center"><span class="glyphicon glyphicon-time" aria-hidden="true" title="Time spent running tests"></span></th>
             <th>Final</th>
@@ -107,6 +114,14 @@
                           th:classappend="${report.cssLabel}"
                           th:title="${report.indicator.description}"
                           th:text="${report.progressSummary(true)}">14/14</span>
+                </span>
+            </td>
+
+            <td class="text-nowrap">
+                <span th:if="${submissionInfo.lastSubmission.testResults != null}" th:each="testResult : ${submissionInfo.lastSubmission.testResults}">
+                    <img src="../img/if_sign-check_299110.png" th:if="${testResult.type == 'Success'}" th:alt="${testResult.methodName}" th:title="${testResult.methodName}" width="16" height="16" />
+                    <img src="../img/if_sign-error_299045.png" th:if="${testResult.type != 'Success' and testResult.type !='Empty'}" th:alt="${testResult.methodName}" th:title="${testResult.methodName}" width="16" height="16" />
+                    <img src="../img/if_sign-question-mark.png" th:if="${testResult.type == 'Empty'}" th:alt="${testResult.methodName}" th:title="${testResult.methodName}" width="16" height="16" />
                 </span>
             </td>
 

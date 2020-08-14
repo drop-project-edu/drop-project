@@ -100,6 +100,9 @@ class UploadControllerTests {
     lateinit var assigneeRepository: AssigneeRepository
 
     @Autowired
+    lateinit var assignmentTestMethodRepository: AssignmentTestMethodRepository
+
+    @Autowired
     lateinit var zipService: ZipService
 
     @Autowired
@@ -125,6 +128,13 @@ class UploadControllerTests {
                 submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummy",
                 gitRepositoryFolder = "testJavaProj")
         assignmentRepository.save(assignment01)
+
+        assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "testJavaProj",
+                                                testClass = "TestTeacherProject", testMethod = "testFuncaoParaTestar"))
+        assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "testJavaProj",
+                                                testClass = "TestTeacherProject", testMethod = "testFuncaoLentaParaTestar"))
+        assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "testJavaProj",
+                                                testClass = "TestTeacherHiddenProject", testMethod = "testFuncaoParaTestarQueNaoApareceAosAlunos"))
     }
 
     @After
@@ -540,6 +550,13 @@ class UploadControllerTests {
             |${'\t'}at org.dropProject.sampleAssignments.testProj.Main.funcaoQueRebenta(Main.java:14)
             |${'\t'}at org.dropProject.sampleAssignments.testProj.TestTeacherHiddenProject.testFuncaoParaTestarQueNaoApareceAosAlunos(TestTeacherHiddenProject.java:10)
         """.trimMargin(), stackTraceHidden?.trimEnd())
+
+        val testResults = buildResult.testResults()
+        assertNotNull(testResults)
+        assertEquals(3, testResults!!.size)
+        assertEquals("testFuncaoParaTestar", testResults[0].methodName)
+        assertEquals("testFuncaoLentaParaTestar", testResults[1].methodName)
+        assertEquals("testFuncaoParaTestarQueNaoApareceAosAlunos", testResults[2].methodName)
     }
 
     @Test

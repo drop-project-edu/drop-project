@@ -20,6 +20,7 @@
 package org.dropProject.dao
 
 import org.dropProject.data.JUnitSummary
+import org.dropProject.services.JUnitMethodResult
 import java.io.File
 import java.util.*
 import javax.persistence.*
@@ -97,7 +98,10 @@ data class Submission(
         var hiddenTests: JUnitSummary? = null,
 
         @Transient
-        var coverage: Int? = null
+        var coverage: Int? = null,
+
+        @Transient
+        var testResults: List<JUnitMethodResult>? = null
 ) {
     @ManyToOne
     lateinit var group: ProjectGroup

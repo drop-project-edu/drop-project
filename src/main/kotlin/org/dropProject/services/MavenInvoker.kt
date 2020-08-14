@@ -98,7 +98,7 @@ class MavenInvoker {
 
         request.setOutputHandler {
             line -> run {
-                // println(">>> ${line}")
+                println(">>> ${line}")
                 outputLines.add(line)
             }
         }
