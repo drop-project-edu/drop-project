@@ -250,14 +250,18 @@ class AssignmentValidator {
                     testClassSource.classes.forEach {
                         it.methods.forEach {
                             val methodName = it.name
-                            it.annotations.forEach {
-                                if (it.type.fullyQualifiedName == "org.junit.Test") {
-                                    if (it.getNamedParameter("timeout") == null) {
-                                        invalidTestMethods++
-                                    } else {
-                                        validTestMethods++
+                            if (!it.annotations.any { it.type.fullyQualifiedName == "org.junit.Ignore" ||
+                                            it.type.fullyQualifiedName == "Ignore" }) {  // ignore @Ignore
+                                it.annotations.forEach {
+                                    if (it.type.fullyQualifiedName == "org.junit.Test" ||  // found @Test
+                                            it.type.fullyQualifiedName == "Test") {  // qdox doesn't handle import *
+                                        if (it.getNamedParameter("timeout") == null) {
+                                            invalidTestMethods++
+                                        } else {
+                                            validTestMethods++
+                                        }
+                                        testMethods.add(testClassSource.classes.get(0).name + ":" + methodName)
                                     }
-                                    testMethods.add(testClassSource.classes.get(0).name + ":" + methodName)
                                 }
                             }
                         }

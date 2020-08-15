@@ -142,4 +142,13 @@ class TestAssignmentValidator {
         })
     }
 
+    @Test
+    fun `Test testJavaComplexProj with several test classes and test methods`() {
+
+        val assignmentFolder = resourceLoader.getResource("file:${sampleAssignmentsRootFolder}/testJavaComplexProj").file
+
+        assignmentValidator.validate(assignmentFolder, dummyAssignment)
+        val tests = assignmentValidator.testMethods
+        assertEquals(35, tests.size)
+    }
 }
