@@ -19,6 +19,7 @@
  */
 package org.dropProject
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -31,6 +32,12 @@ import org.thymeleaf.templateresolver.ITemplateResolver
 
 @Configuration
 class ThymeleafConfig() {
+
+    @Value("\${spring.thymeleaf.prefix:classpath:/templates/}")
+    lateinit var thymeleafPrefix : String
+
+    @Value("\${spring.thymeleaf.cache:false}")
+    lateinit var thymeleafCache : String
 
     @Bean
     @Description("Thymeleaf template engine with Spring integration")
@@ -62,11 +69,11 @@ class ThymeleafConfig() {
     fun htmlTemplateResolver(appCtx: ApplicationContext): SpringResourceTemplateResolver {
         val templateResolver = SpringResourceTemplateResolver()
         templateResolver.setApplicationContext(appCtx)
-        templateResolver.prefix = "classpath:/templates/"
+        templateResolver.prefix = thymeleafPrefix
         templateResolver.suffix = ".html"
         templateResolver.templateMode = TemplateMode.HTML
         templateResolver.characterEncoding = "UTF-8"
-        templateResolver.isCacheable = true
+        templateResolver.isCacheable = thymeleafCache.toBoolean()
         templateResolver.checkExistence = true  // if it doesn't find the template check the next resolver
         return templateResolver
     }
