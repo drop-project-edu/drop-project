@@ -728,20 +728,23 @@ class ReportController(
             model["hasCoverage"] = true
         }
 
-        val assignmentTests = assignmentTestMethodRepository.findByAssignmentId(assignmentId)
-
         if (includeTestDetails) {
-            // calculate how many submissions pass each test
-            val testCounts = assignmentTests.map { "${it.testMethod}:${it.testClass}" to 0 }.toMap(LinkedHashMap())
-            submissionInfoList.forEach {
-                it.lastSubmission.testResults?.forEach {
-                    if (it.type == "Success") {
-                        testCounts.computeIfPresent("${it.methodName}:${it.getClassName()}") { _, v -> v + 1 }
+            val assignmentTests = assignmentTestMethodRepository.findByAssignmentId(assignmentId)
+            if (assignmentTests.isEmpty()) {
+                model["message"] = "No information about tests for this assignment"
+            } else {
+                // calculate how many submissions pass each test
+                val testCounts = assignmentTests.map { "${it.testMethod}:${it.testClass}" to 0 }.toMap(LinkedHashMap())
+                submissionInfoList.forEach {
+                    it.lastSubmission.testResults?.forEach {
+                        if (it.type == "Success") {
+                            testCounts.computeIfPresent("${it.methodName}:${it.getClassName()}") { _, v -> v + 1 }
+                        }
                     }
                 }
-            }
 
-            model["tests"] = testCounts
+                model["tests"] = testCounts
+            }
         }
 
         model["submissions"] = submissionInfoList

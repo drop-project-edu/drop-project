@@ -33,7 +33,11 @@
         <div role="tabpanel" class="tab-pane active">
             <p>&nbsp;</p>
 
-            <table class="table myDataTable">
+            <div th:if="${message}">
+                <div class="alert alert-info" th:text="${message}"/>
+            </div>
+
+            <table class="table myDataTable" th:if="${tests != null}">
                 <thead>
                 <tr>
                     <th>Students <small>(ID/<a class="toggle-vis" data-column-show="1" data-column-hide="0" href="">Name</a>)</small></th>
@@ -72,11 +76,6 @@
                                 </td>
                             </tr>
                         </table>
-                    </td>
-
-                    <td class="text-nowrap text-right" th:if="${hasCoverage}">
-                        <span th:if="${submissionInfo.lastSubmission.coverage != null}"
-                              th:text="${submissionInfo.lastSubmission.coverage +'%'}"></span>
                     </td>
 
                     <td class="text-nowrap text-center">
