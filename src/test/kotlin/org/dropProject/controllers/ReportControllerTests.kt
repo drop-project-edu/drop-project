@@ -48,14 +48,18 @@ import java.io.File
 import java.nio.file.Files
 import org.dropProject.TestsHelper
 import org.dropProject.dao.Assignment
+import org.dropProject.dao.AssignmentTestMethod
 import org.dropProject.dao.LeaderboardType
 import org.dropProject.extensions.formatDefault
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.AssignmentRepository
+import org.dropProject.repository.AssignmentTestMethodRepository
 import org.dropProject.repository.GitSubmissionRepository
 import org.dropProject.repository.SubmissionRepository
 import org.dropProject.services.ZipService
+import org.hamcrest.Matchers.contains
 import java.util.*
+import kotlin.collections.LinkedHashMap
 
 
 @RunWith(SpringRunner::class)
@@ -87,6 +91,9 @@ class ReportControllerTests {
     lateinit var submissionRepository: SubmissionRepository
 
     @Autowired
+    lateinit var assignmentTestMethodRepository: AssignmentTestMethodRepository
+
+    @Autowired
     private lateinit var testsHelper: TestsHelper
 
     @Autowired
@@ -112,6 +119,13 @@ class ReportControllerTests {
                 submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
                 gitRepositoryFolder = "testJavaProj")
         assignmentRepository.save(assignment01)
+
+        assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "testJavaProj",
+                testClass = "TestTeacherProject", testMethod = "testFuncaoParaTestar"))
+        assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "testJavaProj",
+                testClass = "TestTeacherProject", testMethod = "testFuncaoLentaParaTestar"))
+        assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "testJavaProj",
+                testClass = "TestTeacherHiddenProject", testMethod = "testFuncaoParaTestarQueNaoApareceAosAlunos"))
 
         val assignment02 = Assignment(id = "sampleJavaProject", name = "Test Project (for automatic tests)",
                 packageName = "org.dropProject.samples.sampleJavaAssignment", ownerUserId = "teacher1",
@@ -156,8 +170,6 @@ class ReportControllerTests {
         assertEquals(1, report[2].allSubmissions.size)
         assertEquals("student1", report[3].projectGroup.authorsStr())
         assertEquals(1, report[3].allSubmissions.size)
-
-
     }
 
 
@@ -470,6 +482,24 @@ class ReportControllerTests {
                             |
                         """.trimMargin()))
 
+    }
+
+    @Test
+    @DirtiesContext
+    fun testTestMatrix() {
+        testsHelper.uploadProject(this.mvc, "projectJUnitErrors", defaultAssignmentId, STUDENT_1)
+
+        val reportResult = this.mvc.perform(get("/testMatrix/${defaultAssignmentId}")
+                .with(user(TEACHER_1)))
+                .andExpect(status().isOk())
+                .andReturn()
+
+        @Suppress("UNCHECKED_CAST")
+        val tests = reportResult.modelAndView.modelMap["tests"] as LinkedHashMap<String,Int>
+        assertEquals(3, tests.size)
+        assertThat(tests.keys.map { "${it}->${tests[it]}" }, contains("testFuncaoParaTestar:TestTeacherProject->0",
+                "testFuncaoLentaParaTestar:TestTeacherProject->1",
+                "testFuncaoParaTestarQueNaoApareceAosAlunos:TestTeacherHiddenProject->0"))
     }
 
 }
