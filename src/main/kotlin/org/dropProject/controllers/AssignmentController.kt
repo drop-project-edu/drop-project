@@ -487,41 +487,15 @@ class AssignmentController(
     fun listMyAssignments(@RequestParam(name="tags", required = false) tags: String?,
                           model: ModelMap, principal: Principal): String {
 
-        var assignments = assignmentService.getMyAssignments(principal, archived = false)
-
-        if (tags != null) {
-            val tagsDB = tags.split(",").map { assignmentTagRepository.findByName(it) }
-            assignments = assignments.filter { it.tags.intersect(tagsDB).isNotEmpty() }
-        }
-
-        model["assignments"] = assignments
-        model["archived"] = false
-        model["allTags"] = assignmentTagRepository.findAll()
-                .map { it.selected = tags?.split(",")?.contains(it.name) ?: false; it }
-                .sortedBy { it.name }
-
+        listMyFilteredAssignments(principal, tags, model, archived = false)
         return "teacher-assignments-list"
     }
 
-
-    // TODO remove the duplication between this and /my
     @RequestMapping(value = ["/archived"], method = [(RequestMethod.GET)])
     fun listMyArchivedAssignments(@RequestParam(name="tags", required = false) tags: String?,
                                   model: ModelMap, principal: Principal): String {
 
-        var assignments = assignmentService.getMyAssignments(principal, archived = true)
-
-        if (tags != null) {
-            val tagsDB = tags.split(",").map { assignmentTagRepository.findByName(it) }
-            assignments = assignments.filter { it.tags.intersect(tagsDB).isNotEmpty() }
-        }
-
-        model["assignments"] = assignments
-        model["archived"] = true
-        model["allTags"] = assignmentTagRepository.findAll()
-                .map { it.selected = tags?.split(",")?.contains(it.name) ?: false; it }
-                .sortedBy { it.name }
-
+        listMyFilteredAssignments(principal, tags, model, archived = true)
         return "teacher-assignments-list"
     }
 
@@ -643,4 +617,20 @@ class AssignmentController(
                 "Notice that these may not be their best submissions, just the last ones. You may now review each one individually.")
         return "redirect:/report/${assignmentId}"
     }
+
+    private fun listMyFilteredAssignments(principal: Principal, tags: String?, model: ModelMap, archived: Boolean) {
+        var assignments = assignmentService.getMyAssignments(principal, archived)
+
+        if (tags != null) {
+            val tagsDB = tags.split(",").map { assignmentTagRepository.findByName(it) }
+            assignments = assignments.filter { it.tags.intersect(tagsDB).size == tagsDB.size }
+        }
+
+        model["assignments"] = assignments
+        model["archived"] = false
+        model["allTags"] = assignmentTagRepository.findAll()
+                .map { it.selected = tags?.split(",")?.contains(it.name) ?: false; it }
+                .sortedBy { it.name }
+    }
+
 }

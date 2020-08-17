@@ -848,5 +848,69 @@ class AssignmentControllerTests {
         }
     }
 
+    @Test
+    @DirtiesContext
+    fun test_19_listAssignmentsFilteredByTags() {
+
+        val user = User("p1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
+
+        try {// list assigments should return empty
+            this.mvc.perform(get("/assignment/my")
+                    .with(SecurityMockMvcRequestPostProcessors.user(user)))
+                    .andExpect(status().isOk())
+                    .andExpect(model().hasNoErrors())
+                    .andExpect(model().attribute("assignments", emptyList<Assignment>()))
+
+            // create two assignments
+            testsHelper.createAndSetupAssignment(mvc, assignmentRepository, "dummyAssignment4", "Dummy Assignment",
+                    "org.dummy",
+                    "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git",
+                    teacherId = "p1", activateRightAfterCloning = false, tags = "sample,test")
+
+            testsHelper.createAndSetupAssignment(mvc, assignmentRepository, "dummyAssignment5", "Dummy Assignment",
+                    "org.dummy",
+                    "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git",
+                    teacherId = "p1", activateRightAfterCloning = false, tags = "other,test")
+
+            // list assignments filtered by tag "sample" should return one assignment
+            this.mvc.perform(get("/assignment/my?tags=sample")
+                    .with(SecurityMockMvcRequestPostProcessors.user(user)))
+                    .andExpect(status().isOk())
+                    .andExpect(model().hasNoErrors())
+                    .andExpect(model().attribute("assignments", hasSize<Assignment>(1)))
+
+            // list assignments filtered by tag "notexistent" should return zero assignments
+            this.mvc.perform(get("/assignment/my?tags=notexistent")
+                    .with(SecurityMockMvcRequestPostProcessors.user(user)))
+                    .andExpect(status().isOk())
+                    .andExpect(model().hasNoErrors())
+                    .andExpect(model().attribute("assignments", hasSize<Assignment>(0)))
+
+            // list assignments filtered by tag "test" should return two assignments
+            this.mvc.perform(get("/assignment/my?tags=test")
+                    .with(SecurityMockMvcRequestPostProcessors.user(user)))
+                    .andExpect(status().isOk())
+                    .andExpect(model().hasNoErrors())
+                    .andExpect(model().attribute("assignments", hasSize<Assignment>(2)))
+
+            // list assignments filtered by tag "sample,other" should return zero assignments
+            this.mvc.perform(get("/assignment/my?tags=sample,other")
+                    .with(SecurityMockMvcRequestPostProcessors.user(user)))
+                    .andExpect(status().isOk())
+                    .andExpect(model().hasNoErrors())
+                    .andExpect(model().attribute("assignments", hasSize<Assignment>(0)))
+
+        } finally {
+            // cleanup assignment files
+            if (File(assignmentsRootLocation,"dummyAssignment4").exists()) {
+                File(assignmentsRootLocation,"dummyAssignment4").deleteRecursively()
+            }
+
+            if (File(assignmentsRootLocation,"dummyAssignment5").exists()) {
+                File(assignmentsRootLocation,"dummyAssignment5").deleteRecursively()
+            }
+        }
+    }
+
 }
     

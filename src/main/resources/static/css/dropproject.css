@@ -54,7 +54,22 @@ pre {
     margin-right: 4px;
 }
 
-.test-details-header .badge {
+.badge-test-count-public {
+    font-size: 10px;
+    padding: 3px 5px;
+    display: inline-block;
+    min-width: 10px;
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    background-color: #337ab7;
+    border-radius: 10px;
+}
+
+.badge-test-count-hidden {
     font-size: 10px;
     padding: 3px 5px;
     display: inline-block;

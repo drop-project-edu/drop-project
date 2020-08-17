@@ -46,9 +46,10 @@
                     <th class="text-center">Last Submission Date</th>
                     <th>
                         <table class="fixed-width" th:style="${'width: ' + (tests.size() * 20) + 'px'}">
-                            <tr class="test-details-header">
+                            <tr>
                                 <td th:each="key: ${tests.keySet()}" class="text-center">
-                                    <span class="badge" th:text="${tests.get(key)}" th:title="${key}" />
+                                    <span class="badge-test-count-hidden" th:text="${tests.get(key)}" th:title="${key}" th:if="${key.contains('Hidden')}" />
+                                    <span class="badge-test-count-public" th:text="${tests.get(key)}" th:title="${key}" th:if="${!key.contains('Hidden')}" />
                                 </td>
                             </tr>
                         </table>
