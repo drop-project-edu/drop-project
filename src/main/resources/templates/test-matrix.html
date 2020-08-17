@@ -47,7 +47,7 @@
                     <th>
                         <table class="fixed-width" th:style="${'width: ' + (tests.size() * 20) + 'px'}">
                             <tr class="test-details-header">
-                                <td th:each="key: ${tests.keySet()}">
+                                <td th:each="key: ${tests.keySet()}" class="text-center">
                                     <span class="badge" th:text="${tests.get(key)}" th:title="${key}" />
                                 </td>
                             </tr>
