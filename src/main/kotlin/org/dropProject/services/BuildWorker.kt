@@ -70,151 +70,154 @@ class BuildWorker(
 
         LOG.info("[${authorsStr}] Finished maven invocation")
 
-        if (!mavenResult.expiredByTimeout) {
+        when {
+            mavenResult.expiredByTimeout -> submission.setStatus(SubmissionStatus.ABORTED_BY_TIMEOUT,
+                                                                    dontUpdateStatusDate = dontChangeStatusDate)
+            mavenResult.tooMuchOutput() -> submission.setStatus(SubmissionStatus.TOO_MUCH_OUTPUT,
+                                                                    dontUpdateStatusDate = dontChangeStatusDate)
+            else -> {
+                LOG.info("[${authorsStr}] Maven invoker OK")
+                val buildReport = buildReportBuilder.build(mavenResult.outputLines, mavenizedProjectFolder.absolutePath,
+                        assignment, submission)
 
-            LOG.info("[${authorsStr}] Maven invoker OK")
-            val buildReport = buildReportBuilder.build(mavenResult.outputLines, mavenizedProjectFolder.absolutePath,
-                    assignment, submission)
+                // clear previous indicators except PROJECT_STRUCTURE
+                submissionReportRepository.deleteBySubmissionIdExceptProjectStructure(submission.id)
 
-            // clear previous indicators except PROJECT_STRUCTURE
-            submissionReportRepository.deleteBySubmissionIdExceptProjectStructure(submission.id)
+                if (!buildReport.mavenExecutionFailed()) {
 
-            if (!buildReport.mavenExecutionFailed()) {
+                    submissionReportRepository.save(SubmissionReport(submissionId = submission.id,
+                            reportKey = Indicator.COMPILATION.code, reportValue = if (buildReport.compilationErrors().isEmpty()) "OK" else "NOK"))
 
-                submissionReportRepository.save(SubmissionReport(submissionId = submission.id,
-                        reportKey = Indicator.COMPILATION.code, reportValue = if (buildReport.compilationErrors().isEmpty()) "OK" else "NOK"))
+                    if (buildReport.compilationErrors().isEmpty()) {
 
-                if (buildReport.compilationErrors().isEmpty()) {
-
-                    if (buildReport.checkstyleValidationActive()) {
-                        submissionReportRepository.save(SubmissionReport(submissionId = submission.id,
-                                reportKey = Indicator.CHECKSTYLE.code, reportValue = if (buildReport.checkstyleErrors().isEmpty()) "OK" else "NOK"))
-                    }
+                        if (buildReport.checkstyleValidationActive()) {
+                            submissionReportRepository.save(SubmissionReport(submissionId = submission.id,
+                                    reportKey = Indicator.CHECKSTYLE.code, reportValue = if (buildReport.checkstyleErrors().isEmpty()) "OK" else "NOK"))
+                        }
 
 
-                    // PMD not yet implemented
+                        // PMD not yet implemented
 //                submissionReportRepository.deleteBySubmissionIdAndReportKey(submission.id, "Code Quality (PMD)")
 //                submissionReportRepository.save(SubmissionReport(submissionId = submission.id,
 //                        reportKey = "Code Quality (PMD)", reportValue = if (buildReport.PMDerrors().isEmpty()) "OK" else "NOK"))
 
 
 
-                    if (assignment.acceptsStudentTests) {
+                        if (assignment.acceptsStudentTests) {
 
-                        val junitSummary = buildReport.junitSummaryAsObject(TestType.STUDENT)
-                        val indicator =
-                            if (buildReport.hasJUnitErrors(TestType.STUDENT) == true) {
-                                "NOK"
-                            } else if (junitSummary?.numTests == null || junitSummary.numTests < assignment.minStudentTests!!) {
-                                // student hasn't implemented enough tests
-                                "Not Enough Tests"
-                            } else {
-                                "OK"
-                            }
+                            val junitSummary = buildReport.junitSummaryAsObject(TestType.STUDENT)
+                            val indicator =
+                                    if (buildReport.hasJUnitErrors(TestType.STUDENT) == true) {
+                                        "NOK"
+                                    } else if (junitSummary?.numTests == null || junitSummary.numTests < assignment.minStudentTests!!) {
+                                        // student hasn't implemented enough tests
+                                        "Not Enough Tests"
+                                    } else {
+                                        "OK"
+                                    }
 
-                        submissionReportRepository.save(SubmissionReport(submissionId = submission.id,
+                            submissionReportRepository.save(SubmissionReport(submissionId = submission.id,
                                     reportKey = Indicator.STUDENT_UNIT_TESTS.code,
                                     reportValue = indicator,
                                     reportProgress = junitSummary?.progress,
                                     reportGoal = junitSummary?.numTests))
-                    }
+                        }
 
-                    if (buildReport.hasJUnitErrors(TestType.TEACHER) != null) {
-                        val junitSummary = buildReport.junitSummaryAsObject(TestType.TEACHER)
-                        submissionReportRepository.save(SubmissionReport(submissionId = submission.id,
-                                reportKey = Indicator.TEACHER_UNIT_TESTS.code,
-                                reportValue = if (buildReport.hasJUnitErrors(TestType.TEACHER) == true) "NOK" else "OK",
-                                reportProgress = junitSummary?.progress,
-                                reportGoal = junitSummary?.numTests))
-                    }
+                        if (buildReport.hasJUnitErrors(TestType.TEACHER) != null) {
+                            val junitSummary = buildReport.junitSummaryAsObject(TestType.TEACHER)
+                            submissionReportRepository.save(SubmissionReport(submissionId = submission.id,
+                                    reportKey = Indicator.TEACHER_UNIT_TESTS.code,
+                                    reportValue = if (buildReport.hasJUnitErrors(TestType.TEACHER) == true) "NOK" else "OK",
+                                    reportProgress = junitSummary?.progress,
+                                    reportGoal = junitSummary?.numTests))
+                        }
 
-                    if (buildReport.hasJUnitErrors(TestType.HIDDEN) != null) {
-                        val junitSummary = buildReport.junitSummaryAsObject(TestType.HIDDEN)
-                        submissionReportRepository.save(SubmissionReport(submissionId = submission.id,
-                                reportKey = Indicator.HIDDEN_UNIT_TESTS.code,
-                                reportValue = if (buildReport.hasJUnitErrors(TestType.HIDDEN) == true) "NOK" else "OK",
-                                reportProgress = junitSummary?.progress,
-                                reportGoal = junitSummary?.numTests))
+                        if (buildReport.hasJUnitErrors(TestType.HIDDEN) != null) {
+                            val junitSummary = buildReport.junitSummaryAsObject(TestType.HIDDEN)
+                            submissionReportRepository.save(SubmissionReport(submissionId = submission.id,
+                                    reportKey = Indicator.HIDDEN_UNIT_TESTS.code,
+                                    reportValue = if (buildReport.hasJUnitErrors(TestType.HIDDEN) == true) "NOK" else "OK",
+                                    reportProgress = junitSummary?.progress,
+                                    reportGoal = junitSummary?.numTests))
+                        }
                     }
                 }
-            }
 
 
-            val buildReportDB = buildReportRepository.save(org.dropProject.dao.BuildReport(
-                    buildReport = buildReport.mavenOutput()))
-            submission.buildReportId = buildReportDB.id
+                val buildReportDB = buildReportRepository.save(org.dropProject.dao.BuildReport(
+                        buildReport = buildReport.mavenOutput()))
+                submission.buildReportId = buildReportDB.id
 
-            // store the junit reports in the DB
-            File("${mavenizedProjectFolder}/target/surefire-reports")
-                    .walkTopDown()
-                    .filter { it -> it.name.endsWith(".xml") }
-                    .forEach {
-                        val report = JUnitReport(submissionId = submission.id, fileName = it.name,
-                                xmlReport = it.readText(Charset.forName("UTF-8")))
-                        jUnitReportRepository.save(report)
-                    }
-
-
-            if (assignment.calculateStudentTestsCoverage && hasCoverageReport(mavenizedProjectFolder)) {
-
-                // this may seem stupid but I have to rename TestTeacher files to something that will make junit ignore them,
-                // then invoke maven again, so that the coverage report is based
-                // on the sole execution of the student unit tests (otherwise, it will include coverage from
-                // the teacher tests) and finally rename TestTeacher files back
-                File("${mavenizedProjectFolder}/src/test")
+                // store the junit reports in the DB
+                File("${mavenizedProjectFolder}/target/surefire-reports")
                         .walkTopDown()
-                        .filter { it -> it.name.startsWith("TestTeacher") }
+                        .filter { it -> it.name.endsWith(".xml") }
                         .forEach {
-                            Files.move(it.toPath(), it.toPath().resolveSibling("${it.name}.ignore"))
+                            val report = JUnitReport(submissionId = submission.id, fileName = it.name,
+                                    xmlReport = it.readText(Charset.forName("UTF-8")))
+                            jUnitReportRepository.save(report)
                         }
 
 
-                LOG.info("[${authorsStr}] Started maven invocation again (for coverage)")
+                if (assignment.calculateStudentTestsCoverage && hasCoverageReport(mavenizedProjectFolder)) {
 
-                val mavenResultCoverage = mavenInvoker.run(mavenizedProjectFolder, realPrincipalName, assignment.maxMemoryMb)
-                if (!mavenResultCoverage.expiredByTimeout) {
-                    LOG.info("[${authorsStr}] Finished maven invocation (for coverage)")
+                    // this may seem stupid but I have to rename TestTeacher files to something that will make junit ignore them,
+                    // then invoke maven again, so that the coverage report is based
+                    // on the sole execution of the student unit tests (otherwise, it will include coverage from
+                    // the teacher tests) and finally rename TestTeacher files back
+                    File("${mavenizedProjectFolder}/src/test")
+                            .walkTopDown()
+                            .filter { it -> it.name.startsWith("TestTeacher") }
+                            .forEach {
+                                Files.move(it.toPath(), it.toPath().resolveSibling("${it.name}.ignore"))
+                            }
 
-                    // check again the result of the tests
-                    val buildReportCoverage = buildReportBuilder.build(mavenResult.outputLines, mavenizedProjectFolder.absolutePath,
-                            assignment, submission)
-                    if (buildReportCoverage.hasJUnitErrors(TestType.STUDENT) == true) {
-                        LOG.warn("Submission ${submission.id} failed executing student tests when isolated from teacher tests")
-                    } else {
-                        if (File("${mavenizedProjectFolder}/target/site/jacoco").exists()) {
-                            // store the jacoco reports in the DB
-                            File("${mavenizedProjectFolder}/target/site/jacoco")
-                                    .listFiles()
-                                    .filter { it -> it.name.endsWith(".csv") }
-                                    .forEach {
-                                        val report = JacocoReport(submissionId = submission.id, fileName = it.name,
-                                                csvReport = it.readText(Charset.forName("UTF-8")))
-                                        jacocoReportRepository.save(report)
-                                    }
+
+                    LOG.info("[${authorsStr}] Started maven invocation again (for coverage)")
+
+                    val mavenResultCoverage = mavenInvoker.run(mavenizedProjectFolder, realPrincipalName, assignment.maxMemoryMb)
+                    if (!mavenResultCoverage.expiredByTimeout) {
+                        LOG.info("[${authorsStr}] Finished maven invocation (for coverage)")
+
+                        // check again the result of the tests
+                        val buildReportCoverage = buildReportBuilder.build(mavenResult.outputLines, mavenizedProjectFolder.absolutePath,
+                                assignment, submission)
+                        if (buildReportCoverage.hasJUnitErrors(TestType.STUDENT) == true) {
+                            LOG.warn("Submission ${submission.id} failed executing student tests when isolated from teacher tests")
                         } else {
-                            LOG.warn("Submission ${submission.id} failed measuring coverage because the folder " +
-                                    "[${mavenizedProjectFolder}/target/site/jacoco] doesn't exist")
+                            if (File("${mavenizedProjectFolder}/target/site/jacoco").exists()) {
+                                // store the jacoco reports in the DB
+                                File("${mavenizedProjectFolder}/target/site/jacoco")
+                                        .listFiles()
+                                        .filter { it -> it.name.endsWith(".csv") }
+                                        .forEach {
+                                            val report = JacocoReport(submissionId = submission.id, fileName = it.name,
+                                                    csvReport = it.readText(Charset.forName("UTF-8")))
+                                            jacocoReportRepository.save(report)
+                                        }
+                            } else {
+                                LOG.warn("Submission ${submission.id} failed measuring coverage because the folder " +
+                                        "[${mavenizedProjectFolder}/target/site/jacoco] doesn't exist")
+                            }
                         }
+
                     }
+
+                    File("${mavenizedProjectFolder}/src/test")
+                            .walkTopDown()
+                            .filter { it -> it.name.endsWith(".ignore") }
+                            .forEach {
+                                Files.move(it.toPath(), it.toPath().resolveSibling(it.name.replace(".ignore","")))
+                            }
 
                 }
 
-                File("${mavenizedProjectFolder}/src/test")
-                        .walkTopDown()
-                        .filter { it -> it.name.endsWith(".ignore") }
-                        .forEach {
-                            Files.move(it.toPath(), it.toPath().resolveSibling(it.name.replace(".ignore","")))
-                        }
-
+                if (!rebuildByTeacher) {
+                    submission.setStatus(SubmissionStatus.VALIDATED, dontUpdateStatusDate = dontChangeStatusDate)
+                } else {
+                    submission.setStatus(SubmissionStatus.VALIDATED_REBUILT, dontUpdateStatusDate = dontChangeStatusDate)
+                }
             }
-
-            if (!rebuildByTeacher) {
-                submission.setStatus(SubmissionStatus.VALIDATED, dontUpdateStatusDate = dontChangeStatusDate)
-            } else {
-                submission.setStatus(SubmissionStatus.VALIDATED_REBUILT, dontUpdateStatusDate = dontChangeStatusDate)
-            }
-        } else {
-            submission.setStatus(SubmissionStatus.ABORTED_BY_TIMEOUT, dontUpdateStatusDate = dontChangeStatusDate)
         }
 
         if (submission.gitSubmissionId != null) {

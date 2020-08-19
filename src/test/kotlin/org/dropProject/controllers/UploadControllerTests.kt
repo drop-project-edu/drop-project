@@ -1306,6 +1306,24 @@ class UploadControllerTests {
 
     @Test
     @DirtiesContext
+    fun uploadProjectWithLargeOutput() {  // too many println's
+
+        val assignment = assignmentRepository.getOne("testJavaProj")
+        assignmentRepository.save(assignment)
+
+        val submissionId = testsHelper.uploadProject(this.mvc, "projectWithLargeOutput", "testJavaProj", STUDENT_1)
+
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId"))
+                .andExpect(status().isOk())
+                .andReturn()
+
+        @Suppress("UNCHECKED_CAST")
+        val error = reportResult.modelAndView.modelMap["error"] as String
+        assertEquals("O processo de validação foi abortado pois estava a produzir demasiado output para o écran.", error)
+    }
+
+    @Test
+    @DirtiesContext
     fun rebuild() {
         val submissionId = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
 

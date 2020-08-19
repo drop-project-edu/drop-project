@@ -24,6 +24,7 @@ import org.apache.maven.model.io.xpp3.MavenXpp3Reader
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer
 import org.apache.maven.shared.invoker.DefaultInvocationRequest
 import org.apache.maven.shared.invoker.DefaultInvoker
+import org.dropProject.Constants
 import org.dropProject.data.MavenResult
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -96,10 +97,17 @@ class MavenInvoker {
 //              </configuration>
 //            </plugin>
 
+        var numLines = 0
         request.setOutputHandler {
             line -> run {
                 // println(">>> ${line}")
-                outputLines.add(line)
+                numLines++
+                if (numLines < Constants.TOO_MUCH_OUTPUT_THRESHOLD) {
+                    outputLines.add(line)
+                }
+                if (numLines == Constants.TOO_MUCH_OUTPUT_THRESHOLD) {
+                    outputLines.add("*** Trimmed here by DP ***")
+                }
             }
         }
         request.goals = Arrays.asList("clean", "compile", "test")  // "pmd:check", "checkstyle:check", "exec:java"

@@ -27,6 +27,8 @@ object Constants {
     const val DEFAULT_MAX_MEMORY_MB = 512  // max memory (in Mb) that is given to each submission to run their tests
 
     const val COOLOFF_FOR_STRUCTURE_OR_COMPILATION = 2 // minutes
+
+    const val TOO_MUCH_OUTPUT_THRESHOLD = 1000 // more than 1000 println's is too much
 }
     
     

@@ -167,6 +167,7 @@ class ReportController(
                 SubmissionStatus.ILLEGAL_ACCESS -> model["error"] = "O projecto não pode aceder a ficheiros fora da pasta no qual é executado"
                 SubmissionStatus.FAILED -> model["error"] = "Ocorreu um erro interno a validar o seu projecto. Tente novamente. Caso o problema persista, contacte o administrador."
                 SubmissionStatus.ABORTED_BY_TIMEOUT -> model["error"] = "O processo de validação foi abortado pois estava a demorar demasiado. Tempo máximo permitido: ${MAVEN_MAX_EXECUTION_TIME} seg"
+                SubmissionStatus.TOO_MUCH_OUTPUT -> model["error"] = "O processo de validação foi abortado pois estava a produzir demasiado output para o écran."
                 SubmissionStatus.SUBMITTED, SubmissionStatus.SUBMITTED_FOR_REBUILD, SubmissionStatus.REBUILDING -> {
                     model["error"] = "A submissão ainda não foi validada. Aguarde..."
                     model["autoRefresh"] = true

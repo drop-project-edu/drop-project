@@ -36,7 +36,8 @@ enum class SubmissionStatus(val code: String, val description: String) {
     VALIDATED_REBUILT("VR", "Validated (Rebuilt)"),
     REBUILDING("R", "Rebuilding"),
     ILLEGAL_ACCESS("IA", "Illegal Access"),
-    DELETED("D", "Deleted");
+    DELETED("D", "Deleted"),
+    TOO_MUCH_OUTPUT("TO", "Too much output");
 
     companion object {
         fun getSubmissionStatus(code: String) : SubmissionStatus {
