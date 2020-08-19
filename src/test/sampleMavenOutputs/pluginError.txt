@@ -1,0 +1,41 @@
+[INFO] Scanning for projects...
+[INFO]
+[INFO] -----------< pt.ulusofona.lusofonax.fp:pedra-papel-tesoura >------------
+[INFO] Building pedra-papel-tesoura 1.0-SNAPSHOT
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO]
+[INFO] --- maven-clean-plugin:2.5:clean (default-clean) @ pedra-papel-tesoura ---
+[INFO]
+[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ pedra-papel-tesoura ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory /srv/drop-project/mavenized-projects/1592587286410-Pedra, Papel, Tesoura-mavenized-for-rebuild/src/main/resources
+[INFO]
+[INFO] --- maven-compiler-plugin:3.1:compile (default-compile) @ pedra-papel-tesoura ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO]
+[INFO] --- kotlin-maven-plugin:1.3.70:compile (compile) @ pedra-papel-tesoura ---
+[INFO]
+[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ pedra-papel-tesoura ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory /srv/drop-project/mavenized-projects/1592587286410-Pedra, Papel, Tesoura-mavenized-for-rebuild/src/main/resources
+[INFO]
+[INFO] --- maven-compiler-plugin:3.1:compile (default-compile) @ pedra-papel-tesoura ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO]
+[INFO] --- kotlin-maven-plugin:1.3.70:compile (compile) @ pedra-papel-tesoura ---
+[INFO]
+[INFO] --- detekt-maven-plugin:1.1.1:check (default) @ pedra-papel-tesoura ---
+[INFO] Args:
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 6.757 s
+[INFO] Finished at: 2020-06-20T16:12:20+01:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal com.github.ozsie:detekt-maven-plugin:1.1.1:check (default) on project pedra-papel-tesoura: Execution default of goal com.github.ozsie:detekt-maven-plugin:1.1.1:check failed: Provided path '/srv/drop-project/mavenized-projects/1592587286410-Pedra' does not exist! -> [Help 1]
+[ERROR]
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR]
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/PluginExecutionException

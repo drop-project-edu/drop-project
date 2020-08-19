@@ -76,17 +76,17 @@ class BuildWorker(
             val buildReport = buildReportBuilder.build(mavenResult.outputLines, mavenizedProjectFolder.absolutePath,
                     assignment, submission)
 
+            // clear previous indicators except PROJECT_STRUCTURE
+            submissionReportRepository.deleteBySubmissionIdExceptProjectStructure(submission.id)
+
             if (!buildReport.mavenExecutionFailed()) {
 
-                // clear previous indicators
-                submissionReportRepository.deleteBySubmissionIdAndReportKey(submission.id, Indicator.COMPILATION.code)
                 submissionReportRepository.save(SubmissionReport(submissionId = submission.id,
                         reportKey = Indicator.COMPILATION.code, reportValue = if (buildReport.compilationErrors().isEmpty()) "OK" else "NOK"))
 
                 if (buildReport.compilationErrors().isEmpty()) {
 
                     if (buildReport.checkstyleValidationActive()) {
-                        submissionReportRepository.deleteBySubmissionIdAndReportKey(submission.id, Indicator.CHECKSTYLE.code)
                         submissionReportRepository.save(SubmissionReport(submissionId = submission.id,
                                 reportKey = Indicator.CHECKSTYLE.code, reportValue = if (buildReport.checkstyleErrors().isEmpty()) "OK" else "NOK"))
                     }
@@ -112,7 +112,6 @@ class BuildWorker(
                                 "OK"
                             }
 
-                        submissionReportRepository.deleteBySubmissionIdAndReportKey(submission.id, Indicator.STUDENT_UNIT_TESTS.code)
                         submissionReportRepository.save(SubmissionReport(submissionId = submission.id,
                                     reportKey = Indicator.STUDENT_UNIT_TESTS.code,
                                     reportValue = indicator,
@@ -122,7 +121,6 @@ class BuildWorker(
 
                     if (buildReport.hasJUnitErrors(TestType.TEACHER) != null) {
                         val junitSummary = buildReport.junitSummaryAsObject(TestType.TEACHER)
-                        submissionReportRepository.deleteBySubmissionIdAndReportKey(submission.id, Indicator.TEACHER_UNIT_TESTS.code)
                         submissionReportRepository.save(SubmissionReport(submissionId = submission.id,
                                 reportKey = Indicator.TEACHER_UNIT_TESTS.code,
                                 reportValue = if (buildReport.hasJUnitErrors(TestType.TEACHER) == true) "NOK" else "OK",
@@ -132,7 +130,6 @@ class BuildWorker(
 
                     if (buildReport.hasJUnitErrors(TestType.HIDDEN) != null) {
                         val junitSummary = buildReport.junitSummaryAsObject(TestType.HIDDEN)
-                        submissionReportRepository.deleteBySubmissionIdAndReportKey(submission.id, Indicator.HIDDEN_UNIT_TESTS.code)
                         submissionReportRepository.save(SubmissionReport(submissionId = submission.id,
                                 reportKey = Indicator.HIDDEN_UNIT_TESTS.code,
                                 reportValue = if (buildReport.hasJUnitErrors(TestType.HIDDEN) == true) "NOK" else "OK",

@@ -19,14 +19,24 @@
  */
 package org.dropProject.repository
 
+import org.dropProject.dao.Indicator
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.transaction.annotation.Transactional
 import org.dropProject.dao.SubmissionReport
+import org.springframework.data.jpa.repository.Modifying
+import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
 
 interface SubmissionReportRepository : JpaRepository<SubmissionReport, Long> {
 
     fun findBySubmissionId(submissionId: Long) : List<SubmissionReport>
     fun deleteBySubmissionIdAndReportKey(submissionId: Long, reportKey: String)
+
+    @Transactional
+    @Modifying
+    @Query("delete from SubmissionReport sr where sr.submissionId = :submissionId and sr.reportKey <> :except")
+    fun deleteBySubmissionIdExceptProjectStructure(@Param("submissionId") submissionId: Long,
+                                                   @Param("except") except: String = Indicator.PROJECT_STRUCTURE.code)
 
     @Transactional
     fun deleteBySubmissionId(submissionId: Long)

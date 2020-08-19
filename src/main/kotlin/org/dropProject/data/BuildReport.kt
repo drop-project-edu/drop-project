@@ -50,10 +50,11 @@ data class BuildReport(val mavenOutputLines: List<String>,
         // if it has a failed goal other than compiler or surefire (junit), it is a fatal error
 
         if (mavenOutputLines.
-                        filter { it.startsWith("[ERROR] Failed to execute goal org.apache.maven.plugins:") }.isNotEmpty()) {
+                        filter { it.startsWith("[ERROR] Failed to execute goal") }.isNotEmpty()) {
             return mavenOutputLines.filter {
                         it.startsWith("[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin") ||
-                        it.startsWith("[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin")
+                        it.startsWith("[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin") ||
+                        it.startsWith("[ERROR] Failed to execute goal org.jetbrains.kotlin:kotlin-maven-plugin")
             }.isEmpty()
         }
 

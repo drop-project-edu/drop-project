@@ -199,7 +199,6 @@ class TestBuildReport {
         assertEquals(0, buildReport.checkstyleErrors().size)
     }
 
-    @Ignore
     @Test
     fun testPluginError() {
         val mavenOutputLines = resourceLoader.getResource("file:src/test/sampleMavenOutputs/pluginError.txt").file.readLines()
