@@ -28,7 +28,7 @@ object Constants {
 
     const val COOLOFF_FOR_STRUCTURE_OR_COMPILATION = 2 // minutes
 
-    const val TOO_MUCH_OUTPUT_THRESHOLD = 1000 // more than 1000 println's is too much
+    const val TOO_MUCH_OUTPUT_THRESHOLD = 2500 // more than 2500 println's is too much
 }
     
     
