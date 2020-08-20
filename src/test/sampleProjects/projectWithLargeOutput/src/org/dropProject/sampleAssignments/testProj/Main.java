@@ -4,7 +4,7 @@ public class Main {
 
     static int funcaoParaTestar() {
         // this fuction will produce too much output and DP should mark it with a fatal error
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 3000; i++) {
             System.out.println("Output" + i);
         }
         return 3;
