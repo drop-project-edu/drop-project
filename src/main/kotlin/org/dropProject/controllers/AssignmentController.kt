@@ -518,6 +518,12 @@ class AssignmentController(
         assignmentACLRepository.deleteByAssignmentId(assignmentId)
         assignmentReportRepository.deleteByAssignmentId(assignmentId)
 
+        val rootFolder = File(assignmentsRootLocation, assignment.gitRepositoryFolder)
+        if (!rootFolder.delete()) {
+            LOG.warn("Unable to delete ${rootFolder.absolutePath}")
+        }
+        LOG.info("Removed assignment ${assignment.id}")
+
         redirectAttributes.addFlashAttribute("message", "Assignment was successfully deleted")
         return "redirect:/assignment/my"
     }
