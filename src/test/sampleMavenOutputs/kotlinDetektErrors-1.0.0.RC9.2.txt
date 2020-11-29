@@ -1,0 +1,97 @@
+[INFO] Scanning for projects...
+[INFO]
+[INFO] ------< org.dropProject.sampleAssignments:sampleKotlinAssignment >------
+[INFO] Building sampleKotlinAssignment 1.0-SNAPSHOT
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO]
+[INFO] --- maven-clean-plugin:2.5:clean (default-clean) @ sampleKotlinAssignment ---
+[INFO]
+[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ sampleKotlinAssignment ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory someMavenizedProj/src/main/resources
+[INFO]
+[INFO] --- maven-compiler-plugin:3.1:compile (default-compile) @ sampleKotlinAssignment ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO]
+[INFO] --- kotlin-maven-plugin:1.2.71:compile (compile) @ sampleKotlinAssignment ---
+[INFO]
+[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ sampleKotlinAssignment ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory someMavenizedProj/src/main/resources
+[INFO]
+[INFO] --- maven-compiler-plugin:3.1:compile (default-compile) @ sampleKotlinAssignment ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO]
+[INFO] --- kotlin-maven-plugin:1.2.71:compile (compile) @ sampleKotlinAssignment ---
+[INFO]
+[INFO] --- detekt-maven-plugin:1.0.0.RC9.2:check (default) @ sampleKotlinAssignment ---
+[INFO] Args:
+..
+
+2 kotlin files were analyzed.
+
+Ruleset: comments
+Ruleset: complexity
+Ruleset: empty-blocks
+Ruleset: exceptions
+Ruleset: naming - 15min debt
+	FunctionParameterNaming - [Param] at someMavenizedProj/src/main/kotlin/Main.kt:20:14
+	VariableNaming - [Soma] at someMavenizedProj/src/main/kotlin/Main.kt:34:5
+	FunctionNaming - [SomeFunc] at someMavenizedProj/src/main/kotlin/Main.kt:1:1
+Ruleset: performance
+Ruleset: potential-bugs
+Ruleset: style
+	MaxLineLength - [whenAdding1and3_thenAnswerIs4] at someMavenizedProj/src/test/kotlin/TestProject.kt:53:9
+	MaxLineLength - [whenAdding2and5_thenAnswerIs7] at someMavenizedProj/src/test/kotlin/TestProject.kt:64:9
+
+Overall debt: 15min
+
+Complexity Report:
+	- 105 lines of code (loc)
+	- 47 source lines of code (sloc)
+	- 35 logical lines of code (lloc)
+	- 38 comment lines of code (cloc)
+	- 7 McCabe complexity (mcc)
+	- 3 number of total code smells
+	- 80 % comment source ratio
+	- 200 mcc per 1000 lloc
+	- 85 code smells per 1000 lloc
+
+Project Statistics:
+	- number of properties: 8
+	- number of functions: 6
+	- number of classes: 1
+	- number of packages: 1
+	- number of kt files: 2
+
+
+detekt finished in 1579 ms.
+[INFO]
+[INFO] --- maven-resources-plugin:2.6:testResources (default-testResources) @ sampleKotlinAssignment ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory someMavenizedProj/src/test/resources
+[INFO]
+[INFO] --- maven-compiler-plugin:3.1:testCompile (default-testCompile) @ sampleKotlinAssignment ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO]
+[INFO] --- kotlin-maven-plugin:1.2.71:test-compile (test-compile) @ sampleKotlinAssignment ---
+[INFO]
+[INFO] --- maven-surefire-plugin:2.12.4:test (default-test) @ sampleKotlinAssignment ---
+[INFO] Surefire report directory: someMavenizedProj/target/surefire-reports
+
+-------------------------------------------------------
+ T E S T S
+-------------------------------------------------------
+Running TestProject
+Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.152 sec
+
+Results :
+
+Tests run: 2, Failures: 0, Errors: 0, Skipped: 0
+
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  12.926 s
+[INFO] Finished at: 2020-11-29T18:43:47Z
+[INFO] ------------------------------------------------------------------------
