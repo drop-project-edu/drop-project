@@ -21,6 +21,9 @@ package org.dropProject.dao
 
 import javax.persistence.*
 
+/**
+ * Represents the author of a submission (a student or a teacher).
+ */
 @Entity
 data class Author(
         @Id @GeneratedValue

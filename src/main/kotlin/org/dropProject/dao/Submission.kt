@@ -53,6 +53,9 @@ enum class SubmissionStatus(val code: String, val description: String) {
     }
 }
 
+/**
+ * Represents a Submission, which is a single interaction of the student (or group) with an Assignment.
+ */
 @Entity
 data class Submission(
         @Id @GeneratedValue

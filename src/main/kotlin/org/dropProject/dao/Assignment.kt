@@ -44,6 +44,9 @@ enum class LeaderboardType {
     COVERAGE     // ordered by number of passed tests (desc) and then coverage (desc)
 }
 
+/**
+ * Represents an Assignment, which is a problem to be solved by a student or group of students.
+ */
 @Entity
 data class Assignment(
         @Id
