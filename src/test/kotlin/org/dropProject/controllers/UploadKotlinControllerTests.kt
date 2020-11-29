@@ -177,9 +177,9 @@ class UploadKotlinControllerTests {
         assertThat(buildResult.checkstyleErrors(),
                 CoreMatchers.hasItems(
                         "Nome do parâmetro de função deve começar por letra minúscula. Caso o nome tenha mais do que uma palavra, as palavras seguintes devem ser capitalizadas (iniciadas por uma maiúscula) - [Param] at Main.kt:20:14",
-                        "Nome da variável deve começar por letra minúscula. Caso o nome tenha mais do que uma palavra, as palavras seguintes devem ser capitalizadas (iniciadas por uma maiúscula) - [Soma] at Main.kt:34:5",
-                        "Nome da função deve começar por letra minúscula. Caso o nome tenha mais do que uma palavra, as palavras seguintes devem ser capitalizadas (iniciadas por uma maiúscula) - [SomeFunc] at Main.kt:1:1",
-                        "Instrução 'if' sem chaveta - [SomeFunc] at Main.kt:22:5",
+                        "Nome da variável deve começar por letra minúscula. Caso o nome tenha mais do que uma palavra, as palavras seguintes devem ser capitalizadas (iniciadas por uma maiúscula) - [Soma] at Main.kt:34:9",
+                          "Nome da função deve começar por letra minúscula. Caso o nome tenha mais do que uma palavra, as palavras seguintes devem ser capitalizadas (iniciadas por uma maiúscula) - [SomeFunc] at Main.kt:20:5",
+                        "Instrução 'if' sem chaveta - [SomeFunc] at Main.kt:23:9",
                         "Variável imutável declarada com var - [Soma] at Main.kt:34:5"
                 ))
 
