@@ -230,7 +230,6 @@ class AssignmentController(
      * @return the created Assignment
      */
     private fun createAssignmentBasedOnForm(assignmentForm: AssignmentForm, principal: Principal): Assignment {
-        print("Create Assignment")
         val newAssignment = Assignment(id = assignmentForm.assignmentId!!, name = assignmentForm.assignmentName!!,
                 packageName = assignmentForm.assignmentPackage, language = assignmentForm.language!!,
                 dueDate = assignmentForm.dueDate, acceptsStudentTests = assignmentForm.acceptsStudentTests,
@@ -243,12 +242,9 @@ class AssignmentController(
                 hiddenTestsVisibility = assignmentForm.hiddenTestsVisibility,
                 leaderboardType = assignmentForm.leaderboardType)
 
-        print("Create Assignment. New = " + newAssignment)
-
         // associate tags
         val tagNames = assignmentForm.assignmentTags?.toLowerCase()?.split(",")
         tagNames?.forEach {
-            print("Tag: " + it.trim().toLowerCase())
             newAssignment.tags.add(assignmentTagRepository.findByName(it.trim().toLowerCase())
                     ?: AssignmentTag(name = it.trim().toLowerCase()))
         }
@@ -259,7 +255,6 @@ class AssignmentController(
      * Updates an existing Assignment with the contents of an AssignmentForm.
      */
     private fun updateAssignment(existingAssignment: Assignment, assignmentForm: AssignmentForm) {
-        print("Update Assignment")
         existingAssignment.name = assignmentForm.assignmentName!!
         existingAssignment.packageName = assignmentForm.assignmentPackage
         existingAssignment.language = assignmentForm.language!!
@@ -278,7 +273,6 @@ class AssignmentController(
         val tagNames = assignmentForm.assignmentTags?.toLowerCase()?.split(",")
         existingAssignment.tags.clear()
         tagNames?.forEach {
-            print("Tag: " + it.trim().toLowerCase())
             existingAssignment.tags.add(assignmentTagRepository.findByName(it.trim().toLowerCase())
                     ?: AssignmentTag(name = it.trim().toLowerCase()))
         }
