@@ -339,6 +339,7 @@ class AssignmentController(
 
     /**
      * Creates an AssignmentForm based on the Assignment object.
+     * @return The created AssignmentForm
      */
     private fun createAssignmentFormBasedOnAssignment(assignment: Assignment, acl: List<AssignmentACL>): AssignmentForm {
         val assignmentForm = AssignmentForm(assignmentId = assignment.id,
