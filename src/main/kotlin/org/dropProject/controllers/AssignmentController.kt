@@ -227,6 +227,7 @@ class AssignmentController(
 
     /**
      * Creates a new Assignment based on the contents of an AssignmentForm.
+     * @param assignmentForm, the form from which the Assignment contents will be copied
      * @return the created Assignment
      */
     private fun createAssignmentBasedOnForm(assignmentForm: AssignmentForm, principal: Principal): Assignment {
@@ -339,6 +340,7 @@ class AssignmentController(
 
     /**
      * Creates an AssignmentForm based on the Assignment object.
+     * @param assignment, the Assignment with the information to place in the form
      * @return The created AssignmentForm
      */
     private fun createAssignmentFormBasedOnAssignment(assignment: Assignment, acl: List<AssignmentACL>): AssignmentForm {
