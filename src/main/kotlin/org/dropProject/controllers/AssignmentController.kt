@@ -40,7 +40,10 @@ import java.io.File
 import java.security.Principal
 import javax.validation.Valid
 
-
+/**
+ * AssignmentController contains MVC controller functions that handle requests related with Assignments
+ * (e.g. assignment creation, edition, etc.)
+ */
 @Controller
 @RequestMapping("/assignment")
 class AssignmentController(
@@ -227,7 +230,7 @@ class AssignmentController(
 
     /**
      * Creates a new Assignment based on the contents of an AssignmentForm.
-     * @param assignmentForm, the form from which the Assignment contents will be copied
+     * @param assignmentForm, the AssignmentForm from which the Assignment contents will be copied
      * @return the created Assignment
      */
     private fun createAssignmentBasedOnForm(assignmentForm: AssignmentForm, principal: Principal): Assignment {
@@ -254,6 +257,8 @@ class AssignmentController(
 
     /**
      * Updates an existing Assignment with the contents of an AssignmentForm.
+     * @param existingAssignment, the Assignment that will be updated
+     * @param assignmentForm, the AssignmentForm from which the Assignment contents will be copied
      */
     private fun updateAssignment(existingAssignment: Assignment, assignmentForm: AssignmentForm) {
         existingAssignment.name = assignmentForm.assignmentName!!
@@ -509,6 +514,10 @@ class AssignmentController(
         return "redirect:/assignment/info/${assignment.id}"
     }
 
+    /**
+     * Controller to handle the page that lists the assignments to which the logged-in
+     * teacher has access.
+     */
     @RequestMapping(value = ["/my"], method = [(RequestMethod.GET)])
     fun listMyAssignments(@RequestParam(name = "tags", required = false) tags: String?,
                           model: ModelMap, principal: Principal): String {
@@ -517,6 +526,10 @@ class AssignmentController(
         return "teacher-assignments-list"
     }
 
+    /**
+     * Controller to handle the page that lists the archived assignments to which the logged-in
+     * teacher has access.
+     */
     @RequestMapping(value = ["/archived"], method = [(RequestMethod.GET)])
     fun listMyArchivedAssignments(@RequestParam(name = "tags", required = false) tags: String?,
                                   model: ModelMap, principal: Principal): String {
@@ -525,6 +538,9 @@ class AssignmentController(
         return "teacher-assignments-list"
     }
 
+    /**
+     * Controller to handle the deletion of an assignment.
+     */
     @RequestMapping(value = ["/delete/{assignmentId}"], method = [(RequestMethod.POST)])
     fun deleteAssignment(@PathVariable assignmentId: String, redirectAttributes: RedirectAttributes,
                          principal: Principal): String {
@@ -548,6 +564,9 @@ class AssignmentController(
         return "redirect:/assignment/my"
     }
 
+    /**
+     * Controller that allows toggling the status of an assignment between "active" and "inactive".
+     */
     @RequestMapping(value = ["/toggle-status/{assignmentId}"], method = [(RequestMethod.GET), (RequestMethod.POST)])
     fun toggleAssignmentStatus(@PathVariable assignmentId: String, redirectAttributes: RedirectAttributes,
                                principal: Principal): String {
@@ -592,6 +611,9 @@ class AssignmentController(
         return "redirect:/assignment/my"
     }
 
+    /**
+     * Controller that allows the archiving of an assignment.
+     */
     @RequestMapping(value = ["/archive/{assignmentId}"], method = [(RequestMethod.POST)])
     fun archiveAssignment(@PathVariable assignmentId: String,
                           redirectAttributes: RedirectAttributes,
@@ -616,6 +638,10 @@ class AssignmentController(
 
     }
 
+    /**
+     * Controller that allows marking the latest submission of each group as final.
+     * Note that the latest submission might not be the best one.
+     */
     @RequestMapping(value = ["/markAllAsFinal/{assignmentId}"], method = [(RequestMethod.POST)])
     fun markAllSubmissionsAsFinal(@PathVariable assignmentId: String,
                                   redirectAttributes: RedirectAttributes,
