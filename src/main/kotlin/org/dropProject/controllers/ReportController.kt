@@ -64,6 +64,10 @@ import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import kotlin.collections.LinkedHashMap
 
+/**
+ * ReportController contains MVC controller functions to handle requests related with submission reports
+ * (e.g. build report, submissions list, etc.).
+ */
 @Controller
 class ReportController(
         val authorRepository: AuthorRepository,
@@ -95,6 +99,10 @@ class ReportController(
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
+    /**
+     * Controller that handles requests for an Assignment's report (i.e. list of submissions per student/group).
+     * @param assignmentId is a String identifying the relevant Assignment
+     */
     @RequestMapping(value = ["/report/{assignmentId}"], method = [(RequestMethod.GET)])
     fun getReport(@PathVariable assignmentId: String, model: ModelMap,
                   principal: Principal, request: HttpServletRequest): String {
@@ -105,6 +113,12 @@ class ReportController(
         return "report"
     }
 
+    /**
+     * Controller that handles requests for an Assignment's Test Matrix. The Test Matrix is a matrix where each row
+     * represents a student/group and each column represents an evaluation test. The intersection between lines and
+     * columns will tell us if each group has passed each specific test.
+     * @param assignmentId is a String identifying the relevant Assignment
+     */
     @RequestMapping(value = ["/testMatrix/{assignmentId}"], method = [(RequestMethod.GET)])
     fun getTestMatrix(@PathVariable assignmentId: String, model: ModelMap,
                   principal: Principal, request: HttpServletRequest): String {
@@ -202,6 +216,11 @@ class ReportController(
         return "build-report"
     }
 
+    /**
+     * Controller that handles the download of a specific submission's code. The submission is downloaded in
+     * a format compatible with Maven.
+     * @param submissionId is a Long, representing the submission to download
+     */
     @RequestMapping(value = ["/downloadMavenProject/{submissionId}"],
             method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
     @ResponseBody
@@ -234,7 +253,11 @@ class ReportController(
         }
     }
 
-
+    /**
+     * Controller that handles the download of a specific submission's code. The submission is downloaded in
+     * it's original format.
+     * @param submissionId is a Long, representing the Submission to download
+     */
     @RequestMapping(value = ["/downloadOriginalProject/{submissionId}"],
             method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
     @ResponseBody
@@ -290,6 +313,11 @@ class ReportController(
         }
     }
 
+    /**
+     * Controller that handles requests related with the download of ALL the students' submissions (code)
+     * for a certain Assignment. The submissions are downloaded in their original format.
+     * @param assignmentId is a String identifying the relevant Assignment
+     */
     @RequestMapping(value = ["/downloadOriginalAll/{assignmentId}"],
             method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
     @ResponseBody
@@ -354,7 +382,11 @@ class ReportController(
 
     }
 
-
+    /**
+     * Controller that handles requests related with the download of ALL the students' submissions (code)
+     * for a certain Assignment. The submissions are downloaded in a format compatible with Maven.
+     * @param assignmentId is a String identifying the relevant Assignment
+     */
     @RequestMapping(value = ["/downloadMavenizedAll/{assignmentId}"],
             method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
     @ResponseBody
@@ -476,6 +508,10 @@ class ReportController(
         return "submissions"
     }
 
+    /**
+     * Controller that handles requests related with listing Submissions of a certain Assignment.
+     * @param assignmentId is a String identifying the relevant Assignment.
+     */
     @RequestMapping(value = ["/submissions"], method = [(RequestMethod.GET)])
     fun getSubmissions(@RequestParam("assignmentId") assignmentId: String,
                        @RequestParam("groupId") groupId: Long,
@@ -521,7 +557,10 @@ class ReportController(
         return "submissions"
     }
 
-
+    /**
+     * Controller that handles the exportation of an Assignment's submission results to a CSV file.
+     * @param assignmentId is a String, identifying the relevant Assignment
+     */
     @RequestMapping(value = ["/exportCSV/{assignmentId}"], method = [(RequestMethod.GET)])
     fun exportCSV(@PathVariable assignmentId: String,
                   @RequestParam(name="ellapsed", defaultValue = "true") includeEllapsed: Boolean, principal: Principal): ResponseEntity<String> {
