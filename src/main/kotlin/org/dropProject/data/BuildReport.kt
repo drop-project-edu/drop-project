@@ -166,9 +166,11 @@ data class BuildReport(val mavenOutputLines: List<String>,
                         startIdx = idx + 1
                     }
                     // depending on the detekt-maven-plugin version, the output is different
-                    if (idx > startIdx + 1 &&
+                    if (startIdx > 0 &&
+                            idx > startIdx + 1 &&
                             (mavenOutputLine.startsWith("detekt finished") || mavenOutputLine.startsWith("[INFO]"))) {
                         endIdx = idx
+                        break
                     }
                 }
 

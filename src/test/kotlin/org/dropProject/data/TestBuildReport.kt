@@ -230,4 +230,16 @@ class TestBuildReport {
         }
 
     }
+
+    @Test
+    fun testKotlinDetektErrors2() {
+        val mavenOutputLines = resourceLoader.getResource("file:src/test/sampleMavenOutputs/kotlinDetektErrors2-1.11.0.txt").file.readLines()
+        val buildReport = buildReportBuilder.build(mavenOutputLines,
+                "someMavenizedProj",
+                dummyKotlinAssignment)
+
+        assertTrue(!buildReport.mavenExecutionFailed())
+        assertEquals(0, buildReport.compilationErrors().size)
+        assertEquals(8, buildReport.checkstyleErrors().size)
+    }
 }

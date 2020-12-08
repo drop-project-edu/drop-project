@@ -1,0 +1,486 @@
+[INFO] Scanning for projects...
+[INFO]
+[INFO] -------------< pt.ulusofona.deisi.fp:fp-projecto-2020-21 >--------------
+[INFO] Building fp-projecto-2020-21 1.0-SNAPSHOT
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO]
+[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ fp-projecto-2020-21 ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory /Users/pedroalves/Downloads/a21800468_mavenized/src/main/resources
+[INFO]
+[INFO] --- maven-compiler-plugin:3.1:compile (default-compile) @ fp-projecto-2020-21 ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO]
+[INFO] --- kotlin-maven-plugin:1.4.10:compile (compile) @ fp-projecto-2020-21 ---
+[INFO]
+[INFO] --- detekt-maven-plugin:1.11.0:check (default) @ fp-projecto-2020-21 ---
+[INFO] Args:
+/Users/pedroalves/Downloads/a21800468_mavenized/src/main/kotlin/Main.kt - 40min debt
+	StringLiteralDuplication - 4/3 - [boardsWithLegendsAndPieces] at /Users/pedroalves/Downloads/a21800468_mavenized/src/main/kotlin/Main.kt:55:42
+	StringLiteralDuplication - 6/3 - [boardsWithLegendsAndPieces] at /Users/pedroalves/Downloads/a21800468_mavenized/src/main/kotlin/Main.kt:57:42
+	StringLiteralDuplication - 6/3 - [boardsWithLegendsAndPieces] at /Users/pedroalves/Downloads/a21800468_mavenized/src/main/kotlin/Main.kt:49:42
+	StringLiteralDuplication - 7/3 - [secondPlayerName] at /Users/pedroalves/Downloads/a21800468_mavenized/src/main/kotlin/Main.kt:256:21
+	StringLiteralDuplication - 8/3 - [boardsWithLegendsAndPieces] at /Users/pedroalves/Downloads/a21800468_mavenized/src/main/kotlin/Main.kt:26:26
+	StringLiteralDuplication - 4/3 - [boardsWithLegendsAndPieces] at /Users/pedroalves/Downloads/a21800468_mavenized/src/main/kotlin/Main.kt:47:42
+	StringLiteralDuplication - 4/3 - [boardsWithLegendsAndPieces] at /Users/pedroalves/Downloads/a21800468_mavenized/src/main/kotlin/Main.kt:45:42
+	StringLiteralDuplication - 4/3 - [boardsWithLegendsAndPieces] at /Users/pedroalves/Downloads/a21800468_mavenized/src/main/kotlin/Main.kt:53:42
+
+Overall debt: 40min
+
+complexity - 40min debt
+	StringLiteralDuplication - 4/3 - [boardsWithLegendsAndPieces] at /Users/pedroalves/Downloads/a21800468_mavenized/src/main/kotlin/Main.kt:55:42
+	StringLiteralDuplication - 6/3 - [boardsWithLegendsAndPieces] at /Users/pedroalves/Downloads/a21800468_mavenized/src/main/kotlin/Main.kt:57:42
+	StringLiteralDuplication - 6/3 - [boardsWithLegendsAndPieces] at /Users/pedroalves/Downloads/a21800468_mavenized/src/main/kotlin/Main.kt:49:42
+	StringLiteralDuplication - 7/3 - [secondPlayerName] at /Users/pedroalves/Downloads/a21800468_mavenized/src/main/kotlin/Main.kt:256:21
+	StringLiteralDuplication - 8/3 - [boardsWithLegendsAndPieces] at /Users/pedroalves/Downloads/a21800468_mavenized/src/main/kotlin/Main.kt:26:26
+	StringLiteralDuplication - 4/3 - [boardsWithLegendsAndPieces] at /Users/pedroalves/Downloads/a21800468_mavenized/src/main/kotlin/Main.kt:47:42
+	StringLiteralDuplication - 4/3 - [boardsWithLegendsAndPieces] at /Users/pedroalves/Downloads/a21800468_mavenized/src/main/kotlin/Main.kt:45:42
+	StringLiteralDuplication - 4/3 - [boardsWithLegendsAndPieces] at /Users/pedroalves/Downloads/a21800468_mavenized/src/main/kotlin/Main.kt:53:42
+
+Overall debt: 40min
+
+[INFO]
+[INFO] --- maven-resources-plugin:2.6:testResources (default-testResources) @ fp-projecto-2020-21 ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory /Users/pedroalves/Downloads/a21800468_mavenized/src/test/resources
+[INFO]
+[INFO] --- maven-compiler-plugin:3.1:testCompile (default-testCompile) @ fp-projecto-2020-21 ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO]
+[INFO] --- kotlin-maven-plugin:1.4.10:test-compile (test-compile) @ fp-projecto-2020-21 ---
+[INFO]
+[INFO] --- maven-surefire-plugin:2.19.1:test (default-test) @ fp-projecto-2020-21 ---
+
+-------------------------------------------------------
+ T E S T S
+-------------------------------------------------------
+Running TestTeacherProject
+Tests run: 23, Failures: 9, Errors: 0, Skipped: 0, Time elapsed: 0.313 sec <<< FAILURE! - in TestTeacherProject
+buildBoard5x5WithLegendAndPieces1(TestTeacherProject)  Time elapsed: 0.013 sec  <<< FAILURE!
+org.junit.ComparisonFailure:
+Chess not equal expected:<... 1 30m ♟  ♟  ♟  ♟  ♟
+ 2
+ 3
+ 4
+ 5  ♙  ♙  ♙  ♙ m ♙    ...> but was:<... 1 47m ♟  ♟  ♟  ♟  ♟
+ 2
+ 3
+ 4
+ 5  ♙  ♙  ♙  ♙ m ♙    ...>
+	at org.junit.Assert.assertEquals(Assert.java:115)
+	at kotlin.test.junit.JUnitAsserter.assertEquals(JUnitSupport.kt:32)
+	at kotlin.test.AssertionsKt__AssertionsKt.assertEquals(Assertions.kt:57)
+	at kotlin.test.AssertionsKt.assertEquals(Unknown Source)
+	at TestTeacherProject.buildBoard5x5WithLegendAndPieces1(TestTeacherProject.kt:71)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:564)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:298)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:292)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.lang.Thread.run(Thread.java:832)
+
+buildBoard5x5WithLegendAndPieces2(TestTeacherProject)  Time elapsed: 0.004 sec  <<< FAILURE!
+org.junit.ComparisonFailure:
+Chess not equal expected:<... 1 30m ♟  ♟  ♟  ♟  ♟
+ 2
+ 3
+ 4
+ 5  ♙  ♙  ♙  ♙ m ♙    ...> but was:<... 1 47m ♟  ♟  ♟  ♟  ♟
+ 2
+ 3
+ 4
+ 5  ♙  ♙  ♙  ♙ m ♙    ...>
+	at org.junit.Assert.assertEquals(Assert.java:115)
+	at kotlin.test.junit.JUnitAsserter.assertEquals(JUnitSupport.kt:32)
+	at kotlin.test.AssertionsKt__AssertionsKt.assertEquals(Assertions.kt:57)
+	at kotlin.test.AssertionsKt.assertEquals(Unknown Source)
+	at TestTeacherProject.buildBoard5x5WithLegendAndPieces2(TestTeacherProject.kt:83)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:564)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:298)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:292)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.lang.Thread.run(Thread.java:832)
+
+buildBoard5x5NoLegendNoPiecesWithNoParameters(TestTeacherProject)  Time elapsed: 0.002 sec  <<< FAILURE!
+org.junit.ComparisonFailure:
+Chess not equal expected:<[
+
+
+
+
+]> but was:<[]>
+	at org.junit.Assert.assertEquals(Assert.java:115)
+	at kotlin.test.junit.JUnitAsserter.assertEquals(JUnitSupport.kt:32)
+	at kotlin.test.AssertionsKt__AssertionsKt.assertEquals(Assertions.kt:57)
+	at kotlin.test.AssertionsKt.assertEquals(Unknown Source)
+	at TestTeacherProject.buildBoard5x5NoLegendNoPiecesWithNoParameters(TestTeacherProject.kt:34)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:564)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:298)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:292)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.lang.Thread.run(Thread.java:832)
+
+buildBoard5x5NoLegendNoPieces1(TestTeacherProject)  Time elapsed: 0.001 sec  <<< FAILURE!
+org.junit.ComparisonFailure:
+Chess not equal expected:<[
+
+
+
+
+]> but was:<[]>
+	at org.junit.Assert.assertEquals(Assert.java:115)
+	at kotlin.test.junit.JUnitAsserter.assertEquals(JUnitSupport.kt:32)
+	at kotlin.test.AssertionsKt__AssertionsKt.assertEquals(Assertions.kt:57)
+	at kotlin.test.AssertionsKt.assertEquals(Unknown Source)
+	at TestTeacherProject.buildBoard5x5NoLegendNoPieces1(TestTeacherProject.kt:14)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:564)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:298)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:292)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.lang.Thread.run(Thread.java:832)
+
+buildBoard5x5NoLegendNoPieces2(TestTeacherProject)  Time elapsed: 0.014 sec  <<< FAILURE!
+org.junit.ComparisonFailure:
+Chess not equal expected:<[
+
+
+
+
+]> but was:<[]>
+	at org.junit.Assert.assertEquals(Assert.java:115)
+	at kotlin.test.junit.JUnitAsserter.assertEquals(JUnitSupport.kt:32)
+	at kotlin.test.AssertionsKt__AssertionsKt.assertEquals(Assertions.kt:57)
+	at kotlin.test.AssertionsKt.assertEquals(Unknown Source)
+	at TestTeacherProject.buildBoard5x5NoLegendNoPieces2(TestTeacherProject.kt:24)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:564)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:298)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:292)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.lang.Thread.run(Thread.java:832)
+
+startNewGameWithInvalidInputs(TestTeacherProject)  Time elapsed: 0.004 sec  <<< FAILURE!
+org.junit.ComparisonFailure:
+ Last 5 lines were:
+[OUT]: First player name?(enter)(enter)
+[OUT]: (enter)
+[OUT]: >(enter)
+[IN]: Bruno(enter)
+[OUT]: Invalid response.(enter)(enter)
+ expected:<[]Invalid response.> but was:<[>]Invalid response.>
+	at org.junit.Assert.assertEquals(Assert.java:115)
+	at pt.ulusofona.deisi.Command.validateAgainst(StdinStdoutHelper.java:78)
+	at pt.ulusofona.deisi.StdinStdoutHelper$1.checkLine(StdinStdoutHelper.java:264)
+	at pt.ulusofona.deisi.StdinStdoutHelper$1.write(StdinStdoutHelper.java:250)
+	at java.base/sun.nio.cs.StreamEncoder.writeBytes(StreamEncoder.java:242)
+	at java.base/sun.nio.cs.StreamEncoder.implFlushBuffer(StreamEncoder.java:321)
+	at java.base/sun.nio.cs.StreamEncoder.flushBuffer(StreamEncoder.java:110)
+	at java.base/java.io.OutputStreamWriter.flushBuffer(OutputStreamWriter.java:181)
+	at java.base/java.io.PrintStream.write(PrintStream.java:699)
+	at java.base/java.io.PrintStream.print(PrintStream.java:877)
+	at MainKt.firstPlayerName(Main.kt:237)
+	at MainKt.main(Main.kt:389)
+	at TestTeacherProject.startNewGameWithInvalidInputs(TestTeacherProject.kt:300)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:564)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:298)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:292)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.lang.Thread.run(Thread.java:832)
+
+startNewGame1(TestTeacherProject)  Time elapsed: 0.007 sec  <<< FAILURE!
+org.junit.ComparisonFailure:
+ Last 5 lines were:
+[OUT]: 0-> Exit Game;(enter)(enter)
+[OUT]: (enter)
+[OUT]: >(enter)
+[IN]: 1(enter)
+[OUT]: First player name?(enter)(enter)
+ expected:<[]First player name?> but was:<[>]First player name?>
+	at org.junit.Assert.assertEquals(Assert.java:115)
+	at pt.ulusofona.deisi.Command.validateAgainst(StdinStdoutHelper.java:78)
+	at pt.ulusofona.deisi.StdinStdoutHelper$1.checkLine(StdinStdoutHelper.java:264)
+	at pt.ulusofona.deisi.StdinStdoutHelper$1.write(StdinStdoutHelper.java:250)
+	at java.base/sun.nio.cs.StreamEncoder.writeBytes(StreamEncoder.java:242)
+	at java.base/sun.nio.cs.StreamEncoder.implFlushBuffer(StreamEncoder.java:321)
+	at java.base/sun.nio.cs.StreamEncoder.flushBuffer(StreamEncoder.java:110)
+	at java.base/java.io.OutputStreamWriter.flushBuffer(OutputStreamWriter.java:181)
+	at java.base/java.io.PrintStream.write(PrintStream.java:699)
+	at java.base/java.io.PrintStream.print(PrintStream.java:863)
+	at java.base/java.io.PrintStream.println(PrintStream.java:1054)
+	at MainKt.firstPlayerName(Main.kt:230)
+	at MainKt.main(Main.kt:389)
+	at TestTeacherProject.startNewGame1(TestTeacherProject.kt:128)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:564)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:298)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:292)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.lang.Thread.run(Thread.java:832)
+
+buildBoard5x5WithLegendNoPieces1(TestTeacherProject)  Time elapsed: 0.003 sec  <<< FAILURE!
+org.junit.ComparisonFailure:
+Chess not equal expected:<... 1 30m
+ 2
+ 3
+ 4
+ 5
+]   [30;...> but was:<... 1 47m ♟  ♟  ♟  ♟  ♟
+ 2
+ 3
+ 4
+ 5  ♙  ♙  ♙  ♙  ♙
+
+ 7  ♙  ♙  ♙  ♙  ♙  ♙  ♙
+      ]   [30;...>
+	at org.junit.Assert.assertEquals(Assert.java:115)
+	at kotlin.test.junit.JUnitAsserter.assertEquals(JUnitSupport.kt:32)
+	at kotlin.test.AssertionsKt__AssertionsKt.assertEquals(Assertions.kt:57)
+	at kotlin.test.AssertionsKt.assertEquals(Unknown Source)
+	at TestTeacherProject.buildBoard5x5WithLegendNoPieces1(TestTeacherProject.kt:47)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:564)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:298)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:292)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.lang.Thread.run(Thread.java:832)
+
+buildBoard5x5WithLegendNoPieces2(TestTeacherProject)  Time elapsed: 0.014 sec  <<< FAILURE!
+org.junit.ComparisonFailure:
+Chess not equal expected:<... 1 30m
+ 2
+ 3
+ 4
+ 5
+]   [30;...> but was:<... 1 47m ♟  ♟  ♟  ♟  ♟
+ 2
+ 3
+ 4
+ 5  ♙  ♙  ♙  ♙  ♙
+
+ 7  ♙  ♙  ♙  ♙  ♙  ♙  ♙
+      ]   [30;...>
+	at org.junit.Assert.assertEquals(Assert.java:115)
+	at kotlin.test.junit.JUnitAsserter.assertEquals(JUnitSupport.kt:32)
+	at kotlin.test.AssertionsKt__AssertionsKt.assertEquals(Assertions.kt:57)
+	at kotlin.test.AssertionsKt.assertEquals(Unknown Source)
+	at TestTeacherProject.buildBoard5x5WithLegendNoPieces2(TestTeacherProject.kt:59)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:564)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:298)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:292)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.lang.Thread.run(Thread.java:832)
+
+Running TestTeacherHiddenProject
+Tests run: 3, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.006 sec <<< FAILURE! - in TestTeacherHiddenProject
+buildBoard8x8WithLegendAndPieces(TestTeacherHiddenProject)  Time elapsed: 0.005 sec  <<< FAILURE!
+org.junit.ComparisonFailure:
+Chess not equal expected:<...;44m E  [F
+ 1  ♟  ♟  ♟  ♟  ♟  ♟
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7  ♙  ♙  ♙  ♙  ♙  ♙
+]   [30;...> but was:<...;44m E  [
+ 1  ♟  ♟  ♟  ♟  ♟
+ 2
+ 3
+ 4
+ 5  ♙  ♙  ♙  ♙  ♙
+
+ 7  ♙  ♙  ♙  ♙  ♙  ♙  ♙
+   ]   [30;...>
+	at org.junit.Assert.assertEquals(Assert.java:115)
+	at kotlin.test.junit.JUnitAsserter.assertEquals(JUnitSupport.kt:32)
+	at kotlin.test.AssertionsKt__AssertionsKt.assertEquals(Assertions.kt:57)
+	at kotlin.test.AssertionsKt.assertEquals(Unknown Source)
+	at TestTeacherHiddenProject.buildBoard8x8WithLegendAndPieces(TestTeacherHiddenProject.kt:30)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:564)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:298)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:292)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.lang.Thread.run(Thread.java:832)
+
+
+Results :
+
+Failed tests:
+  TestTeacherHiddenProject.buildBoard8x8WithLegendAndPieces:30 Chess not equal expected:<...;44m E  [F
+ 1  ♟  ♟  ♟  ♟  ♟  ♟
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7  ♙  ♙  ♙  ♙  ♙  ♙
+]   [30;...> but was:<...;44m E  [
+ 1  ♟  ♟  ♟  ♟  ♟
+ 2
+ 3
+ 4
+ 5  ♙  ♙  ♙  ♙  ♙
+
+ 7  ♙  ♙  ♙  ♙  ♙  ♙  ♙
+   ]   [30;...>
+  TestTeacherProject.buildBoard5x5NoLegendNoPieces1:14 Chess not equal expected:<[
+
+
+
+
+]> but was:<[]>
+  TestTeacherProject.buildBoard5x5NoLegendNoPieces2:24 Chess not equal expected:<[
+
+
+
+
+]> but was:<[]>
+  TestTeacherProject.buildBoard5x5NoLegendNoPiecesWithNoParameters:34 Chess not equal expected:<[
+
+
+
+
+]> but was:<[]>
+  TestTeacherProject.buildBoard5x5WithLegendAndPieces1:71 Chess not equal expected:<... 1 30m ♟  ♟  ♟  ♟  ♟
+ 2
+ 3
+ 4
+ 5  ♙  ♙  ♙  ♙ m ♙    ...> but was:<... 1 47m ♟  ♟  ♟  ♟  ♟
+ 2
+ 3
+ 4
+ 5  ♙  ♙  ♙  ♙ m ♙    ...>
+  TestTeacherProject.buildBoard5x5WithLegendAndPieces2:83 Chess not equal expected:<... 1 30m ♟  ♟  ♟  ♟  ♟
+ 2
+ 3
+ 4
+ 5  ♙  ♙  ♙  ♙ m ♙    ...> but was:<... 1 47m ♟  ♟  ♟  ♟  ♟
+ 2
+ 3
+ 4
+ 5  ♙  ♙  ♙  ♙ m ♙    ...>
+  TestTeacherProject.buildBoard5x5WithLegendNoPieces1:47 Chess not equal expected:<... 1 30m
+ 2
+ 3
+ 4
+ 5
+]   [30;...> but was:<... 1 47m ♟  ♟  ♟  ♟  ♟
+ 2
+ 3
+ 4
+ 5  ♙  ♙  ♙  ♙  ♙
+
+ 7  ♙  ♙  ♙  ♙  ♙  ♙  ♙
+      ]   [30;...>
+  TestTeacherProject.buildBoard5x5WithLegendNoPieces2:59 Chess not equal expected:<... 1 30m
+ 2
+ 3
+ 4
+ 5
+]   [30;...> but was:<... 1 47m ♟  ♟  ♟  ♟  ♟
+ 2
+ 3
+ 4
+ 5  ♙  ♙  ♙  ♙  ♙
+
+ 7  ♙  ♙  ♙  ♙  ♙  ♙  ♙
+      ]   [30;...>
+  TestTeacherProject.startNewGame1:128  Last 5 lines were:
+[OUT]: 0-> Exit Game;(enter)(enter)
+[OUT]: (enter)
+[OUT]: >(enter)
+[IN]: 1(enter)
+[OUT]: First player name?(enter)(enter)
+ expected:<[]First player name?> but was:<[>]First player name?>
+  TestTeacherProject.startNewGameWithInvalidInputs:300  Last 5 lines were:
+[OUT]: First player name?(enter)(enter)
+[OUT]: (enter)
+[OUT]: >(enter)
+[IN]: Bruno(enter)
+[OUT]: Invalid response.(enter)(enter)
+ expected:<[]Invalid response.> but was:<[>]Invalid response.>
+
+Tests run: 26, Failures: 10, Errors: 0, Skipped: 0
+
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  29.505 s
+[INFO] Finished at: 2020-12-08T20:47:32Z
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:2.19.1:test (default-test) on project fp-projecto-2020-21: There are test failures.
+[ERROR]
+[ERROR] Please refer to /Users/pedroalves/Downloads/a21800468_mavenized/target/surefire-reports for the individual test results.
+[ERROR] -> [Help 1]
+[ERROR]
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR]
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
