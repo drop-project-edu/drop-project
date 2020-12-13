@@ -34,7 +34,9 @@ class AssignmentService(
         val assignmentRepository: AssignmentRepository,
         val assignmentACLRepository: AssignmentACLRepository,
         val submissionRepository: SubmissionRepository,
-        val assigneeRepository: AssigneeRepository
+        val assigneeRepository: AssigneeRepository,
+        val submissionService: SubmissionService,
+        val assignmentTestMethodRepository: AssignmentTestMethodRepository
 ) {
 
     @Cacheable(
@@ -66,4 +68,41 @@ class AssignmentService(
         }
         return filteredAssigments
     }
+    fun getAllSubmissionsForAssignment(assignmentId: String, principal: Principal, model: ModelMap,
+                                               request: HttpServletRequest, includeTestDetails: Boolean = false,
+                                               mode: String) {
+        val assignment = assignmentRepository.findById(assignmentId).get()
+        val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
+
+        if (principal.realName() != assignment.ownerUserId && acl.find { it.userId == principal.realName() } == null) {
+            throw IllegalAccessError("Assignment reports can only be accessed by their owner or authorized teachers")
+        }
+
+        val submissionInfoList = submissionService.getSubmissionsList(assignment)
+
+        if (submissionInfoList.any { it.lastSubmission.coverage != null }) {
+            model["hasCoverage"] = true
+        }
+
+        if (includeTestDetails) {
+            val assignmentTests = assignmentTestMethodRepository.findByAssignmentId(assignmentId)
+            if (assignmentTests.isEmpty()) {
+                model["message"] = "No information about tests for this assignment"
+            } else {
+                // calculate how many submissions pass each test
+                val testCounts = assignmentTests.map { "${it.testMethod}:${it.testClass}" to 0 }.toMap(LinkedHashMap())
+                submissionInfoList.forEach {
+                    it.lastSubmission.testResults?.forEach {
+                        if (it.type == "Success") {
+                            testCounts.computeIfPresent("${it.methodName}:${it.getClassName()}") { _, v -> v + 1 }
+                        }
+                model["tests"] = testCounts
+            }
+        }
+        model["submissions"] = submissionInfoList
+        model["countMarkedAsFinal"] = submissionInfoList.asSequence().filter { it.lastSubmission.markedAsFinal }.count()
+        model["isAdmin"] = request.isUserInRole("DROP_PROJECT_ADMIN")
+        model["mode"] = mode
+    }
+
 }

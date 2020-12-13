@@ -85,7 +85,8 @@ class ReportController(
         val submissionService: SubmissionService,
         val storageService: StorageService,
         val zipService: ZipService,
-        val templateEngine: TemplateEngine
+        val templateEngine: TemplateEngine,
+        val assignmentService: AssignmentService
 ) {
 
     @Value("\${mavenizedProjects.rootLocation}")
@@ -108,7 +109,7 @@ class ReportController(
                   principal: Principal, request: HttpServletRequest): String {
         model["assignmentId"] = assignmentId
 
-        getAllSubmissionsForAssignment(assignmentId, principal, model, request, mode = "summary")
+        assignmentService.getAllSubmissionsForAssignment(assignmentId, principal, model, request, mode = "summary")
 
         return "report"
     }
@@ -124,7 +125,7 @@ class ReportController(
                   principal: Principal, request: HttpServletRequest): String {
         model["assignmentId"] = assignmentId
 
-        getAllSubmissionsForAssignment(assignmentId, principal, model, request, includeTestDetails = true, mode = "testMatrix")
+        assignmentService.getAllSubmissionsForAssignment(assignmentId, principal, model, request, includeTestDetails = true, mode = "testMatrix")
 
         return "test-matrix"
     }
