@@ -670,6 +670,11 @@ class AssignmentController(
         return "redirect:/report/${assignmentId}"
     }
 
+    /**
+     * Collects assignments that have certain [tags] into the [model].
+     * @param model
+     * @param tags
+     */
     private fun listMyFilteredAssignments(principal: Principal, tags: String?, model: ModelMap, archived: Boolean) {
         var assignments = assignmentService.getMyAssignments(principal, archived)
 
