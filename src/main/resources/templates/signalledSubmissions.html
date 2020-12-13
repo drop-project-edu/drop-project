@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="layout/layout :: head (pageTitle='Drop Project - Test Matrix')">
+</head>
+
+<body>
+
+<div th:replace="layout/layout :: header"></div>
+
+<!-- override popover default size because of "mark all as final" explanation -->
+<style>
+    .popover{
+        width:400px;
+    }
+</style>
+
+<!--/*@thymesVar id="submissions" type="java.util.ArrayList<org.dropProject.data.SubmissionInfo>"*/-->
+<div class="container" style="max-width: 900px; margin-bottom: 65px">
+
+    <h1 class="page-header" th:text="${assignmentId} + ' submissions'"></h1>
+
+    <ul class="nav nav-tabs" id="myTab">
+        <li role="presentation" th:classappend="${mode == 'summary'} ? 'active' : ''">
+            <a th:href="@{'/report/' + ${assignmentId}}" data-toggle="tab" data-target="#myTab">Summary</a>
+        </li>
+        <li role="presentation" th:classappend="${mode == 'testMatrix'} ? 'active' : ''">
+            <a th:href="@{'/testMatrix/' + ${assignmentId}}" data-toggle="tab" data-target="#myTab">Test Matrix</a>
+        </li>
+        <li role="presentation" th:classappend="${mode == 'signalledSubmissions'} ? 'active' : ''">
+            <a th:href="@{'/cenas/' + ${assignmentId}}" data-toggle="tab" data-target="#myTab">Signalled Students</a>
+        </li>
+    </ul>
+
+    <div class="tab-content ">
+        <div role="tabpanel" class="tab-pane active">
+            <p>&nbsp;</p>
+
+            <!--
+            <div th:if="${similarGroups}">
+                <div class="alert alert-info" th:text="${similarGroups}"/>
+            </div>
+            -->
+
+            <table border="1">
+                <thead>
+                    <tr>
+                        <td>Group Members</td>
+                        <td># of Failures</td>
+                        <td>Test Names</td>
+                    </tr>
+                </thead>
+
+                <tr th:each="groupedGroups: ${similarGroups}">
+                    <td>
+                        <ul>
+                            <li th:each="groupMembers: ${groupedGroups.getGroupMembers()}" th:text="${groupMembers}"/>
+                        </ul>
+                    </td>
+                    <td th:text="${groupedGroups.showNrOfFailedTests()}"/></td>
+                    <td>
+                        <ul>
+                            <li th:each="testName: ${groupedGroups.getTestNames()}" th:text="${testName}"/>
+                        </ul>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<div th:replace="layout/layout :: footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-confirmation2@2.4.2/bootstrap-confirmation.min.js"></script>
+<script>
+    $('[data-toggle=confirmation]').confirmation({
+        rootSelector: '[data-toggle=confirmation]'
+        // other options
+    });
+
+    $(document).ready(function() {
+        var table = $('.myDataTable').DataTable( {
+            "paging":    false,
+            "ordering":  true,
+            "info":      false,
+            "searching": false,
+            "order": [],
+            "columnDefs": [
+                {
+                    "targets": [ 0, 1, 2, 4, 5 ],
+                    "orderable": false
+                },
+                {
+                    "targets": [ 1 ],  // 1 - Student Name
+                    "visible": false,
+                    "orderable": false
+                },
+                {
+                    "targets": [ 3 ],  // 3 - Last submission date
+                    "searchable": false
+                }
+            ]
+        });
+
+        // toggle student ID and name
+        $('a.toggle-vis').on( 'click', function (e) {
+            e.preventDefault();
+
+            // Get the column API object
+            var columnShow = table.column( $(this).attr('data-column-show') );
+            var columnHide = table.column( $(this).attr('data-column-hide') );
+
+            // Toggle the visibility
+            columnHide.visible( false );
+            columnShow.visible( true );
+        } );
+
+        // clicking on a tab changes the url
+        $(document).ready(function() {
+            $('#myTab a').click(function(e) {
+                //alert("999");
+                e.preventDefault();
+                var url = $(this).attr("href");
+                location.href = url;
+            });
+        });
+    } );
+</script>
+
+</body>
+</html>

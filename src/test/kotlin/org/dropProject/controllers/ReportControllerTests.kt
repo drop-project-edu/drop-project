@@ -42,20 +42,19 @@ import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
-import org.dropProject.dao.Submission
 import org.dropProject.data.SubmissionInfo
 import java.io.File
 import java.nio.file.Files
 import org.dropProject.TestsHelper
-import org.dropProject.dao.Assignment
-import org.dropProject.dao.AssignmentTestMethod
-import org.dropProject.dao.LeaderboardType
+import org.dropProject.dao.*
+import org.dropProject.data.GroupedProjectGroups
 import org.dropProject.extensions.formatDefault
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.AssignmentRepository
 import org.dropProject.repository.AssignmentTestMethodRepository
 import org.dropProject.repository.GitSubmissionRepository
 import org.dropProject.repository.SubmissionRepository
+import org.dropProject.services.AssignmentService
 import org.dropProject.services.ZipService
 import org.hamcrest.Matchers.contains
 import java.util.*
@@ -98,6 +97,9 @@ class ReportControllerTests {
 
     @Autowired
     private lateinit var zipService: ZipService
+
+    @Autowired
+    private lateinit var assignmentService: AssignmentService
 
     val defaultAssignmentId = "testJavaProj"
 
@@ -502,6 +504,51 @@ class ReportControllerTests {
                 "testFuncaoParaTestarQueNaoApareceAosAlunos:TestTeacherHiddenProject->0"))
     }
 
+    @Test
+    fun testGroupGroupsByFailures() {
+
+        val g1 = ProjectGroup(1)
+        g1.authors.add(Author(1, "BC", "BC"))
+
+        val g2 = ProjectGroup(2)
+        g2.authors.add(Author(2, "RCC", "RCC"))
+
+        val g3 = ProjectGroup(3)
+        g3.authors.add(Author(3, "PA", "PA"))
+
+        val g4 = ProjectGroup(4)
+        g4.authors.add(Author(4, "IL", "IL"))
+
+        val g5 = ProjectGroup(5)
+        g5.authors.add(Author(5, "RP", "RP"))
+
+        val failuresByGroup : HashMap<ProjectGroup, ArrayList<String>> = HashMap()
+
+        failuresByGroup.put(g1, mutableListOf("Test001", "Test002") as ArrayList<String>);
+        failuresByGroup.put(g2, mutableListOf("Test001") as ArrayList<String>);
+        failuresByGroup.put(g3, mutableListOf("Test001", "Test002") as ArrayList<String>);
+
+        // same failed tests, different order
+        failuresByGroup.put(g4, mutableListOf("Test001", "Test003") as ArrayList<String>);
+        failuresByGroup.put(g5, mutableListOf("Test003", "Test001") as ArrayList<String>);
+
+        // expected groups: (1 and 3) ; (2) ; (4 and 5)
+        val group1 = GroupedProjectGroups(mutableListOf(g1, g3), mutableListOf("Test001", "Test002"))
+        val group2 = GroupedProjectGroups(mutableListOf(g2), mutableListOf("Test001"))
+        val group3 = GroupedProjectGroups(mutableListOf(g4, g5), mutableListOf("Test001", "Test003"))
+
+        val expected = mutableListOf<GroupedProjectGroups>(group1, group2, group3)
+
+        print("failures by group: " + failuresByGroup + "\n")
+
+        // cal fn to check result
+        val result = assignmentService.groupGroupsByFailures(failuresByGroup)
+
+        assert(result != null)
+        assert(3 == result.size)
+        assert(result.containsAll(expected))
+    }
+    
 }
 
 
