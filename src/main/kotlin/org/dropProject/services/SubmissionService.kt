@@ -39,7 +39,11 @@ class SubmissionService(
         val assignmentTeacherFiles: AssignmentTeacherFiles,
         val buildReportBuilder: BuildReportBuilder) {
 
-
+    /**
+     * Returns all the SubmissionInfo objects related with [assignment].
+     * @param assignment is the target Assignment
+     * @return an ArrayList with SubmissionInfo objects
+     */
     fun getSubmissionsList(assignment: Assignment): ArrayList<SubmissionInfo> {
         val submissions = submissionRepository
                 .findByAssignmentId(assignment.id)
