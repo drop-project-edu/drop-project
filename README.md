@@ -54,8 +54,9 @@ After cloning the repository, change the following properties:
     dropProject.maven.repository=<path_to_maven_repository>
 
 in the following files:
-    - src/main/resources/drop-project.properties (to be able to run drop project)
-    - src/test/resources/drop-project-test.properties (to be able to run drop project's unit tests)
+
+     src/main/resources/drop-project.properties (to be able to run drop project)
+     src/test/resources/drop-project-test.properties (to be able to run drop project's unit tests)
 
 And run the embedded jetty runner:
 
