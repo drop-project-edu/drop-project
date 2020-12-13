@@ -27,11 +27,9 @@ import org.commonmark.ext.autolink.AutolinkExtension
 import org.commonmark.parser.Parser
 import org.commonmark.renderer.html.HtmlRenderer
 import org.dropProject.MAVEN_MAX_EXECUTION_TIME
-import org.dropProject.dao.Indicator
-import org.dropProject.dao.LeaderboardType
-import org.dropProject.dao.Submission
-import org.dropProject.dao.SubmissionStatus
+import org.dropProject.dao.*
 import org.dropProject.data.AuthorDetails
+import org.dropProject.data.GroupedProjectGroups
 import org.dropProject.data.TestType
 import org.dropProject.extensions.formatDefault
 import org.dropProject.extensions.realName
@@ -62,6 +60,7 @@ import java.security.Principal
 import java.util.*
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
+import kotlin.collections.HashMap
 import kotlin.collections.LinkedHashMap
 
 /**
@@ -101,8 +100,24 @@ class ReportController(
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
     /**
+     * Controller that handles requests for the list of signalled groups in an Assignment.
+     * The signalled groups are groups of students that are failing exactly the same tests.
+     */
+    @RequestMapping(value = ["/cenas/{assignmentId}"], method = [(RequestMethod.GET)])
+    fun getSignaledGroupsOrSubmissions(@PathVariable assignmentId: String, model: ModelMap,
+    principal: Principal, request: HttpServletRequest): String {
+        model["assignmentId"] = assignmentId
+
+        assignmentService.getAllSubmissionsForAssignment(assignmentId, principal, model, request, includeTestDetails = true,
+                mode = "signalledSubmissions")
+
+        return "signalledSubmissions"
+    }
+
+    /**
      * Controller that handles requests for an Assignment's report (i.e. list of submissions per student/group).
      * @param assignmentId is a String identifying the relevant Assignment
+     * @return
      */
     @RequestMapping(value = ["/report/{assignmentId}"], method = [(RequestMethod.GET)])
     fun getReport(@PathVariable assignmentId: String, model: ModelMap,
@@ -318,6 +333,7 @@ class ReportController(
      * Controller that handles requests related with the download of ALL the students' submissions (code)
      * for a certain Assignment. The submissions are downloaded in their original format.
      * @param assignmentId is a String identifying the relevant Assignment
+     *
      */
     @RequestMapping(value = ["/downloadOriginalAll/{assignmentId}"],
             method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
@@ -606,6 +622,8 @@ class ReportController(
                 ellapsed = ellapsed.setScale(2, RoundingMode.UP)
             }
 
+            System.out.println("#55 submission - " + submission)
+
             for (author in submission.group.authors) {
                 resultCSV += "${submission.group.id};${author.userId};${author.name};${r1};${r2};${r3};"
 
@@ -753,46 +771,4 @@ class ReportController(
 //
 //    }
 
-    private fun getAllSubmissionsForAssignment(assignmentId: String, principal: Principal, model: ModelMap,
-                                               request: HttpServletRequest, includeTestDetails: Boolean = false,
-                                               mode: String) {
-        val assignment = assignmentRepository.findById(assignmentId).get()
-        val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
-
-        if (principal.realName() != assignment.ownerUserId && acl.find { it.userId == principal.realName() } == null) {
-            throw IllegalAccessError("Assignment reports can only be accessed by their owner or authorized teachers")
-        }
-
-        val submissionInfoList = submissionService.getSubmissionsList(assignment)
-
-        if (submissionInfoList.any { it.lastSubmission.coverage != null }) {
-            model["hasCoverage"] = true
-        }
-
-        if (includeTestDetails) {
-            val assignmentTests = assignmentTestMethodRepository.findByAssignmentId(assignmentId)
-            if (assignmentTests.isEmpty()) {
-                model["message"] = "No information about tests for this assignment"
-            } else {
-                // calculate how many submissions pass each test
-                val testCounts = assignmentTests.map { "${it.testMethod}:${it.testClass}" to 0 }.toMap(LinkedHashMap())
-                submissionInfoList.forEach {
-                    it.lastSubmission.testResults?.forEach {
-                        if (it.type == "Success") {
-                            testCounts.computeIfPresent("${it.methodName}:${it.getClassName()}") { _, v -> v + 1 }
-                        }
-                    }
-                }
-
-                model["tests"] = testCounts
-            }
-        }
-
-        model["submissions"] = submissionInfoList
-        model["countMarkedAsFinal"] = submissionInfoList.asSequence().filter { it.lastSubmission.markedAsFinal }.count()
-        model["isAdmin"] = request.isUserInRole("DROP_PROJECT_ADMIN")
-        model["mode"] = mode
-    }
 }
-    
-    
