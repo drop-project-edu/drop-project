@@ -29,6 +29,9 @@ import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 import java.security.Principal
 
+/**
+ * AssignmentService provides Assignment related functionality (e.g. list of assignments).
+ */
 @Service
 class AssignmentService(
         val assignmentRepository: AssignmentRepository,
@@ -43,6 +46,15 @@ class AssignmentService(
             value = ["archivedAssignmentsCache"],
             key = "#principal.name",
             condition = "#archived==true")
+
+    /**
+     * Returns the [Assignment]s that a certain user can access. The returned assignments will be the ones
+     * that are owned by the user and also the ones that the user has been given access to.
+     * @param principal is the user whose assignments shall be retrieved.
+     * @param archived is a Boolean. If true, only archived Assignment(s) will be returned. Otherwise, only
+     * non-archived Assignment(s) will be returned.
+     * @return An ArrayList of Assignment(s)
+     */
     fun getMyAssignments(principal: Principal, archived: Boolean): List<Assignment> {
         val assignmentsOwns = assignmentRepository.findByOwnerUserId(principal.realName())
 
@@ -68,6 +80,13 @@ class AssignmentService(
         }
         return filteredAssigments
     }
+    /**
+     * Collects into [model] all submissions related with a certain assignment.
+     * @param assignmentId is a String identifying the relevant assignment.
+     * @param model is a ModelMap that will be populated with values to use in a View.
+     * @param includeTestDetails is a Boolean, indicating if test-matrix information should be included.
+     * @param mode is a String. Possible values are: summary and testMatrix.
+     */
     fun getAllSubmissionsForAssignment(assignmentId: String, principal: Principal, model: ModelMap,
                                                request: HttpServletRequest, includeTestDetails: Boolean = false,
                                                mode: String) {
