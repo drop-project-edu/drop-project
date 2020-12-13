@@ -68,7 +68,9 @@ import java.util.concurrent.Executor
 import java.util.logging.Level
 import javax.servlet.http.HttpServletRequest
 
-
+/**
+ * UploadController is an MVC controller class to handle requests related with the upload of submissions.
+ */
 @Controller
 @EnableAsync
 class UploadController(
