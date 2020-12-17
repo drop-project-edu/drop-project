@@ -87,7 +87,9 @@ class AssignmentService(
     /**
      * Collects into [model] all submissions related with a certain assignment.
      * @param assignmentId is a String identifying the relevant assignment.
-     * @param model is a ModelMap that will be populated with values to use in a View.
+     * @param principal is a [Principal]
+     * @param model is a [ModelMap] that will be populated with values to use in a View.
+     * @param request is a [HttpServletRequest]
      * @param includeTestDetails is a Boolean, indicating if test-matrix information should be included.
      * @param mode is a String which indicates the page that is being served and influences the information that is
      * placed in the model. Possible values are:
@@ -156,11 +158,10 @@ class AssignmentService(
     /**
      * Identifies and joins into a group the student groups that are failing the same unit tests.
      *
-     * @param failuresByGroup is an HashMap with a ProjectGroup as key and an ArrayList of Strings as value. Each
+     * @param failuresByGroup is an [HashMap] with a [ProjectGroup] as key and an [ArrayList] of Strings as value. Each
      * Strings represents the name of a unit test that the group fails.
-     * @return a List of [GroupedProjectsGroup]s
+     * @return a [List] of [GroupedProjectsGroup]s
      */
-
     public fun groupGroupsByFailures(failuresByGroup: HashMap<ProjectGroup, java.util.ArrayList<String>>): List<GroupedProjectGroups> {
 
         val projectGroupsByFailures = mutableMapOf<String, java.util.ArrayList<ProjectGroup>>()
