@@ -25,6 +25,12 @@ import javax.persistence.GeneratedValue
 import javax.persistence.Id
 import javax.persistence.OneToMany
 
+/**
+ * Represents a set of [Author]s (e.g. students) that interact with Drop Project as a group.
+ *
+ * @property id
+ * @constructor Create empty Project group
+ */
 @Entity
 data class ProjectGroup(
         @Id @GeneratedValue
