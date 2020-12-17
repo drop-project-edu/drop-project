@@ -174,8 +174,6 @@ class ReportControllerTests {
         assertEquals(1, report[3].allSubmissions.size)
     }
 
-
-
     @Test
     @DirtiesContext
     fun testMySubmissions() {
@@ -504,48 +502,60 @@ class ReportControllerTests {
                 "testFuncaoParaTestarQueNaoApareceAosAlunos:TestTeacherHiddenProject->0"))
     }
 
-    @Test
-    fun testGroupGroupsByFailures() {
-
+    private fun testDataForGroupGroupsByFailures(): List<ProjectGroup> {
         val g1 = ProjectGroup(1)
         g1.authors.add(Author(1, "BC", "BC"))
-
         val g2 = ProjectGroup(2)
         g2.authors.add(Author(2, "RCC", "RCC"))
-
         val g3 = ProjectGroup(3)
         g3.authors.add(Author(3, "PA", "PA"))
-
         val g4 = ProjectGroup(4)
         g4.authors.add(Author(4, "IL", "IL"))
-
         val g5 = ProjectGroup(5)
         g5.authors.add(Author(5, "RP", "RP"))
+        return mutableListOf<ProjectGroup>(g1, g2, g3, g4, g5)
+    }
+
+    @Test
+    fun testGroupGroupsByFailures_MoreComplexScenario() {
+
+        val projectGroups = testDataForGroupGroupsByFailures();
+        var g1 = projectGroups[0];
+        var g2 = projectGroups[1];
+        var g3 = projectGroups[2];
+        var g4 = projectGroups[3];
+        var g5 = projectGroups[4];
 
         val failuresByGroup : HashMap<ProjectGroup, ArrayList<String>> = HashMap()
 
-        failuresByGroup.put(g1, mutableListOf("Test001", "Test002") as ArrayList<String>);
-        failuresByGroup.put(g2, mutableListOf("Test001") as ArrayList<String>);
-        failuresByGroup.put(g3, mutableListOf("Test001", "Test002") as ArrayList<String>);
+        failuresByGroup.put(g1, mutableListOf("Test001", "Test002") as ArrayList<String>)
+        failuresByGroup.put(g2, mutableListOf("Test001") as ArrayList<String>)
+        failuresByGroup.put(g3, mutableListOf("Test001", "Test002") as ArrayList<String>)
 
         // same failed tests, different order
         failuresByGroup.put(g4, mutableListOf("Test001", "Test003") as ArrayList<String>);
         failuresByGroup.put(g5, mutableListOf("Test003", "Test001") as ArrayList<String>);
 
-        // expected groups: (1 and 3) ; (2) ; (4 and 5)
+        // the ProjectGroups with the same failures are:
+        //    (1 and 3) ; (2) ; (4 and 5)
+        // however, (2) will be ignored because there is no "suspicion"
+        // as such, the expected groups are:
+        //    (1 and 3) ; (2) ; (4 and 5)
         val group1 = GroupedProjectGroups(mutableListOf(g1, g3), mutableListOf("Test001", "Test002"))
-        val group2 = GroupedProjectGroups(mutableListOf(g2), mutableListOf("Test001"))
+        //val group2 = GroupedProjectGroups(mutableListOf(g2), mutableListOf("Test001"))
         val group3 = GroupedProjectGroups(mutableListOf(g4, g5), mutableListOf("Test001", "Test003"))
 
-        val expected = mutableListOf<GroupedProjectGroups>(group1, group2, group3)
-
-        print("failures by group: " + failuresByGroup + "\n")
+        //val expected = mutableListOf<GroupedProjectGroups>(group1, group2, group3)
+        val expected = mutableListOf<GroupedProjectGroups>(group1, group3)
 
         // cal fn to check result
         val result = assignmentService.groupGroupsByFailures(failuresByGroup)
 
         assert(result != null)
-        assert(3 == result.size)
+        //assert(3 == result.size)
+        assert(result.size == 2)
+
+        // FIXME: support different results order
         assert(result.containsAll(expected))
     }
     
