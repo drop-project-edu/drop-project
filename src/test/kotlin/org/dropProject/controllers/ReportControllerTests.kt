@@ -517,6 +517,59 @@ class ReportControllerTests {
     }
 
     @Test
+    fun testGroupGroupsByFailures_NoGroupsAreSignalled() {
+        val projectGroups = testDataForGroupGroupsByFailures();
+        var g1 = projectGroups[0];
+        var g2 = projectGroups[1];
+        var g3 = projectGroups[2];
+
+        val failuresByGroup : HashMap<ProjectGroup, ArrayList<String>> = HashMap()
+
+        // in this scenario, the 3 ProjectoGroups have distinct failures, so nothing will be Signalled
+        failuresByGroup.put(g1, mutableListOf("Test001", "Test002") as ArrayList<String>)
+        failuresByGroup.put(g2, mutableListOf("Test001") as ArrayList<String>)
+        failuresByGroup.put(g3, mutableListOf("Test002") as ArrayList<String>)
+
+        val expected = mutableListOf<GroupedProjectGroups>()
+        val result = assignmentService.groupGroupsByFailures(failuresByGroup)
+
+        assert(expected != null)
+        assert(result.size == 0)
+    }
+
+    @Test
+    fun testGroupGroupsByFailures_AllGroupsAreSignalled() {
+        val projectGroups = testDataForGroupGroupsByFailures();
+        var g1 = projectGroups[0];
+        var g2 = projectGroups[1];
+        var g3 = projectGroups[2];
+
+        val failuresByGroup : HashMap<ProjectGroup, ArrayList<String>> = HashMap()
+
+        failuresByGroup.put(g1, mutableListOf("Test001", "Test002") as ArrayList<String>)
+        failuresByGroup.put(g2, mutableListOf("Test001", "Test002") as ArrayList<String>)
+        // the order of the failures should not influence the "signalling"
+        failuresByGroup.put(g3, mutableListOf("Test002", "Test001") as ArrayList<String>)
+
+        var group1 = GroupedProjectGroups(mutableListOf<ProjectGroup>(g1, g2, g3), mutableListOf("Test001", "Test002"))
+        val expected = mutableListOf<GroupedProjectGroups>(group1)
+        val result = assignmentService.groupGroupsByFailures(failuresByGroup)
+
+        assert(result != null)
+        assert(result.size == 1)
+
+        // the order of each group (g1, g2 and g3) in the result might change, so we check
+        // the list size and the individual existence of each group
+        assert(result.get(0).groups.size == 3)
+        assert(result.get(0).groups.contains(g1));
+        assert(result.get(0).groups.contains(g2));
+        assert(result.get(0).groups.contains(g3));
+
+        assert(result.get(0).failedTestNames.contains("Test001"))
+        assert(result.get(0).failedTestNames.contains("Test002"))
+    }
+
+    @Test
     fun testGroupGroupsByFailures_MoreComplexScenario() {
 
         val projectGroups = testDataForGroupGroupsByFailures();
@@ -558,7 +611,7 @@ class ReportControllerTests {
         // FIXME: support different results order
         assert(result.containsAll(expected))
     }
-    
+
 }
 
 
