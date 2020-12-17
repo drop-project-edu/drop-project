@@ -89,7 +89,11 @@ class AssignmentService(
      * @param assignmentId is a String identifying the relevant assignment.
      * @param model is a ModelMap that will be populated with values to use in a View.
      * @param includeTestDetails is a Boolean, indicating if test-matrix information should be included.
-     * @param mode is a String. Possible values are: "summary" and "testMatrix" and "signalledSubmissions".
+     * @param mode is a String which indicates the page that is being served and influences the information that is
+     * placed in the model. Possible values are:
+     * - "summary" - meaning that the data is being loaded for the "Summary" page;
+     * - "testMatrix" - meaning that the data is being loaded for the "Test Matrix" page; and
+     * - "signalledSubmissions" - meaning that the data is being loaded for the "Signalled Groups" page.
      */
     fun getAllSubmissionsForAssignment(assignmentId: String, principal: Principal, model: ModelMap,
                                                request: HttpServletRequest, includeTestDetails: Boolean = false,
@@ -110,7 +114,6 @@ class AssignmentService(
         if (includeTestDetails) {
             val assignmentTests = assignmentTestMethodRepository.findByAssignmentId(assignmentId)
 
-
             if (assignmentTests.isEmpty()) {
                 model["message"] = "No information about tests for this assignment"
             } else {
@@ -120,11 +123,8 @@ class AssignmentService(
 
                 submissionInfoList.forEach {
                     val group = it.projectGroup
-
                     var failed = java.util.ArrayList<String>()
-
                     it.lastSubmission.testResults?.forEach {
-
                         if (it.type == "Success") {
                             testCounts.computeIfPresent("${it.methodName}:${it.getClassName()}") { _, v -> v + 1 }
                         }
