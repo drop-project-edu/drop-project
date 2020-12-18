@@ -67,3 +67,7 @@ The application should now be accessible on http://localhost:8080
 ## Documentation
 
 https://github.com/drop-project-edu/drop-project/wiki/Documentation
+
+To generate source code documentation, run:
+
+    mvn dokka:dokka
