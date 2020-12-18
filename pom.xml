@@ -209,6 +209,14 @@
 		</dependency>
 	</dependencies>
 
+	<pluginRepositories>
+		<pluginRepository>
+			<id>jcenter</id>
+			<name>JCenter</name>
+			<url>https://jcenter.bintray.com/</url>
+		</pluginRepository>
+	</pluginRepositories>
+
 	<build>
 		<finalName>drop-project</finalName>
 		<sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
@@ -358,6 +366,20 @@
 						<configuration>
 							<licenseName>apache_v2</licenseName>
 						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.jetbrains.dokka</groupId>
+				<artifactId>dokka-maven-plugin</artifactId>
+				<!--<version>${dokka.version}</version>-->
+				<version>1.4.20</version>
+				<executions>
+					<execution>
+						<phase>pre-site</phase>
+						<goals>
+							<goal>dokka</goal>
+						</goals>
 					</execution>
 				</executions>
 			</plugin>
