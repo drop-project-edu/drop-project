@@ -108,7 +108,8 @@ class ReportController(
     principal: Principal, request: HttpServletRequest): String {
         model["assignmentId"] = assignmentId
 
-        assignmentService.getAllSubmissionsForAssignment(assignmentId, principal, model, request, includeTestDetails = true,
+        assignmentService.getAllSubmissionsForAssignment(assignmentId, principal, model, request,
+                includeTestDetails = true,
                 mode = "signalledSubmissions")
 
         return "signalledSubmissions"
