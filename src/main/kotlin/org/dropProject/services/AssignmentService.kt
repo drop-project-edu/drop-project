@@ -144,6 +144,11 @@ class AssignmentService(
 
                 if(mode == "signalledSubmissions") {
                     val similarGroups = groupGroupsByFailures(hashMap);
+                    if(similarGroups.isEmpty()) {
+                        if(model["message"] == null) {
+                            model["message"] = "No groups identified as similar"
+                        }
+                    }
                     model["similarGroups"] = similarGroups
                 }
             }
