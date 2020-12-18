@@ -164,7 +164,7 @@ class AssignmentService(
      * Identifies and joins into a group the student groups that are failing the same unit tests.
      *
      * @param failuresByGroup is an [HashMap] with a [ProjectGroup] as key and an [ArrayList] of Strings as value. Each
-     * Strings represents the name of a unit test that the group fails.
+     * String in the ArrayList represents the name of a unit test that the group fails.
      * @return a [List] of [GroupedProjectsGroup]s
      */
     public fun groupGroupsByFailures(failuresByGroup: HashMap<ProjectGroup, java.util.ArrayList<String>>): List<GroupedProjectGroups> {
