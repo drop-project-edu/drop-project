@@ -142,7 +142,10 @@ class ReportController(
                   principal: Principal, request: HttpServletRequest): String {
         model["assignmentId"] = assignmentId
 
-        assignmentService.getAllSubmissionsForAssignment(assignmentId, principal, model, request, includeTestDetails = true, mode = "testMatrix")
+
+        assignmentService.getAllSubmissionsForAssignment(assignmentId, principal, model, request,
+                includeTestDetails = true,
+                mode = "testMatrix")
 
         return "test-matrix"
     }
