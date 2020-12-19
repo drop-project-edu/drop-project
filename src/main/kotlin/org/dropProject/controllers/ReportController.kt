@@ -116,9 +116,9 @@ class ReportController(
     }
 
     /**
-     * Controller that handles requests for an Assignment's report (i.e. list of submissions per student/group).
+     * Controller that handles requests for an [Assignment]'s report (i.e. list of submissions per student/group).
      * @param assignmentId is a String identifying the relevant Assignment
-     * @return
+     * @return A String with the name of the relevant View
      */
     @RequestMapping(value = ["/report/{assignmentId}"], method = [(RequestMethod.GET)])
     fun getReport(@PathVariable assignmentId: String, model: ModelMap,
@@ -131,10 +131,11 @@ class ReportController(
     }
 
     /**
-     * Controller that handles requests for an Assignment's Test Matrix. The Test Matrix is a matrix where each row
+     * Controller that handles requests for an [Assignment]'s Test Matrix. The Test Matrix is a matrix where each row
      * represents a student/group and each column represents an evaluation test. The intersection between lines and
      * columns will tell us if each group has passed each specific test.
      * @param assignmentId is a String identifying the relevant Assignment
+     * @return A String with the name of the relevant View
      */
     @RequestMapping(value = ["/testMatrix/{assignmentId}"], method = [(RequestMethod.GET)])
     fun getTestMatrix(@PathVariable assignmentId: String, model: ModelMap,

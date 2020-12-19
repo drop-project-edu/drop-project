@@ -593,7 +593,7 @@ class ReportControllerTests {
         //    (1 and 3) ; (2) ; (4 and 5)
         // however, (2) will be ignored because there is no "suspicion"
         // as such, the expected groups are:
-        //    (1 and 3) ; (2) ; (4 and 5)
+        //    (1 and 3) ; (4 and 5)
         val group1 = GroupedProjectGroups(mutableListOf(g1, g3), mutableListOf("Test001", "Test002"))
         //val group2 = GroupedProjectGroups(mutableListOf(g2), mutableListOf("Test001"))
         val group3 = GroupedProjectGroups(mutableListOf(g4, g5), mutableListOf("Test001", "Test003"))
