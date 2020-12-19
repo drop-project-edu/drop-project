@@ -49,7 +49,7 @@
                     </tr>
                 </thead>
 
-                <tr th:each="groupedGroups: ${similarGroups}">
+                <tr th:each="groupedGroups: ${signalledGroups}">
                     <td>
                         <ul>
                             <li th:each="groupMembers: ${groupedGroups.getGroupMembers()}" th:text="${groupMembers}"/>

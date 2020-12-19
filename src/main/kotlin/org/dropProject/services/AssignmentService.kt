@@ -143,13 +143,13 @@ class AssignmentService(
                 model["tests"] = testCounts
 
                 if(mode == "signalledSubmissions") {
-                    val similarGroups = groupGroupsByFailures(hashMap);
-                    if(similarGroups.isEmpty()) {
+                    val signalledGroups = groupGroupsByFailures(hashMap);
+                    if(signalledGroups.isEmpty()) {
                         if(model["message"] == null) {
                             model["message"] = "No groups identified as similar"
                         }
                     }
-                    model["similarGroups"] = similarGroups
+                    model["signalledGroups"] = signalledGroups
                 }
             }
         }
