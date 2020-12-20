@@ -100,8 +100,13 @@ class ReportController(
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
     /**
-     * Controller that handles requests for the list of signalled groups in an Assignment.
+     * Controller that handles requests for the list of signalled groups in an [Assignment].
      * The signalled groups are groups of students that are failing exactly the same tests.
+     * @param assignmentId is a String identifying the relevant Assignment
+     * @param model is a [ModelMap] that will be populated with information to use in a View
+     * @param principal is a [Principal] representing the user making the request.
+     * @param HttpServletRequest is a [HttpServletRequest]
+     * @return A String with the name of the relevant View
      */
     @RequestMapping(value = ["/cenas/{assignmentId}"], method = [(RequestMethod.GET)])
     fun getSignaledGroupsOrSubmissions(@PathVariable assignmentId: String, model: ModelMap,

@@ -52,7 +52,7 @@ class AssignmentService(
     /**
      * Returns the [Assignment]s that a certain user can access. The returned assignments will be the ones
      * that are owned by the user and also the ones that the user has been given access to.
-     * @param principal is the user whose assignments shall be retrieved.
+     * @param principal is a [Principal], representing the user whose assignments shall be retrieved.
      * @param archived is a Boolean. If true, only archived Assignment(s) will be returned. Otherwise, only
      * non-archived Assignment(s) will be returned.
      * @return An [ArrayList] of Assignment(s)
@@ -85,10 +85,10 @@ class AssignmentService(
     }
 
     /**
-     * Collects into [model] all submissions related with a certain assignment.
+     * Collects into [model] information about all the [Submission]s related with a certain [Assignment].
      * @param assignmentId is a String identifying the relevant assignment.
-     * @param principal is a [Principal]
-     * @param model is a [ModelMap] that will be populated with values to use in a View.
+     * @param principal is a [Principal] representing the user making the request.
+     * @param model is a [ModelMap] that will be populated with information to use in a View.
      * @param request is a [HttpServletRequest]
      * @param includeTestDetails is a Boolean, indicating if test-matrix information should be included.
      * @param mode is a String which indicates the page that is being served and influences the information that is
