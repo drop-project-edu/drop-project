@@ -505,9 +505,13 @@ class ReportControllerTests {
     @Test
     @DirtiesContext
     fun testSignalledGroups() {
+        val student3 = User("student3", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
+
         testsHelper.uploadProject(this.mvc, "projectJUnitErrors", defaultAssignmentId, STUDENT_1)
         testsHelper.uploadProject(this.mvc,"projectJUnitErrors", defaultAssignmentId, STUDENT_2,
                 authors = listOf(STUDENT_2.username to "Student 2"))
+        testsHelper.uploadProject(this.mvc,"projectOK", defaultAssignmentId, student3,
+                authors = listOf(student3.username to "Student 3"))
 
         val reportResult = this.mvc.perform(get("/cenas/${defaultAssignmentId}")
                 .with(user(TEACHER_1)))
