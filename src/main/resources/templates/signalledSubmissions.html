@@ -40,12 +40,14 @@
                 <div class="alert alert-info" th:text="${message}"/>
             </div>
 
+
             <table border="1">
                 <thead>
                     <tr>
-                        <td>Group Members</td>
-                        <td># of Failures</td>
-                        <td>Test Names</td>
+                        <td><b>Group Members</b></td>
+                        <td><b>Submissions</b></td>
+                        <td><b># of Failures</b></td>
+                        <td><b>Test Names</b></td>
                     </tr>
                 </thead>
 
@@ -53,6 +55,11 @@
                     <td>
                         <ul>
                             <li th:each="groupMembers: ${groupedGroups.getGroupMembers()}" th:text="${groupMembers}"/>
+                        </ul>
+                    </td>
+                    <td>
+                        <ul>
+                            <a th:each="groupID: ${groupedGroups.getGroupIDs()}" th:href="'/submissions/?assignmentId=' + ${assignmentId} + '&groupId=' + ${groupID}"><li>View submissions</li></a>
                         </ul>
                     </td>
                     <td th:text="${groupedGroups.showNrOfFailedTests()}"/></td>

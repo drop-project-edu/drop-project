@@ -11,10 +11,18 @@ import org.dropProject.dao.ProjectGroup
 data class GroupedProjectGroups(val groups : List<ProjectGroup>,
                                 val failedTestNames: List<String>) {
 
+    fun getGroupIDs(): List<Long> {
+        var result = mutableListOf<Long>()
+        for(group in groups) {
+            result.add(group.id)
+        }
+        return result
+    }
+
     fun getGroupMembers(): List<String> {
         var result = mutableListOf<String>()
         for(group in groups) {
-            result.add("Group: " + group.id + " | " + group.authorsNameStr());
+            result.add("Group: " + group.id + " | " + group.authorsNameStr())
         }
         return result;
     }
