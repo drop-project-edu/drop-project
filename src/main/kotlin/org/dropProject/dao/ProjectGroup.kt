@@ -26,7 +26,7 @@ import javax.persistence.Id
 import javax.persistence.OneToMany
 
 /**
- * Represents a set of [Author]s (e.g. students) that interact with Drop Project as a group.
+ * Represents a set of [Author]s (for example, students) that interact with Drop Project as a group.
  *
  * @property id is a primary-key like generated value
  * @property authors is a MutableSet containing the [Author]s that are part of the group
