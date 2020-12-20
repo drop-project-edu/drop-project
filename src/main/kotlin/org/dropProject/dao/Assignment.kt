@@ -46,6 +46,21 @@ enum class LeaderboardType {
 
 /**
  * Represents an Assignment, which is a problem to be solved by a student or group of students.
+ * @property id is a String that uniquely identifies the Assignment
+ * @property name is a String representing the name of the Assignment
+ * @property packageName is a String with the (optional) Assignment's expected package (e.g. all the code should be
+ * placed in this package)
+ * @property dueDate is an (optional) [LocalDateTime] with the submission deadline
+ * @property language is the programming [Language] that the code should be written in
+ * @property acceptsStudentTests is a Boolean, indicating if the students are allowed to submit their own unit tests
+ * @property minStudentTests is an (optional) Integer, indicating the minimum number of unit tests that students are
+ * asked to implement
+ * @property calculateStudentTestsCoverage is an (optional) Boolean, indicating if the test coverage should be calculated
+ * for student's own tests
+ * @property cooloffPeriod is an (optional) Integer with the number of minutes that students must wait between consecutive
+ * submissions
+ * @property maxMemoryMb is an (optional) Integer, indicating the maximum number of Mb that the student's code can use
+ * @property showLeaderBoard is a Boolean, indicating if the leaderboard page should be active for this Assignment.
  */
 @Entity
 data class Assignment(

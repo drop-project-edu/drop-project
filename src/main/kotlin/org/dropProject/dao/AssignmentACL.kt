@@ -23,6 +23,12 @@ import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.Id
 
+/**
+ * Represents the association between an [Assignment] and a user that can access it.
+ * @property id is a primary-key like generated value
+ * @assignmentId is a String, identifying the Assignment
+ * @userId is a String, identifying the user
+ */
 @Entity
 data class AssignmentACL(
     @Id

@@ -32,7 +32,7 @@ import java.security.Principal
 import javax.servlet.http.HttpServletRequest
 
 /**
- * AssignmentService provides Assignment related functionality (e.g. list of assignments).
+ * AssignmentService provides [Assignment] related functionality (e.g. list of assignments).
  */
 @Service
 class AssignmentService(

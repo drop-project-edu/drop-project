@@ -41,7 +41,7 @@ import java.security.Principal
 import javax.validation.Valid
 
 /**
- * AssignmentController contains MVC controller functions that handle requests related with Assignments
+ * AssignmentController contains MVC controller functions that handle requests related with [Assignment]s
  * (e.g. assignment creation, edition, etc.)
  */
 @Controller
