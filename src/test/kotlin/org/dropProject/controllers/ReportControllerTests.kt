@@ -632,7 +632,6 @@ class ReportControllerTests {
         val result = assignmentService.groupGroupsByFailures(failuresByGroup)
 
         assert(result != null)
-        //assert(3 == result.size)
         assert(result.size == 2)
 
         // FIXME: support different results order
