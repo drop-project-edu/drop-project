@@ -344,8 +344,9 @@ class AssignmentController(
     }
 
     /**
-     * Creates an AssignmentForm based on the Assignment object.
-     * @param assignment, the Assignment with the information to place in the form
+     * Creates an [AssignmentForm] based on the [Assignment] object.
+     * @param assignment is the Assignment with the information to place in the form
+     * @param acl is a List of [AssignmentACL], containing the user's that have access to the repository
      * @return The created AssignmentForm
      */
     private fun createAssignmentFormBasedOnAssignment(assignment: Assignment, acl: List<AssignmentACL>): AssignmentForm {
@@ -457,6 +458,10 @@ class AssignmentController(
         return "setup-git"
     }
 
+    /**
+     * Controller to handle requests related with connecting an [Assigment] with a git repository. This is needed
+     * to obtain the information that is defined by code (instructions, unit tests, etc).
+     */
     @RequestMapping(value = ["/setup-git/{assignmentId}"], method = [(RequestMethod.POST)])
     fun connectAssignmentToGitRepository(@PathVariable assignmentId: String, redirectAttributes: RedirectAttributes,
                                          model: ModelMap, principal: Principal): String {
@@ -515,8 +520,8 @@ class AssignmentController(
     }
 
     /**
-     * Controller to handle the page that lists the assignments to which the logged-in
-     * teacher has access.
+     * Controller to handle the page that lists the [Assignment]s to which the logged-in
+     * user has access.
      */
     @RequestMapping(value = ["/my"], method = [(RequestMethod.GET)])
     fun listMyAssignments(@RequestParam(name = "tags", required = false) tags: String?,
@@ -539,7 +544,7 @@ class AssignmentController(
     }
 
     /**
-     * Controller to handle the deletion of an assignment.
+     * Controller to handle the deletion of an [Assignment].
      */
     @RequestMapping(value = ["/delete/{assignmentId}"], method = [(RequestMethod.POST)])
     fun deleteAssignment(@PathVariable assignmentId: String, redirectAttributes: RedirectAttributes,
@@ -565,7 +570,7 @@ class AssignmentController(
     }
 
     /**
-     * Controller that allows toggling the status of an assignment between "active" and "inactive".
+     * Controller that allows toggling the status of an [Assignment] between "active" and "inactive".
      */
     @RequestMapping(value = ["/toggle-status/{assignmentId}"], method = [(RequestMethod.GET), (RequestMethod.POST)])
     fun toggleAssignmentStatus(@PathVariable assignmentId: String, redirectAttributes: RedirectAttributes,
@@ -612,7 +617,7 @@ class AssignmentController(
     }
 
     /**
-     * Controller that allows the archiving of an assignment.
+     * Controller that allows the archiving of an [Assignment].
      */
     @RequestMapping(value = ["/archive/{assignmentId}"], method = [(RequestMethod.POST)])
     fun archiveAssignment(@PathVariable assignmentId: String,
@@ -671,9 +676,10 @@ class AssignmentController(
     }
 
     /**
-     * Collects assignments that have certain [tags] into the [model].
-     * @param model
-     * @param tags
+     * Collects [Assignment]s that have certain [tags] into the [model].
+     * @param model is a [ModelMap] that will be populated with information to use in a View.
+     * @param tags is a String containing the names of multiple tags. Each tag name is separated by a comma. Only the
+     * assignments that have all the tags will be placed in the model.
      */
     private fun listMyFilteredAssignments(principal: Principal, tags: String?, model: ModelMap, archived: Boolean) {
         var assignments = assignmentService.getMyAssignments(principal, archived)
