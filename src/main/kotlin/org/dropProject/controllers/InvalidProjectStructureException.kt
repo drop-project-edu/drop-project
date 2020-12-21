@@ -19,4 +19,8 @@
  */
 package org.dropProject.controllers
 
+/**
+ * Represents an Exception that is raised when the submitted project's file and folder structure does not comply
+ * with the expected/mandatory project structure.
+ */
 class InvalidProjectStructureException(message: String?, cause: Throwable? = null) : RuntimeException(message, cause)

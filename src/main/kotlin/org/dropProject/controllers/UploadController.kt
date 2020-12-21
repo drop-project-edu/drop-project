@@ -394,6 +394,14 @@ class UploadController(
         return ProjectGroup()
     }
 
+    /**
+     * Transforms a student's submission/code from its original structure to a structure that respects Maven's
+     * expected format.
+     * @param projectFolder is a file
+     * @param submission is a Submission
+     * @param teacherRebuild is a Boolean
+     * @return File
+     */
     private fun mavenize(projectFolder: File, submission: Submission, assignment: Assignment, teacherRebuild: Boolean = false): File {
         val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission, teacherRebuild)
 

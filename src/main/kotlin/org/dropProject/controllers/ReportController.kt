@@ -104,8 +104,8 @@ class ReportController(
      * The signalled groups are groups of students that are failing exactly the same tests.
      * @param assignmentId is a String identifying the relevant Assignment
      * @param model is a [ModelMap] that will be populated with information to use in a View
-     * @param principal is a [Principal] representing the user making the request.
-     * @param HttpServletRequest is a [HttpServletRequest]
+     * @param principal is a [Principal] representing the user making the request
+     * @param request is an [HttpServletRequest]
      * @return A String with the name of the relevant View
      */
     @RequestMapping(value = ["/cenas/{assignmentId}"], method = [(RequestMethod.GET)])
@@ -124,6 +124,8 @@ class ReportController(
      * Controller that handles requests for an [Assignment]'s report (for example, list of submissions per student/group).
      * @param assignmentId is a String identifying the relevant Assignment
      * @param model is a [ModelMap] that will be populated with information to use in a View
+     * @param principal is a [Principal] representing the user making the request
+     * @param request is an [HttpServletRequest]
      * @return A String with the name of the relevant View
      */
     @RequestMapping(value = ["/report/{assignmentId}"], method = [(RequestMethod.GET)])
@@ -141,6 +143,9 @@ class ReportController(
      * represents a student/group and each column represents an evaluation test. The intersection between lines and
      * columns will tell us if each group has passed each specific test.
      * @param assignmentId is a String identifying the relevant Assignment
+     * @param model is a [ModelMap] that will be populated with information to use in a View
+     * @param principal is a [Principal] representing the user making the request
+     * @param request is an [HttpServletRequest]
      * @return A String with the name of the relevant View
      */
     @RequestMapping(value = ["/testMatrix/{assignmentId}"], method = [(RequestMethod.GET)])
@@ -246,7 +251,11 @@ class ReportController(
     /**
      * Controller that handles the download of a specific submission's code. The submission is downloaded in
      * a format compatible with Maven.
-     * @param submissionId is a Long, representing the submission to download
+     * @param submissionId is a Long, representing the [Submission] to download
+     * @param principal is a [Principal] representing the user making the request
+     * @param request is a [HttpServletRequest]
+     * @param response is a [HttpServletResponse]
+     * @return A FileSystemResource
      */
     @RequestMapping(value = ["/downloadMavenProject/{submissionId}"],
             method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
@@ -284,6 +293,10 @@ class ReportController(
      * Controller that handles the download of a specific submission's code. The submission is downloaded in
      * it's original format.
      * @param submissionId is a Long, representing the Submission to download
+     * @param principal is a [Principal] representing the user making the request
+     * @param request is an [HttpServletRequest]
+     * @param response is an [HttpServletResponse]
+     * @return A FileSystemResource
      */
     @RequestMapping(value = ["/downloadOriginalProject/{submissionId}"],
             method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
@@ -344,7 +357,9 @@ class ReportController(
      * Controller that handles requests related with the download of ALL the students' submissions (code)
      * for a certain Assignment. The submissions are downloaded in their original format.
      * @param assignmentId is a String identifying the relevant Assignment
-     *
+     * @param principal is a [Principal] representing the user making the request
+     * @param response is an [HttpServletResponse]
+     * @return A FileSystemResource
      */
     @RequestMapping(value = ["/downloadOriginalAll/{assignmentId}"],
             method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
@@ -412,8 +427,11 @@ class ReportController(
 
     /**
      * Controller that handles requests related with the download of ALL the students' submissions (code)
-     * for a certain Assignment. The submissions are downloaded in a format compatible with Maven.
+     * for a certain [Assignment]. The submissions are downloaded in a format compatible with Maven.
      * @param assignmentId is a String identifying the relevant Assignment
+     * @param principal is a [Principal] representing the user making the request
+     * @param response is an [HttpServletResponse]
+     * @return A FileSystemResource
      */
     @RequestMapping(value = ["/downloadMavenizedAll/{assignmentId}"],
             method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
@@ -537,8 +555,14 @@ class ReportController(
     }
 
     /**
-     * Controller that handles requests related with listing Submissions of a certain Assignment.
-     * @param assignmentId is a String identifying the relevant Assignment.
+     * Controller that handles requests related with listing [Submission]s of a certain [Assignment] and
+     * [ProjectGroup].
+     * @param assignmentId is a String identifying the relevant Assignment
+     * @param groupId is a String identifying the relevant ProjectGroup
+     * @param model is a [ModelMap] that will be populated with information to use in a View
+     * @param principal is a [Principal] representing the user making the request
+     * @param request is an [HttpServletRequest]
+     * @return A String with the name of the relevant View
      */
     @RequestMapping(value = ["/submissions"], method = [(RequestMethod.GET)])
     fun getSubmissions(@RequestParam("assignmentId") assignmentId: String,
@@ -588,6 +612,7 @@ class ReportController(
     /**
      * Controller that handles the exportation of an Assignment's submission results to a CSV file.
      * @param assignmentId is a String, identifying the relevant Assignment
+     * @return A ResponseEntity<String>
      */
     @RequestMapping(value = ["/exportCSV/{assignmentId}"], method = [(RequestMethod.GET)])
     fun exportCSV(@PathVariable assignmentId: String,
@@ -683,6 +708,14 @@ class ReportController(
         return ResponseEntity(resultCSV, headers, HttpStatus.OK);
     }
 
+    /**
+     * Controller that handles requests for an [Assignment]'s Leaderboard.
+     * @param assignmentId is a String identifying the relevant Assignment
+     * @param model is a [ModelMap] that will be populated with information to use in a View
+     * @param principal is a [Principal] representing the user making the request
+     * @param request is an [HttpServletRequest]
+     * @return A String with the name of the relevant View
+     */
     @RequestMapping(value = ["/leaderboard/{assignmentId}"], method = [(RequestMethod.GET)])
     fun getLeaderboard(@PathVariable assignmentId: String, model: ModelMap,
                        principal: Principal, request: HttpServletRequest): String {

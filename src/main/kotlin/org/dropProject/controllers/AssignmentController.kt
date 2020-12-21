@@ -229,7 +229,7 @@ class AssignmentController(
     }
 
     /**
-     * Creates a new Assignment based on the contents of an AssignmentForm.
+     * Creates a new [Assignment] based on the contents of an [AssignmentForm].
      * @param assignmentForm, the AssignmentForm from which the Assignment contents will be copied
      * @return the created Assignment
      */
@@ -461,6 +461,11 @@ class AssignmentController(
     /**
      * Controller to handle requests related with connecting an [Assigment] with a git repository. This is needed
      * to obtain the information that is defined by code (instructions, unit tests, etc).
+     * @param assignmentId is a String representing the relevant Assignment
+     * @param redirectAttributes is a RedirectAttributes
+     * @param model is a [ModelMap] that will be populated with information to use in a View
+     * @param principal is a [Principal] representing the user making the request
+     * @return A String with the name of the relevant View
      */
     @RequestMapping(value = ["/setup-git/{assignmentId}"], method = [(RequestMethod.POST)])
     fun connectAssignmentToGitRepository(@PathVariable assignmentId: String, redirectAttributes: RedirectAttributes,
@@ -522,6 +527,11 @@ class AssignmentController(
     /**
      * Controller to handle the page that lists the [Assignment]s to which the logged-in
      * user has access.
+     * @param tags is a String containing the names of multiple tags. Each tag name is separated by a comma. Only the
+     * assignments that have all the tags will be placed in the model.
+     * @param model is a [ModelMap] that will be populated with information to use in a View
+     * @param principal is a [Principal] representing the user making the request
+     * @return A String with the name of the relevant View
      */
     @RequestMapping(value = ["/my"], method = [(RequestMethod.GET)])
     fun listMyAssignments(@RequestParam(name = "tags", required = false) tags: String?,
@@ -532,8 +542,13 @@ class AssignmentController(
     }
 
     /**
-     * Controller to handle the page that lists the archived assignments to which the logged-in
+     * Controller to handle the page that lists the **archived** assignments to which the logged-in
      * teacher has access.
+     * @param tags is a String containing the names of multiple tags. Each tag name is separated by a comma. Only the
+     * assignments that have all the tags will be placed in the model.
+     * @param model is a [ModelMap] that will be populated with information to use in a View
+     * @param principal is a [Principal] representing the user making the request
+     * @return A String with the name of the relevant View
      */
     @RequestMapping(value = ["/archived"], method = [(RequestMethod.GET)])
     fun listMyArchivedAssignments(@RequestParam(name = "tags", required = false) tags: String?,

@@ -32,6 +32,9 @@ enum class SubmissionMethod {
     UPLOAD, GIT
 }
 
+/**
+ * Represents the contents of a form used to create or edit an [Assignment].
+ */
 data class AssignmentForm(
         @field:NotEmpty(message = "Error: Assignment Id must not be empty")
         var assignmentId: String? = null,
