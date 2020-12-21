@@ -27,6 +27,12 @@ import javax.persistence.*
 import java.math.BigDecimal
 import java.text.SimpleDateFormat
 
+/**
+ * Enum represening the possible statuses that a Submission can be in.
+ * The submission starts in the "Submitted" status, and then moves to another status as it is validated
+ * and tested.
+ * Some of the statuses represent problematic situations.
+ */
 enum class SubmissionStatus(val code: String, val description: String) {
     SUBMITTED("S", "Submitted"),
     VALIDATED("V", "Validated"),
