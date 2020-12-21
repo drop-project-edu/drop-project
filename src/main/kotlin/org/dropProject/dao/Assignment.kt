@@ -45,7 +45,7 @@ enum class TestVisibility {
 }
 
 /**
- * Enum representing the types of Leaderboard (for example, based on Nr. of Passed Tests).
+ * Enum representing the types of Leaderboard (for example, based on Number of Passed Tests).
  */
 enum class LeaderboardType {
     TESTS_OK,    // ordered by number of passed tests (desc)
