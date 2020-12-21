@@ -23,6 +23,10 @@ import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.Id
 
+/**
+ * Enum representing the multiple evaluation criteria that a Submission can be subject to. Some of the criteria
+ * are mandatory (e.g. Compilation) while others are optional (e.g. Teacher Hidden Unit Tests).
+ */
 enum class Indicator(val code: String, val description: String) {
     PROJECT_STRUCTURE("PS", "Project Structure"),
     COMPILATION("C", "Compilation"),
