@@ -502,6 +502,17 @@ class ReportControllerTests {
                 "testFuncaoParaTestarQueNaoApareceAosAlunos:TestTeacherHiddenProject->0"))
     }
 
+    /**
+     * Tested function: ReportController.getSignaledGroupsOrSubmissions()
+     * Test scenario:
+     * - 3 students perform submissions.
+     * - Two of them fail the same 2 tests.
+     * - The other does not fail any test.
+     * Expectations:
+     * - The MVC controller function should return a List of size 1.
+     * - The only element of the list should be a GroupedProjectGroup with 2 groups (one for each student)
+     * and 2 failed tests.
+     */
     @Test
     @DirtiesContext
     fun testSignalledGroups() {
@@ -533,6 +544,10 @@ class ReportControllerTests {
         assert(cena.get(0).failedTestNames.containsAll(expectedFailedTests))
     }
 
+    /**
+     * This function creates "test data" that will be used in multiple tests of
+     * the function AssignmentService.groupGroupsByFailures()
+     */
     private fun testDataForGroupGroupsByFailures(): List<ProjectGroup> {
         val g1 = ProjectGroup(1)
         g1.authors.add(Author(1, "BC", "BC"))
@@ -547,6 +562,13 @@ class ReportControllerTests {
         return mutableListOf<ProjectGroup>(g1, g2, g3, g4, g5)
     }
 
+    /**
+     * Tested function: AssignmentService.groupGroupsByFailures()
+     * Test scenario:
+     * - 3 student/project groups
+     * - All have different test failures
+     * - The groupGroupsByFailures() function will return a List with size 0
+     */
     @Test
     fun testGroupGroupsByFailures_NoGroupsAreSignalled() {
         val projectGroups = testDataForGroupGroupsByFailures();
@@ -568,6 +590,15 @@ class ReportControllerTests {
         assert(result.size == 0)
     }
 
+    /**
+     * Tested function: AssignmentService.groupGroupsByFailures()
+     * Test scenario:
+     * - 3 student/project groups
+     * - All have the same failures, but one of the groups has the failures in different order
+     * Expectations:
+     * - The groupGroupsByFailures() function will return a List with size 1
+     * - The only element of the returned list will contain 3 student groups and 2 failed tests
+     */
     @Test
     fun testGroupGroupsByFailures_AllGroupsAreSignalled() {
         val projectGroups = testDataForGroupGroupsByFailures();
@@ -600,6 +631,19 @@ class ReportControllerTests {
         assert(result.get(0).failedTestNames.contains("Test002"))
     }
 
+    /**
+     * Tested function: AssignmentService.groupGroupsByFailures()
+     * Test scenario:
+     * - 5 student/project groups
+     * - groups 1 and 3 have the same failures
+     * - group 2 has failures but the list is unlike any other group
+     * - groups 4 and 5 have hte same failures (in different order)
+     * Expectations:
+     * - The groupGroupsByFailures() function will return a List with size 2
+     * - The list will have two GroupedProjectGroups objects:
+     * -- One with groups 1 and 3
+     * -- One with groups 4 and 5
+     */
     @Test
     fun testGroupGroupsByFailures_MoreComplexScenario() {
 
