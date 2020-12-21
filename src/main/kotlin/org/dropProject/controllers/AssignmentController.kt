@@ -42,7 +42,7 @@ import javax.validation.Valid
 
 /**
  * AssignmentController contains MVC controller functions that handle requests related with [Assignment]s
- * (e.g. assignment creation, edition, etc.)
+ * (for example, assignment creation, edition, etc.)
  */
 @Controller
 @RequestMapping("/assignment")

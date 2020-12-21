@@ -65,7 +65,7 @@ import kotlin.collections.LinkedHashMap
 
 /**
  * ReportController contains MVC controller functions to handle requests related with submission reports
- * (e.g. build report, submissions list, etc.).
+ * (for example, build report, submissions list, etc.).
  */
 @Controller
 class ReportController(
@@ -121,8 +121,9 @@ class ReportController(
     }
 
     /**
-     * Controller that handles requests for an [Assignment]'s report (i.e. list of submissions per student/group).
+     * Controller that handles requests for an [Assignment]'s report (for example, list of submissions per student/group).
      * @param assignmentId is a String identifying the relevant Assignment
+     * @param model is a [ModelMap] that will be populated with information to use in a View
      * @return A String with the name of the relevant View
      */
     @RequestMapping(value = ["/report/{assignmentId}"], method = [(RequestMethod.GET)])
