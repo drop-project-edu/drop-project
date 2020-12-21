@@ -583,7 +583,7 @@ class ReportControllerTests {
         failuresByGroup.put(g3, mutableListOf("Test002", "Test001") as ArrayList<String>)
 
         var group1 = GroupedProjectGroups(mutableListOf<ProjectGroup>(g1, g2, g3), mutableListOf("Test001", "Test002"))
-        val expected = mutableListOf<GroupedProjectGroups>(group1)
+        //val expected = mutableListOf<GroupedProjectGroups>(group1)
         val result = assignmentService.groupGroupsByFailures(failuresByGroup)
 
         assert(result != null)
