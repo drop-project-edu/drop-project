@@ -29,7 +29,7 @@ Several checks are performed on each project:
 
 ## Current limitations
 
-* Only works for Java 8 / Kotlin non-maven projects
+* Only works for Java 8+ / Kotlin non-maven projects
 
 ## How does it work?
 
@@ -53,9 +53,9 @@ After cloning the repository, change src/main/resources/drop-project.properties:
     dropProject.maven.home=<path_to_maven_home>
     dropProject.maven.repository=<path_to_maven_repository>
     
-And run the embedded jetty runner:
+And run the embedded tomcat runner:
 
-    mvn jetty:run
+    mvn spring-boot:run
     
 The application should now be accessible on http://localhost:8080
 

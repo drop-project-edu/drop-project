@@ -53,12 +53,21 @@ class DropProjectApplication : SpringBootServletInitializer() {
 
         return application.sources(DropProjectApplication::class.java).properties("spring.config.name: drop-project")
     }
+
+    companion object {
+        @JvmStatic
+        fun main(args: Array<String>) {
+            System.setProperty("spring.config.name", "drop-project")
+            SpringApplication.run(DropProjectApplication::class.java, *args)
+        }
+    }
 }
 
-fun main(args: Array<String>) {
-    System.setProperty("spring.config.name", "drop-project")
-    SpringApplication.run(DropProjectApplication::class.java, *args)
-}
+
+//fun main(args: Array<String>) {
+//    System.setProperty("spring.config.name", "drop-project")
+//    SpringApplication.run(DropProjectApplication::class.java, *args)
+//}
 
 
 
