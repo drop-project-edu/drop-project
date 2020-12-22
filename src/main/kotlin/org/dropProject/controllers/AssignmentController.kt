@@ -560,6 +560,10 @@ class AssignmentController(
 
     /**
      * Controller to handle the deletion of an [Assignment].
+     * @param assignmentId is a String representing the relevant Assignment
+     * @param redirectAttributes is a RedirectAttributes
+     * @param principal is a [Principal] representing the user making the request
+     * @return A String with the name of the relevant View
      */
     @RequestMapping(value = ["/delete/{assignmentId}"], method = [(RequestMethod.POST)])
     fun deleteAssignment(@PathVariable assignmentId: String, redirectAttributes: RedirectAttributes,
@@ -586,6 +590,10 @@ class AssignmentController(
 
     /**
      * Controller that allows toggling the status of an [Assignment] between "active" and "inactive".
+     * @param assignmentId is a String representing the relevant Assignment
+     * @param redirectAttributes is a RedirectAttributes
+     * @param principal is a [Principal] representing the user making the request
+     * @return A String with the name of the relevant View
      */
     @RequestMapping(value = ["/toggle-status/{assignmentId}"], method = [(RequestMethod.GET), (RequestMethod.POST)])
     fun toggleAssignmentStatus(@PathVariable assignmentId: String, redirectAttributes: RedirectAttributes,
@@ -633,6 +641,10 @@ class AssignmentController(
 
     /**
      * Controller that allows the archiving of an [Assignment].
+     * @param assignmentId is a String representing the relevant Assignment
+     * @param redirectAttributes is a RedirectAttributes
+     * @param principal is a [Principal] representing the user making the request
+     * @return A String with the name of the relevant View
      */
     @RequestMapping(value = ["/archive/{assignmentId}"], method = [(RequestMethod.POST)])
     fun archiveAssignment(@PathVariable assignmentId: String,
@@ -661,6 +673,10 @@ class AssignmentController(
     /**
      * Controller that allows marking the latest submission of each group as final.
      * Note that the latest submission might not be the best one.
+     * @param assignmentId is a String representing the relevant Assignment
+     * @param redirectAttributes is a RedirectAttributes
+     * @param principal is a [Principal] representing the user making the request
+     * @return A String with the name of the relevant View
      */
     @RequestMapping(value = ["/markAllAsFinal/{assignmentId}"], method = [(RequestMethod.POST)])
     fun markAllSubmissionsAsFinal(@PathVariable assignmentId: String,
