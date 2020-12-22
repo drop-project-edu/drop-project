@@ -158,7 +158,8 @@ class GitClient {
 
 
     fun getLastCommitInfo(git: Git): CommitInfo? {
-        val objectId = git.repository.resolve("refs/heads/master")
+        // try main and master (github is changing the default branch to main - https://github.com/github/renaming)
+        val objectId = git.repository.resolve("refs/heads/main") ?: git.repository.resolve("refs/heads/master")
         if (objectId != null) {
             val commits = git.log().add(objectId).call()
             val lastCommit = commits.sortedByDescending { it -> it.commitTime }.first()
@@ -193,7 +194,8 @@ class GitClient {
 
     fun getHistory(localRepository: File) : List<CommitInfo> {
         val git = Git.open(localRepository)
-        val objectId = git.repository.resolve("refs/heads/master")
+        // try main and master (github is changing the default branch to main - https://github.com/github/renaming)
+        val objectId = git.repository.resolve("refs/heads/main") ?: git.repository.resolve("refs/heads/master")
         if (objectId != null) {
             val logs = git.log().add(objectId).call()
             val myLog = logs

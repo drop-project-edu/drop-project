@@ -1,0 +1,76 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ------< org.dropProject.sampleAssignments:sampleKotlinAssignment >------
+[INFO] Building sampleKotlinAssignment 1.0-SNAPSHOT
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-clean-plugin:2.5:clean (default-clean) @ sampleKotlinAssignment ---
+[INFO] 
+[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ sampleKotlinAssignment ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory someMavenizedProj/src/main/resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.1:compile (default-compile) @ sampleKotlinAssignment ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- kotlin-maven-plugin:1.2.71:compile (compile) @ sampleKotlinAssignment ---
+[INFO] 
+[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ sampleKotlinAssignment ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory someMavenizedProj/src/main/resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.1:compile (default-compile) @ sampleKotlinAssignment ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- kotlin-maven-plugin:1.2.71:compile (compile) @ sampleKotlinAssignment ---
+[INFO] 
+[INFO] --- detekt-maven-plugin:1.11.0:check (default) @ sampleKotlinAssignment ---
+[INFO] Args:
+someMavenizedProj/src/main/kotlin/Main.kt - 25min debt
+	FunctionNaming - [SomeFunc] at someMavenizedProj/src/main/kotlin/Main.kt:20:5
+	VariableNaming - [Soma] at someMavenizedProj/src/main/kotlin/Main.kt:34:9
+	FunctionParameterNaming - [Param] at someMavenizedProj/src/main/kotlin/Main.kt:20:14
+	MandatoryBracesIfStatements - [SomeFunc] at someMavenizedProj/src/main/kotlin/Main.kt:23:9
+	VarCouldBeVal - [Soma] at someMavenizedProj/src/main/kotlin/Main.kt:34:5
+
+Overall debt: 25min
+
+naming - 15min debt
+	FunctionNaming - [SomeFunc] at someMavenizedProj/src/main/kotlin/Main.kt:20:5
+	VariableNaming - [Soma] at someMavenizedProj/src/main/kotlin/Main.kt:34:9
+	FunctionParameterNaming - [Param] at someMavenizedProj/src/main/kotlin/Main.kt:20:14
+style - 10min debt
+	MandatoryBracesIfStatements - [SomeFunc] at someMavenizedProj/src/main/kotlin/Main.kt:23:9
+	VarCouldBeVal - [Soma] at someMavenizedProj/src/main/kotlin/Main.kt:34:5
+
+Overall debt: 25min
+
+[INFO] 
+[INFO] --- maven-resources-plugin:2.6:testResources (default-testResources) @ sampleKotlinAssignment ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory someMavenizedProj/src/test/resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.1:testCompile (default-testCompile) @ sampleKotlinAssignment ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- kotlin-maven-plugin:1.2.71:test-compile (test-compile) @ sampleKotlinAssignment ---
+[INFO] 
+[INFO] --- maven-surefire-plugin:2.12.4:test (default-test) @ sampleKotlinAssignment ---
+[INFO] Surefire report directory: someMavenizedProj/target/surefire-reports
+
+-------------------------------------------------------
+ T E S T S
+-------------------------------------------------------
+Running TestProject
+Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.191 sec
+
+Results :
+
+Tests run: 2, Failures: 0, Errors: 0, Skipped: 0
+
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  11.566 s
+[INFO] Finished at: 2020-11-29T19:02:43Z
+[INFO] ------------------------------------------------------------------------

@@ -211,4 +211,35 @@ class TestBuildReport {
 
         // TODO: devia ter uma flag "fatalError" quando um plugin rebenta
     }
+
+    @Test
+    fun testKotlinDetektErrors() {
+
+        val detektOutputs = arrayOf("kotlinDetektErrors-1.0.0.RC9.2.txt", "kotlinDetektErrors-1.1.1.txt", "kotlinDetektErrors-1.11.0.txt")
+
+        detektOutputs.forEach {
+            val mavenOutputLines = resourceLoader.getResource("file:src/test/sampleMavenOutputs/$it").file.readLines()
+
+            val buildReport = buildReportBuilder.build(mavenOutputLines,
+                    "someMavenizedProj",
+                    dummyKotlinAssignment)
+
+            assertTrue(!buildReport.mavenExecutionFailed())
+            assertEquals(0, buildReport.compilationErrors().size)
+            assertEquals("$it", 5, buildReport.checkstyleErrors().size)
+        }
+
+    }
+
+    @Test
+    fun testKotlinDetektErrors2() {
+        val mavenOutputLines = resourceLoader.getResource("file:src/test/sampleMavenOutputs/kotlinDetektErrors2-1.11.0.txt").file.readLines()
+        val buildReport = buildReportBuilder.build(mavenOutputLines,
+                "someMavenizedProj",
+                dummyKotlinAssignment)
+
+        assertTrue(!buildReport.mavenExecutionFailed())
+        assertEquals(0, buildReport.compilationErrors().size)
+        assertEquals(8, buildReport.checkstyleErrors().size)
+    }
 }

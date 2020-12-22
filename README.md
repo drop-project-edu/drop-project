@@ -29,7 +29,7 @@ Several checks are performed on each project:
 
 ## Current limitations
 
-* Only works for Java 8 / Kotlin non-maven projects
+* Only works for Java 8+ / Kotlin non-maven projects
 
 ## How does it work?
 
@@ -57,10 +57,10 @@ in the following files:
 
      src/main/resources/drop-project.properties (to be able to run drop project)
      src/test/resources/drop-project-test.properties (to be able to run drop project's unit tests)
+    
+And run the embedded tomcat runner:
 
-And run the embedded jetty runner:
-
-    mvn jetty:run
+    mvn spring-boot:run
     
 The application should now be accessible on http://localhost:8080
 

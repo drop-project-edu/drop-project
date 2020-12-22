@@ -165,18 +165,23 @@ data class BuildReport(val mavenOutputLines: List<String>,
                     if (mavenOutputLine.startsWith("[INFO] --- detekt-maven-plugin")) {
                         startIdx = idx + 1
                     }
-                    if (idx > startIdx && mavenOutputLine.startsWith("detekt finished")) {
+                    // depending on the detekt-maven-plugin version, the output is different
+                    if (startIdx > 0 &&
+                            idx > startIdx + 1 &&
+                            (mavenOutputLine.startsWith("detekt finished") || mavenOutputLine.startsWith("[INFO]"))) {
                         endIdx = idx
+                        break
                     }
                 }
 
                 if (startIdx > 0) {
                     return mavenOutputLines
                             .subList(startIdx, endIdx)
-                            .filter { it -> it.startsWith("\t") }
-                            .map { it -> it.replace("\t", "") }
-                            .map { it -> it.replace("${mavenizedProjectFolder}/src/main/${folder}/", "") }
-                            .map { it -> translateDetektError(it) }
+                            .filter { it.startsWith("\t") && !it.startsWith("\t-") }
+                            .map { it.replace("\t", "") }
+                            .map { it.replace("${mavenizedProjectFolder}/src/main/${folder}/", "") }
+                            .map { translateDetektError(it) }
+                            .distinct()
                 } else {
                     return emptyList()
                 }
