@@ -71,3 +71,8 @@ https://github.com/drop-project-edu/drop-project/wiki/Documentation
 To generate source code documentation, run:
 
     mvn dokka:dokka
+
+The generated documentation will be available in the following folder:
+
+    /target/dokka/drop-project/index.html
+
