@@ -76,3 +76,20 @@ The generated documentation will be available in the following folder:
 
     /target/dokka/drop-project/index.html
 
+## Unit Tests
+
+To execute the unit tests, run:
+
+    mvn test
+
+## Unit Test Coverage
+
+To measure the unit test coverage, run:
+
+    mvn test
+
+Note: to run the coverage measurement, you must first run the tests themselves.
+
+The test coverage report will be available in the following folder:
+
+    /target/site/jacoco/index.html
