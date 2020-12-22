@@ -29,6 +29,15 @@ import org.dropProject.Constants
 import org.dropProject.dao.Assignment
 import java.io.ByteArrayInputStream
 
+/**
+ * Represents the result of executing a certain JUnit Test.
+ * @property methodName is a String with the name of the test function
+ * @property fullMethodName is a String with the full name of the test function (i.e. includes the package name)
+ * @property type is the type of the result. Possible values are "Success", "Error" or "Failure"
+ * @property failureType is a a String
+ * @property failureErrorLine is a String
+ * @property failureDetail is a String
+ */
 data class JUnitMethodResult(val methodName: String,
                              val fullMethodName: String,
                              val type: String,  // Success, Error or Failure
