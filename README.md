@@ -86,7 +86,7 @@ To execute the unit tests, run:
 
 To measure the unit test coverage, run:
 
-    mvn test
+    mvn jacoco:report
 
 Note: to run the coverage measurement, you must first run the tests themselves.
 
