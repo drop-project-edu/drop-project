@@ -101,6 +101,12 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
     @Value("\${assignments.rootLocation}")
     val assignmentsRootLocation: String = ""
 
+    /**
+     * This function is executed when DP starts running.
+     *
+     * If the assignment repository (i.e. database) is empty, this function will create some "fake data" (e.g. students,
+     * teachers, and submissions from both) in order to have a "in-memory" database that allows testing the system.
+     */
     override fun onApplicationEvent(event: ContextRefreshedEvent) {
 
         LOG.info("************ Starting Drop Project **************")
