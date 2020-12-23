@@ -55,9 +55,15 @@ After cloning the repository, change the following properties:
 
 in the following files:
 
-     src/main/resources/drop-project.properties (to be able to run drop project)
-     src/test/resources/drop-project-test.properties (to be able to run drop project's unit tests)
-    
+     src/main/resources/drop-project.properties
+     src/test/resources/drop-project-test.properties 
+
+Note:
+- Configuring the first file will allow you to run Drop Project.
+- Configuring the second file will allow you to run Drop Project's unit tests.
+- Linux users: the Maven Home is usually in /usr/share/maven (otherwise, try: whereis maven) and the Maven Repository is in /home/&lt;USERNAME&gt;/.m2
+- Windows users: the Maven Home is the installation directory it and the Maven Repository is in c:\Users\&lt;USERNAME&gt;\\.m2
+
 And run the embedded tomcat runner:
 
     mvn spring-boot:run
