@@ -530,15 +530,15 @@ class ReportControllerTests {
                 .andReturn()
 
         @Suppress("UNCHECKED_CAST")
-        val cena = reportResult.modelAndView.modelMap["signalledGroups"] as List<GroupedProjectGroups>
+        val signalledGroups = reportResult.modelAndView.modelMap["signalledGroups"] as List<GroupedProjectGroups>
 
-        assert(cena != null)
-        assert(cena.size == 1)
-        assert(cena.get(0).groups.size == 2)
+        assert(signalledGroups != null)
+        assert(signalledGroups.size == 1)
+        assert(signalledGroups.get(0).groups.size == 2)
 
-        assert(cena.get(0).failedTestNames.size == 2)
+        assert(signalledGroups.get(0).failedTestNames.size == 2)
         var expectedFailedTests = mutableListOf("testFuncaoParaTestar", "testFuncaoParaTestarQueNaoApareceAosAlunos")
-        assert(cena.get(0).failedTestNames.containsAll(expectedFailedTests))
+        assert(signalledGroups.get(0).failedTestNames.containsAll(expectedFailedTests))
     }
 
     /**
@@ -645,7 +645,6 @@ class ReportControllerTests {
         failuresByGroup.put(g3, mutableListOf("Test002", "Test001") as ArrayList<String>)
 
         var group1 = GroupedProjectGroups(mutableListOf<ProjectGroup>(g1, g2, g3), mutableListOf("Test001", "Test002"))
-        //val expected = mutableListOf<GroupedProjectGroups>(group1)
         val result = assignmentService.groupGroupsByFailures(failuresByGroup)
 
         assert(result != null)
@@ -701,7 +700,6 @@ class ReportControllerTests {
         // as such, the expected groups are:
         //    (1 and 3) ; (4 and 5)
         val group1 = GroupedProjectGroups(mutableListOf(g1, g3), mutableListOf("Test001", "Test002"))
-        //val group2 = GroupedProjectGroups(mutableListOf(g2), mutableListOf("Test001"))
         val group3 = GroupedProjectGroups(mutableListOf(g4, g5), mutableListOf("Test001", "Test003"))
 
         //val expected = mutableListOf<GroupedProjectGroups>(group1, group2, group3)
@@ -713,7 +711,6 @@ class ReportControllerTests {
         assert(result != null)
         assert(result.size == 2)
 
-        // FIXME: support different results order
         assert(result.containsAll(expected))
     }
 
