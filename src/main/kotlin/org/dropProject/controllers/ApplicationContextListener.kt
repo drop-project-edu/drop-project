@@ -149,8 +149,8 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
                 // only save if it successfully cloned the assignment
                 assignmentRepository.save(assignment)
 
-                assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student1"))
-                assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student2"))
+                //assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student1"))
+                //assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student2"))
                 assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student4"))
                 assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student5"))
                 assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "teacher1"))
@@ -163,6 +163,7 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
 
             if (connected) {
 
+                /*
                 val author = Author(name = "Student 1", userId = "student1")
                 authorRepository.save(author)
 
@@ -172,6 +173,7 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
                 val author2 = Author(name = "Student 2", userId = "student2")
                 authorRepository.save(author2)
                 uploadStudentSubmission(author2, "2019-01-02T14:55:30", "javaSubmissionOk", "OK", 2, 2)
+                */
 
                 val author3 = Author(name = "BC", userId = "teacher1")
                 authorRepository.save(author3)
@@ -190,6 +192,7 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
                 val author6 = Author(name="Leo Da Vinci", userId="student4")
                 authorRepository.save(author6)
                 uploadStudentSubmission(author6, "2020-12-17T14:37:00", "javaSubmission2Errors", "NOK", 2, 4)
+
 
             }
         }
