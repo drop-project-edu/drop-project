@@ -74,7 +74,7 @@ To generate source code documentation, run:
 
 The generated documentation will be available in the following folder:
 
-    /target/dokka/drop-project/index.html
+    target/dokka/drop-project/index.html
 
 ## Unit Tests
 
@@ -92,4 +92,4 @@ Note: to run the coverage measurement, you must first run the tests themselves.
 
 The test coverage report will be available in the following folder:
 
-    /target/site/jacoco/index.html
+    target/site/jacoco/index.html
