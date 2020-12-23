@@ -400,6 +400,10 @@
 			<name>Pedro Alves</name>
 			<email>pedro.alves@ulusofona.pt</email>
 		</developer>
+		<developer>
+			<name>Bruno Cipriano</name>
+			<email>bcipriano@ulusofona.pt</email>
+		</developer>
 	</developers>
 
 </project>
