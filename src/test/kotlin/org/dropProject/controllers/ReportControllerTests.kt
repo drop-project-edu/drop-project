@@ -503,13 +503,13 @@ class ReportControllerTests {
     }
 
     /**
-     * Tested function: ReportController.getSignaledGroupsOrSubmissions()
+     * Tested function: ReportController.getSignaledGroupsOrSubmissions() via MVC
      * Test scenario:
      * - 3 students perform submissions.
      * - Two of them fail the same 2 tests.
      * - The other does not fail any test.
      * Expectations:
-     * - The MVC controller function should return a List of size 1.
+     * - The MVC controller function should place in the Model in the model a List of size 1.
      * - The only element of the list should be a GroupedProjectGroup with 2 groups (one for each student)
      * and 2 failed tests.
      */
@@ -532,9 +532,6 @@ class ReportControllerTests {
         @Suppress("UNCHECKED_CAST")
         val cena = reportResult.modelAndView.modelMap["signalledGroups"] as List<GroupedProjectGroups>
 
-        //print("Carapau: " + reportResult.modelAndView.modelMap)
-        //print("Cena: " + cena)
-
         assert(cena != null)
         assert(cena.size == 1)
         assert(cena.get(0).groups.size == 2)
@@ -544,6 +541,17 @@ class ReportControllerTests {
         assert(cena.get(0).failedTestNames.containsAll(expectedFailedTests))
     }
 
+    /**
+     * Tested function: ReportController.getSignaledGroupsOrSubmissions() via MVC
+     * Test scenario:
+     * - 2 students perform submissions.
+     * - One of them fails tests.
+     * - The other does not fail any test.
+     * Expectations:
+     * - The MVC controller function should place in the Model:
+     * -- a List of size 0; and
+     * -- a String with a message saying that there are no signalled groups.
+     */
     @Test
     @DirtiesContext
     fun testSignalledGroupsViaMVC_NoGroupsAreSignalled() {
@@ -566,6 +574,7 @@ class ReportControllerTests {
         assertEquals("No groups identified as similar", message)
         assert(list.isEmpty())
     }
+
     /**
      * This function creates "test data" that will be used in multiple tests of
      * the function AssignmentService.groupGroupsByFailures()
