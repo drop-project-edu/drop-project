@@ -94,7 +94,7 @@ To measure the unit test coverage, run:
 
     mvn jacoco:report
 
-Note: to run the coverage measurement, you must first run the tests themselves.
+Note: to run the coverage measurement, you must first run the unit tests themselves.
 
 The test coverage report will be available in the following folder:
 
