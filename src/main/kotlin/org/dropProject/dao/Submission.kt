@@ -64,9 +64,12 @@ enum class SubmissionStatus(val code: String, val description: String) {
  * @param id is a primary-key like generated value
  *
  * @param submissionDate is a [Date] representing the date and time when the submission was performed
- *
+ * @param submitterUserId is a String identifying the user that performed the submission
+ * @param status is a String. The value will be the "Code" property of an [SubmissionStatus] object
+ * @param statusDate is a [Date] representing the date and time when the Assignment's status was last updated
  * @param assignmentId is a String identifying the relevant Assignment
- *
+ * @param buildReportId is a String
+ * @param structureErrors is a String
  * @param markedAsFinal is a Boolean, indicating if this submission is marked as the group's final one. The
  * final Submission is the one that is exported to CSV.
  * @studentTests is a [JUnitSummary] with the result of executing the student's own unit tests
@@ -74,6 +77,7 @@ enum class SubmissionStatus(val code: String, val description: String) {
  * @hiddenTests is a [JUnitSummary] with the result of executing the teacher's hidden tests
  * @param coverage is an Int with the test coverage percentage calculated for the submission's own unit tests
  * @param testResults is a List of [JUnitMethodResult] containing the result for each evaluation JUnit Test
+ * @param group is the [ProjectGrop] that performed the submission.
  */
 @Entity
 data class Submission(
