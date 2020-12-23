@@ -658,8 +658,6 @@ class ReportController(
                 ellapsed = ellapsed.setScale(2, RoundingMode.UP)
             }
 
-            System.out.println("#55 submission - " + submission)
-
             for (author in submission.group.authors) {
                 resultCSV += "${submission.group.id};${author.userId};${author.name};${r1};${r2};${r3};"
 
