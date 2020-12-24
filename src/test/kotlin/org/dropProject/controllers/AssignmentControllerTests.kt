@@ -707,7 +707,11 @@ class AssignmentControllerTests {
         assignmentRepository.save(assignment01)
 
         // make several submissions for that assignment
-        testsHelper.makeSeveralSubmissions("projectInvalidStructure1", mvc)
+        testsHelper.makeSeveralSubmissions(
+                listOf("projectInvalidStructure1",
+                        "projectInvalidStructure1",
+                        "projectInvalidStructure1",
+                        "projectInvalidStructure1"), mvc)
 
         // mark all as final
         this.mvc.perform(post("/assignment/markAllAsFinal/${assignmentId}")

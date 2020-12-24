@@ -533,7 +533,7 @@ class ReportController(
             throw IllegalAccessError("Assignment reports can only be accessed by their owner or authorized teachers")
         }
 
-        var headersCSV = mutableSetOf("submission id","student id","student name","project structure", "compilation", "code quality")
+        var headersCSV = LinkedHashSet(mutableListOf("submission id","student id","student name","project structure", "compilation", "code quality"))
         var resultCSV = ""
 
         val submissions = submissionRepository.findByAssignmentIdAndMarkedAsFinal(assignmentId, true)
@@ -556,10 +556,15 @@ class ReportController(
                     submission.coverage = buildReport.jacocoResults[0].lineCoveragePercent
                 }
             }
+        }
 
-            val r1 = reportElements.getOrNull(0)?.reportValue.orEmpty()  // Project Structure
-            val r2 = reportElements.getOrNull(1)?.reportValue.orEmpty()  // Compilation
-            val r3 = reportElements.getOrNull(2)?.reportValue.orEmpty()  // Code Quality
+        val hasTeacherTests = submissions.any { it.teacherTests != null }
+        val hasHiddenTests = submissions.any { it.hiddenTests != null }
+
+        for (submission in submissions) {
+            val r1 = submission.reportElements?.getOrNull(0)?.reportValue.orEmpty()  // Project Structure
+            val r2 = submission.reportElements?.getOrNull(1)?.reportValue.orEmpty()  // Compilation
+            val r3 = submission.reportElements?.getOrNull(2)?.reportValue.orEmpty()  // Code Quality
 
             var ellapsed = submission.ellapsed
             if (ellapsed != null) {
@@ -578,25 +583,24 @@ class ReportController(
                     }
                 }
 
-                if (submission.teacherTests != null) {
+                if (hasTeacherTests) {
                     headersCSV.add("teacher tests")
-                    resultCSV += "${submission.teacherTests!!.progress};"
+                    resultCSV += if (submission.teacherTests != null) "${submission.teacherTests!!.progress};" else ";"
                 }
 
-                if (submission.hiddenTests != null) {
+                if (hasHiddenTests) {
                     headersCSV.add("hidden tests")
-                    resultCSV += "${submission.hiddenTests!!.progress};"
+                    resultCSV += if (submission.hiddenTests != null) "${submission.hiddenTests!!.progress};" else ";"
                 }
 
-                if (submission.coverage != null) {
+                if (assignment.calculateStudentTestsCoverage) {
                     headersCSV.add("coverage")
-                    resultCSV += "${submission.coverage};"
+                    resultCSV += if (submission.coverage != null) "${submission.coverage};" else ";"
                 }
+
                 if (includeEllapsed) {
                     headersCSV.add("ellapsed")
                     resultCSV += "${ellapsed?.toPlainString().orEmpty()};"
-                } else {
-                    resultCSV += ";"
                 }
 
                 headersCSV.add("submission date")
