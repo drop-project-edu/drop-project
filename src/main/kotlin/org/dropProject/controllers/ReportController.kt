@@ -153,7 +153,6 @@ class ReportController(
                   principal: Principal, request: HttpServletRequest): String {
         model["assignmentId"] = assignmentId
 
-
         assignmentService.getAllSubmissionsForAssignment(assignmentId, principal, model, request,
                 includeTestDetails = true,
                 mode = "testMatrix")
@@ -255,7 +254,7 @@ class ReportController(
      * @param principal is a [Principal] representing the user making the request
      * @param request is a [HttpServletRequest]
      * @param response is a [HttpServletResponse]
-     * @return A FileSystemResource
+     * @return A [FileSystemResource] containing a [ZipFile]
      */
     @RequestMapping(value = ["/downloadMavenProject/{submissionId}"],
             method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
@@ -296,7 +295,7 @@ class ReportController(
      * @param principal is a [Principal] representing the user making the request
      * @param request is an [HttpServletRequest]
      * @param response is an [HttpServletResponse]
-     * @return A FileSystemResource
+     * @return A [FileSystemResource] containing a [ZipFile]
      */
     @RequestMapping(value = ["/downloadOriginalProject/{submissionId}"],
             method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
@@ -359,7 +358,7 @@ class ReportController(
      * @param assignmentId is a String identifying the relevant Assignment
      * @param principal is a [Principal] representing the user making the request
      * @param response is an [HttpServletResponse]
-     * @return A FileSystemResource
+     * @return A [FileSystemResource] containing a [ZipFile]
      */
     @RequestMapping(value = ["/downloadOriginalAll/{assignmentId}"],
             method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
@@ -431,7 +430,7 @@ class ReportController(
      * @param assignmentId is a String identifying the relevant Assignment
      * @param principal is a [Principal] representing the user making the request
      * @param response is an [HttpServletResponse]
-     * @return A FileSystemResource
+     * @return A [FileSystemResource] containing a [ZipFile]
      */
     @RequestMapping(value = ["/downloadMavenizedAll/{assignmentId}"],
             method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
@@ -522,6 +521,15 @@ class ReportController(
 
     }
 
+    /**
+     * Controller that handles requests for the submissions of the current user in a certain [Assigment].
+     * @param assignmentId is a String identifying the relevant assignment
+     * @param model is a [ModelMap] that will be populated with information to use in a View
+     * @param principal is a [Principal] representing the user making the request. This is the user whose submissions
+     * will be returned.
+     * @param request is an [HttpServletRequest]
+     * @return A String with the name of the relevant View
+     */
     @RequestMapping(value = ["/mySubmissions"], method = [(RequestMethod.GET)])
     fun getMySubmissions(@RequestParam("assignmentId") assignmentId: String, model: ModelMap,
                          principal: Principal, request: HttpServletRequest): String {
