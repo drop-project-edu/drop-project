@@ -537,6 +537,7 @@ class ReportController(
         var resultCSV = ""
 
         val submissions = submissionRepository.findByAssignmentIdAndMarkedAsFinal(assignmentId, true)
+                .filter { it.getStatus() != SubmissionStatus.DELETED }
         for (submission in submissions) {
             val reportElements = submissionReportRepository.findBySubmissionId(submission.id)
             submission.reportElements = reportElements
