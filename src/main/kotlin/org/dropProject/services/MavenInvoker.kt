@@ -51,6 +51,8 @@ class MavenInvoker {
         securityManagerEnabled = false
     }
 
+    var showMavenOutput = false
+
     fun run(mavenizedProjectFolder: File, principalName: String?, maxMemoryMb: Int?) : MavenResult {
 
         if (!File(mavenRepository).exists()) {
@@ -100,7 +102,9 @@ class MavenInvoker {
         var numLines = 0
         request.setOutputHandler {
             line -> run {
-                // println(">>> ${line}")
+                if (showMavenOutput) {
+                    println(">>> ${line}")
+                }
                 numLines++
                 if (numLines < Constants.TOO_MUCH_OUTPUT_THRESHOLD) {
                     outputLines.add(line)

@@ -46,6 +46,19 @@
                         </ul>
                     </li>
                 </ul>
+                <ul class="nav navbar-nav" th:if="${#authorization.expression('hasRole(''DROP_PROJECT_ADMIN'')')}">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownAdmin" role="button" data-toggle="dropdown"
+                           aria-haspopup="true" aria-expanded="false">
+                            <span>Admin</span><span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a th:href="@{/admin/dashboard}">Dashboard</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
 
                 <ul class="nav navbar-nav navbar-right">
                     <li class="nav-item dropdown">

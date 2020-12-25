@@ -45,7 +45,8 @@ open class DropProjectSecurityConfig : WebSecurityConfigurerAdapter() {
                             "/cleanup/*"
                     ).hasRole("TEACHER")  // TODO: review
                 .antMatchers(
-                        "/cleanup/*"
+                        "/cleanup/*",
+                        "/admin/*"
                     ).hasRole("DROP_PROJECT_ADMIN")
                     .anyRequest().authenticated()
                 .and()
