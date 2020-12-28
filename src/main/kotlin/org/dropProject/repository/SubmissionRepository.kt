@@ -47,6 +47,9 @@ interface SubmissionRepository : JpaRepository<Submission, Long> {
 
     fun findFirstByAssignmentIdOrderBySubmissionDateDesc(assignmentId: String) : Submission
 
+    fun findByStatusOrderByStatusDate(statusId: String): List<Submission>
+    fun findBySubmissionId(submissionId: String): Submission
+
     @Transactional
     fun deleteByGitSubmissionId(gitSubmissionId: Long)
 }
