@@ -377,6 +377,11 @@ class UploadController(
             erros.add("O projecto contém ficheiros cujo nome começa por 'TestTeacher'")
         }
 
+        val readme = File(projectFolder, "README.md")
+        if (readme.exists() && !readme.isFile) {
+            erros.add("O projecto contém uma pasta README.md mas devia ser um ficheiro")
+        }
+
         return erros
     }
 

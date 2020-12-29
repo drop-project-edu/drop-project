@@ -1,0 +1,156 @@
+[INFO] Scanning for projects...
+[INFO]
+[INFO] -------------< pt.ulusofona.deisi.fp:fp-projecto-2020-21 >--------------
+[INFO] Building fp-projecto-2020-21 1.0-SNAPSHOT
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO]
+[INFO] --- maven-clean-plugin:2.5:clean (default-clean) @ fp-projecto-2020-21 ---
+[INFO]
+[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ fp-projecto-2020-21 ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory someMavenizedProj/src/main/resources
+[INFO]
+[INFO] --- maven-compiler-plugin:3.1:compile (default-compile) @ fp-projecto-2020-21 ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO]
+[INFO] --- kotlin-maven-plugin:1.4.10:compile (compile) @ fp-projecto-2020-21 ---
+[WARNING] someMavenizedProj/src/main/kotlin/Main.kt: (58, 17) Variable 'nome2' initializer is redundant
+[WARNING] someMavenizedProj/src/main/kotlin/Main.kt: (59, 19) Variable 'colunas' initializer is redundant
+[WARNING] someMavenizedProj/src/main/kotlin/Main.kt: (60, 18) Variable 'linhas' initializer is redundant
+[WARNING] someMavenizedProj/src/main/kotlin/Main.kt: (92, 77) Parameter 'showPieces' is never used
+[WARNING] someMavenizedProj/src/main/kotlin/Main.kt: (99, 22) Variable 'countLines' initializer is redundant
+[INFO]
+[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ fp-projecto-2020-21 ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory someMavenizedProj/src/main/resources
+[INFO]
+[INFO] --- maven-compiler-plugin:3.1:compile (default-compile) @ fp-projecto-2020-21 ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO]
+[INFO] --- kotlin-maven-plugin:1.4.10:compile (compile) @ fp-projecto-2020-21 ---
+[WARNING] someMavenizedProj/src/main/kotlin/Main.kt: (58, 17) Variable 'nome2' initializer is redundant
+[WARNING] someMavenizedProj/src/main/kotlin/Main.kt: (59, 19) Variable 'colunas' initializer is redundant
+[WARNING] someMavenizedProj/src/main/kotlin/Main.kt: (60, 18) Variable 'linhas' initializer is redundant
+[WARNING] someMavenizedProj/src/main/kotlin/Main.kt: (92, 77) Parameter 'showPieces' is never used
+[WARNING] someMavenizedProj/src/main/kotlin/Main.kt: (99, 22) Variable 'countLines' initializer is redundant
+[INFO]
+[INFO] --- detekt-maven-plugin:1.11.0:check (default) @ fp-projecto-2020-21 ---
+[INFO] Args:
+someMavenizedProj/src/main/kotlin/Main.kt - 25min debt
+	StringLiteralDuplication - 5/3 - [buildBoard] at someMavenizedProj/src/main/kotlin/Main.kt:102:19
+	UnconditionalJumpStatementInLoop - [checkName] at someMavenizedProj/src/main/kotlin/Main.kt:13:5
+	UnconditionalJumpStatementInLoop - [checkName] at someMavenizedProj/src/main/kotlin/Main.kt:16:5
+
+Overall debt: 25min
+
+complexity - 5min debt
+	StringLiteralDuplication - 5/3 - [buildBoard] at someMavenizedProj/src/main/kotlin/Main.kt:102:19
+potential-bugs - 20min debt
+	UnconditionalJumpStatementInLoop - [checkName] at someMavenizedProj/src/main/kotlin/Main.kt:13:5
+	UnconditionalJumpStatementInLoop - [checkName] at someMavenizedProj/src/main/kotlin/Main.kt:16:5
+
+Overall debt: 25min
+
+[INFO]
+[INFO] --- maven-resources-plugin:2.6:testResources (default-testResources) @ fp-projecto-2020-21 ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory someMavenizedProj/src/test/resources
+[INFO]
+[INFO] --- maven-compiler-plugin:3.1:testCompile (default-testCompile) @ fp-projecto-2020-21 ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO]
+[INFO] --- kotlin-maven-plugin:1.4.10:test-compile (test-compile) @ fp-projecto-2020-21 ---
+[WARNING] someMavenizedProj/src/test/kotlin/TestTeacherHiddenProject.kt: (30, 9) Type inference failed. The value of the type parameter T should be mentioned in input types (argument types, receiver type or expected type). Try to specify it explicitly.
+[WARNING] someMavenizedProj/src/test/kotlin/TestTeacherProject.kt: (14, 9) Type inference failed. The value of the type parameter T should be mentioned in input types (argument types, receiver type or expected type). Try to specify it explicitly.
+[WARNING] someMavenizedProj/src/test/kotlin/TestTeacherProject.kt: (24, 9) Type inference failed. The value of the type parameter T should be mentioned in input types (argument types, receiver type or expected type). Try to specify it explicitly.
+[WARNING] someMavenizedProj/src/test/kotlin/TestTeacherProject.kt: (34, 9) Type inference failed. The value of the type parameter T should be mentioned in input types (argument types, receiver type or expected type). Try to specify it explicitly.
+[WARNING] someMavenizedProj/src/test/kotlin/TestTeacherProject.kt: (47, 9) Type inference failed. The value of the type parameter T should be mentioned in input types (argument types, receiver type or expected type). Try to specify it explicitly.
+[WARNING] someMavenizedProj/src/test/kotlin/TestTeacherProject.kt: (59, 9) Type inference failed. The value of the type parameter T should be mentioned in input types (argument types, receiver type or expected type). Try to specify it explicitly.
+[WARNING] someMavenizedProj/src/test/kotlin/TestTeacherProject.kt: (71, 9) Type inference failed. The value of the type parameter T should be mentioned in input types (argument types, receiver type or expected type). Try to specify it explicitly.
+[WARNING] someMavenizedProj/src/test/kotlin/TestTeacherProject.kt: (83, 9) Type inference failed. The value of the type parameter T should be mentioned in input types (argument types, receiver type or expected type). Try to specify it explicitly.
+[INFO]
+[INFO] --- maven-surefire-plugin:2.19.1:test (default-test) @ fp-projecto-2020-21 ---
+
+-------------------------------------------------------
+ T E S T S
+-------------------------------------------------------
+NOTE: Picked up JDK_JAVA_OPTIONS:  --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.rmi/sun.rmi.transport=ALL-UNNAMED
+Running TestTeacherHiddenProject
+
+
+   Tests run: 3, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.098 sec <<< FAILURE! - in TestTeacherHiddenProject
+buildBoard8x8WithLegendAndPieces(TestTeacherHiddenProject)  Time elapsed: 0.019 sec  <<< FAILURE!
+java.lang.AssertionError:
+Chess not equal expected:<    A  B  C  D  E  F
+ 1  ♟  ♟  ♟  ♟  ♟  ♟
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7  ♙  ♙  ♙  ♙  ♙  ♙
+
+> but was:<kotlin.Unit>
+	at org.junit.Assert.fail(Assert.java:88)
+	at org.junit.Assert.failNotEquals(Assert.java:834)
+	at org.junit.Assert.assertEquals(Assert.java:118)
+	at kotlin.test.junit.JUnitAsserter.assertEquals(JUnitSupport.kt:32)
+	at kotlin.test.AssertionsKt__AssertionsKt.assertEquals(Assertions.kt:57)
+	at kotlin.test.AssertionsKt.assertEquals(Unknown Source)
+	at TestTeacherHiddenProject.buildBoard8x8WithLegendAndPieces(TestTeacherHiddenProject.kt:30)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:564)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:298)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:292)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.lang.Thread.run(Thread.java:832)
+
+Running TestTeacherProject
+
+
+
+
+
+
+
+
+
+
+
+Results :
+
+Failed tests:
+  TestTeacherHiddenProject.buildBoard8x8WithLegendAndPieces:30 Chess not equal expected:<    A  B  C  D  E  F
+ 1  ♟  ♟  ♟  ♟  ♟  ♟
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7  ♙  ♙  ♙  ♙  ♙  ♙
+
+> but was:<kotlin.Unit>
+
+Tests run: 3, Failures: 1, Errors: 0, Skipped: 0
+
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 9.178 s
+[INFO] Finished at: 2020-12-13T11:08:45Z
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:2.19.1:test (default-test) on project fp-projecto-2020-21: Execution default-test of goal org.apache.maven.plugins:maven-surefire-plugin:2.19.1:test failed: The forked VM terminated without properly saying goodbye. VM crash or System.exit called?
+[ERROR] Command was /bin/sh -c cd "someMavenizedProj" && /usr/lib/jvm/java-14-oracle/bin/java -jar 'someMavenizedProj/target/surefire/surefirebooter5075278655671406970.jar' 'someMavenizedProj/target/surefire/surefire184091204595042932tmp' 'someMavenizedProj/target/surefire/surefire_09373920241408990749tmp'
+[ERROR] -> [Help 1]
+[ERROR]
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR]
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/PluginExecutionException

@@ -242,4 +242,18 @@ class TestBuildReport {
         assertEquals(0, buildReport.compilationErrors().size)
         assertEquals(8, buildReport.checkstyleErrors().size)
     }
+
+    @Test
+    fun testExit() {
+
+        val mavenOutputLines = resourceLoader.getResource("file:src/test/sampleMavenOutputs/exit.txt").file.readLines()
+
+        val buildReport = buildReportBuilder.build(mavenOutputLines,
+                "someMavenizedProj",
+                dummyJavaAssignment)
+
+        assertTrue(!buildReport.mavenExecutionFailed())
+        assertEquals(1, buildReport.compilationErrors().size)
+        assertEquals("Invalid call to System.exit(). Please remove this instruction", buildReport.compilationErrors()[0])
+    }
 }
