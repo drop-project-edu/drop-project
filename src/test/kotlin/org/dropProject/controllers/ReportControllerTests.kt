@@ -153,7 +153,12 @@ class ReportControllerTests {
     @DirtiesContext
     fun reportForMultipleSubmissions() {
 
-        testsHelper.makeSeveralSubmissions("projectInvalidStructure1", mvc)
+        testsHelper.makeSeveralSubmissions(
+                listOf("projectInvalidStructure1",
+                        "projectInvalidStructure1",
+                        "projectInvalidStructure1",
+                        "projectInvalidStructure1",
+                        "projectInvalidStructure1"), mvc)
 
         val reportResult = this.mvc.perform(get("/report/testJavaProj")
                 .with(user(TEACHER_1)))
@@ -164,13 +169,13 @@ class ReportControllerTests {
         val report = reportResult.modelAndView.modelMap["submissions"] as List<SubmissionInfo>
 
         assertEquals("report should have 4 lines", 4, report.size)
-        assertEquals("student1,student2", report[0].projectGroup.authorsStr())
-        assertEquals(1, report[0].allSubmissions.size)
+        assertEquals("student1", report[0].projectGroup.authorsStr())
+        assertEquals(2, report[0].allSubmissions.size)
         assertEquals("student2", report[1].projectGroup.authorsStr())
-        assertEquals(2, report[1].allSubmissions.size)
+        assertEquals(1, report[1].allSubmissions.size)
         assertEquals("student3", report[2].projectGroup.authorsStr())
         assertEquals(1, report[2].allSubmissions.size)
-        assertEquals("student1", report[3].projectGroup.authorsStr())
+        assertEquals("student4,student5", report[3].projectGroup.authorsStr())
         assertEquals(1, report[3].allSubmissions.size)
     }
 
@@ -419,28 +424,30 @@ class ReportControllerTests {
         val now = Date()
         val nowStr = now.formatDefault()
 
-        testsHelper.makeSeveralSubmissions("projectInvalidStructure1", mvc, now)
+        testsHelper.makeSeveralSubmissions(
+                listOf("projectInvalidStructure1",
+                        "projectInvalidStructure1",
+                        "projectOK",
+                        "projectInvalidStructure1"), mvc, now)
 
         // mark all as final, otherwise the export will be empty
         val submissions = submissionRepository.findAll()
         for (submission in submissions) {
-            if (submission.id != 4L) {  // this submission is a repeated submission from the same student
-                submission.markedAsFinal = true
-                submissionRepository.save(submission)
-            }
+            submission.markedAsFinal = true
+            submissionRepository.save(submission)
         }
 
-        this.mvc.perform(get("/exportCSV/testJavaProj")
+        this.mvc.perform(get("/exportCSV/testJavaProj?ellapsed=false")
                 .with(user(TEACHER_1)))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/csv"))
                 .andExpect(content().string(
-                        "submission id;student id;student name;project structure;compilation;code quality;ellapsed;submission date\n" +
-                        "1;student1;Student 1;NOK;;;;${nowStr}\n" +
-                        "1;student2;Student 2;NOK;;;;${nowStr}\n" +
-                        "2;student2;Student 2;NOK;;;;${nowStr}\n" +
-                        "3;student3;Student 3;NOK;;;;${nowStr}\n" +
-                        "4;student1;Student 3;NOK;;;;${nowStr}\n"))
+                        "submission id;student id;student name;project structure;compilation;code quality;teacher tests;hidden tests;submission date\n" +
+                        "1;student1;Student 1;NOK;;;;;${nowStr}\n" +
+                        "2;student2;Student 2;NOK;;;;;${nowStr}\n" +
+                        "3;student3;Student 3;OK;OK;OK;2;1;${nowStr}\n" +
+                        "4;student5;Student 5;NOK;;;;;${nowStr}\n" +
+                        "4;student4;Student 4;NOK;;;;;${nowStr}\n"))
 
     }
 
@@ -456,15 +463,17 @@ class ReportControllerTests {
         val now = Date()
         val nowStr = now.formatDefault()
 
-        testsHelper.makeSeveralSubmissions("projectWith1StudentTest", mvc, now)
+        testsHelper.makeSeveralSubmissions(
+                listOf("projectWith1StudentTest",
+                        "projectWith1StudentTest",
+                        "projectWith1StudentTest",
+                        "projectWith1StudentTest"), mvc, now)
 
         // mark all as final, otherwise the export will be empty
         val submissions = submissionRepository.findAll()
         for (submission in submissions) {
-            if (submission.id != 4L) {  // this submission is a repeated submission from the same student
-                submission.markedAsFinal = true
-                submissionRepository.save(submission)
-            }
+            submission.markedAsFinal = true
+            submissionRepository.save(submission)
         }
 
         this.mvc.perform(get("/exportCSV/testJavaProj?ellapsed=false")
@@ -474,11 +483,11 @@ class ReportControllerTests {
                 .andExpect(content().string(
                         """
                             |submission id;student id;student name;project structure;compilation;code quality;student tests;teacher tests;hidden tests;submission date
-                            |1;student1;Student 1;OK;OK;OK;1;2;1;;${nowStr}
-                            |1;student2;Student 2;OK;OK;OK;1;2;1;;${nowStr}
-                            |2;student2;Student 2;OK;OK;OK;1;2;1;;${nowStr}
-                            |3;student3;Student 3;OK;OK;OK;1;2;1;;${nowStr}
-                            |4;student1;Student 3;OK;OK;OK;1;2;1;;${nowStr}
+                            |1;student1;Student 1;OK;OK;OK;1;2;1;${nowStr}
+                            |2;student2;Student 2;OK;OK;OK;1;2;1;${nowStr}
+                            |3;student3;Student 3;OK;OK;OK;1;2;1;${nowStr}
+                            |4;student5;Student 5;OK;OK;OK;1;2;1;${nowStr}
+                            |4;student4;Student 4;OK;OK;OK;1;2;1;${nowStr}
                             |
                         """.trimMargin()))
 

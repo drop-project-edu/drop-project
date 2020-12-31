@@ -128,6 +128,12 @@ data class BuildReport(val mavenOutputLines: List<String>,
             }
         }
 
+        // check if tests didn't run because of a crash or System.exit(). for the lack of better solution, I'll
+        // consider this as a compilation error
+        if (mavenOutputLines.any { it.contains("The forked VM terminated without properly saying goodbye.") }) {
+            errors.add("Invalid call to System.exit(). Please remove this instruction")
+        }
+
         return errors
     }
 
@@ -342,7 +348,6 @@ data class BuildReport(val mavenOutputLines: List<String>,
     }
 
     fun testResults() : List<JUnitMethodResult>? {
-
         if (assignmentTestMethods.isEmpty()) {
             return null  // assignment is not properly configured
         }

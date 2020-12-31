@@ -283,43 +283,64 @@ class TestsHelper {
         return contentJSON.getInt("submissionId")
     }
 
-    fun makeSeveralSubmissions(projectName: String, mvc: MockMvc, submissionDate: Date? = null) {
-        // we start with two authors
-        val projectRoot = resourceLoader.getResource("file:src/test/sampleProjects/$projectName").file
-        val path = File(projectRoot, "AUTHORS.txt").toPath()
-        val lines = Files.readAllLines(path)
-        Assert.assertEquals("student1;Student 1", lines[0])
-        Assert.assertEquals("student2;Student 2", lines[1])
+    fun makeSeveralSubmissions(projectNames: List<String>, mvc: MockMvc, submissionDate: Date? = null) {
+
+        if (projectNames.size > 5) {
+            throw Exception("This function is not prepared for more than 5 submissions")
+        }
 
         val student3 = User("student3", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
+        val student4 = User("student4", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
+        val student5 = User("student5", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
 
-        try {
-            // upload five times, each time with a different author
-            uploadProject(mvc, projectName, defaultAssignmentId, STUDENT_1)
-            uploadProject(mvc, projectName, defaultAssignmentId, STUDENT_2,
-                    authors = listOf(STUDENT_2.username to "Student 2"))
-            uploadProject(mvc, projectName, defaultAssignmentId, student3,
-                    authors = listOf(student3.username to "Student 3"))
-            uploadProject(mvc, projectName, defaultAssignmentId, STUDENT_2,
-                    authors = listOf(STUDENT_2.username to "Student 2"))
-            uploadProject(mvc, projectName, defaultAssignmentId, STUDENT_1,
-                    authors = listOf(STUDENT_1.username to "Student 3"))
+        for ((index, projectName) in projectNames.withIndex()) {
 
-            // force submissionDate
-            if (submissionDate != null) {
-                submissionRepository.findAll().forEach {
-                    it.submissionDate = submissionDate
-                    submissionRepository.save(it)
+            val projectRoot = resourceLoader.getResource("file:src/test/sampleProjects/$projectName").file
+            val path = File(projectRoot, "AUTHORS.txt").toPath()
+            val lines = Files.readAllLines(path)
+            Assert.assertEquals("student1;Student 1", lines[0])
+            Assert.assertEquals("student2;Student 2", lines[1])
+
+            try {
+                val authors: Pair<User, List<Pair<String, String>>?> = when (index) {
+                    0 -> Pair(STUDENT_1, listOf(STUDENT_1.username to "Student 1"))
+                    1 -> Pair(STUDENT_2, listOf(STUDENT_2.username to "Student 2"))
+                    2 -> Pair(student3, listOf(student3.username to "Student 3"))
+                    3 -> Pair(student4, listOf(student4.username to "Student 4", student5.username to "Student 5"))
+                    4 -> Pair(STUDENT_1, listOf(STUDENT_1.username to "Student 1"))  // another submissions from user1
+                    else -> throw Exception("Not possible")
                 }
-            }
 
-        } finally {
-            // restore original AUTHORS.txt
-            val writer = Files.newBufferedWriter(path)
-            writer.write(lines[0])
-            writer.newLine()
-            writer.write(lines[1])
-            writer.close()
+                uploadProject(mvc, projectName, defaultAssignmentId, authors.first, authors.second)
+
+            } finally {
+                // restore original AUTHORS.txt
+                val writer = Files.newBufferedWriter(path)
+                writer.write(lines[0])
+                writer.newLine()
+                writer.write(lines[1])
+                writer.close()
+            }
         }
+
+//            // upload five times, each time with a different author
+//            uploadProject(mvc, projectName, defaultAssignmentId, STUDENT_1)
+//            uploadProject(mvc, projectName, defaultAssignmentId, STUDENT_2,
+//                    authors = listOf(STUDENT_2.username to "Student 2"))
+//            uploadProject(mvc, projectName, defaultAssignmentId, student3,
+//                    authors = listOf(student3.username to "Student 3"))
+//            uploadProject(mvc, projectName, defaultAssignmentId, STUDENT_2,
+//                    authors = listOf(STUDENT_2.username to "Student 2"))
+//            uploadProject(mvc, projectName, defaultAssignmentId, STUDENT_1,
+//                    authors = listOf(STUDENT_1.username to "Student 3"))
+
+        // force submissionDate
+        if (submissionDate != null) {
+            submissionRepository.findAll().forEach {
+                it.submissionDate = submissionDate
+                submissionRepository.save(it)
+            }
+        }
+
     }
 }

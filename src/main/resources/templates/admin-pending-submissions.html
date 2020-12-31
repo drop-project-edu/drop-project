@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="layout/layout :: head (pageTitle='Drop Project - Pending Submissions')">
+</head>
+
+<body>
+
+<div th:replace="layout/layout :: header"></div>
+
+<div class="container" style="max-width: 760px">
+
+    <h1 class="page-header">Pending submissions</h1>
+
+    <div th:if="${message}">
+        <div class="alert alert-info" th:text="${message}"/>
+    </div>
+
+    <div th:if="${error}">
+        <div class="alert alert-danger" th:text="${error}"/>
+    </div>
+
+    <p>&nbsp;</p>
+
+    <!--/*@thymesVar id="pendingSubmissions" type="java.util.ArrayList<org.dropProject.dao.Submission>"*/-->
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Students</th>
+            <th>Assignment</th>
+            <th>Submission Date</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="submission : ${pendingSubmissions}">
+            <td th:text="${submission.group.authorsStr(', ')}" th:title="${submission.group.authorsNameStr()}"></td>
+            <td th:text="${submission.assignmentId}"></td>
+            <td th:text="${#dates.format(submission.submissionDate, 'dd/MMM HH:mm:ss')}"></td>
+            <td th:text="${submission.getStatus().description}"></td>
+            <td>
+                <form class="inline" method="post" th:action="@{'/admin/abort/' + ${submission.id}}">
+                    <input type="submit" value="Abort" class="btn btn-default btn-xs"/>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+</div>
+
+<div th:replace="layout/layout :: footer"></div>
+
+</body>
+</html>

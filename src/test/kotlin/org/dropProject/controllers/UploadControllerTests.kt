@@ -246,6 +246,29 @@ class UploadControllerTests {
 
     @Test
     @DirtiesContext
+    fun uploadProjectInvalidStructure2() {
+
+        val submissionId = testsHelper.uploadProject(this.mvc, "projectInvalidStructure2", "testJavaProj", STUDENT_1)
+
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId"))
+                .andExpect(status().isOk())
+                .andReturn()
+
+        @Suppress("UNCHECKED_CAST")
+        val summary = reportResult.modelAndView.modelMap["summary"] as List<SubmissionReport>
+        assertEquals("Summary should be 1 line", 1, summary.size)
+        assertEquals("projectStructure should be NOK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
+        assertEquals("projectStructure should be NOK (value)", "NOK", summary[0].reportValue)
+
+        @Suppress("UNCHECKED_CAST")
+        val structureErrors = reportResult.modelAndView.modelMap["structureErrors"] as List<String>
+        assertThat(structureErrors,
+                CoreMatchers.hasItems("O projecto contém uma pasta README.md mas devia ser um ficheiro"))
+    }
+
+
+    @Test
+    @DirtiesContext
     fun uploadProjectDoesntCompile() {
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)

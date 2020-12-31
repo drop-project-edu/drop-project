@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="layout/layout :: head (pageTitle='Drop Project - Admin dashboard')">
+</head>
+
+<body>
+
+<div th:replace="layout/layout :: header"></div>
+
+<div class="container" style="max-width: 760px; margin-bottom: 65px">
+
+    <h1 class="page-header">Admin dashboard</h1>
+
+    <div th:if="${message}">
+        <div class="alert alert-info" th:text="${message}"/>
+    </div>
+
+    <div th:if="${error}">
+        <div class="alert alert-danger" th:text="${error}"/>
+    </div>
+
+    <!--/*@thymesVar id="adminDashboardForm" type="org.dropProject.forms.AdminDashboardForm"*/-->
+    <form th:object="${adminDashboardForm}" method="post" th:action="@{/admin/dashboard}" class="form-horizontal">
+        <div class="form-group" th:classappend="${#fields.hasErrors('showMavenOutput')} ? 'has-error' : ''">
+            <label for="showMavenOutput" class="col-sm-3 control-label">Maven Output</label>
+            <div class="col-sm-9">
+                <select th:field="*{showMavenOutput}" class="form-control" id="showMavenOutput">
+                    <option value="false" th:selected="${!adminDashboardForm.showMavenOutput}">No</option>
+                    <option value="true" th:selected="${adminDashboardForm.showMavenOutput}">Yes</option>
+                </select>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Save</button>
+    </form>
+
+</div>
+
+<div th:replace="layout/layout :: footer"></div>
+
+<script th:src="@{/js/dropproject.js}"></script>
+
+</body>
+</html>
