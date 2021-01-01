@@ -44,11 +44,6 @@ class AssignmentService(
         val assignmentTestMethodRepository: AssignmentTestMethodRepository
 ) {
 
-    @Cacheable(
-            value = ["archivedAssignmentsCache"],
-            key = "#principal.name",
-            condition = "#archived==true")
-
     /**
      * Returns the [Assignment]s that a certain user can access. The returned assignments will be the ones
      * that are owned by the user and also the ones that the user has been given access to.
@@ -57,6 +52,10 @@ class AssignmentService(
      * non-archived Assignment(s) will be returned.
      * @return An [ArrayList] of Assignment(s)
      */
+    @Cacheable(
+            value = ["archivedAssignmentsCache"],
+            key = "#principal.name",
+            condition = "#archived==true")
     fun getMyAssignments(principal: Principal, archived: Boolean): List<Assignment> {
         val assignmentsOwns = assignmentRepository.findByOwnerUserId(principal.realName())
 
