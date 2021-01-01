@@ -108,7 +108,7 @@ class ReportController(
      * @param request is an [HttpServletRequest]
      * @return A String with the name of the relevant View
      */
-    @RequestMapping(value = ["/cenas/{assignmentId}"], method = [(RequestMethod.GET)])
+    @RequestMapping(value = ["/signalledSubmissions/{assignmentId}"], method = [(RequestMethod.GET)])
     fun getSignaledGroupsOrSubmissions(@PathVariable assignmentId: String, model: ModelMap,
     principal: Principal, request: HttpServletRequest): String {
         model["assignmentId"] = assignmentId
@@ -117,7 +117,7 @@ class ReportController(
                 includeTestDetails = true,
                 mode = "signalledSubmissions")
 
-        return "signalledSubmissions"
+        return "signalled-submissions"
     }
 
     /**
