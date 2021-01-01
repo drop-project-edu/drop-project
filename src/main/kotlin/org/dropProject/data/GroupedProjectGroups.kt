@@ -24,11 +24,15 @@ import org.dropProject.dao.ProjectGroup
 /**
  * Represents student groups that were signalled as failling exactly the same unit tests
  * @property groups is a List of [ProjectGroup]s
- * @property failedTestNames is a List of Strings with the names of the unit tests that the groups are failing
+ * @property failedTestNames is a List of Strings with the names of the unit tests that the groups are failing. Each
+ * String is the name of one failed test.
  */
 data class GroupedProjectGroups(val groups : List<ProjectGroup>,
                                 val failedTestNames: List<String>) {
 
+    /**
+     * @return a List of Longs representing the IDs of each group
+     */
     fun getGroupIDs(): List<Long> {
         var result = mutableListOf<Long>()
         for(group in groups) {
@@ -37,6 +41,9 @@ data class GroupedProjectGroups(val groups : List<ProjectGroup>,
         return result
     }
 
+    /**
+     * @return a List of Strings representing the names of the authors (i.e. students) in each group
+     */
     fun getGroupMembers(): List<String> {
         var result = mutableListOf<String>()
         for(group in groups) {
@@ -45,10 +52,16 @@ data class GroupedProjectGroups(val groups : List<ProjectGroup>,
         return result;
     }
 
+    /**
+     * @return an Int with the number of failed tests
+     */
     fun showNrOfFailedTests(): Int {
         return failedTestNames.size
     }
 
+    /**
+     * @return a List of Strings with the names of tests that are failed by the groups
+     */
     fun getTestNames(): List<String> {
         return failedTestNames;
     }
