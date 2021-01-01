@@ -19,7 +19,6 @@
  */
 package org.dropProject.data
 
-import org.apache.coyote.http11.Constants.a
 import org.dropProject.dao.ProjectGroup
 
 /**
