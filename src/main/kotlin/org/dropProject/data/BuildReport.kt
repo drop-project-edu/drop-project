@@ -28,6 +28,14 @@ import org.dropProject.services.JacocoResults
 import org.slf4j.LoggerFactory
 import java.math.BigDecimal
 
+/**
+ * Enum representing the types of tests that DP supports:
+ * - Student tests - unit tests written by the students to test their own work;
+ * - Teacher - unit tests written by the teachers to test the student's work; The detailed results of these tests are
+ * always shown to the students.
+ * - Hidden Teacher Tests - unit tests written by the teachers; The results of these tests can be partially visible to
+ * the students or not (configurable when creating the assignment).
+ */
 enum class TestType {
     STUDENT, TEACHER, HIDDEN
 }

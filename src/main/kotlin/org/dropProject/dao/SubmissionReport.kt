@@ -52,6 +52,7 @@ enum class Indicator(val code: String, val description: String) {
 /**
  * Represents a SubmissionReport, which is the status of a [Submission] for a certain indicator (for example, Compilation).
  * Each Submission will have multiple such indicators.
+ *
  * @property id
  * @property submissionId
  * @property reportKey is a String, matching the value of one of the existing [Indicator]s

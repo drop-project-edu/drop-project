@@ -24,6 +24,7 @@ import org.dropProject.dao.Submission
 
 /**
  * Represents the [Submission]s that a [ProjectGroup] did for a certain [Assignment].
+ *
  * @property projectGroup is a ProjectGroup
  * @property lastSubmission is the last (most recent) [Submission] performed by the ProjectGroup
  * @property allSubmissions is a List of [Submission]s

@@ -148,7 +148,6 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
     }
 
     fun getProjectFolderAsFile(submission: Submission, wasRebuilt: Boolean) : File {
-
         val projectFolder =
                 if (submission.submissionId != null) submission.submissionId
                 else submission.gitSubmissionId!!.toString()

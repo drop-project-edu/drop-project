@@ -36,7 +36,7 @@ enum class Language {
 }
 
 /**
- * Enum representing the types of visibility that can be applied to the results of the unit tests.
+ * Enum representing the types of visibility that can be applied to the results of the hidden unit tests.
  */
 enum class TestVisibility {
     HIDE_EVERYTHING,
@@ -55,6 +55,7 @@ enum class LeaderboardType {
 
 /**
  * Represents an Assignment, which is a problem to be solved by a student or group of students.
+ *
  * @property id is a String that uniquely identifies the Assignment
  * @property name is a String representing the name of the Assignment
  * @property packageName is a String with the (optional) Assignment's expected package (e.g. all the code should be

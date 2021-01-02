@@ -22,7 +22,8 @@ package org.dropProject.data
 import org.dropProject.dao.ProjectGroup
 
 /**
- * Represents student groups that were signalled as failling exactly the same unit tests
+ * Represents student groups that were signalled as failling exactly the same unit tests.
+ *
  * @property groups is a List of [ProjectGroup]s
  * @property failedTestNames is a List of Strings with the names of the unit tests that the groups are failing. Each
  * String is the name of one failed test.

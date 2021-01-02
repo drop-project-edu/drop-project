@@ -72,5 +72,4 @@ data class ProjectGroup(
         return authorsStr().hashCode()
     }
 
-
 }
