@@ -40,6 +40,9 @@
                 <div class="alert alert-info" th:text="${message}"/>
             </div>
 
+            <div th:if="${offTheAverage}">
+                <div class="alert alert-info" th:text="${offTheAverage}"/>
+            </div>
 
             <table border="1">
                 <thead>
@@ -70,6 +73,24 @@
                     </td>
                 </tr>
             </table>
+
+            <hr>
+
+            <table border="1">
+                <thead>
+                    <tr>
+                        <td><b>Group ID</b></td>
+                        <td><b>Nr of Submissions</b></td>
+                        <td><b>Nr of Passed Tests</b></td>
+                    </tr>
+                </thead>
+                <tr th:each="groupStats: ${offTheAverage}">
+                    <td th:text="${groupStats.nrPassedTests}"/></td>
+                    <td th:text="${groupStats.nrSubmissions}"/></td>
+                    <td></td>
+                </tr>
+            </table>
+
         </div>
     </div>
 

@@ -42,12 +42,11 @@ import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
-import org.dropProject.data.SubmissionInfo
 import java.io.File
 import java.nio.file.Files
 import org.dropProject.TestsHelper
 import org.dropProject.dao.*
-import org.dropProject.data.GroupedProjectGroups
+import org.dropProject.data.*
 import org.dropProject.extensions.formatDefault
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.AssignmentRepository
@@ -723,7 +722,35 @@ class ReportControllerTests {
         assert(result.containsAll(expected))
     }
 
+    fun testDataForComputeStatistics(): List<GroupSubmissionStatistics> {
+        var groups = testDataForGroupGroupsByFailures();
+        var submissionStatistics = mutableListOf<GroupSubmissionStatistics>()
+
+        submissionStatistics.add(GroupSubmissionStatistics(groups[0].id, 15, 20));
+        submissionStatistics.add(GroupSubmissionStatistics(groups[1].id, 10, 22)); // ignored
+        submissionStatistics.add(GroupSubmissionStatistics(groups[2].id, 17, 18));
+        submissionStatistics.add(GroupSubmissionStatistics(groups[3].id, 15, 5)); // suspicious
+        submissionStatistics.add(GroupSubmissionStatistics(groups[4].id, 20, 20));
+
+        return submissionStatistics
+    }
+
+    @Test
+    fun testComputeStatistics() {
+        var submissionStatistics = testDataForComputeStatistics()
+        var expectedAverageNumberOfSubmissions = (20 + 18 + 5 + 20) / 4.0
+        var expectedStdDev = 7.22
+        var result = computeStatistics(submissionStatistics, 20)
+        assertEquals(expectedAverageNumberOfSubmissions, result.average, 0.01)
+        assertEquals(expectedStdDev, result.standardDeviation, 0.01);
+    }
+
+    @Test
+    fun testIdentifyGroupsOutsideStatisticalNorms() {
+        var submissionStatistics = testDataForComputeStatistics()
+        var assignmentStatistics = computeStatistics(submissionStatistics, 20)
+        var expected = listOf<GroupSubmissionStatistics>(GroupSubmissionStatistics(4, 15, 5))
+        var result = identifyGroupsOutsideStatisticalNorms(submissionStatistics, assignmentStatistics)
+        assertEquals(expected, result)
+    }
 }
-
-
-

@@ -122,21 +122,29 @@ class AssignmentService(
                 val testCounts = assignmentTests.map { "${it.testMethod}:${it.testClass}" to 0 }.toMap(LinkedHashMap())
                 var hashMap : HashMap<ProjectGroup, java.util.ArrayList<String>> = HashMap()
 
+                var submissionStatistics = mutableListOf<GroupSubmissionStatistics>()
+
                 submissionInfoList.forEach {
+
+                    var passedTests = 0
+                    var failedTests = 0
+
                     val group = it.projectGroup
                     var failed = java.util.ArrayList<String>()
                     it.lastSubmission.testResults?.forEach {
                         if (it.type == "Success") {
                             testCounts.computeIfPresent("${it.methodName}:${it.getClassName()}") { _, v -> v + 1 }
+                            passedTests++
                         }
                         else {
-                            failed.add(it.methodName);
+                            failed.add(it.methodName)
+                            failedTests++
                         }
                     }
-
                     if(!failed.isEmpty()) {
                         hashMap.put(group, failed)
                     }
+                    submissionStatistics.add(GroupSubmissionStatistics(group.id, passedTests, it.allSubmissions.size))
                 }
 
                 model["tests"] = testCounts
@@ -149,6 +157,11 @@ class AssignmentService(
                         }
                     }
                     model["signalledGroups"] = signalledGroups
+
+                    var nrTests = assignmentTests.size
+                    var assignmentStatistics = computeStatistics(submissionStatistics, nrTests)
+                    var groupsOutsideNorm = identifyGroupsOutsideStatisticalNorms(submissionStatistics, assignmentStatistics)
+                    model["offTheAverage"] = groupsOutsideNorm
                 }
             }
         }
