@@ -22,7 +22,7 @@ package org.dropProject.services
 import org.dropProject.controllers.ReportController
 import org.dropProject.dao.Assignment
 import org.dropProject.dao.ProjectGroup
-import org.dropProject.data.GroupedProjectGroups
+import org.dropProject.data.*
 import org.dropProject.extensions.realName
 import org.dropProject.repository.*
 import org.springframework.cache.annotation.Cacheable
@@ -149,6 +149,8 @@ class AssignmentService(
 
                 model["tests"] = testCounts
 
+                //filter = "";
+
                 if(mode == "signalledSubmissions") {
                     val signalledGroups = groupGroupsByFailures(hashMap);
                     if(signalledGroups.isEmpty()) {
@@ -162,6 +164,9 @@ class AssignmentService(
                     var assignmentStatistics = computeStatistics(submissionStatistics, nrTests)
                     var groupsOutsideNorm = identifyGroupsOutsideStatisticalNorms(submissionStatistics, assignmentStatistics)
                     model["offTheAverage"] = groupsOutsideNorm
+                    model["assignmentAverageSubmissions"] = assignmentStatistics.average
+                    model["assignmentNrOfTests"] = nrTests
+
                 }
             }
         }
