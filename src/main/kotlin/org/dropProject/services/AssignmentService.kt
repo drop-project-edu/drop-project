@@ -167,6 +167,16 @@ class AssignmentService(
                     model["assignmentAverageSubmissions"] = assignmentStatistics.average
                     model["assignmentNrOfTests"] = nrTests
 
+                    // TEMPORARY JUST TO HAVE DATA AND TEST THE GUI
+                    if(groupsOutsideNorm.isEmpty()) {
+                        var x = mutableListOf<GroupSubmissionStatistics>()
+                        x.add(GroupSubmissionStatistics(1, 10, 5));
+                        x.add(GroupSubmissionStatistics(10, 11, 6));
+                        x.add(GroupSubmissionStatistics(11, 12, 3));
+                        model["offTheAverage"] = x
+                        model["assignmentAverageSubmissions"] = 15
+                        //model["assignmentNrOfTests"] = nrTests
+                    }
                 }
             }
         }
