@@ -533,7 +533,7 @@ class ReportControllerTests {
         testsHelper.uploadProject(this.mvc,"projectOK", defaultAssignmentId, student3,
                 authors = listOf(student3.username to "Student 3"))
 
-        val reportResult = this.mvc.perform(get("/cenas/${defaultAssignmentId}")
+        val reportResult = this.mvc.perform(get("/signalledSubmissions/${defaultAssignmentId}")
                 .with(user(TEACHER_1)))
                 .andExpect(status().isOk())
                 .andReturn()
@@ -570,7 +570,7 @@ class ReportControllerTests {
         testsHelper.uploadProject(this.mvc,"projectOK", defaultAssignmentId, student3,
                 authors = listOf(student3.username to "Student 3"))
 
-        val reportResult = this.mvc.perform(get("/cenas/${defaultAssignmentId}")
+        val reportResult = this.mvc.perform(get("/signalledSubmissions/${defaultAssignmentId}")
                 .with(user(TEACHER_1)))
                 .andExpect(status().isOk())
                 .andReturn()
