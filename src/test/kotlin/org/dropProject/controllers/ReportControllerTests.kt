@@ -726,7 +726,7 @@ class ReportControllerTests {
      * This function generates test data for the code that identifies "suspicious" groups.
      *
      * @param nrSuspiciousCases is an Int, identifying one of two possible scenarios. If the value is 1, the returned
-     * data will contain only one suspicious group. If the value is 2, the retorned data will contain two suspicious
+     * data will contain only one suspicious group. If the value is 2, the returned data will contain two suspicious
      * groups.
      */
     fun testDataForComputeStatistics(nrSuspiciousCases: Int): List<GroupSubmissionStatistics> {
