@@ -9,19 +9,22 @@ package org.dropProject.data
 import org.dropProject.services.AssignmentService
 
 data class AssignmentStatistics(val average : Double,
-                                val standardDeviation : Double) {}
+                                val standardDeviation : Double) {
 
-
-fun identifyGroupsOutsideStatisticalNorms(submissionStatistics : List<GroupSubmissionStatistics>,
-                                          statistics: AssignmentStatistics): List<GroupSubmissionStatistics> {
-    val minPercentage = statistics.average - statistics.standardDeviation
-    var result = mutableListOf<GroupSubmissionStatistics>()
-    for(subStats in submissionStatistics) {
-        if(subStats.nrSubmissions < minPercentage) {
-            result.add(subStats)
+    /**
+     * Identifies [ProjectGroup]'s that have a result that is outside the nome (e.g. they pass "many tests" while having
+     * "little submissions" when compared with the other groups.
+     */
+    fun identifyGroupsOutsideStatisticalNorms(submissionStatistics : List<GroupSubmissionStatistics>): List<GroupSubmissionStatistics> {
+        val minSubmissions = average - standardDeviation
+        var result = mutableListOf<GroupSubmissionStatistics>()
+        for(subStats in submissionStatistics) {
+            if(subStats.nrSubmissions < minSubmissions) {
+                result.add(subStats)
+            }
         }
+        return result
     }
-    return result
 }
 
 /**

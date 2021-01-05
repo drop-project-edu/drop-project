@@ -750,7 +750,7 @@ class ReportControllerTests {
         var submissionStatistics = testDataForComputeStatistics()
         var assignmentStatistics = computeStatistics(submissionStatistics, 20)
         var expected = listOf<GroupSubmissionStatistics>(GroupSubmissionStatistics(4, 15, 5))
-        var result = identifyGroupsOutsideStatisticalNorms(submissionStatistics, assignmentStatistics)
+        var result = assignmentStatistics.identifyGroupsOutsideStatisticalNorms(submissionStatistics)
         assertEquals(expected, result)
     }
 }
