@@ -737,6 +737,9 @@ class ReportControllerTests {
 
     @Test
     fun testComputeStatistics() {
+        var submissionStatistics = testDataForComputeStatistics(1)
+        var nrOfGroups = 4.0
+        var expectedAverageNumberOfSubmissions = (20 + 18 + 5 + 20) / nrOfGroups
         var submissionStatistics = testDataForComputeStatistics()
         var expectedAverageNumberOfSubmissions = (20 + 18 + 5 + 20) / 4.0
         var expectedStdDev = 7.22
