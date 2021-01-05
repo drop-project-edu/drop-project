@@ -6,8 +6,6 @@ package org.dropProject.data
  * @property average is a Double, representing the average number of submissions
  * @property standardDeviation is a Double, representing the standard deviation of the average number of submissions
  */
-import org.dropProject.services.AssignmentService
-
 data class AssignmentStatistics(val average : Double,
                                 val standardDeviation : Double) {
 
@@ -49,7 +47,17 @@ data class GroupSubmissionStatistics(val groupID : Long,
     }
 }
 
-fun computeStatistics(submissionStatistics : List<GroupSubmissionStatistics>, nrTests : Int): AssignmentStatistics {
+/**
+ * Computes statistics for an [Assignment], considering the statistics about each [ProjectGroup]'s submission statistics.
+ *
+ * Only the groups that pass more than a certain number of tests will be considered for the statistics.
+ *
+ * @param submissionStatistics is a List of [GroupSubmissionStatistics]. Each element contains the statistics for a ProjectGroup.
+ * @param nrTests is an Int, indicating how many tests the assignment has.
+ * @param inclusionTreshold is an Int, representing a min percentage that defines the threshold for inclusion of a ProjectGroup
+ * into the calculations. By default, 75% will be used.
+ * @return An [AssignmentStatistics]
+ */
 fun computeStatistics(submissionStatistics : List<GroupSubmissionStatistics>, nrTests : Int, inclusionThreshold: Int = 75): AssignmentStatistics {
     var nrGroupsOverThreshold = 0
     var totalNrOfSubmissionsOverThreshold = 0
