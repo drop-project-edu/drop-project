@@ -175,7 +175,7 @@ class AssignmentService(
                         x.add(GroupSubmissionStatistics(11, 12, 3));
                         model["offTheAverage"] = x
                         model["assignmentAverageSubmissions"] = 15
-                        //model["assignmentNrOfTests"] = nrTests
+                        model["assignmentNrOfTests"] = 15
                     }
                 }
             }
