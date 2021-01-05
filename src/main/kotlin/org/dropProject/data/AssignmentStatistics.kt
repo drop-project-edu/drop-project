@@ -1,5 +1,11 @@
 package org.dropProject.data
 
+/**
+ * Represents statistics about the submissions done
+ *
+ * @property average is a Double, representing the average number of submissions
+ * @property standardDeviation is a Double, representing the standard deviation of the average number of submissions
+ */
 import org.dropProject.services.AssignmentService
 
 data class AssignmentStatistics(val average : Double,
@@ -18,6 +24,13 @@ fun identifyGroupsOutsideStatisticalNorms(submissionStatistics : List<GroupSubmi
     return result
 }
 
+/**
+ * Represents the submission statistics for a certain [ProjectGroup].
+ *
+ * @property groupID is a Long, identifying the ProjectGroup
+ * @property nrPassedTests is an Int
+ * @property nrSubmissions is an Int
+ */
 data class GroupSubmissionStatistics(val groupID : Long,
                                      val nrPassedTests : Int,
                                      val nrSubmissions : Int) {
