@@ -722,7 +722,14 @@ class ReportControllerTests {
         assert(result.containsAll(expected))
     }
 
-    fun testDataForComputeStatistics(): List<GroupSubmissionStatistics> {
+    /**
+     * This function generates test data for the code that identifies "suspicious" groups.
+     *
+     * @param nrSuspiciousCases is an Int, identifying one of two possible scenarios. If the value is 1, the returned
+     * data will contain only one suspicious group. If the value is 2, the retorned data will contain two suspicious
+     * groups.
+     */
+    fun testDataForComputeStatistics(nrSuspiciousCases: Int): List<GroupSubmissionStatistics> {
         var groups = testDataForGroupGroupsByFailures();
         var submissionStatistics = mutableListOf<GroupSubmissionStatistics>()
 
@@ -732,28 +739,62 @@ class ReportControllerTests {
         submissionStatistics.add(GroupSubmissionStatistics(groups[3].id, 15, 5)); // suspicious
         submissionStatistics.add(GroupSubmissionStatistics(groups[4].id, 20, 20));
 
+        if(nrSuspiciousCases == 2) {
+            submissionStatistics.add(GroupSubmissionStatistics(6, 16, 6)) // suspicious
+            submissionStatistics.add(GroupSubmissionStatistics(7, 17, 19))
+            submissionStatistics.add(GroupSubmissionStatistics(8, 14, 14)) // ignored
+        }
+
         return submissionStatistics
     }
 
+    /**
+     * Tested function: computeStatistics()
+     *
+     * This is a test for the calculation of the average and standard deviation statistics.
+     */
     @Test
     fun testComputeStatistics() {
         var submissionStatistics = testDataForComputeStatistics(1)
         var nrOfGroups = 4.0
         var expectedAverageNumberOfSubmissions = (20 + 18 + 5 + 20) / nrOfGroups
-        var submissionStatistics = testDataForComputeStatistics()
-        var expectedAverageNumberOfSubmissions = (20 + 18 + 5 + 20) / 4.0
         var expectedStdDev = 7.22
         var result = computeStatistics(submissionStatistics, 20)
         assertEquals(expectedAverageNumberOfSubmissions, result.average, 0.01)
         assertEquals(expectedStdDev, result.standardDeviation, 0.01);
     }
 
+    /**
+     * Tested function: AssignmentStatistics.identifyGroupsOutsideStatisticalNorms()
+     *
+     * In this scenario there are 4 relevant groups. One (1) of those groups has a result that is considered "too good
+     * to be true" (i.e. it is suspicious). That group should be returned by the function.
+     */
     @Test
     fun testIdentifyGroupsOutsideStatisticalNorms() {
-        var submissionStatistics = testDataForComputeStatistics()
+        var submissionStatistics = testDataForComputeStatistics(1)
         var assignmentStatistics = computeStatistics(submissionStatistics, 20)
         var expected = listOf<GroupSubmissionStatistics>(GroupSubmissionStatistics(4, 15, 5))
         var result = assignmentStatistics.identifyGroupsOutsideStatisticalNorms(submissionStatistics)
+        assert(1 == result.size)
         assertEquals(expected, result)
+    }
+
+    /**
+     * Tested function: AssignmentStatistics.identifyGroupsOutsideStatisticalNorms()
+     *
+     * In this scenario there are 6 relevant groups. Two (2) of those groups have a result that is considered "too good
+     * to be true" (i.e. it is suspicious). Those 2 groups should be returned by the function.
+     */
+    @Test
+    fun testIdentifyGroupsOutsideStatisticalNorms_MoreThanOneSuspiciousGroup() {
+        var submissionStatistics = testDataForComputeStatistics(2)
+        var assignmentStatistics = computeStatistics(submissionStatistics, 20)
+        var gss1 = GroupSubmissionStatistics(4, 15, 5)
+        var gss2 = GroupSubmissionStatistics(6, 16, 6)
+        var expected = listOf<GroupSubmissionStatistics>(gss1, gss2)
+        var result = assignmentStatistics.identifyGroupsOutsideStatisticalNorms(submissionStatistics)
+        assert(2 == result.size)
+        assert(result.containsAll(expected))
     }
 }
