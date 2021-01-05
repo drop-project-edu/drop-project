@@ -63,7 +63,9 @@
     <property name="ftp.nonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
     <property name="sun.cpu.isalist" value=""/>
   </properties>
-  <testcase classname="org.dropProject.samples.sampleJavaAssignment.TestTeacherProject" name="testFindMaxWithNull" time="0.005"/>
+  <testcase name="testFindMaxWithNull" classname="org.dropProject.samples.sampleJavaAssignment.TestTeacherProject" time="0.004"/>
+  <testcase name="testFindMaxAllNegative" classname="org.dropProject.samples.sampleJavaAssignment.TestTeacherProject" time="0"/>
+  <testcase name="testFindMaxNegativeAndPositive" classname="org.dropProject.samples.sampleJavaAssignment.TestTeacherProject" time="0"/>
   <testcase classname="org.dropProject.samples.sampleJavaAssignment.TestTeacherProject" name="testFindMax" time="0.007">
     <failure message="expected:&lt;7&gt; but was:&lt;-2147483648&gt;" type="java.lang.AssertionError">java.lang.AssertionError: expected:&lt;7&gt; but was:&lt;-2147483648&gt;
 	at org.junit.Assert.fail(Assert.java:88)
