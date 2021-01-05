@@ -29,7 +29,6 @@ import org.eclipse.jgit.api.errors.RefNotAdvertisedException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.CacheManager
-import org.springframework.cache.annotation.Cacheable
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
@@ -41,7 +40,10 @@ import java.io.File
 import java.security.Principal
 import javax.validation.Valid
 
-
+/**
+ * AssignmentController contains MVC controller functions that handle requests related with [Assignment]s
+ * (for example, assignment creation, edition, etc.)
+ */
 @Controller
 @RequestMapping("/assignment")
 class AssignmentController(
@@ -106,7 +108,7 @@ class AssignmentController(
             return "assignment-form"
         }
 
-        var assignment : Assignment
+        var assignment: Assignment
         if (!assignmentForm.editMode) {   // create
 
             if (assignmentForm.acl?.split(",")?.contains(principal.realName()) == true) {
@@ -153,24 +155,7 @@ class AssignmentController(
                 }
             }
 
-            val newAssignment = Assignment(id = assignmentForm.assignmentId!!, name = assignmentForm.assignmentName!!,
-                    packageName = assignmentForm.assignmentPackage, language = assignmentForm.language!!,
-                    dueDate = assignmentForm.dueDate, acceptsStudentTests = assignmentForm.acceptsStudentTests,
-                    minStudentTests = assignmentForm.minStudentTests,
-                    calculateStudentTestsCoverage = assignmentForm.calculateStudentTestsCoverage,
-                    cooloffPeriod = assignmentForm.cooloffPeriod,
-                    maxMemoryMb = assignmentForm.maxMemoryMb, submissionMethod = assignmentForm.submissionMethod!!,
-                    gitRepositoryUrl = assignmentForm.gitRepositoryUrl!!, ownerUserId = principal.realName(),
-                    gitRepositoryFolder = assignmentForm.assignmentId!!, showLeaderBoard = assignmentForm.leaderboardType != null,
-                    hiddenTestsVisibility = assignmentForm.hiddenTestsVisibility,
-                    leaderboardType = assignmentForm.leaderboardType)
-
-            // associate tags
-            val tagNames = assignmentForm.assignmentTags?.toLowerCase()?.split(",")
-            tagNames?.forEach {
-                newAssignment.tags.add(assignmentTagRepository.findByName(it.trim().toLowerCase()) ?:
-                AssignmentTag(name = it.trim().toLowerCase()))
-            }
+            val newAssignment = createAssignmentBasedOnForm(assignmentForm, principal)
 
             assignmentRepository.save(newAssignment)
 
@@ -203,27 +188,7 @@ class AssignmentController(
 
             // TODO: check again for assignment integrity
 
-            existingAssignment.name = assignmentForm.assignmentName!!
-            existingAssignment.packageName = assignmentForm.assignmentPackage
-            existingAssignment.language = assignmentForm.language!!
-            existingAssignment.dueDate = assignmentForm.dueDate
-            existingAssignment.submissionMethod = assignmentForm.submissionMethod!!
-            existingAssignment.acceptsStudentTests = assignmentForm.acceptsStudentTests
-            existingAssignment.minStudentTests = assignmentForm.minStudentTests
-            existingAssignment.calculateStudentTestsCoverage = assignmentForm.calculateStudentTestsCoverage
-            existingAssignment.cooloffPeriod = assignmentForm.cooloffPeriod
-            existingAssignment.maxMemoryMb = assignmentForm.maxMemoryMb
-            existingAssignment.showLeaderBoard = assignmentForm.leaderboardType != null
-            existingAssignment.hiddenTestsVisibility = assignmentForm.hiddenTestsVisibility
-            existingAssignment.leaderboardType = assignmentForm.leaderboardType
-
-            // update tags
-            val tagNames = assignmentForm.assignmentTags?.toLowerCase()?.split(",")
-            existingAssignment.tags.clear()
-            tagNames?.forEach {
-                existingAssignment.tags.add(assignmentTagRepository.findByName(it.trim().toLowerCase()) ?:
-                AssignmentTag(name = it.trim().toLowerCase()))
-            }
+            updateAssignment(existingAssignment, assignmentForm)
 
             assignmentRepository.save(existingAssignment)
 
@@ -260,6 +225,62 @@ class AssignmentController(
         } else {
             redirectAttributes.addFlashAttribute("message", "Assignment was successfully ${if (assignmentForm.editMode) "updated" else "created"}")
             return "redirect:/assignment/info/${assignmentForm.assignmentId}"
+        }
+    }
+
+    /**
+     * Creates a new [Assignment] based on the contents of an [AssignmentForm].
+     * @param assignmentForm, the AssignmentForm from which the Assignment contents will be copied
+     * @return the created Assignment
+     */
+    private fun createAssignmentBasedOnForm(assignmentForm: AssignmentForm, principal: Principal): Assignment {
+        val newAssignment = Assignment(id = assignmentForm.assignmentId!!, name = assignmentForm.assignmentName!!,
+                packageName = assignmentForm.assignmentPackage, language = assignmentForm.language!!,
+                dueDate = assignmentForm.dueDate, acceptsStudentTests = assignmentForm.acceptsStudentTests,
+                minStudentTests = assignmentForm.minStudentTests,
+                calculateStudentTestsCoverage = assignmentForm.calculateStudentTestsCoverage,
+                cooloffPeriod = assignmentForm.cooloffPeriod,
+                maxMemoryMb = assignmentForm.maxMemoryMb, submissionMethod = assignmentForm.submissionMethod!!,
+                gitRepositoryUrl = assignmentForm.gitRepositoryUrl!!, ownerUserId = principal.realName(),
+                gitRepositoryFolder = assignmentForm.assignmentId!!, showLeaderBoard = assignmentForm.leaderboardType != null,
+                hiddenTestsVisibility = assignmentForm.hiddenTestsVisibility,
+                leaderboardType = assignmentForm.leaderboardType)
+
+        // associate tags
+        val tagNames = assignmentForm.assignmentTags?.toLowerCase()?.split(",")
+        tagNames?.forEach {
+            newAssignment.tags.add(assignmentTagRepository.findByName(it.trim().toLowerCase())
+                    ?: AssignmentTag(name = it.trim().toLowerCase()))
+        }
+        return newAssignment
+    }
+
+    /**
+     * Updates an existing Assignment with the contents of an AssignmentForm.
+     * @param existingAssignment, the Assignment that will be updated
+     * @param assignmentForm, the AssignmentForm from which the Assignment contents will be copied
+     */
+    private fun updateAssignment(existingAssignment: Assignment, assignmentForm: AssignmentForm) {
+        existingAssignment.name = assignmentForm.assignmentName!!
+        existingAssignment.packageName = assignmentForm.assignmentPackage
+        existingAssignment.language = assignmentForm.language!!
+        existingAssignment.dueDate = assignmentForm.dueDate
+        existingAssignment.submissionMethod = assignmentForm.submissionMethod!!
+        existingAssignment.acceptsStudentTests = assignmentForm.acceptsStudentTests
+        existingAssignment.minStudentTests = assignmentForm.minStudentTests
+        existingAssignment.calculateStudentTestsCoverage = assignmentForm.calculateStudentTestsCoverage
+        existingAssignment.cooloffPeriod = assignmentForm.cooloffPeriod
+        existingAssignment.maxMemoryMb = assignmentForm.maxMemoryMb
+        existingAssignment.showLeaderBoard = assignmentForm.leaderboardType != null
+        existingAssignment.hiddenTestsVisibility = assignmentForm.hiddenTestsVisibility
+        existingAssignment.leaderboardType = assignmentForm.leaderboardType
+
+        // update tags
+        val tagNames = assignmentForm.assignmentTags?.toLowerCase()?.split(",")
+        existingAssignment.tags.clear()
+        tagNames?.forEach {
+            existingAssignment.tags.add(assignmentTagRepository.findByName(it.trim().toLowerCase())
+                    ?: AssignmentTag(name = it.trim().toLowerCase()))
         }
     }
 
@@ -310,6 +331,25 @@ class AssignmentController(
             throw IllegalAccessError("Assignments can only be changed by their owner or authorized teachers")
         }
 
+        val assignmentForm = createAssignmentFormBasedOnAssignment(assignment, acl)
+
+        assignmentForm.editMode = true
+
+        model["assignmentForm"] = assignmentForm
+        model["allTags"] = assignmentTagRepository.findAll()
+                .map { "'" + it.name + "'" }
+                .joinToString(separator = ",", prefix = "[", postfix = "]")
+
+        return "assignment-form";
+    }
+
+    /**
+     * Creates an [AssignmentForm] based on the [Assignment] object.
+     * @param assignment is the Assignment with the information to place in the form
+     * @param acl is a List of [AssignmentACL], containing the user's that have access to the repository
+     * @return The created AssignmentForm
+     */
+    private fun createAssignmentFormBasedOnAssignment(assignment: Assignment, acl: List<AssignmentACL>): AssignmentForm {
         val assignmentForm = AssignmentForm(assignmentId = assignment.id,
                 assignmentName = assignment.name,
                 assignmentTags = if (assignment.tags.isEmpty()) null else assignment.tags.joinToString { t -> t.name },
@@ -327,7 +367,7 @@ class AssignmentController(
                 leaderboardType = assignment.leaderboardType
         )
 
-        val assignees = assigneeRepository.findByAssignmentIdOrderByAuthorUserId(assignmentId)
+        val assignees = assigneeRepository.findByAssignmentIdOrderByAuthorUserId(assignment.id)
         if (!assignees.isEmpty()) {
             val assigneesStr = assignees.map { it -> it.authorUserId }.joinToString(",\n")
             assignmentForm.assignees = assigneesStr
@@ -337,15 +377,7 @@ class AssignmentController(
             val otherTeachersStr = acl.map { it -> it.userId }.joinToString(",\n")
             assignmentForm.acl = otherTeachersStr
         }
-
-        assignmentForm.editMode = true
-
-        model["assignmentForm"] = assignmentForm
-        model["allTags"] = assignmentTagRepository.findAll()
-                .map { "'" + it.name + "'" }
-                .joinToString(separator = ",", prefix = "[", postfix = "]")
-
-        return "assignment-form";
+        return assignmentForm
     }
 
     @RequestMapping(value = ["/refresh-git/{assignmentId}"], method = [(RequestMethod.POST)])
@@ -426,6 +458,15 @@ class AssignmentController(
         return "setup-git"
     }
 
+    /**
+     * Controller to handle requests related with connecting an [Assigment] with a git repository. This is needed
+     * to obtain the information that is defined by code (instructions, unit tests, etc).
+     * @param assignmentId is a String representing the relevant Assignment
+     * @param redirectAttributes is a RedirectAttributes
+     * @param model is a [ModelMap] that will be populated with information to use in a View
+     * @param principal is a [Principal] representing the user making the request
+     * @return A String with the name of the relevant View
+     */
     @RequestMapping(value = ["/setup-git/{assignmentId}"], method = [(RequestMethod.POST)])
     fun connectAssignmentToGitRepository(@PathVariable assignmentId: String, redirectAttributes: RedirectAttributes,
                                          model: ModelMap, principal: Principal): String {
@@ -483,22 +524,47 @@ class AssignmentController(
         return "redirect:/assignment/info/${assignment.id}"
     }
 
+    /**
+     * Controller to handle the page that lists the [Assignment]s to which the logged-in
+     * user has access.
+     * @param tags is a String containing the names of multiple tags. Each tag name is separated by a comma. Only the
+     * assignments that have all the tags will be placed in the model.
+     * @param model is a [ModelMap] that will be populated with information to use in a View
+     * @param principal is a [Principal] representing the user making the request
+     * @return A String with the name of the relevant View
+     */
     @RequestMapping(value = ["/my"], method = [(RequestMethod.GET)])
-    fun listMyAssignments(@RequestParam(name="tags", required = false) tags: String?,
+    fun listMyAssignments(@RequestParam(name = "tags", required = false) tags: String?,
                           model: ModelMap, principal: Principal): String {
 
         listMyFilteredAssignments(principal, tags, model, archived = false)
         return "teacher-assignments-list"
     }
 
+    /**
+     * Controller to handle the page that lists the **archived** assignments to which the logged-in
+     * teacher has access.
+     * @param tags is a String containing the names of multiple tags. Each tag name is separated by a comma. Only the
+     * assignments that have all the tags will be placed in the model.
+     * @param model is a [ModelMap] that will be populated with information to use in a View
+     * @param principal is a [Principal] representing the user making the request
+     * @return A String with the name of the relevant View
+     */
     @RequestMapping(value = ["/archived"], method = [(RequestMethod.GET)])
-    fun listMyArchivedAssignments(@RequestParam(name="tags", required = false) tags: String?,
+    fun listMyArchivedAssignments(@RequestParam(name = "tags", required = false) tags: String?,
                                   model: ModelMap, principal: Principal): String {
 
         listMyFilteredAssignments(principal, tags, model, archived = true)
         return "teacher-assignments-list"
     }
 
+    /**
+     * Controller to handle the deletion of an [Assignment].
+     * @param assignmentId is a String representing the relevant Assignment
+     * @param redirectAttributes is a RedirectAttributes
+     * @param principal is a [Principal] representing the user making the request
+     * @return A String with the name of the relevant View
+     */
     @RequestMapping(value = ["/delete/{assignmentId}"], method = [(RequestMethod.POST)])
     fun deleteAssignment(@PathVariable assignmentId: String, redirectAttributes: RedirectAttributes,
                          principal: Principal): String {
@@ -528,6 +594,13 @@ class AssignmentController(
         return "redirect:/assignment/my"
     }
 
+    /**
+     * Controller that allows toggling the status of an [Assignment] between "active" and "inactive".
+     * @param assignmentId is a String representing the relevant Assignment
+     * @param redirectAttributes is a RedirectAttributes
+     * @param principal is a [Principal] representing the user making the request
+     * @return A String with the name of the relevant View
+     */
     @RequestMapping(value = ["/toggle-status/{assignmentId}"], method = [(RequestMethod.GET), (RequestMethod.POST)])
     fun toggleAssignmentStatus(@PathVariable assignmentId: String, redirectAttributes: RedirectAttributes,
                                principal: Principal): String {
@@ -572,6 +645,13 @@ class AssignmentController(
         return "redirect:/assignment/my"
     }
 
+    /**
+     * Controller that allows the archiving of an [Assignment].
+     * @param assignmentId is a String representing the relevant Assignment
+     * @param redirectAttributes is a RedirectAttributes
+     * @param principal is a [Principal] representing the user making the request
+     * @return A String with the name of the relevant View
+     */
     @RequestMapping(value = ["/archive/{assignmentId}"], method = [(RequestMethod.POST)])
     fun archiveAssignment(@PathVariable assignmentId: String,
                           redirectAttributes: RedirectAttributes,
@@ -596,10 +676,18 @@ class AssignmentController(
 
     }
 
+    /**
+     * Controller that allows marking the latest submission of each group as final.
+     * Note that the latest submission might not be the best one.
+     * @param assignmentId is a String representing the relevant Assignment
+     * @param redirectAttributes is a RedirectAttributes
+     * @param principal is a [Principal] representing the user making the request
+     * @return A String with the name of the relevant View
+     */
     @RequestMapping(value = ["/markAllAsFinal/{assignmentId}"], method = [(RequestMethod.POST)])
     fun markAllSubmissionsAsFinal(@PathVariable assignmentId: String,
                                   redirectAttributes: RedirectAttributes,
-                                  principal: Principal) : String {
+                                  principal: Principal): String {
 
         val assignment = assignmentRepository.getOne(assignmentId)
         val acl = assignmentACLRepository.findByAssignmentId(assignment.id)
@@ -624,6 +712,12 @@ class AssignmentController(
         return "redirect:/report/${assignmentId}"
     }
 
+    /**
+     * Collects [Assignment]s that have certain [tags] into the [model].
+     * @param model is a [ModelMap] that will be populated with information to use in a View.
+     * @param tags is a String containing the names of multiple tags. Each tag name is separated by a comma. Only the
+     * assignments that have all the tags will be placed in the model.
+     */
     private fun listMyFilteredAssignments(principal: Principal, tags: String?, model: ModelMap, archived: Boolean) {
         var assignments = assignmentService.getMyAssignments(principal, archived)
 

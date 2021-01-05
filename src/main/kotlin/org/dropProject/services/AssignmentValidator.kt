@@ -33,7 +33,14 @@ import org.springframework.stereotype.Service
 import java.io.File
 import java.io.FileReader
 
-
+/**
+ * This class performs validation of the assignments created by teachers, in order to make sure that they have the
+ * correct formats and include the expected plugins.
+ *
+ * @property report is a List of [Info], containing warnings about the problems that were identified during the validation
+ * @property testMethods is a List of String, containing the names of the JUnit test methods that were found in the assignment's
+ * test classes. Each String will contain the name of a test method, prefixed by the name of the class where it was declared.
+ */
 @Service
 @Scope("prototype")
 class AssignmentValidator {
@@ -45,6 +52,12 @@ class AssignmentValidator {
     val report = mutableListOf<Info>()
     val testMethods = mutableListOf<String>()
 
+    /**
+     * Validates the [Assignment].
+     *
+     * @param assignmentFolder is a File, representing the file system folder where the assignment's code is stored
+     * @param assignment is the Assignment to validate
+     */
     fun validate(assignmentFolder: File, assignment: Assignment) {
 
         val pomFile = File(assignmentFolder, "pom.xml")
@@ -139,6 +152,14 @@ class AssignmentValidator {
         }
     }
 
+    /**
+     * Performs [Assignment] validations related with the calculation the test coverage of student's own tests.
+     * Namely, it validates if an assignment that is configured to calculate the coverage contains the necessary plugins
+     * in the respective pom.xml file (and vice versa).
+     *
+     * @param pomModel is a Model
+     * @param assignment is the Assignment to validate
+     */
     private fun validatePomPreparedForCoverage(pomModel: Model, assignment: Assignment) {
         val surefirePlugin = pomModel.build.plugins.find { it.artifactId == "jacoco-maven-plugin" }
         val packagePath = assignment.packageName?.replace(".","/").orEmpty()
@@ -225,6 +246,13 @@ class AssignmentValidator {
         }
     }
 
+    /**
+     * Validates an [Assignment]'s test files to determine if the test classes are respecting the expected
+     * formats (for example, ensure that the respective filename starts with the correct prefix).
+     *
+     * @param assignmentFolder is a File, representing the file system folder where the assignment's code is stored
+     * @param assignment is the Assignment to validate
+     */
     private fun validateProperTestClasses(assignmentFolder: File, assignment: Assignment) {
 
         var correctlyPrefixed = true
@@ -323,7 +351,6 @@ class AssignmentValidator {
     }
 
     private fun searchAllSourceFilesWithinFolder(folder: File, text: String): Boolean {
-
         return folder.walkTopDown()
                 .filter { it -> it.name.endsWith(".java") || it.name.endsWith(".kt") }
                 .any {

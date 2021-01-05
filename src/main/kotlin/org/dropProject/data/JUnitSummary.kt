@@ -19,6 +19,16 @@
  */
 package org.dropProject.data
 
+/**
+ * Represents the summary of execution of a set of JUnit Tests.
+ *
+ * @property numTests is an Int
+ * @property numFailures is an Int representing the number of failed tests
+ * @property numErrors is an Int representing the number of tests that resulted in a runtime error
+ * (e.g. "ArrayIndexOutOfBoundsException")
+ * @property numSkipped is an Int
+ * @property ellapsed is a Float representing the time that the execution of the tests took
+ */
 data class JUnitSummary(
         val numTests: Int,
         val numFailures: Int,

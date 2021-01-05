@@ -27,6 +27,9 @@
         <li role="presentation" th:classappend="${mode == 'testMatrix'} ? 'active' : ''">
             <a th:href="@{'/testMatrix/' + ${assignmentId}}" data-toggle="tab" data-target="#myTab">Test Matrix</a>
         </li>
+        <li role="presentation" th:classappend="${mode == 'signalledSubmissions'} ? 'active' : ''">
+            <a th:href="@{'/signalledSubmissions/' + ${assignmentId}}" data-toggle="tab" data-target="#myTab">Signalled Students</a>
+        </li>
     </ul>
 
     <div class="tab-content ">

@@ -209,6 +209,14 @@
 		</dependency>
 	</dependencies>
 
+	<pluginRepositories>
+		<pluginRepository>
+			<id>jcenter</id>
+			<name>JCenter</name>
+			<url>https://jcenter.bintray.com/</url>
+		</pluginRepository>
+	</pluginRepositories>
+
 	<build>
 		<finalName>drop-project</finalName>
 		<sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
@@ -361,6 +369,20 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>org.jetbrains.dokka</groupId>
+				<artifactId>dokka-maven-plugin</artifactId>
+				<!--<version>${dokka.version}</version>-->
+				<version>1.4.20</version>
+				<executions>
+					<execution>
+						<phase>pre-site</phase>
+						<goals>
+							<goal>dokka</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 
@@ -377,6 +399,10 @@
 		<developer>
 			<name>Pedro Alves</name>
 			<email>pedro.alves@ulusofona.pt</email>
+		</developer>
+		<developer>
+			<name>Bruno Cipriano</name>
+			<email>bcipriano@ulusofona.pt</email>
 		</developer>
 	</developers>
 

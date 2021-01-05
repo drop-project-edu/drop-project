@@ -23,6 +23,14 @@ import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.Id
 
+/**
+ * Represents an [Assignment]'s JUnit test method/function.
+ *
+ * @property id is a primary-key like generated value
+ * @property assignmentId is a String, identifying the assignment
+ * @property testClass is a String with the name of the test class
+ * @property testMethod is a String with the name of the method
+ */
 @Entity
 data class AssignmentTestMethod(
         @Id

@@ -27,11 +27,9 @@ import org.commonmark.ext.autolink.AutolinkExtension
 import org.commonmark.parser.Parser
 import org.commonmark.renderer.html.HtmlRenderer
 import org.dropProject.MAVEN_MAX_EXECUTION_TIME
-import org.dropProject.dao.Indicator
-import org.dropProject.dao.LeaderboardType
-import org.dropProject.dao.Submission
-import org.dropProject.dao.SubmissionStatus
+import org.dropProject.dao.*
 import org.dropProject.data.AuthorDetails
+import org.dropProject.data.GroupedProjectGroups
 import org.dropProject.data.TestType
 import org.dropProject.extensions.formatDefault
 import org.dropProject.extensions.realName
@@ -62,8 +60,13 @@ import java.security.Principal
 import java.util.*
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
+import kotlin.collections.HashMap
 import kotlin.collections.LinkedHashMap
 
+/**
+ * ReportController contains MVC controller functions to handle requests related with submission reports
+ * (for example, build report, submissions list, etc.).
+ */
 @Controller
 class ReportController(
         val authorRepository: AuthorRepository,
@@ -81,7 +84,8 @@ class ReportController(
         val submissionService: SubmissionService,
         val storageService: StorageService,
         val zipService: ZipService,
-        val templateEngine: TemplateEngine
+        val templateEngine: TemplateEngine,
+        val assignmentService: AssignmentService
 ) {
 
     @Value("\${mavenizedProjects.rootLocation}")
@@ -95,22 +99,63 @@ class ReportController(
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
+    /**
+     * Controller that handles requests for the list of signalled groups in an [Assignment].
+     * The signalled groups are groups of students that are failing exactly the same tests.
+     * @param assignmentId is a String identifying the relevant Assignment
+     * @param model is a [ModelMap] that will be populated with information to use in a View
+     * @param principal is a [Principal] representing the user making the request
+     * @param request is an [HttpServletRequest]
+     * @return A String with the name of the relevant View
+     */
+    @RequestMapping(value = ["/signalledSubmissions/{assignmentId}"], method = [(RequestMethod.GET)])
+    fun getSignaledGroupsOrSubmissions(@PathVariable assignmentId: String, model: ModelMap,
+    principal: Principal, request: HttpServletRequest): String {
+        model["assignmentId"] = assignmentId
+
+        assignmentService.getAllSubmissionsForAssignment(assignmentId, principal, model, request,
+                includeTestDetails = true,
+                mode = "signalledSubmissions")
+
+        return "signalled-submissions"
+    }
+
+    /**
+     * Controller that handles requests for an [Assignment]'s report (for example, list of submissions per student/group).
+     * @param assignmentId is a String identifying the relevant Assignment
+     * @param model is a [ModelMap] that will be populated with information to use in a View
+     * @param principal is a [Principal] representing the user making the request
+     * @param request is an [HttpServletRequest]
+     * @return A String with the name of the relevant View
+     */
     @RequestMapping(value = ["/report/{assignmentId}"], method = [(RequestMethod.GET)])
     fun getReport(@PathVariable assignmentId: String, model: ModelMap,
                   principal: Principal, request: HttpServletRequest): String {
         model["assignmentId"] = assignmentId
 
-        getAllSubmissionsForAssignment(assignmentId, principal, model, request, mode = "summary")
+        assignmentService.getAllSubmissionsForAssignment(assignmentId, principal, model, request, mode = "summary")
 
         return "report"
     }
 
+    /**
+     * Controller that handles requests for an [Assignment]'s Test Matrix. The Test Matrix is a matrix where each row
+     * represents a student/group and each column represents an evaluation test. The intersection between lines and
+     * columns will tell us if each group has passed each specific test.
+     * @param assignmentId is a String identifying the relevant Assignment
+     * @param model is a [ModelMap] that will be populated with information to use in a View
+     * @param principal is a [Principal] representing the user making the request
+     * @param request is an [HttpServletRequest]
+     * @return A String with the name of the relevant View
+     */
     @RequestMapping(value = ["/testMatrix/{assignmentId}"], method = [(RequestMethod.GET)])
     fun getTestMatrix(@PathVariable assignmentId: String, model: ModelMap,
                   principal: Principal, request: HttpServletRequest): String {
         model["assignmentId"] = assignmentId
 
-        getAllSubmissionsForAssignment(assignmentId, principal, model, request, includeTestDetails = true, mode = "testMatrix")
+        assignmentService.getAllSubmissionsForAssignment(assignmentId, principal, model, request,
+                includeTestDetails = true,
+                mode = "testMatrix")
 
         return "test-matrix"
     }
@@ -202,6 +247,15 @@ class ReportController(
         return "build-report"
     }
 
+    /**
+     * Controller that handles the download of a specific submission's code. The submission is downloaded in
+     * a format compatible with Maven.
+     * @param submissionId is a Long, representing the [Submission] to download
+     * @param principal is a [Principal] representing the user making the request
+     * @param request is a [HttpServletRequest]
+     * @param response is a [HttpServletResponse]
+     * @return A [FileSystemResource] containing a [ZipFile]
+     */
     @RequestMapping(value = ["/downloadMavenProject/{submissionId}"],
             method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
     @ResponseBody
@@ -234,7 +288,15 @@ class ReportController(
         }
     }
 
-
+    /**
+     * Controller that handles the download of a specific submission's code. The submission is downloaded in
+     * it's original format.
+     * @param submissionId is a Long, representing the Submission to download
+     * @param principal is a [Principal] representing the user making the request
+     * @param request is an [HttpServletRequest]
+     * @param response is an [HttpServletResponse]
+     * @return A [FileSystemResource] containing a [ZipFile]
+     */
     @RequestMapping(value = ["/downloadOriginalProject/{submissionId}"],
             method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
     @ResponseBody
@@ -290,6 +352,14 @@ class ReportController(
         }
     }
 
+    /**
+     * Controller that handles requests related with the download of ALL the students' submissions (code)
+     * for a certain Assignment. The submissions are downloaded in their original format.
+     * @param assignmentId is a String identifying the relevant Assignment
+     * @param principal is a [Principal] representing the user making the request
+     * @param response is an [HttpServletResponse]
+     * @return A [FileSystemResource] containing a [ZipFile]
+     */
     @RequestMapping(value = ["/downloadOriginalAll/{assignmentId}"],
             method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
     @ResponseBody
@@ -354,7 +424,14 @@ class ReportController(
 
     }
 
-
+    /**
+     * Controller that handles requests related with the download of ALL the students' submissions (code)
+     * for a certain [Assignment]. The submissions are downloaded in a format compatible with Maven.
+     * @param assignmentId is a String identifying the relevant Assignment
+     * @param principal is a [Principal] representing the user making the request
+     * @param response is an [HttpServletResponse]
+     * @return A [FileSystemResource] containing a [ZipFile]
+     */
     @RequestMapping(value = ["/downloadMavenizedAll/{assignmentId}"],
             method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
     @ResponseBody
@@ -444,6 +521,15 @@ class ReportController(
 
     }
 
+    /**
+     * Controller that handles requests for the submissions of the current user in a certain [Assigment].
+     * @param assignmentId is a String identifying the relevant assignment
+     * @param model is a [ModelMap] that will be populated with information to use in a View
+     * @param principal is a [Principal] representing the user making the request. This is the user whose submissions
+     * will be returned.
+     * @param request is an [HttpServletRequest]
+     * @return A String with the name of the relevant View
+     */
     @RequestMapping(value = ["/mySubmissions"], method = [(RequestMethod.GET)])
     fun getMySubmissions(@RequestParam("assignmentId") assignmentId: String, model: ModelMap,
                          principal: Principal, request: HttpServletRequest): String {
@@ -476,6 +562,16 @@ class ReportController(
         return "submissions"
     }
 
+    /**
+     * Controller that handles requests related with listing [Submission]s of a certain [Assignment] and
+     * [ProjectGroup].
+     * @param assignmentId is a String identifying the relevant Assignment
+     * @param groupId is a String identifying the relevant ProjectGroup
+     * @param model is a [ModelMap] that will be populated with information to use in a View
+     * @param principal is a [Principal] representing the user making the request
+     * @param request is an [HttpServletRequest]
+     * @return A String with the name of the relevant View
+     */
     @RequestMapping(value = ["/submissions"], method = [(RequestMethod.GET)])
     fun getSubmissions(@RequestParam("assignmentId") assignmentId: String,
                        @RequestParam("groupId") groupId: Long,
@@ -521,7 +617,11 @@ class ReportController(
         return "submissions"
     }
 
-
+    /**
+     * Controller that handles the exportation of an Assignment's submission results to a CSV file.
+     * @param assignmentId is a String, identifying the relevant Assignment
+     * @return A ResponseEntity<String>
+     */
     @RequestMapping(value = ["/exportCSV/{assignmentId}"], method = [(RequestMethod.GET)])
     fun exportCSV(@PathVariable assignmentId: String,
                   @RequestParam(name="ellapsed", defaultValue = "true") includeEllapsed: Boolean, principal: Principal): ResponseEntity<String> {
@@ -619,6 +719,14 @@ class ReportController(
         return ResponseEntity(resultCSV, headers, HttpStatus.OK);
     }
 
+    /**
+     * Controller that handles requests for an [Assignment]'s Leaderboard.
+     * @param assignmentId is a String identifying the relevant Assignment
+     * @param model is a [ModelMap] that will be populated with information to use in a View
+     * @param principal is a [Principal] representing the user making the request
+     * @param request is an [HttpServletRequest]
+     * @return A String with the name of the relevant View
+     */
     @RequestMapping(value = ["/leaderboard/{assignmentId}"], method = [(RequestMethod.GET)])
     fun getLeaderboard(@PathVariable assignmentId: String, model: ModelMap,
                        principal: Principal, request: HttpServletRequest): String {
@@ -718,46 +826,4 @@ class ReportController(
 //
 //    }
 
-    private fun getAllSubmissionsForAssignment(assignmentId: String, principal: Principal, model: ModelMap,
-                                               request: HttpServletRequest, includeTestDetails: Boolean = false,
-                                               mode: String) {
-        val assignment = assignmentRepository.findById(assignmentId).get()
-        val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
-
-        if (principal.realName() != assignment.ownerUserId && acl.find { it.userId == principal.realName() } == null) {
-            throw IllegalAccessError("Assignment reports can only be accessed by their owner or authorized teachers")
-        }
-
-        val submissionInfoList = submissionService.getSubmissionsList(assignment)
-
-        if (submissionInfoList.any { it.lastSubmission.coverage != null }) {
-            model["hasCoverage"] = true
-        }
-
-        if (includeTestDetails) {
-            val assignmentTests = assignmentTestMethodRepository.findByAssignmentId(assignmentId)
-            if (assignmentTests.isEmpty()) {
-                model["message"] = "No information about tests for this assignment"
-            } else {
-                // calculate how many submissions pass each test
-                val testCounts = assignmentTests.map { "${it.testMethod}:${it.testClass}" to 0 }.toMap(LinkedHashMap())
-                submissionInfoList.forEach {
-                    it.lastSubmission.testResults?.forEach {
-                        if (it.type == "Success") {
-                            testCounts.computeIfPresent("${it.methodName}:${it.getClassName()}") { _, v -> v + 1 }
-                        }
-                    }
-                }
-
-                model["tests"] = testCounts
-            }
-        }
-
-        model["submissions"] = submissionInfoList
-        model["countMarkedAsFinal"] = submissionInfoList.asSequence().filter { it.lastSubmission.markedAsFinal }.count()
-        model["isAdmin"] = request.isUserInRole("DROP_PROJECT_ADMIN")
-        model["mode"] = mode
-    }
 }
-    
-    

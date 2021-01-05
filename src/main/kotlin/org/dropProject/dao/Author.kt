@@ -21,6 +21,13 @@ package org.dropProject.dao
 
 import javax.persistence.*
 
+/**
+ * Represents the author of a submission (a student or a teacher).
+ *
+ * @property id is a primary-key like generated value
+ * @property name is a String, representing the author's name
+ * @property userId is a String, representing the author's id (e.g. student number, teacher number)
+ */
 @Entity
 data class Author(
         @Id @GeneratedValue

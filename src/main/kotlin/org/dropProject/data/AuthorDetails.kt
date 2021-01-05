@@ -19,6 +19,15 @@
  */
 package org.dropProject.data
 
+/**
+ * Represents one of the authors of a [Submission].
+ * Note that the author might not be the submitter (e.g. if a group has 2 elements, both will be authors, but only one
+ * of them will be the submitter).
+ *
+ * @property name is a String
+ * @property number is a String
+ * @property submitter is a Boolean which will be true if the author object was the one performing the submission
+ */
 data class AuthorDetails(val name: String, val number: String, val submitter: Boolean = false) {
     override fun toString(): String {
         return "${number}-${name}"

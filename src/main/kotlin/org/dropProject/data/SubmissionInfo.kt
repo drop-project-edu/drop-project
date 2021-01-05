@@ -22,9 +22,13 @@ package org.dropProject.data
 import org.dropProject.dao.ProjectGroup
 import org.dropProject.dao.Submission
 
-
-// Created by palves
-
+/**
+ * Represents the [Submission]s that a [ProjectGroup] did for a certain [Assignment].
+ *
+ * @property projectGroup is a ProjectGroup
+ * @property lastSubmission is the last (most recent) [Submission] performed by the ProjectGroup
+ * @property allSubmissions is a List of [Submission]s
+ */
 data class SubmissionInfo(val projectGroup: ProjectGroup,
                      val lastSubmission: Submission,
                      val allSubmissions: List<Submission>) {

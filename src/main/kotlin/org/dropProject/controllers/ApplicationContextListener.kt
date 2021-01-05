@@ -101,6 +101,12 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
     @Value("\${assignments.rootLocation}")
     val assignmentsRootLocation: String = ""
 
+    /**
+     * This function is executed when DP starts running.
+     *
+     * If the assignment repository (i.e. database) is empty, this function will create some "fake data" (e.g. students,
+     * teachers, and submissions from both) in order to have a "in-memory" database that allows testing the system.
+     */
     override fun onApplicationEvent(event: ContextRefreshedEvent) {
 
         LOG.info("************ Starting Drop Project **************")
@@ -119,7 +125,7 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
             val assignment = Assignment(id = "sampleJavaProject", name = "Sample Java Assignment",
                     packageName = "org.dropProject.samples.sampleJavaAssignment", ownerUserId = "teacher1",
                     submissionMethod = SubmissionMethod.UPLOAD,
-                    gitRepositoryUrl = "git@github.com:palves-ulht/sampleJavaAssignment.git",
+                    gitRepositoryUrl = "git@github.com:drop-project-edu/sampleJavaAssignment.git",
                     gitRepositoryPrivKey = sampleJavaAssignmentPrivateKey,
                     gitRepositoryPubKey = sampleJavaAssignmentPublicKey,
                     gitRepositoryFolder = "sampleJavaProject",
@@ -131,6 +137,10 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
                     testClass = "TestTeacherProject", testMethod = "testFindMax"))
             assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "sampleJavaProject",
                     testClass = "TestTeacherProject", testMethod = "testFindMaxWithNull"))
+            assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "sampleJavaProject",
+                    testClass = "TestTeacherProject", testMethod = "testFindMaxAllNegative"))
+            assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "sampleJavaProject",
+                    testClass = "TestTeacherProject", testMethod = "testFindMaxNegativeAndPositive"))
 
             val gitRepository = assignment.gitRepositoryUrl
             var connected = false
@@ -146,6 +156,9 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
 
                 assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student1"))
                 assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student2"))
+                assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student4"))
+                assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student5"))
+                assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "teacher1"))
 
                 connected = true
 
@@ -164,6 +177,26 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
                 val author2 = Author(name = "Student 2", userId = "student2")
                 authorRepository.save(author2)
                 uploadStudentSubmission(author2, "2019-01-02T14:55:30", "javaSubmissionOk", "OK", 2, 2)
+
+                val author3 = Author(name = "BC", userId = "teacher1")
+                authorRepository.save(author3)
+                uploadStudentSubmission(author3, "2020-12-05T14:28:00", "javaSubmissionError", "NOK",0, 4)
+                uploadStudentSubmission(author3, "2020-12-05T14:37:00", "javaSubmission4Errors", "NOK",0, 4)
+
+                val author4 = Author(name = "Neo The One", userId = "teacher2")
+                authorRepository.save(author4)
+                uploadStudentSubmission(author4, "2020-12-05T14:28:00", "javaSubmissionError", "NOK",0, 4)
+                uploadStudentSubmission(author4, "2020-12-05T14:37:00", "javaSubmission4Errors", "NOK",0, 4)
+
+                val author5 = Author(name="The Jackal", userId="student3")
+                authorRepository.save(author5)
+                uploadStudentSubmission(author5, "2020-12-18T14:37:00", "javaSubmission2Errors", "NOK", 2, 4)
+
+                val author6 = Author(name="Leo Da Vinci", userId="student4")
+                authorRepository.save(author6)
+                uploadStudentSubmission(author6, "2020-12-17T14:37:00", "javaSubmission2Errors", "NOK", 2, 4)
+
+
             }
         }
     }

@@ -31,6 +31,9 @@ import org.dropProject.data.TestType
 import org.dropProject.repository.*
 import java.util.ArrayList
 
+/**
+ * Contains functionality related with Submissions (for example, get submissions from the database).
+ */
 @Service
 class SubmissionService(
         val submissionRepository: SubmissionRepository,
@@ -39,7 +42,11 @@ class SubmissionService(
         val assignmentTeacherFiles: AssignmentTeacherFiles,
         val buildReportBuilder: BuildReportBuilder) {
 
-
+    /**
+     * Returns all the SubmissionInfo objects related with [assignment].
+     * @param assignment is the target Assignment
+     * @return an ArrayList with SubmissionInfo objects
+     */
     fun getSubmissionsList(assignment: Assignment): ArrayList<SubmissionInfo> {
         val submissions = submissionRepository
                 .findByAssignmentId(assignment.id)
@@ -89,7 +96,8 @@ class SubmissionService(
     }
 
     /**
-     * Marks this submission as final, and all other submissions for the same group and assignment as not final
+     * Marks a [Submission] as final, and all other submissions for the same group and assignment as not final
+     * @param submission is the Submission to mark as final
      */
     fun markAsFinal(submission: Submission) {
         val otherSubmissions = submissionRepository.findByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(submission.group, submission.assignmentId)

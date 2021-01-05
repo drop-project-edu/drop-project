@@ -42,20 +42,19 @@ import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
-import org.dropProject.dao.Submission
 import org.dropProject.data.SubmissionInfo
 import java.io.File
 import java.nio.file.Files
 import org.dropProject.TestsHelper
-import org.dropProject.dao.Assignment
-import org.dropProject.dao.AssignmentTestMethod
-import org.dropProject.dao.LeaderboardType
+import org.dropProject.dao.*
+import org.dropProject.data.GroupedProjectGroups
 import org.dropProject.extensions.formatDefault
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.AssignmentRepository
 import org.dropProject.repository.AssignmentTestMethodRepository
 import org.dropProject.repository.GitSubmissionRepository
 import org.dropProject.repository.SubmissionRepository
+import org.dropProject.services.AssignmentService
 import org.dropProject.services.ZipService
 import org.hamcrest.Matchers.contains
 import java.util.*
@@ -98,6 +97,9 @@ class ReportControllerTests {
 
     @Autowired
     private lateinit var zipService: ZipService
+
+    @Autowired
+    private lateinit var assignmentService: AssignmentService
 
     val defaultAssignmentId = "testJavaProj"
 
@@ -176,8 +178,6 @@ class ReportControllerTests {
         assertEquals("student4,student5", report[3].projectGroup.authorsStr())
         assertEquals(1, report[3].allSubmissions.size)
     }
-
-
 
     @Test
     @DirtiesContext
@@ -509,6 +509,218 @@ class ReportControllerTests {
         assertThat(tests.keys.map { "${it}->${tests[it]}" }, contains("testFuncaoParaTestar:TestTeacherProject->0",
                 "testFuncaoLentaParaTestar:TestTeacherProject->1",
                 "testFuncaoParaTestarQueNaoApareceAosAlunos:TestTeacherHiddenProject->0"))
+    }
+
+    /**
+     * Tested function: ReportController.getSignaledGroupsOrSubmissions() via MVC
+     * Test scenario:
+     * - 3 students perform submissions.
+     * - Two of them fail the same 2 tests.
+     * - The other does not fail any test.
+     * Expectations:
+     * - The MVC controller function should place in the Model in the model a List of size 1.
+     * - The only element of the list should be a GroupedProjectGroup with 2 groups (one for each student)
+     * and 2 failed tests.
+     */
+    @Test
+    @DirtiesContext
+    fun testSignalledGroups() {
+        val student3 = User("student3", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
+
+        testsHelper.uploadProject(this.mvc, "projectJUnitErrors", defaultAssignmentId, STUDENT_1)
+        testsHelper.uploadProject(this.mvc,"projectJUnitErrors", defaultAssignmentId, STUDENT_2,
+                authors = listOf(STUDENT_2.username to "Student 2"))
+        testsHelper.uploadProject(this.mvc,"projectOK", defaultAssignmentId, student3,
+                authors = listOf(student3.username to "Student 3"))
+
+        val reportResult = this.mvc.perform(get("/signalledSubmissions/${defaultAssignmentId}")
+                .with(user(TEACHER_1)))
+                .andExpect(status().isOk())
+                .andReturn()
+
+        @Suppress("UNCHECKED_CAST")
+        val signalledGroups = reportResult.modelAndView.modelMap["signalledGroups"] as List<GroupedProjectGroups>
+
+        assert(signalledGroups != null)
+        assert(signalledGroups.size == 1)
+        assert(signalledGroups.get(0).groups.size == 2)
+
+        assert(signalledGroups.get(0).failedTestNames.size == 2)
+        var expectedFailedTests = mutableListOf("testFuncaoParaTestar", "testFuncaoParaTestarQueNaoApareceAosAlunos")
+        assert(signalledGroups.get(0).failedTestNames.containsAll(expectedFailedTests))
+    }
+
+    /**
+     * Tested function: ReportController.getSignaledGroupsOrSubmissions() via MVC
+     * Test scenario:
+     * - 2 students perform submissions.
+     * - One of them fails tests.
+     * - The other does not fail any test.
+     * Expectations:
+     * - The MVC controller function should place in the Model:
+     * -- a List of size 0; and
+     * -- a String with a message saying that there are no signalled groups.
+     */
+    @Test
+    @DirtiesContext
+    fun testSignalledGroupsViaMVC_NoGroupsAreSignalled() {
+        val student3 = User("student3", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
+
+        testsHelper.uploadProject(this.mvc, "projectJUnitErrors", defaultAssignmentId, STUDENT_1)
+        testsHelper.uploadProject(this.mvc,"projectOK", defaultAssignmentId, student3,
+                authors = listOf(student3.username to "Student 3"))
+
+        val reportResult = this.mvc.perform(get("/signalledSubmissions/${defaultAssignmentId}")
+                .with(user(TEACHER_1)))
+                .andExpect(status().isOk())
+                .andReturn()
+
+        @Suppress("UNCHECKED_CAST")
+        val message = reportResult.modelAndView.modelMap["message"] as String
+        val list = reportResult.modelAndView.modelMap["signalledGroups"] as List<GroupedProjectGroups>
+
+        assert(message != null)
+        assertEquals("No groups identified as similar", message)
+        assert(list.isEmpty())
+    }
+
+    /**
+     * This function creates "test data" that will be used in multiple tests of
+     * the function AssignmentService.groupGroupsByFailures()
+     */
+    private fun testDataForGroupGroupsByFailures(): List<ProjectGroup> {
+        val g1 = ProjectGroup(1)
+        g1.authors.add(Author(1, "BC", "BC"))
+        val g2 = ProjectGroup(2)
+        g2.authors.add(Author(2, "RCC", "RCC"))
+        val g3 = ProjectGroup(3)
+        g3.authors.add(Author(3, "PA", "PA"))
+        val g4 = ProjectGroup(4)
+        g4.authors.add(Author(4, "IL", "IL"))
+        val g5 = ProjectGroup(5)
+        g5.authors.add(Author(5, "RP", "RP"))
+        return mutableListOf<ProjectGroup>(g1, g2, g3, g4, g5)
+    }
+
+    /**
+     * Tested function: AssignmentService.groupGroupsByFailures()
+     * Test scenario:
+     * - 3 student/project groups
+     * - All have different test failures
+     * - The groupGroupsByFailures() function will return a List with size 0
+     */
+    @Test
+    fun testGroupGroupsByFailures_NoGroupsAreSignalled() {
+        val projectGroups = testDataForGroupGroupsByFailures();
+        var g1 = projectGroups[0];
+        var g2 = projectGroups[1];
+        var g3 = projectGroups[2];
+
+        val failuresByGroup : HashMap<ProjectGroup, ArrayList<String>> = HashMap()
+
+        // in this scenario, the 3 ProjectoGroups have distinct failures, so nothing will be Signalled
+        failuresByGroup.put(g1, mutableListOf("Test001", "Test002") as ArrayList<String>)
+        failuresByGroup.put(g2, mutableListOf("Test001") as ArrayList<String>)
+        failuresByGroup.put(g3, mutableListOf("Test002") as ArrayList<String>)
+
+        val expected = mutableListOf<GroupedProjectGroups>()
+        val result = assignmentService.groupGroupsByFailures(failuresByGroup)
+
+        assert(expected != null)
+        assert(result.size == 0)
+    }
+
+    /**
+     * Tested function: AssignmentService.groupGroupsByFailures()
+     * Test scenario:
+     * - 3 student/project groups
+     * - All have the same failures, but one of the groups has the failures in different order
+     * Expectations:
+     * - The groupGroupsByFailures() function will return a List with size 1
+     * - The only element of the returned list will contain 3 student groups and 2 failed tests
+     */
+    @Test
+    fun testGroupGroupsByFailures_AllGroupsAreSignalled() {
+        val projectGroups = testDataForGroupGroupsByFailures();
+        var g1 = projectGroups[0];
+        var g2 = projectGroups[1];
+        var g3 = projectGroups[2];
+
+        val failuresByGroup : HashMap<ProjectGroup, ArrayList<String>> = HashMap()
+
+        failuresByGroup.put(g1, mutableListOf("Test001", "Test002") as ArrayList<String>)
+        failuresByGroup.put(g2, mutableListOf("Test001", "Test002") as ArrayList<String>)
+        // the order of the failures should not influence the "signalling"
+        failuresByGroup.put(g3, mutableListOf("Test002", "Test001") as ArrayList<String>)
+
+        var group1 = GroupedProjectGroups(mutableListOf<ProjectGroup>(g1, g2, g3), mutableListOf("Test001", "Test002"))
+        val result = assignmentService.groupGroupsByFailures(failuresByGroup)
+
+        assert(result != null)
+        assert(result.size == 1)
+
+        // the order of each group (g1, g2 and g3) in the result might change, so we check
+        // the list size and the individual existence of each group
+        assert(result.get(0).groups.size == 3)
+        assert(result.get(0).groups.contains(g1));
+        assert(result.get(0).groups.contains(g2));
+        assert(result.get(0).groups.contains(g3));
+
+        assert(result.get(0).failedTestNames.contains("Test001"))
+        assert(result.get(0).failedTestNames.contains("Test002"))
+    }
+
+    /**
+     * Tested function: AssignmentService.groupGroupsByFailures()
+     * Test scenario:
+     * - 5 student/project groups
+     * - groups 1 and 3 have the same failures
+     * - group 2 has failures but the list is unlike any other group
+     * - groups 4 and 5 have hte same failures (in different order)
+     * Expectations:
+     * - The groupGroupsByFailures() function will return a List with size 2
+     * - The list will have two GroupedProjectGroups objects:
+     * -- One with groups 1 and 3
+     * -- One with groups 4 and 5
+     */
+    @Test
+    fun testGroupGroupsByFailures_MoreComplexScenario() {
+
+        val projectGroups = testDataForGroupGroupsByFailures();
+        var g1 = projectGroups[0];
+        var g2 = projectGroups[1];
+        var g3 = projectGroups[2];
+        var g4 = projectGroups[3];
+        var g5 = projectGroups[4];
+
+        val failuresByGroup : HashMap<ProjectGroup, ArrayList<String>> = HashMap()
+
+        failuresByGroup.put(g1, mutableListOf("Test001", "Test002") as ArrayList<String>)
+        failuresByGroup.put(g2, mutableListOf("Test001") as ArrayList<String>)
+        failuresByGroup.put(g3, mutableListOf("Test001", "Test002") as ArrayList<String>)
+
+        // same failed tests, different order
+        failuresByGroup.put(g4, mutableListOf("Test001", "Test003") as ArrayList<String>);
+        failuresByGroup.put(g5, mutableListOf("Test003", "Test001") as ArrayList<String>);
+
+        // the ProjectGroups with the same failures are:
+        //    (1 and 3) ; (2) ; (4 and 5)
+        // however, (2) will be ignored because there is no "suspicion"
+        // as such, the expected groups are:
+        //    (1 and 3) ; (4 and 5)
+        val group1 = GroupedProjectGroups(mutableListOf(g1, g3), mutableListOf("Test001", "Test002"))
+        val group3 = GroupedProjectGroups(mutableListOf(g4, g5), mutableListOf("Test001", "Test003"))
+
+        //val expected = mutableListOf<GroupedProjectGroups>(group1, group2, group3)
+        val expected = mutableListOf<GroupedProjectGroups>(group1, group3)
+
+        // cal fn to check result
+        val result = assignmentService.groupGroupsByFailures(failuresByGroup)
+
+        assert(result != null)
+        assert(result.size == 2)
+
+        assert(result.containsAll(expected))
     }
 
 }

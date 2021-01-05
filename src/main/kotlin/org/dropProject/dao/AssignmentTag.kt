@@ -21,6 +21,14 @@ package org.dropProject.dao
 
 import javax.persistence.*
 
+/**
+ * Represents a "tag" used to categorize [Assignment]s. It is mostly used for filtering purposes. It might take any
+ * value (e.g. the name of the course, the year, the type of evaluation, etc.).
+ *
+ * @property id is a primary-key like generated value.
+ * @property name is a String, representing the name of the tag.
+ * @property selected is a Boolean, indicating if this tag has been selected in a current filter.
+ */
 @Entity
 data class AssignmentTag(
     @Id

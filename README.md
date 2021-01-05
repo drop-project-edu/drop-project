@@ -48,11 +48,22 @@ back later to check the report.
 
 ## Quick start
 
-After cloning the repository, change src/main/resources/drop-project.properties:
+After cloning the repository, change the following properties:
 
     dropProject.maven.home=<path_to_maven_home>
     dropProject.maven.repository=<path_to_maven_repository>
-    
+
+in the following files:
+
+     src/main/resources/drop-project.properties
+     src/test/resources/drop-project-test.properties 
+
+Note:
+- Configuring the first file will allow you to run Drop Project.
+- Configuring the second file will allow you to run Drop Project's unit tests.
+- Linux users: the Maven Home is usually in /usr/share/maven (otherwise, try: whereis maven) and the Maven Repository is in /home/&lt;USERNAME&gt;/.m2
+- Windows users: the Maven Home is the installation directory and the Maven Repository is in c:\Users\\&lt;USERNAME&gt;\\.m2
+
 And run the embedded tomcat runner:
 
     mvn spring-boot:run
@@ -62,3 +73,29 @@ The application should now be accessible on http://localhost:8080
 ## Documentation
 
 https://github.com/drop-project-edu/drop-project/wiki/Documentation
+
+To generate source code documentation, run:
+
+    mvn dokka:dokka
+
+The generated documentation will be available in the following folder:
+
+    target/dokka/drop-project/index.html
+
+## Unit Tests
+
+To execute the unit tests, run:
+
+    mvn test
+
+## Unit Test Coverage
+
+To measure the unit test coverage, run:
+
+    mvn jacoco:report
+
+Note: to run the coverage measurement, you must first run the unit tests themselves.
+
+The test coverage report will be available in the following folder:
+
+    target/site/jacoco/index.html

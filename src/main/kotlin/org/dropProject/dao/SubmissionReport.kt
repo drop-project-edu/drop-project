@@ -23,6 +23,10 @@ import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.Id
 
+/**
+ * Enum representing the multiple evaluation criteria that a Submission can be subject to. Some of the criteria
+ * are mandatory (e.g. Compilation) while others are optional (e.g. Teacher Hidden Unit Tests).
+ */
 enum class Indicator(val code: String, val description: String) {
     PROJECT_STRUCTURE("PS", "Project Structure"),
     COMPILATION("C", "Compilation"),
@@ -45,7 +49,17 @@ enum class Indicator(val code: String, val description: String) {
     }
 }
 
-
+/**
+ * Represents a SubmissionReport, which is the status of a [Submission] for a certain indicator (for example, Compilation).
+ * Each Submission will have multiple such indicators.
+ *
+ * @property id
+ * @property submissionId
+ * @property reportKey is a String, matching the value of one of the existing [Indicator]s
+ * @property reportValue is a String
+ * @property reportProgress is an Int. It only makes sense for certain indicators, like TEACHER_UNIT_TESTS
+ * @property reportGoal is an Int. It only makes sense for certain indicators, like TEACHER_UNIT_TESTS
+ */
 @Entity
 data class SubmissionReport(
         @Id @GeneratedValue
