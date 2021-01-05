@@ -38,6 +38,15 @@ data class GroupSubmissionStatistics(val groupID : Long,
                                      val nrPassedTests : Int,
                                      val nrSubmissions : Int) {
 
+    override fun equals(other: Any?): Boolean {
+        if(this === other) return true
+        if(other?.javaClass != this.javaClass) return false
+        other as GroupSubmissionStatistics
+        if(groupID == other.groupID && nrPassedTests == other.nrPassedTests && nrSubmissions == other.nrSubmissions) {
+            return true;
+        }
+        return false;
+    }
 }
 
 fun computeStatistics(submissionStatistics : List<GroupSubmissionStatistics>, nrTests : Int): AssignmentStatistics {
