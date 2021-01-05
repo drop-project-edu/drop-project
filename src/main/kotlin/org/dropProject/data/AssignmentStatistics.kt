@@ -50,11 +50,12 @@ data class GroupSubmissionStatistics(val groupID : Long,
 }
 
 fun computeStatistics(submissionStatistics : List<GroupSubmissionStatistics>, nrTests : Int): AssignmentStatistics {
+fun computeStatistics(submissionStatistics : List<GroupSubmissionStatistics>, nrTests : Int, inclusionThreshold: Int = 75): AssignmentStatistics {
     var nrGroupsOverThreshold = 0
     var totalNrOfSubmissionsOverThreshold = 0
     for(subStats in submissionStatistics) {
         val passedTestsPercentage = subStats.nrPassedTests * 100 / nrTests
-        if(passedTestsPercentage >= 75) {
+        if(passedTestsPercentage >= inclusionThreshold) {
             totalNrOfSubmissionsOverThreshold += subStats.nrSubmissions
             nrGroupsOverThreshold++;
         }
