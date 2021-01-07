@@ -106,6 +106,18 @@ class UploadController(
         storageService.init()
     }
 
+    /**
+     * Controller that handles related with the base URL.
+     *
+     * If the principal can only access one [Assignment], then that assignment's upload form will be displayed. Otherwise,
+     * a list of assignments will be displayed.
+     *
+     * @param model is a [ModelMap] that will be populated with the information to use in a View
+     * @param principal is a [Principal] representing the user making the request
+     * @param request is a HttpServletRequest
+     *
+     * @return A String identifying the relevant View
+     */
     @RequestMapping(value = ["/"], method = [(RequestMethod.GET)])
     fun getUploadForm(model: ModelMap, principal: Principal, request: HttpServletRequest): String {
 
@@ -140,7 +152,16 @@ class UploadController(
     }
 
 
-
+    /**
+     * Controller that handles requests related with the [Assignment]'s upload page.
+     *
+     * @param model is a [ModelMap] that will be populated with the information to use in a View
+     * @param principal is a [Principal] representing the user making the request
+     * @param assignmentId is a String, identifying the relevant Assigment
+     * @param request is an HttpServletRequest
+     *
+     * @return A String identifying the relevant View
+     */
     @RequestMapping(value = ["/upload/{assignmentId}"], method = [(RequestMethod.GET)])
     fun getUploadForm(model: ModelMap, principal: Principal,
                       @PathVariable("assignmentId") assignmentId: String,
@@ -213,7 +234,17 @@ class UploadController(
     }
 
 
-
+    /**
+     * Controller that handles requests for the actual file upload that delivers/submits the student's code.
+     *
+     * @param uploadForm is an [Uploadform]
+     * @param bindingResult is a [BindingResult]
+     * @param file is a [MultipartFile]
+     * @param principal is a [Principal] representing the user making the request
+     * @param request is an HttpServletRequest
+     *
+     * @return a ResponseEntity<String>
+     */
     @RequestMapping(value = ["/upload"], method = [(RequestMethod.POST)])
     fun upload(@Valid @ModelAttribute("uploadForm") uploadForm: UploadForm,
                bindingResult: BindingResult,
@@ -319,6 +350,17 @@ class UploadController(
         return group
     }
 
+    /**
+     * Builds and tests a [Submission].
+     *
+     * @property projectFolder is a File
+     * @property assignment is the [Assignment] for which the submission is being made
+     * @property authorsStr is a String
+     * @property submission is a Submission
+     * @property asyncExecutor is an Executor
+     * @property teacherRebuid is a Boolean, indicating if this "build" is being requested by a teacher
+     * @property principal is a [Principal] representing the user making the request
+     */
     private fun buildSubmission(projectFolder: File, assignment: Assignment,
                                 authorsStr: String,
                                 submission: Submission,
@@ -387,6 +429,14 @@ class UploadController(
         return erros
     }
 
+    /**
+     * Searches for a [ProjectGroup] object that contains the authors described by [authors]. If none is found, then a
+     * new ProjectGroup is created.
+     *
+     * @param authors is a List of [AuthorDetail]s.
+     *
+     * @return a [ProjectGroup]
+     */
     private fun searchExistingProjectGroupOrCreateNew(authors: List<AuthorDetails>): ProjectGroup {
         val groups = projectGroupRepository.getGroupsForAuthor(authors.first().number)
         for (group in groups) {
