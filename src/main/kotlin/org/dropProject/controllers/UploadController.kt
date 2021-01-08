@@ -555,6 +555,16 @@ class UploadController(
         }
     }
 
+    /**
+     * Controller that handles requests for the [Submission]'s rebuild process. The rebuild process is a process where by
+     * a student's submission gets compiled and evaluated again. It can be useful, for example, in situations where an
+     * error was detected in the teacher's tests and the teacher wants to apply corrected tests to the student's submission.
+     *
+     * @param submissionId is a Long, identifying the student's Submission
+     * @param principal is a [Principal] representing the user making the request
+     *
+     * @return a String identifying the relevant View
+     */
     @RequestMapping(value = ["/rebuild/{submissionId}"], method = [(RequestMethod.POST)])
     fun rebuild(@PathVariable submissionId: Long,
                 principal: Principal) : String {
@@ -640,6 +650,22 @@ class UploadController(
         return "redirect:/buildReport/${rebuiltSubmission.id}";
     }
 
+    /**
+     * Controller that handles requests for marking a [Submission] as "final". Since, by design, students' can make
+     * multiple submissions in DP, marking a submission as "final" is the way for the teacher to indicate that it's the
+     * one that shall be considered when exporting the submissions' data (e.g. for grading purposes).
+     *
+     * Note that only one submission per [ProjectGroup] can be marked as final. This means that, when a certain submission
+     * is marked as final, any previously "finalized" submission by the same group will not be final anymore.
+     *
+     * @param submissionId is a Long, identifying the student's Submission
+     * @param redirectToSubmissionsList is a Boolean. If true, then after the marking process is done, the user will be
+     * redirected to the group's submissions list. Otherwise, the redirection will be done to the the final submission's
+     * build report.
+     * @param principal is a [Principal] representing the user making the request
+     *
+     * @return a String identifying the relevant View
+     */
     @RequestMapping(value = ["/markAsFinal/{submissionId}"], method = [(RequestMethod.POST)])
     fun markAsFinal(@PathVariable submissionId: Long,
                     @RequestParam(name="redirectToSubmissionsList", required = false, defaultValue = "false")
@@ -654,15 +680,12 @@ class UploadController(
             throw IllegalAccessError("Submissions can only be marked as final by the assignment owner or authorized teachers")
         }
 
-
         if (submission.markedAsFinal) {
             submission.markedAsFinal = false
             LOG.info("Unmarking as final: ${submissionId}")
 
         } else {
-
             LOG.info("Marking as final: ${submissionId}")
-
             // marks this submission as final, and all other submissions for the same group and assignment as not final
             submissionService.markAsFinal(submission)
         }
@@ -703,6 +726,18 @@ class UploadController(
         return "redirect:/report/${assignmentId}";
     }
 
+    /**
+     * Controller that handles requests for connecting a student's GitHub repository with DP.
+     *
+     * This process works like a two step wizard. This is the first part. The second part is in "/student/setup-git-2".
+     *
+     * @param assignmentId
+     * @param gitRepositoryUrl is a String
+     * @param model is a [ModelMap] that will be populated with the information to use in a View
+     * @param principal is a [Principal] representing the user making the request
+     *
+     * @return A String identifying the relevant View
+     */
     @RequestMapping(value = ["/student/setup-git"], method = [(RequestMethod.POST)])
     fun setupStudentSubmissionUsingGitRepository(@RequestParam("assignmentId") assignmentId: String,
                                                  @RequestParam("gitRepositoryUrl") gitRepositoryUrl: String?,
@@ -736,12 +771,10 @@ class UploadController(
             return "student-git-form"
         }
 
-
         var gitSubmission =
                 gitSubmissionRepository.findBySubmitterUserIdAndAssignmentId(principal.realName(), assignmentId)
                 ?:
                 gitSubmissionService.findGitSubmissionBy(principal.realName(), assignmentId) // check if it belongs to a group who has already a git submission
-
 
         if (gitSubmission == null || gitSubmission.gitRepositoryPubKey == null) {
 
@@ -765,6 +798,18 @@ class UploadController(
         return "student-setup-git"
     }
 
+    /**
+     * Controller that handles requests for connecting a student's GitHub repository with DP.
+     *
+     * This process works like a two step wizard. This is the second part. The first part is in "/student/setup-git".
+     *
+     * @param assignmentId
+     * @param gitRepositoryUrl is a String
+     * @param model is a [ModelMap] that will be populated with the information to use in a View
+     * @param principal is a [Principal] representing the user making the request
+     *
+     * @return A String identifying the relevant View
+     */
     @RequestMapping(value = ["/student/setup-git-2/{gitSubmissionId}"], method = [(RequestMethod.POST)])
     fun connectAssignmentToGitRepository(@PathVariable gitSubmissionId: String, redirectAttributes: RedirectAttributes,
                                          model: ModelMap, principal: Principal): String {
@@ -822,12 +867,10 @@ class UploadController(
                 }
 
             } catch (ipse: InvalidProjectStructureException) {
-
                 LOG.info("Invalid project structure: ${ipse.message}")
                 model["error"] = "O projecto localizado no repositório ${gitRepository} tem uma estrutura inválida: ${ipse.message}"
                 model["gitSubmission"] = gitSubmission
                 return "student-setup-git"
-
             } catch (e: Exception) {
                 LOG.info("Error cloning ${gitRepository} - ${e}")
                 model["error"] = "Error cloning ${gitRepository} - ${e.message}"
