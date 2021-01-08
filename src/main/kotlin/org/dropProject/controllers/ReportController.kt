@@ -160,7 +160,16 @@ class ReportController(
         return "test-matrix"
     }
 
-
+    /**
+     * Controller that handles requests for a [Submission]'s "Build Report".
+     *
+     * @param submissionId is a Long identifying the relevant Submission
+     * @param model is a [ModelMap] that will be populated with information to use in a View
+     * @param principal is a [Principal] representing the user making the request
+     * @param request is an [HttpServletRequest]
+     *
+     * @return is a String identifying the relevant View
+     */
     @RequestMapping(value = ["/buildReport/{submissionId}"], method = [(RequestMethod.GET)])
     fun getSubmissionReport(@PathVariable submissionId: Long, model: ModelMap, principal: Principal,
                             request: HttpServletRequest): String {
