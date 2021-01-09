@@ -21,6 +21,14 @@ package org.dropProject.dao
 
 import javax.persistence.*
 
+/**
+ * Represents a persisted Jacoco report.
+ *
+ * @property id is a Long with a primary-key like generated id
+ * @property submissionId is Long is a Long, identifying the [Submission] that the report is based on
+ * @property fileName is a String with the name of the JUnit report file
+ * @property csvReport is a String with the CSV version of the report
+ */
 @Entity
 @Table(uniqueConstraints=[UniqueConstraint(columnNames = ["submissionId", "fileName"])])
 data class JacocoReport(
