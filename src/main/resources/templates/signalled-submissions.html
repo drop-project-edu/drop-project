@@ -50,7 +50,7 @@
                         <ul class="list-group">
                             <li class="list-group-item" th:each="group: ${groupedGroups.groups}">
                                 <span th:text="${'Group:' + group.id + ' | ' + group.authorsNameStr()}"/>
-                                <small><a th:href="'/submissions/?assignmentId=' + ${assignmentId} + '&groupId=' + ${group.id}">(submissions)</a></small>
+                                <small><a th:href="@{'/submissions/?assignmentId=' + ${assignmentId} + '&groupId=' + ${group.id}}">(submissions)</a></small>
                             </li>
                         </ul>
                     </td>
