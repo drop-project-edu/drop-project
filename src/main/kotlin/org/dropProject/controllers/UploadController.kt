@@ -727,12 +727,12 @@ class UploadController(
     }
 
     /**
-     * Controller that handles requests for connecting a student's GitHub repository with DP.
+     * Controller that handles requests for connecting a student's GitHub repository with an [Assignment] available in DP.
      *
      * This process works like a two step wizard. This is the first part. The second part is in "/student/setup-git-2".
      *
-     * @param assignmentId
-     * @param gitRepositoryUrl is a String
+     * @param assignmentId is a String, identifying the relevant Assignment
+     * @param gitRepositoryUrl is a String with the student's GitHub repository URL
      * @param model is a [ModelMap] that will be populated with the information to use in a View
      * @param principal is a [Principal] representing the user making the request
      *
@@ -972,6 +972,14 @@ class UploadController(
 
     }
 
+     * Controller that handles requests for the resetting of the connection between a GitHub and an Assignment.
+     *
+     * @param gitSubmissionId is a String identifying a [GitSubmission]
+     * @param redirectAttributes is a RedirectAttributes
+     * @param principal is [Principal] representing the user making the request
+     *
+     * @return a String with the name of the relevant View
+     */
     @RequestMapping(value = ["/student/reset-git/{gitSubmissionId}"], method = [(RequestMethod.POST)])
     fun disconnectAssignmentToGitRepository(@PathVariable gitSubmissionId: String,
                                             redirectAttributes: RedirectAttributes,
@@ -1003,6 +1011,13 @@ class UploadController(
         return "redirect:/upload/${assignment.id}"
     }
 
+    /**
+     * Controller that handles requests for the deletion of a [Submission].
+     *
+     * @param submissionId is a Long, identifying the Submission to delete
+     * @param principal is a [Principal] representing the user making the request
+     * @return a String with the name of the relevant View
+     */
     @RequestMapping(value = ["/delete/{submissionId}"], method = [(RequestMethod.POST)])
     fun deleteSubmission(@PathVariable submissionId: Long,
                          principal: Principal) : String {
@@ -1023,6 +1038,14 @@ class UploadController(
         return "redirect:/report/${assignment.id}"
     }
 
+    /**
+     * Checks if a certain user can access a certain [Assignment]. Only relevant for Assignments that have access
+     * control lists.
+     *
+     * @param assignmentId is a String identifying the relevant Assignment
+     * @param principalName is a String identifyng the user trying to access the Assignment
+     * @throws If the user is not allowed to access the Assignment, an [AccessDeniedException] will be thrown.
+     */
     private fun checkAssignees(assignmentId: String, principalName: String) {
         if (assigneeRepository.existsByAssignmentId(assignmentId)) {
             // if it enters here, it means this assignment has a white list
