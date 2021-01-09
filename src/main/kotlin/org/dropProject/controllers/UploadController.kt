@@ -925,6 +925,15 @@ class UploadController(
         return ResponseEntity("{ \"success\": \"true\"}", HttpStatus.OK);
     }
 
+    /**
+     * Controller that handles requests for the generation of a [GitSubmission]'s build report.
+     *
+     * @param gitSubmissionId is a String identifying a [GitSubmission]
+     * @param principal is a [Principal] representing the user making the request
+     * @param request is a HttpServletRequest
+     *
+     * @return a ResponseEntity<String>
+     */
     @RequestMapping(value = ["/git-submission/generate-report/{gitSubmissionId}"], method = [(RequestMethod.POST)])
     fun upload(@PathVariable gitSubmissionId: String,
                principal: Principal,
@@ -1065,24 +1074,28 @@ class UploadController(
         }
     }
 
+    /**
+     * Searches for the last [Submission] performed in an [Assignment] by a certain user or by a member of the respective
+     * [ProjectGroup].
+     *
+     * @param principal is a [Principal] representing the user whose last submission is being searched
+     * @param assignmentId is a String representing the relevant Assignment
+     *
+     * @return a Submission
+     */
     private fun getLastSubmission(principal: Principal, assignmentId: String): Submission? {
-
         val groupsToWhichThisStudentBelongs = projectGroupRepository.getGroupsForAuthor(principal.realName())
         var lastSubmission: Submission? = null
-
         // TODO: This is ugly - should rethink data model for groups
         for (group in groupsToWhichThisStudentBelongs) {
-
             val lastSubmissionForThisGroup = submissionRepository
                     .findFirstByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(group, assignmentId)
-
             if (lastSubmission == null ||
                     (lastSubmissionForThisGroup != null &&
                             lastSubmission.submissionDate.before(lastSubmissionForThisGroup.submissionDate))) {
                 lastSubmission = lastSubmissionForThisGroup
             }
         }
-
         return lastSubmission
     }
 
