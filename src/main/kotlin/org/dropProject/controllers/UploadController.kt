@@ -883,6 +883,15 @@ class UploadController(
         return "redirect:/upload/${assignment.id}"
     }
 
+    /**
+     * Controller that handles requests for the creation of a new submission via Git, by refreshing the contents
+     * that are in the respective student's repository.
+     *
+     * @param submissionId is a String identifying the student's last Git submission
+     * @param principal is a [Principal] representing the user making the requets
+     *
+     * @return a ResponseEntity<String>
+     */
     @RequestMapping(value = ["/git-submission/refresh-git/{submissionId}"], method = [(RequestMethod.POST)])
     fun refreshAssignmentGitRepository(@PathVariable submissionId: String,
                                        principal: Principal): ResponseEntity<String> {
@@ -969,9 +978,9 @@ class UploadController(
 
         return ResponseEntity("{ \"submissionId\": \"${submission.id}\"}", HttpStatus.OK);
 
-
     }
 
+    /**
      * Controller that handles requests for the resetting of the connection between a GitHub and an Assignment.
      *
      * @param gitSubmissionId is a String identifying a [GitSubmission]
@@ -1125,7 +1134,6 @@ class UploadController(
 
     @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Inexistent assignment")
     class AssignmentNotFoundException(assignmentId: String) : Exception("Inexistent assignment ${assignmentId}") {
-
         val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
         init {
@@ -1135,7 +1143,6 @@ class UploadController(
 
     @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Inexistent submission")
     class SubmissionNotFoundException(submissionId: Long) : Exception("Inexistent submission ${submissionId}") {
-
         val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
         init {
@@ -1144,5 +1151,3 @@ class UploadController(
     }
 
 }
-    
-    
