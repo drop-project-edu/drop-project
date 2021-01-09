@@ -100,7 +100,7 @@ fun computeStatistics(submissionStatistics : List<GroupSubmissionStatistics>, nr
     for(subStats in submissionStatistics) {
         //val delta = ().toDouble()
         val passedTestsPercentage = subStats.nrPassedTests * 100 / nrTests
-        if(passedTestsPercentage >= 75) {
+        if(passedTestsPercentage >= inclusionThreshold) {
             dev += Math.pow(subStats.nrSubmissions - averageNrOfSubmissions, 2.0)
         }
     }
