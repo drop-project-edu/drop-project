@@ -77,7 +77,10 @@ enum class LeaderboardType {
  * @property ownerUserId is a String with the user id of the user that created the Assignment
  * @property active is a Boolean indicating if the Assignment can receive submissions from students
  * @property archived is a Boolean indicating if the Assignment has been archived
+ * @property buildReportId is a Long, representing the Id of the Assignment's [BuildReport]
  *
+ * @property public is a Boolean, indicating if the assignment is accessible to everyone or only to registered [Assignee]s
+ * @property lastSubmissionDate is a Date, containing the date of the last submission performed for this Assignment
  * @property tags is a Set of [AssignmentTag].
  */
 @Entity

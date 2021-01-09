@@ -21,6 +21,12 @@ package org.dropProject.dao
 
 import javax.persistence.*
 
+/**
+ * Represents an [Assignment]'s "Build Report".
+ *
+ * @property id is a primary-key like generated value
+ * @property buildReport is a String, containing the textual information that resulted from building an [Assignment]
+ */
 @Entity
 data class BuildReport(
         @Id @GeneratedValue
