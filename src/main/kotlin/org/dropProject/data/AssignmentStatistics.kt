@@ -1,7 +1,26 @@
+/*-
+ * ========================LICENSE_START=================================
+ * DropProject
+ * %%
+ * Copyright (C) 2019 - 2021 Pedro Alves
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * =========================LICENSE_END==================================
+ */
 package org.dropProject.data
 
 /**
- * Represents statistics about the submissions done
+ * Represents statistics about the submissions done for an [Assignment].
  *
  * @property average is a Double, representing the average number of submissions
  * @property standardDeviation is a Double, representing the standard deviation of the average number of submissions
@@ -12,6 +31,9 @@ data class AssignmentStatistics(val average : Double,
     /**
      * Identifies [ProjectGroup]'s that have a result that is outside the nome (e.g. they pass "many tests" while having
      * "little submissions" when compared with the other groups.
+     *
+     * @param submissionStatistics is a List of [GroupSubmissionStatistics]
+     * @return is a List of [GroupSubmissionStatistics]
      */
     fun identifyGroupsOutsideStatisticalNorms(submissionStatistics : List<GroupSubmissionStatistics>): List<GroupSubmissionStatistics> {
         val minSubmissions = average - standardDeviation
@@ -29,8 +51,8 @@ data class AssignmentStatistics(val average : Double,
  * Represents the submission statistics for a certain [ProjectGroup].
  *
  * @property groupID is a Long, identifying the ProjectGroup
- * @property nrPassedTests is an Int
- * @property nrSubmissions is an Int
+ * @property nrPassedTests is an Int, representing how many tests the group (last) submission passes
+ * @property nrSubmissions is an Int, representing the number of submissions that the group performed
  */
 data class GroupSubmissionStatistics(val groupID : Long,
                                      val nrPassedTests : Int,
