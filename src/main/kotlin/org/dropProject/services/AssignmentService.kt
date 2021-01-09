@@ -22,7 +22,7 @@ package org.dropProject.services
 import org.dropProject.controllers.ReportController
 import org.dropProject.dao.Assignment
 import org.dropProject.dao.ProjectGroup
-import org.dropProject.data.GroupedProjectGroups
+import org.dropProject.data.*
 import org.dropProject.extensions.realName
 import org.dropProject.repository.*
 import org.springframework.cache.annotation.Cacheable
@@ -122,24 +122,34 @@ class AssignmentService(
                 val testCounts = assignmentTests.map { "${it.testMethod}:${it.testClass}" to 0 }.toMap(LinkedHashMap())
                 var hashMap : HashMap<ProjectGroup, java.util.ArrayList<String>> = HashMap()
 
+                var submissionStatistics = mutableListOf<GroupSubmissionStatistics>()
+
                 submissionInfoList.forEach {
+
+                    var passedTests = 0
+                    var failedTests = 0
+
                     val group = it.projectGroup
                     var failed = java.util.ArrayList<String>()
                     it.lastSubmission.testResults?.forEach {
                         if (it.type == "Success") {
                             testCounts.computeIfPresent("${it.methodName}:${it.getClassName()}") { _, v -> v + 1 }
+                            passedTests++
                         }
                         else {
-                            failed.add(it.methodName);
+                            failed.add(it.methodName)
+                            failedTests++
                         }
                     }
-
                     if(!failed.isEmpty()) {
                         hashMap.put(group, failed)
                     }
+                    submissionStatistics.add(GroupSubmissionStatistics(group.id, passedTests, it.allSubmissions.size))
                 }
 
                 model["tests"] = testCounts
+
+                //filter = "";
 
                 if(mode == "signalledSubmissions") {
                     val signalledGroups = groupGroupsByFailures(hashMap);
@@ -149,6 +159,13 @@ class AssignmentService(
                         }
                     }
                     model["signalledGroups"] = signalledGroups
+
+                    var nrTests = assignmentTests.size
+                    var assignmentStatistics = computeStatistics(submissionStatistics, nrTests)
+                    var groupsOutsideNorm = assignmentStatistics.identifyGroupsOutsideStatisticalNorms(submissionStatistics)
+                    model["offTheAverage"] = groupsOutsideNorm
+                    model["assignmentAverageSubmissions"] = assignmentStatistics.average
+                    model["assignmentNrOfTests"] = nrTests
                 }
             }
         }

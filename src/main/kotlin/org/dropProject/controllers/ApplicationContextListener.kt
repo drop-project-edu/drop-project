@@ -158,7 +158,6 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
                 assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student2"))
                 assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student4"))
                 assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student5"))
-                assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "teacher1"))
 
                 connected = true
 

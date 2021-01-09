@@ -31,6 +31,7 @@ import java.io.ByteArrayInputStream
 
 /**
  * Represents the result of executing a certain JUnit Test.
+ *
  * @property methodName is a String with the name of the test function
  * @property fullMethodName is a String with the full name of the test function (i.e. includes the package name)
  * @property type is the type of the result. Possible values are "Success", "Error" or "Failure"
@@ -66,6 +67,17 @@ data class JUnitMethodResult(val methodName: String,
     }
 }
 
+/**
+ * Represents the JUnit Test results for a certain Test class.
+ *
+ * @property testClassNam is a String, identifying the Test class (e.g. TestTeacher-01.java)
+ * @property fullTestClassName is a String, with the Test class name prefixed by the name of the respective package
+ * @property numTests is an Int with the number of unit tests that were executed
+ * @property numErrors is an Int with the number of unit tests that resulting in an error
+ * @property numFailures is an Int with the number of unit tests that failed
+ * @property timeEllapsed is a Float, representing the time that it took to execute the Test class
+ * @property junitMethodResults is a List of [JUnitMethodResult] with the result each unit test
+ */
 data class JUnitResults(val testClassName: String,
                         val fullTestClassName: String,
                         val numTests: Int,
@@ -75,6 +87,13 @@ data class JUnitResults(val testClassName: String,
                         val timeEllapsed: Float,
                         val junitMethodResults: List<JUnitMethodResult>) {
 
+    /**
+     * Determines if the Test class contains *public* tests implemented by the teacher. Public tests are tests that are
+     * designed for their results to be fully and always visible to the students that performed the [Submission].
+     *
+     * @param assignment is an [Assignment]
+     * @return a Boolean with the value true iif the test class represents public teacher tests; false otherwise
+     */
     fun isTeacherPublic(assignment: Assignment) : Boolean {
         if (testClassName.startsWith(Constants.TEACHER_HIDDEN_TEST_NAME_PREFIX)) {
             return false
@@ -87,10 +106,22 @@ data class JUnitResults(val testClassName: String,
         }
     }
 
+    /**
+     * Determines if the Test class contains *private* tests implemented by the teacher. Private tests are tests that
+     * are designed for their results to be invisible, or only partially visible, to the students that performed the
+     * [Submission].
+     *
+     * @return a Boolean with the value true iif the test class represents private teacher tests; false otherwise
+     */
     fun isTeacherHidden() : Boolean {
         return testClassName.startsWith(Constants.TEACHER_HIDDEN_TEST_NAME_PREFIX)
     }
 
+    /**
+     * Determines if the Test class contains tests implemented by the students performing the [Submission].
+     *
+     * @return a Boolean with the value true iif the test class represents student tests; false otherwise
+     */
     fun isStudent(assignment: Assignment) : Boolean {
         if (assignment.acceptsStudentTests) {
             return !testClassName.startsWith(Constants.TEACHER_TEST_NAME_PREFIX) &&
@@ -101,9 +132,19 @@ data class JUnitResults(val testClassName: String,
     }
 }
 
+/**
+ * Utility for parsing JUnit test results a String.
+ */
 @Service
 class JunitResultsParser {
 
+    /**
+     * Parses from a String the test results of testing a single Test class.
+     *
+     * @param content is a String containing the contents of an XML file with a JUnit report.
+     *
+     * @return a [JUnitResults]
+     */
     fun parseXml(content: String) : JUnitResults {
         val parser = TestSuiteXmlParser(PrintStreamLogger(System.out))
         val byteArrayIs = ByteArrayInputStream(content.toByteArray())

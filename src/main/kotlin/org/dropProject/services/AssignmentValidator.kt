@@ -47,6 +47,9 @@ class AssignmentValidator {
 
     enum class InfoType { INFO, WARNING, ERROR }
 
+    /**
+     * Represents an assignment validation message that is used to report problems with the [Assignment] being validated.
+     */
     data class Info(val type: InfoType, val message: String, val description: String = "")
 
     val report = mutableListOf<Info>()

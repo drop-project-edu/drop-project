@@ -66,6 +66,11 @@ class AssignmentController(
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
+    /**
+     * Controller that handles HTTP GET requests for the [Assignment] creation form.
+     * @param model is a [ModelMap] that will be populated with information to use in a View
+     * @return A String with the name of the relevant View
+     */
     @RequestMapping(value = ["/new"], method = [(RequestMethod.GET)])
     fun getNewAssignmentForm(model: ModelMap): String {
         model["assignmentForm"] = AssignmentForm()
@@ -75,6 +80,16 @@ class AssignmentController(
         return "assignment-form"
     }
 
+    /**
+     * Controller that handles HTTP POST requests for the [Assignment] creation form.
+     *
+     * @param assignmentForm is an [AssignmentForm]
+     * @param bindingResult is a [BindingResult]
+     * @param redirectAttributes is a [RedirectAttributes]
+     * @param principal is a [Principal] representing the user making the request
+     *
+     * @return is a String with the name of the relevant View
+     */
     @RequestMapping(value = ["/new"], method = [(RequestMethod.POST)])
     fun createOrEditAssignment(@Valid @ModelAttribute("assignmentForm") assignmentForm: AssignmentForm,
                                bindingResult: BindingResult,
@@ -231,6 +246,7 @@ class AssignmentController(
     /**
      * Creates a new [Assignment] based on the contents of an [AssignmentForm].
      * @param assignmentForm, the AssignmentForm from which the Assignment contents will be copied
+     * @param principal is a [Principal] representing the user making the request
      * @return the created Assignment
      */
     private fun createAssignmentBasedOnForm(assignmentForm: AssignmentForm, principal: Principal): Assignment {
@@ -284,6 +300,15 @@ class AssignmentController(
         }
     }
 
+    /**
+     * Handles requests for for an [Assignment]'s "Info" page.
+     *
+     * @param assignmentId is a String identifying the relevant Assignment
+     * @param model is a [ModelMap] that will be populated with information to use in a View
+     * @param principal is a [Principal] representing the user making the request
+     *
+     * @return a String with the name of the relevant View
+     */
     @RequestMapping(value = ["/info/{assignmentId}"], method = [(RequestMethod.GET)])
     fun getAssignmentDetail(@PathVariable assignmentId: String, model: ModelMap, principal: Principal): String {
 
@@ -320,7 +345,15 @@ class AssignmentController(
         return "assignment-detail";
     }
 
-
+    /**
+     * Controller that handles HTTP GET requests for the [Assignment] edition form.
+     *
+     * @param assignmentId is a String representing the relevant Assignment
+     * @param model is a [ModelMap] that will be populated with information to use in a View
+     * @param principal is a [Principal] representing the user making the request
+     *
+     * @return a String with the name of the relevant View
+     */
     @RequestMapping(value = ["/edit/{assignmentId}"], method = [(RequestMethod.GET)])
     fun getEditAssignmentForm(@PathVariable assignmentId: String, model: ModelMap, principal: Principal): String {
 
@@ -380,6 +413,14 @@ class AssignmentController(
         return assignmentForm
     }
 
+    /**
+     * Controller that handles requests for the refreshing of the Assignment's configuration from its Git repository.
+     *
+     * @param assignmentId is a String, identifying the relevant assignment
+     * @param principal is a [Principal] representing the user making the request
+     *
+     * @return a ResponseEntity<String>
+     */
     @RequestMapping(value = ["/refresh-git/{assignmentId}"], method = [(RequestMethod.POST)])
     fun refreshAssignmentGitRepository(@PathVariable assignmentId: String,
                                        principal: Principal): ResponseEntity<String> {
@@ -429,6 +470,16 @@ class AssignmentController(
         return ResponseEntity("{ \"success\": \"true\"}", HttpStatus.OK);
     }
 
+    /**
+     * Controller that handles requests for the creation of the connection between the [Assignment] and the Git repository
+     * that contains its configuration.
+     *
+     * @param assignmentId is a String, identifying the relevant Assignment
+     * @param model is a [ModelMap] that will be populated with information to use in a View
+     * @param principal is a [Principal] representing the user making the request
+     *
+     * @return a String with the name of the relevant View
+     */
     @RequestMapping(value = ["/setup-git/{assignmentId}"], method = [(RequestMethod.GET)])
     fun setupAssignmentToGitRepository(@PathVariable assignmentId: String, model: ModelMap, principal: Principal): String {
 

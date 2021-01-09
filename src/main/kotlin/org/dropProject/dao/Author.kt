@@ -27,6 +27,7 @@ import javax.persistence.*
  * @property id is a primary-key like generated value
  * @property name is a String, representing the author's name
  * @property userId is a String, representing the author's id (e.g. student number, teacher number)
+ * @property group is a [ProjectGroup], representing the group that the author belongs to
  */
 @Entity
 data class Author(

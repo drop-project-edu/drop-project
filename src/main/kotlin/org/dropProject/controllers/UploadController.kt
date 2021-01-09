@@ -106,6 +106,18 @@ class UploadController(
         storageService.init()
     }
 
+    /**
+     * Controller that handles related with the base URL.
+     *
+     * If the principal can only access one [Assignment], then that assignment's upload form will be displayed. Otherwise,
+     * a list of assignments will be displayed.
+     *
+     * @param model is a [ModelMap] that will be populated with the information to use in a View
+     * @param principal is a [Principal] representing the user making the request
+     * @param request is a HttpServletRequest
+     *
+     * @return A String identifying the relevant View
+     */
     @RequestMapping(value = ["/"], method = [(RequestMethod.GET)])
     fun getUploadForm(model: ModelMap, principal: Principal, request: HttpServletRequest): String {
 
@@ -140,7 +152,16 @@ class UploadController(
     }
 
 
-
+    /**
+     * Controller that handles requests related with the [Assignment]'s upload page.
+     *
+     * @param model is a [ModelMap] that will be populated with the information to use in a View
+     * @param principal is a [Principal] representing the user making the request
+     * @param assignmentId is a String, identifying the relevant Assigment
+     * @param request is an HttpServletRequest
+     *
+     * @return A String identifying the relevant View
+     */
     @RequestMapping(value = ["/upload/{assignmentId}"], method = [(RequestMethod.GET)])
     fun getUploadForm(model: ModelMap, principal: Principal,
                       @PathVariable("assignmentId") assignmentId: String,
@@ -213,7 +234,17 @@ class UploadController(
     }
 
 
-
+    /**
+     * Controller that handles requests for the actual file upload that delivers/submits the student's code.
+     *
+     * @param uploadForm is an [Uploadform]
+     * @param bindingResult is a [BindingResult]
+     * @param file is a [MultipartFile]
+     * @param principal is a [Principal] representing the user making the request
+     * @param request is an HttpServletRequest
+     *
+     * @return a ResponseEntity<String>
+     */
     @RequestMapping(value = ["/upload"], method = [(RequestMethod.POST)])
     fun upload(@Valid @ModelAttribute("uploadForm") uploadForm: UploadForm,
                bindingResult: BindingResult,
@@ -319,6 +350,17 @@ class UploadController(
         return group
     }
 
+    /**
+     * Builds and tests a [Submission].
+     *
+     * @property projectFolder is a File
+     * @property assignment is the [Assignment] for which the submission is being made
+     * @property authorsStr is a String
+     * @property submission is a Submission
+     * @property asyncExecutor is an Executor
+     * @property teacherRebuid is a Boolean, indicating if this "build" is being requested by a teacher
+     * @property principal is a [Principal] representing the user making the request
+     */
     private fun buildSubmission(projectFolder: File, assignment: Assignment,
                                 authorsStr: String,
                                 submission: Submission,
@@ -387,6 +429,14 @@ class UploadController(
         return erros
     }
 
+    /**
+     * Searches for a [ProjectGroup] object that contains the authors described by [authors]. If none is found, then a
+     * new ProjectGroup is created.
+     *
+     * @param authors is a List of [AuthorDetail]s.
+     *
+     * @return a [ProjectGroup]
+     */
     private fun searchExistingProjectGroupOrCreateNew(authors: List<AuthorDetails>): ProjectGroup {
         val groups = projectGroupRepository.getGroupsForAuthor(authors.first().number)
         for (group in groups) {
@@ -505,6 +555,16 @@ class UploadController(
         }
     }
 
+    /**
+     * Controller that handles requests for the [Submission]'s rebuild process. The rebuild process is a process where by
+     * a student's submission gets compiled and evaluated again. It can be useful, for example, in situations where an
+     * error was detected in the teacher's tests and the teacher wants to apply corrected tests to the student's submission.
+     *
+     * @param submissionId is a Long, identifying the student's Submission
+     * @param principal is a [Principal] representing the user making the request
+     *
+     * @return a String identifying the relevant View
+     */
     @RequestMapping(value = ["/rebuild/{submissionId}"], method = [(RequestMethod.POST)])
     fun rebuild(@PathVariable submissionId: Long,
                 principal: Principal) : String {
@@ -590,6 +650,22 @@ class UploadController(
         return "redirect:/buildReport/${rebuiltSubmission.id}";
     }
 
+    /**
+     * Controller that handles requests for marking a [Submission] as "final". Since, by design, students' can make
+     * multiple submissions in DP, marking a submission as "final" is the way for the teacher to indicate that it's the
+     * one that shall be considered when exporting the submissions' data (e.g. for grading purposes).
+     *
+     * Note that only one submission per [ProjectGroup] can be marked as final. This means that, when a certain submission
+     * is marked as final, any previously "finalized" submission by the same group will not be final anymore.
+     *
+     * @param submissionId is a Long, identifying the student's Submission
+     * @param redirectToSubmissionsList is a Boolean. If true, then after the marking process is done, the user will be
+     * redirected to the group's submissions list. Otherwise, the redirection will be done to the the final submission's
+     * build report.
+     * @param principal is a [Principal] representing the user making the request
+     *
+     * @return a String identifying the relevant View
+     */
     @RequestMapping(value = ["/markAsFinal/{submissionId}"], method = [(RequestMethod.POST)])
     fun markAsFinal(@PathVariable submissionId: Long,
                     @RequestParam(name="redirectToSubmissionsList", required = false, defaultValue = "false")
@@ -604,15 +680,12 @@ class UploadController(
             throw IllegalAccessError("Submissions can only be marked as final by the assignment owner or authorized teachers")
         }
 
-
         if (submission.markedAsFinal) {
             submission.markedAsFinal = false
             LOG.info("Unmarking as final: ${submissionId}")
 
         } else {
-
             LOG.info("Marking as final: ${submissionId}")
-
             // marks this submission as final, and all other submissions for the same group and assignment as not final
             submissionService.markAsFinal(submission)
         }
@@ -653,6 +726,18 @@ class UploadController(
         return "redirect:/report/${assignmentId}";
     }
 
+    /**
+     * Controller that handles requests for connecting a student's GitHub repository with an [Assignment] available in DP.
+     *
+     * This process works like a two step wizard. This is the first part. The second part is in "/student/setup-git-2".
+     *
+     * @param assignmentId is a String, identifying the relevant Assignment
+     * @param gitRepositoryUrl is a String with the student's GitHub repository URL
+     * @param model is a [ModelMap] that will be populated with the information to use in a View
+     * @param principal is a [Principal] representing the user making the request
+     *
+     * @return A String identifying the relevant View
+     */
     @RequestMapping(value = ["/student/setup-git"], method = [(RequestMethod.POST)])
     fun setupStudentSubmissionUsingGitRepository(@RequestParam("assignmentId") assignmentId: String,
                                                  @RequestParam("gitRepositoryUrl") gitRepositoryUrl: String?,
@@ -686,12 +771,10 @@ class UploadController(
             return "student-git-form"
         }
 
-
         var gitSubmission =
                 gitSubmissionRepository.findBySubmitterUserIdAndAssignmentId(principal.realName(), assignmentId)
                 ?:
                 gitSubmissionService.findGitSubmissionBy(principal.realName(), assignmentId) // check if it belongs to a group who has already a git submission
-
 
         if (gitSubmission == null || gitSubmission.gitRepositoryPubKey == null) {
 
@@ -715,6 +798,18 @@ class UploadController(
         return "student-setup-git"
     }
 
+    /**
+     * Controller that handles requests for connecting a student's GitHub repository with DP.
+     *
+     * This process works like a two step wizard. This is the second part. The first part is in "/student/setup-git".
+     *
+     * @param assignmentId
+     * @param gitRepositoryUrl is a String
+     * @param model is a [ModelMap] that will be populated with the information to use in a View
+     * @param principal is a [Principal] representing the user making the request
+     *
+     * @return A String identifying the relevant View
+     */
     @RequestMapping(value = ["/student/setup-git-2/{gitSubmissionId}"], method = [(RequestMethod.POST)])
     fun connectAssignmentToGitRepository(@PathVariable gitSubmissionId: String, redirectAttributes: RedirectAttributes,
                                          model: ModelMap, principal: Principal): String {
@@ -772,12 +867,10 @@ class UploadController(
                 }
 
             } catch (ipse: InvalidProjectStructureException) {
-
                 LOG.info("Invalid project structure: ${ipse.message}")
                 model["error"] = "O projecto localizado no repositório ${gitRepository} tem uma estrutura inválida: ${ipse.message}"
                 model["gitSubmission"] = gitSubmission
                 return "student-setup-git"
-
             } catch (e: Exception) {
                 LOG.info("Error cloning ${gitRepository} - ${e}")
                 model["error"] = "Error cloning ${gitRepository} - ${e.message}"
@@ -790,6 +883,15 @@ class UploadController(
         return "redirect:/upload/${assignment.id}"
     }
 
+    /**
+     * Controller that handles requests for the creation of a new submission via Git, by refreshing the contents
+     * that are in the respective student's repository.
+     *
+     * @param submissionId is a String identifying the student's last Git submission
+     * @param principal is a [Principal] representing the user making the requets
+     *
+     * @return a ResponseEntity<String>
+     */
     @RequestMapping(value = ["/git-submission/refresh-git/{submissionId}"], method = [(RequestMethod.POST)])
     fun refreshAssignmentGitRepository(@PathVariable submissionId: String,
                                        principal: Principal): ResponseEntity<String> {
@@ -823,6 +925,15 @@ class UploadController(
         return ResponseEntity("{ \"success\": \"true\"}", HttpStatus.OK);
     }
 
+    /**
+     * Controller that handles requests for the generation of a [GitSubmission]'s build report.
+     *
+     * @param gitSubmissionId is a String identifying a [GitSubmission]
+     * @param principal is a [Principal] representing the user making the request
+     * @param request is a HttpServletRequest
+     *
+     * @return a ResponseEntity<String>
+     */
     @RequestMapping(value = ["/git-submission/generate-report/{gitSubmissionId}"], method = [(RequestMethod.POST)])
     fun upload(@PathVariable gitSubmissionId: String,
                principal: Principal,
@@ -876,9 +987,17 @@ class UploadController(
 
         return ResponseEntity("{ \"submissionId\": \"${submission.id}\"}", HttpStatus.OK);
 
-
     }
 
+    /**
+     * Controller that handles requests for the resetting of the connection between a GitHub and an Assignment.
+     *
+     * @param gitSubmissionId is a String identifying a [GitSubmission]
+     * @param redirectAttributes is a RedirectAttributes
+     * @param principal is [Principal] representing the user making the request
+     *
+     * @return a String with the name of the relevant View
+     */
     @RequestMapping(value = ["/student/reset-git/{gitSubmissionId}"], method = [(RequestMethod.POST)])
     fun disconnectAssignmentToGitRepository(@PathVariable gitSubmissionId: String,
                                             redirectAttributes: RedirectAttributes,
@@ -910,6 +1029,13 @@ class UploadController(
         return "redirect:/upload/${assignment.id}"
     }
 
+    /**
+     * Controller that handles requests for the deletion of a [Submission].
+     *
+     * @param submissionId is a Long, identifying the Submission to delete
+     * @param principal is a [Principal] representing the user making the request
+     * @return a String with the name of the relevant View
+     */
     @RequestMapping(value = ["/delete/{submissionId}"], method = [(RequestMethod.POST)])
     fun deleteSubmission(@PathVariable submissionId: Long,
                          principal: Principal) : String {
@@ -930,6 +1056,14 @@ class UploadController(
         return "redirect:/report/${assignment.id}"
     }
 
+    /**
+     * Checks if a certain user can access a certain [Assignment]. Only relevant for Assignments that have access
+     * control lists.
+     *
+     * @param assignmentId is a String identifying the relevant Assignment
+     * @param principalName is a String identifyng the user trying to access the Assignment
+     * @throws If the user is not allowed to access the Assignment, an [AccessDeniedException] will be thrown.
+     */
     private fun checkAssignees(assignmentId: String, principalName: String) {
         if (assigneeRepository.existsByAssignmentId(assignmentId)) {
             // if it enters here, it means this assignment has a white list
@@ -940,24 +1074,28 @@ class UploadController(
         }
     }
 
+    /**
+     * Searches for the last [Submission] performed in an [Assignment] by a certain user or by a member of the respective
+     * [ProjectGroup].
+     *
+     * @param principal is a [Principal] representing the user whose last submission is being searched
+     * @param assignmentId is a String representing the relevant Assignment
+     *
+     * @return a Submission
+     */
     private fun getLastSubmission(principal: Principal, assignmentId: String): Submission? {
-
         val groupsToWhichThisStudentBelongs = projectGroupRepository.getGroupsForAuthor(principal.realName())
         var lastSubmission: Submission? = null
-
         // TODO: This is ugly - should rethink data model for groups
         for (group in groupsToWhichThisStudentBelongs) {
-
             val lastSubmissionForThisGroup = submissionRepository
                     .findFirstByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(group, assignmentId)
-
             if (lastSubmission == null ||
                     (lastSubmissionForThisGroup != null &&
                             lastSubmission.submissionDate.before(lastSubmissionForThisGroup.submissionDate))) {
                 lastSubmission = lastSubmissionForThisGroup
             }
         }
-
         return lastSubmission
     }
 
@@ -1009,7 +1147,6 @@ class UploadController(
 
     @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Inexistent assignment")
     class AssignmentNotFoundException(assignmentId: String) : Exception("Inexistent assignment ${assignmentId}") {
-
         val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
         init {
@@ -1019,7 +1156,6 @@ class UploadController(
 
     @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Inexistent submission")
     class SubmissionNotFoundException(submissionId: Long) : Exception("Inexistent submission ${submissionId}") {
-
         val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
         init {
@@ -1028,5 +1164,3 @@ class UploadController(
     }
 
 }
-    
-    

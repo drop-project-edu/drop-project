@@ -74,9 +74,9 @@ enum class SubmissionStatus(val code: String, val description: String) {
  * @param structureErrors is a String
  * @param markedAsFinal is a Boolean, indicating if this submission is marked as the group's final one. The
  * final Submission is the one that is exported to CSV.
- * @studentTests is a [JUnitSummary] with the result of executing the student's own unit tests
- * @teacherTests is a [JUnitSummary] with the result of executing the teacher's public tests
- * @hiddenTests is a [JUnitSummary] with the result of executing the teacher's hidden tests
+ * @param studentTests is a [JUnitSummary] with the result of executing the student's own unit tests
+ * @param teacherTests is a [JUnitSummary] with the result of executing the teacher's public tests
+ * @param hiddenTests is a [JUnitSummary] with the result of executing the teacher's hidden tests
  * @param coverage is an Int with the test coverage percentage calculated for the submission's own unit tests
  * @param testResults is a List of [JUnitMethodResult] containing the result for each evaluation JUnit Test
  * @param group is the [ProjectGrop] that performed the submission.

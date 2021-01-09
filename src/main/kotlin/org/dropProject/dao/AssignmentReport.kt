@@ -22,6 +22,16 @@ package org.dropProject.dao
 import org.dropProject.services.AssignmentValidator
 import javax.persistence.*
 
+/**
+ * Represents a report of information that was generated during an [Assignment]'s validation. This information will be
+ * listed on the Assignments "Validation Report" page.
+ *
+ * @property id is a primary-key like generated value
+ * @property assignmentId is a String with the relevant Assignment's ID
+ * @property type is the type of the report (e.g. Warning)
+ * @property message is a short description of the problem (note that some problems only result in this message)
+ * @property description is the long description of the problem
+ */
 @Entity
 data class AssignmentReport(
         @Id @GeneratedValue

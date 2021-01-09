@@ -33,6 +33,9 @@
                 <div class="alert alert-info" th:text="${message}"/>
             </div>
 
+            <div th:if="${signalledGroups}">
+                <h3>Groups that fail the same tests</h3>
+            </div>
 
             <table class="table">
                 <thead>
@@ -58,6 +61,37 @@
                     </td>
                 </tr>
             </table>
+
+            <hr>
+
+            <div th:if="${offTheAverage}">
+                <h3>Groups passing many tests with relatively little submissions</h3>
+                <b>Assignment submission average for groups with more than 75% correct tests:</b>
+                <p th:text="${assignmentAverageSubmissions}"/>
+                <b>Nr of Tests:</b>
+                <p th:text="${assignmentNrOfTests}"/>
+            </div>
+
+            <table border="1">
+                <thead>
+                    <tr>
+                        <td><b>Group ID</b></td>
+                        <td><b>View Submissions</b></td>
+                        <td><b>Nr of Submissions</b></td>
+                        <td><b>Nr of Passed Tests</b></td>
+                    </tr>
+                </thead>
+                <tr th:each="groupStats: ${offTheAverage}">
+                    <td th:text="${groupStats.groupID}"/></td>
+                    <td>
+                        <a th:each="groupID: ${groupStats.groupID}" th:href="'/submissions/?assignmentId=' + ${assignmentId} + '&groupId=' + ${groupID}">View submissions</a>
+                    </td>
+                    <td th:text="${groupStats.nrSubmissions}"/></td>
+                    <td th:text="${groupStats.nrPassedTests}"/></td>
+                    <td></td>
+                </tr>
+            </table>
+
         </div>
     </div>
 
