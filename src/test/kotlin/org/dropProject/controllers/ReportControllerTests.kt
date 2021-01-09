@@ -797,4 +797,42 @@ class ReportControllerTests {
         assert(2 == result.size)
         assert(result.containsAll(expected))
     }
+
+    /**
+     * Tested function: AssignmentStatistics.identifyGroupsOutsideStatisticalNorms()
+     *
+     * In this scenario all the groups will be below de 75% threshold. This means that no groups should be identified
+     * as being outside the statistical norms.
+     */
+    @Test
+    fun testIdentifyGroupsOutsideStatisticalNorms_NoGroupsOverThreshold() {
+        var submissionStatistics = mutableListOf<GroupSubmissionStatistics>()
+        // all the groups are below the 75% threshold
+        submissionStatistics.add(GroupSubmissionStatistics(1, 10, 20));
+        submissionStatistics.add(GroupSubmissionStatistics(2, 10, 22));
+        submissionStatistics.add(GroupSubmissionStatistics(3, 12, 20));
+        var assignmentStatistics = computeStatistics(submissionStatistics, 20)
+        var result = assignmentStatistics.identifyGroupsOutsideStatisticalNorms(submissionStatistics)
+        assert(result.isEmpty())
+    }
+
+    /**
+     * Tested function: AssignmentStatistics.identifyGroupsOutsideStatisticalNorms()
+     *
+     * In this scenario, two of the three groups are below the 75% threshold. This means that no groups should be
+     * identified as being outside the statistical norms, because only one group will define the norm and will not be
+     * outside of it.
+     */
+    @Test
+    fun testIdentifyGroupsOutsideStatisticalNorms_OnlyTheOneGroupIsOverThreshold() {
+        var submissionStatistics = mutableListOf<GroupSubmissionStatistics>()
+        // 2 of the 3 groups are below the 75% threshold
+        submissionStatistics.add(GroupSubmissionStatistics(1, 10, 20)); // ignored
+        submissionStatistics.add(GroupSubmissionStatistics(2, 15, 22));
+        submissionStatistics.add(GroupSubmissionStatistics(3, 12, 20)); // ignored
+        var assignmentStatistics = computeStatistics(submissionStatistics, 20)
+        var result = assignmentStatistics.identifyGroupsOutsideStatisticalNorms(submissionStatistics)
+        assert(result.isEmpty())
+    }
+
 }
