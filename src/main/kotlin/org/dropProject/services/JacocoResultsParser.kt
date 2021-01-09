@@ -26,12 +26,30 @@ import java.io.ByteArrayInputStream
 import java.io.InputStreamReader
 import kotlin.math.round
 
-
+/**
+ * Represents the results from the execution of the plugin for unit coverage calculation (Jacoco).
+ *
+ * The students test coverage is calculated by DP when the [Assignment] is configured to evaluate it.
+ *
+ * @property linesMissed is an Int with the number of lines that *are not covered* by the students' tests
+ * @property linesCovered is an Int with the number of lines that *are covered* by the students' tests
+ * @property lineCoveragePercent is an Int, indicating the percentage of lines that are covered
+ */
 data class JacocoResults(val linesMissed: Int, val linesCovered: Int, val lineCoveragePercent: Int)
 
+/**
+ * Utility for parsing Jacoco coverage results from a String.
+ */
 @Service
 class JacocoResultsParser {
 
+    /**
+     * Parses from a String the test results of testing a single Test class.
+     *
+     * @param content is a String containing the contents of a CSV file with a Jacoco report.
+     *
+     * @return a [JacocoResults]
+     */
     fun parseCsv(content: String): JacocoResults {
 
         val byteArrayIs = ByteArrayInputStream(content.toByteArray())

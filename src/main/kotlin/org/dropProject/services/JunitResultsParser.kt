@@ -31,6 +31,7 @@ import java.io.ByteArrayInputStream
 
 /**
  * Represents the result of executing a certain JUnit Test.
+ *
  * @property methodName is a String with the name of the test function
  * @property fullMethodName is a String with the full name of the test function (i.e. includes the package name)
  * @property type is the type of the result. Possible values are "Success", "Error" or "Failure"
@@ -131,9 +132,19 @@ data class JUnitResults(val testClassName: String,
     }
 }
 
+/**
+ * Utility for parsing JUnit test results a String.
+ */
 @Service
 class JunitResultsParser {
 
+    /**
+     * Parses from a String the test results of testing a single Test class.
+     *
+     * @param content is a String containing the contents of an XML file with a JUnit report.
+     *
+     * @return a [JUnitResults]
+     */
     fun parseXml(content: String) : JUnitResults {
         val parser = TestSuiteXmlParser(PrintStreamLogger(System.out))
         val byteArrayIs = ByteArrayInputStream(content.toByteArray())
