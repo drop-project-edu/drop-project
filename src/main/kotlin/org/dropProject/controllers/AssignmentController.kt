@@ -413,6 +413,14 @@ class AssignmentController(
         return assignmentForm
     }
 
+    /**
+     * Controller that handles requests for the refreshing of the Assignment's configuration from its Git repository.
+     *
+     * @param assignmentId is a String, identifying the relevant assignment
+     * @param principal is a [Principal] representing the user making the request
+     *
+     * @return a ResponseEntity<String>
+     */
     @RequestMapping(value = ["/refresh-git/{assignmentId}"], method = [(RequestMethod.POST)])
     fun refreshAssignmentGitRepository(@PathVariable assignmentId: String,
                                        principal: Principal): ResponseEntity<String> {
@@ -462,6 +470,16 @@ class AssignmentController(
         return ResponseEntity("{ \"success\": \"true\"}", HttpStatus.OK);
     }
 
+    /**
+     * Controller that handles requests for the creation of the connection between the [Assignment] and the Git repository
+     * that contains its configuration.
+     *
+     * @param assignmentId is a String, identifying the relevant Assignment
+     * @param model is a [ModelMap] that will be populated with information to use in a View
+     * @param principal is a [Principal] representing the user making the request
+     *
+     * @return a String with the name of the relevant View
+     */
     @RequestMapping(value = ["/setup-git/{assignmentId}"], method = [(RequestMethod.GET)])
     fun setupAssignmentToGitRepository(@PathVariable assignmentId: String, model: ModelMap, principal: Principal): String {
 
