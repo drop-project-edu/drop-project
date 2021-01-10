@@ -775,7 +775,7 @@ class ReportControllerTests {
         var submissionStatistics = testDataForComputeStatistics(1)
         var assignmentStatistics = computeStatistics(submissionStatistics, 20)
         var expected = listOf<GroupSubmissionStatistics>(GroupSubmissionStatistics(4, 15, 5))
-        var result = assignmentStatistics.identifyGroupsOutsideStatisticalNorms(submissionStatistics)
+        var result = assignmentStatistics.identifyGroupsOutsideStatisticalNorms()
         assert(1 == result.size)
         assertEquals(expected, result)
     }
@@ -793,7 +793,7 @@ class ReportControllerTests {
         var gss1 = GroupSubmissionStatistics(4, 15, 5)
         var gss2 = GroupSubmissionStatistics(6, 16, 6)
         var expected = listOf<GroupSubmissionStatistics>(gss1, gss2)
-        var result = assignmentStatistics.identifyGroupsOutsideStatisticalNorms(submissionStatistics)
+        var result = assignmentStatistics.identifyGroupsOutsideStatisticalNorms()
         assert(2 == result.size)
         assert(result.containsAll(expected))
     }
@@ -812,7 +812,7 @@ class ReportControllerTests {
         submissionStatistics.add(GroupSubmissionStatistics(2, 10, 22));
         submissionStatistics.add(GroupSubmissionStatistics(3, 12, 20));
         var assignmentStatistics = computeStatistics(submissionStatistics, 20)
-        var result = assignmentStatistics.identifyGroupsOutsideStatisticalNorms(submissionStatistics)
+        var result = assignmentStatistics.identifyGroupsOutsideStatisticalNorms()
         assert(result.isEmpty())
     }
 
@@ -831,7 +831,7 @@ class ReportControllerTests {
         submissionStatistics.add(GroupSubmissionStatistics(2, 15, 22));
         submissionStatistics.add(GroupSubmissionStatistics(3, 12, 20)); // ignored
         var assignmentStatistics = computeStatistics(submissionStatistics, 20)
-        var result = assignmentStatistics.identifyGroupsOutsideStatisticalNorms(submissionStatistics)
+        var result = assignmentStatistics.identifyGroupsOutsideStatisticalNorms()
         assert(result.isEmpty())
     }
 

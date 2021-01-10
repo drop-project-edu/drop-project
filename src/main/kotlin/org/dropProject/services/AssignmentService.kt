@@ -166,7 +166,7 @@ class AssignmentService(
 
                     var nrTests = assignmentTests.size
                     var assignmentStatistics = computeStatistics(submissionStatistics, nrTests)
-                    var groupsOutsideNorm = assignmentStatistics.identifyGroupsOutsideStatisticalNorms(submissionStatistics)
+                    var groupsOutsideNorm = assignmentStatistics.identifyGroupsOutsideStatisticalNorms()
                     model["offTheAverage"] = groupsOutsideNorm
                     model["assignmentAverageSubmissions"] = assignmentStatistics.average
                     model["assignmentNrOfTests"] = nrTests

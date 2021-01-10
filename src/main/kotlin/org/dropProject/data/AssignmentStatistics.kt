@@ -24,21 +24,23 @@ package org.dropProject.data
  *
  * @property average is a Double, representing the average number of submissions
  * @property standardDeviation is a Double, representing the standard deviation of the average number of submissions
+ * @property groupsConsideredForStatistics is a List with the [GroupSubmissionStatistics] that were considered when
+ * calculating the statistics
  */
 data class AssignmentStatistics(val average : Double,
-                                val standardDeviation : Double) {
+                                val standardDeviation : Double,
+                                val groupsConsideredForStatistics : List<GroupSubmissionStatistics>) {
 
     /**
      * Identifies [ProjectGroup]'s that have a result that is outside the nome (e.g. they pass "many tests" while having
      * "little submissions" when compared with the other groups.
      *
-     * @param submissionStatistics is a List of [GroupSubmissionStatistics]
      * @return is a List of [GroupSubmissionStatistics]
      */
-    fun identifyGroupsOutsideStatisticalNorms(submissionStatistics : List<GroupSubmissionStatistics>): List<GroupSubmissionStatistics> {
+    fun identifyGroupsOutsideStatisticalNorms(): List<GroupSubmissionStatistics> {
         val minSubmissions = average - standardDeviation
         var result = mutableListOf<GroupSubmissionStatistics>()
-        for(subStats in submissionStatistics) {
+        for(subStats in groupsConsideredForStatistics) {
             if(subStats.nrSubmissions < minSubmissions) {
                 result.add(subStats)
             }
@@ -51,7 +53,7 @@ data class AssignmentStatistics(val average : Double,
  * Represents the submission statistics for a certain [ProjectGroup].
  *
  * @property groupID is a Long, identifying the ProjectGroup
- * @property nrPassedTests is an Int, representing how many tests the group (last) submission passes
+ * @property nrPassedTests is an Int, representing how many tests the group's (last) submission passes
  * @property nrSubmissions is an Int, representing the number of submissions that the group performed
  */
 data class GroupSubmissionStatistics(val groupID : Long,
@@ -83,11 +85,14 @@ data class GroupSubmissionStatistics(val groupID : Long,
 fun computeStatistics(submissionStatistics : List<GroupSubmissionStatistics>, nrTests : Int, inclusionThreshold: Int = 75): AssignmentStatistics {
     var nrGroupsOverThreshold = 0
     var totalNrOfSubmissionsOverThreshold = 0
+    var groupsConsideredForStatistics = mutableListOf<GroupSubmissionStatistics>()
+
     for(subStats in submissionStatistics) {
         val passedTestsPercentage = subStats.nrPassedTests * 100 / nrTests
         if(passedTestsPercentage >= inclusionThreshold) {
             totalNrOfSubmissionsOverThreshold += subStats.nrSubmissions
             nrGroupsOverThreshold++;
+            groupsConsideredForStatistics.add(subStats)
         }
     }
 
@@ -107,5 +112,5 @@ fun computeStatistics(submissionStatistics : List<GroupSubmissionStatistics>, nr
 
     dev = Math.sqrt(dev / (nrGroupsOverThreshold - 1))
 
-    return AssignmentStatistics(averageNrOfSubmissions, dev)
+    return AssignmentStatistics(averageNrOfSubmissions, dev, groupsConsideredForStatistics)
 }
