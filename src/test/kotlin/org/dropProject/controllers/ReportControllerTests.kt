@@ -835,4 +835,30 @@ class ReportControllerTests {
         assert(result.isEmpty())
     }
 
+    /**
+     * Tested function: AssignmentStatistics.identifyGroupsOutsideStatisticalNorms()
+     *
+     * Scenario where a Group has little submissions but also has little tests.
+     *
+     * Average: 21.33
+     * StdDev: 1.154
+     * Average - StdDev = 20.17
+     * All Groups with at least 15 tests and less than 20.17 submissions will be signalled.
+     */
+    @Test
+    fun testIdentifyGroupsOutsideStatisticalNorms_MoreComplexScenario() {
+        var submissionStatistics = mutableListOf<GroupSubmissionStatistics>()
+        submissionStatistics.add(GroupSubmissionStatistics(1, 10, 20)); // ignored because below 75% of tests
+        submissionStatistics.add(GroupSubmissionStatistics(2, 15, 22));
+        submissionStatistics.add(GroupSubmissionStatistics(3, 10, 10)); // ignored low tests & low subs
+        submissionStatistics.add(GroupSubmissionStatistics(4, 15, 22));
+        val gss5 = GroupSubmissionStatistics(5, 17, 20)
+        submissionStatistics.add(gss5); // signalled
+        var assignmentStatistics = computeStatistics(submissionStatistics, 20)
+        var result = assignmentStatistics.identifyGroupsOutsideStatisticalNorms()
+        
+        assert(1 == result.size)
+        assert(result.contains(gss5))
+    }
+
 }
