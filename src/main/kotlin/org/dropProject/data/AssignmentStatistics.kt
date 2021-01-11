@@ -102,15 +102,17 @@ fun computeStatistics(submissionStatistics : List<GroupSubmissionStatistics>, nr
     // calculate standard dev
     var dev = 0.0
 
-    for(subStats in submissionStatistics) {
-        //val delta = ().toDouble()
-        val passedTestsPercentage = subStats.nrPassedTests * 100 / nrTests
-        if(passedTestsPercentage >= inclusionThreshold) {
-            dev += Math.pow(subStats.nrSubmissions - averageNrOfSubmissions, 2.0)
+    // if there is only 1 group, the std dev will be irrelevant
+    if(nrGroupsOverThreshold > 1) {
+        for (subStats in submissionStatistics) {
+            val passedTestsPercentage = subStats.nrPassedTests * 100 / nrTests
+            if (passedTestsPercentage >= inclusionThreshold) {
+                dev += Math.pow(subStats.nrSubmissions - averageNrOfSubmissions, 2.0)
+            }
         }
+        dev = Math.sqrt(dev / (nrGroupsOverThreshold - 1))
     }
 
-    dev = Math.sqrt(dev / (nrGroupsOverThreshold - 1))
 
     return AssignmentStatistics(averageNrOfSubmissions, dev, groupsConsideredForStatistics)
 }
