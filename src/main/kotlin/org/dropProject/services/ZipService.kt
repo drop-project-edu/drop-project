@@ -34,6 +34,9 @@ import org.dropProject.repository.*
 import java.io.File
 import java.util.ArrayList
 
+/**
+ * Utility to create ZIP files based on folder contents.
+ */
 @Service
 class ZipService {
 

@@ -33,6 +33,10 @@ import java.io.FileNotFoundException
 import java.security.Principal
 import java.util.*
 
+/**
+ * Provides functionality related with an Assignment's Teacher Files (for example, checking if the Teacher's submission
+ * compiles, passes the CheckStyle, and so on).
+ */
 @Service
 class AssignmentTeacherFiles(val buildWorker: BuildWorker,
                              val buildReportRepository: BuildReportRepository,

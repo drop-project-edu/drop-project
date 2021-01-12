@@ -34,6 +34,9 @@ import java.io.FileReader
 import java.io.StringWriter
 import java.util.*
 
+/**
+ * Utility to perform Maven related tasks.
+ */
 @Service
 class MavenInvoker {
 
