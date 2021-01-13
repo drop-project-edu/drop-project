@@ -40,6 +40,12 @@ import java.util.ArrayList
 @Service
 class ZipService {
 
+    /**
+     * Creates a ZIP File with the contents of [projectFolder].
+     *
+     * @param zipFilename is a String with the desired name for the ZIP file
+     * @param projectFolder is a File containing the directory that shall be zipped
+     */
     fun createZipFromFolder(zipFilename: String, projectFolder: File): ZipFile {
         val zFile = File.createTempFile(zipFilename, ".zip")
         if (zFile.exists()) {
