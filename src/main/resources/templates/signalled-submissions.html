@@ -66,8 +66,11 @@
 
             <div th:if="${offTheAverage}">
                 <h3>Groups passing many tests with relatively little submissions</h3>
-                <b>Assignment submission average for groups with more than 75% correct tests:</b>
-                <p th:text="${assignmentAverageSubmissions}"/>
+                <p>Groups needed, on average, <b th:text="${assignmentAverageSubmissions}"/> (+-
+                    <b th:text="${assignmentStandardDeviation}" />) submissions to pass 75% (or more) tests. The groups
+                    below are signalled because they only needed <b th:text="${submissionsThreshold}" /> (or less)
+                    submissions to pass 75% (or more) tests.
+                </p>
                 <b>Nr of Tests:</b>
                 <p th:text="${assignmentNrOfTests}"/>
             </div>

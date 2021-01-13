@@ -775,7 +775,7 @@ class ReportControllerTests {
         var submissionStatistics = testDataForComputeStatistics(1)
         var assignmentStatistics = computeStatistics(submissionStatistics, 20)
         var expected = listOf<GroupSubmissionStatistics>(GroupSubmissionStatistics(4, 15, 5))
-        var result = assignmentStatistics.identifyGroupsOutsideStatisticalNorms(submissionStatistics)
+        var result = assignmentStatistics.identifyGroupsOutsideStatisticalNorms()
         assert(1 == result.size)
         assertEquals(expected, result)
     }
@@ -793,7 +793,7 @@ class ReportControllerTests {
         var gss1 = GroupSubmissionStatistics(4, 15, 5)
         var gss2 = GroupSubmissionStatistics(6, 16, 6)
         var expected = listOf<GroupSubmissionStatistics>(gss1, gss2)
-        var result = assignmentStatistics.identifyGroupsOutsideStatisticalNorms(submissionStatistics)
+        var result = assignmentStatistics.identifyGroupsOutsideStatisticalNorms()
         assert(2 == result.size)
         assert(result.containsAll(expected))
     }
@@ -812,7 +812,7 @@ class ReportControllerTests {
         submissionStatistics.add(GroupSubmissionStatistics(2, 10, 22));
         submissionStatistics.add(GroupSubmissionStatistics(3, 12, 20));
         var assignmentStatistics = computeStatistics(submissionStatistics, 20)
-        var result = assignmentStatistics.identifyGroupsOutsideStatisticalNorms(submissionStatistics)
+        var result = assignmentStatistics.identifyGroupsOutsideStatisticalNorms()
         assert(result.isEmpty())
     }
 
@@ -831,8 +831,34 @@ class ReportControllerTests {
         submissionStatistics.add(GroupSubmissionStatistics(2, 15, 22));
         submissionStatistics.add(GroupSubmissionStatistics(3, 12, 20)); // ignored
         var assignmentStatistics = computeStatistics(submissionStatistics, 20)
-        var result = assignmentStatistics.identifyGroupsOutsideStatisticalNorms(submissionStatistics)
+        var result = assignmentStatistics.identifyGroupsOutsideStatisticalNorms()
         assert(result.isEmpty())
+    }
+
+    /**
+     * Tested function: AssignmentStatistics.identifyGroupsOutsideStatisticalNorms()
+     *
+     * Scenario where a Group has little submissions but also has little tests.
+     *
+     * Average: 21.33
+     * StdDev: 1.154
+     * Average - StdDev = 20.17
+     * All Groups with at least 15 tests and less than 20.17 submissions will be signalled.
+     */
+    @Test
+    fun testIdentifyGroupsOutsideStatisticalNorms_MoreComplexScenario() {
+        var submissionStatistics = mutableListOf<GroupSubmissionStatistics>()
+        submissionStatistics.add(GroupSubmissionStatistics(1, 10, 20)); // ignored because below 75% of tests
+        submissionStatistics.add(GroupSubmissionStatistics(2, 15, 22));
+        submissionStatistics.add(GroupSubmissionStatistics(3, 10, 10)); // ignored low tests & low subs
+        submissionStatistics.add(GroupSubmissionStatistics(4, 15, 22));
+        val gss5 = GroupSubmissionStatistics(5, 17, 20)
+        submissionStatistics.add(gss5); // signalled
+        var assignmentStatistics = computeStatistics(submissionStatistics, 20)
+        var result = assignmentStatistics.identifyGroupsOutsideStatisticalNorms()
+        
+        assert(1 == result.size)
+        assert(result.contains(gss5))
     }
 
 }
