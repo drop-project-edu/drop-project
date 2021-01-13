@@ -22,7 +22,9 @@ package org.dropProject.extensions
 import java.io.File
 import java.io.IOException
 
-
+/**
+ * This file contains extensions to the default [File] class.
+ */
 
 // taken from https://stackoverflow.com/a/34730781
 fun File.existsCaseSensitive(): Boolean {

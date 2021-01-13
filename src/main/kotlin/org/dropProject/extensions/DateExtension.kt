@@ -22,6 +22,10 @@ package org.dropProject.extensions
 import java.text.SimpleDateFormat
 import java.util.*
 
+/**
+ * This file contains extensions to the default [Date] class.
+ */
+
 fun Date.formatDefault(): String{
     val sdf= SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
     return sdf.format(this)
