@@ -20,6 +20,7 @@
 package org.dropProject.services
 
 import net.lingala.zip4j.core.ZipFile
+import net.lingala.zip4j.exception.ZipException
 import net.lingala.zip4j.model.ZipParameters
 import net.lingala.zip4j.util.Zip4jConstants
 import org.springframework.scheduling.annotation.Async
@@ -31,7 +32,9 @@ import org.dropProject.dao.Submission
 import org.dropProject.data.SubmissionInfo
 import org.dropProject.data.TestType
 import org.dropProject.repository.*
+import org.dropProject.storage.StorageException
 import java.io.File
+import java.nio.file.Path
 import java.util.ArrayList
 
 /**
@@ -45,6 +48,8 @@ class ZipService {
      *
      * @param zipFilename is a String with the desired name for the ZIP file
      * @param projectFolder is a File containing the directory that shall be zipped
+     *
+     * @return a [ZipFile]
      */
     fun createZipFromFolder(zipFilename: String, projectFolder: File): ZipFile {
         val zFile = File.createTempFile(zipFilename, ".zip")
@@ -57,6 +62,26 @@ class ZipService {
         zipParameters.compressionLevel = Zip4jConstants.DEFLATE_LEVEL_ULTRA
         zipFile.createZipFileFromFolder(projectFolder, zipParameters, false, -1)
         return zipFile
+    }
+
+    /**
+     * Decompresses a ZIP file.
+     *
+     * @param file is a Path representing the .ZIP file to decompress
+     * @param originalFilename is a String
+     *
+     * @return a File containing a directory with the unzipped files
+     */
+    fun unzip(file: Path, originalFilename: String?): File {
+        val destinationFileFile = file.toFile()
+        val destinationFolder = File(destinationFileFile.parent, destinationFileFile.nameWithoutExtension)
+        try {
+            val zipFile = ZipFile(destinationFileFile)
+            zipFile.extractAll(destinationFolder.absolutePath)
+        } catch (e: ZipException) {
+            throw StorageException("Failed to unzip ${originalFilename}", e)
+        }
+        return destinationFolder
     }
 
 }

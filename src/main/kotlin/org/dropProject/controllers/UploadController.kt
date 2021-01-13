@@ -52,7 +52,6 @@ import org.dropProject.extensions.realName
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.*
 import org.dropProject.services.*
-import org.dropProject.storage.unzip
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.io.InputStream
@@ -88,7 +87,8 @@ class UploadController(
         val assignmentTeacherFiles: AssignmentTeacherFiles,
         val gitClient: GitClient,
         val gitSubmissionService: GitSubmissionService,
-        val submissionService: SubmissionService
+        val submissionService: SubmissionService,
+        val zipService: ZipService
         ) {
 
     @Value("\${storage.rootLocation}/git")
@@ -625,7 +625,7 @@ class UploadController(
                     // let's check if there is a zip file with this project
                     val projectZipFile = File("${projectFolder.absolutePath}.zip")
                     if (projectZipFile.exists()) {
-                        unzip(Paths.get(projectZipFile.path), projectFolder.name)
+                        zipService.unzip(Paths.get(projectZipFile.path), projectFolder.name)
                     }
                 }
 
