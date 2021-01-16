@@ -37,9 +37,9 @@ Most of the work is done by a Maven Invoker, running several goals on the projec
 The results are collected into a report that is viewable by the student and the teacher.
 
 Projects must not be maven projects because they are "mavenized" by the server, after uploading. 
-By "mavenizing", I mean copying the files into a proper Maven folder structure (e.g. putting the sources 
-into /src/main/java), mixing the student files with the teacher unit tests and adding a pom.xml 
-(also provided by the teacher). 
+In this context, "mavenizing", means copying the files into a proper Maven folder structure (e.g. putting the sources 
+into `/src/main/java`), mixing the student files with the teacher unit tests and adding a `pom.xml` 
+(also provided by the teacher).
 
 Since checking a project may take some time, it is done asynchronously - the student submits the file and must come 
 back later to check the report.
