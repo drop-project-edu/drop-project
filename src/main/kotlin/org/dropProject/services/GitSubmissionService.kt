@@ -25,6 +25,10 @@ import org.springframework.transaction.annotation.Transactional
 import org.dropProject.dao.GitSubmission
 import org.dropProject.repository.*
 
+/**
+ * Provides functionality related with handling [GitSubmission]s (for example, searching for a GitSubmission in the
+ * database or deleting a [GitSubmission].
+ */
 @Service
 class GitSubmissionService(
         val submissionRepository: SubmissionRepository,

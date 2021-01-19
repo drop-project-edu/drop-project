@@ -45,6 +45,9 @@ import org.eclipse.jgit.util.io.DisabledOutputStream
 import org.slf4j.LoggerFactory
 import java.util.logging.Logger
 
+/**
+ * Provides functionality related with GitHub repositories (for example, pulling the contents of a repository).
+ */
 @Service
 class GitClient {
 

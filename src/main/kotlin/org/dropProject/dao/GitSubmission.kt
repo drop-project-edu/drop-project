@@ -24,6 +24,11 @@ import java.text.SimpleDateFormat
 import java.util.*
 import javax.persistence.*
 
+/**
+ * Represents a [GitSubmission] which is a [Submission] performed by connecting to a GitHub repository and pulling
+ * it's code.
+ *
+ */
 @Entity
 @Table(uniqueConstraints=[UniqueConstraint(columnNames = ["submitterUserId", "assignmentId"])])
 data class GitSubmission(

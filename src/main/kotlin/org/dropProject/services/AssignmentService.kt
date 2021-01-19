@@ -20,8 +20,7 @@
 package org.dropProject.services
 
 import org.dropProject.controllers.ReportController
-import org.dropProject.dao.Assignment
-import org.dropProject.dao.ProjectGroup
+import org.dropProject.dao.*
 import org.dropProject.data.*
 import org.dropProject.extensions.realName
 import org.dropProject.repository.*
@@ -41,7 +40,8 @@ class AssignmentService(
         val submissionRepository: SubmissionRepository,
         val assigneeRepository: AssigneeRepository,
         val submissionService: SubmissionService,
-        val assignmentTestMethodRepository: AssignmentTestMethodRepository
+        val assignmentTestMethodRepository: AssignmentTestMethodRepository,
+        val submissionReportRepository: SubmissionReportRepository
 ) {
 
     /**
@@ -131,6 +131,7 @@ class AssignmentService(
 
                     val group = it.projectGroup
                     var failed = java.util.ArrayList<String>()
+
                     it.lastSubmission.testResults?.forEach {
                         if (it.type == "Success") {
                             testCounts.computeIfPresent("${it.methodName}:${it.getClassName()}") { _, v -> v + 1 }
@@ -141,10 +142,13 @@ class AssignmentService(
                             failedTests++
                         }
                     }
-                    if(!failed.isEmpty()) {
-                        hashMap.put(group, failed)
+
+                    if(submissionCompilledCorrectly(it.lastSubmission)) {
+                        if (!failed.isEmpty()) {
+                            hashMap.put(group, failed)
+                        }
+                        submissionStatistics.add(GroupSubmissionStatistics(group.id, passedTests, it.allSubmissions.size))
                     }
-                    submissionStatistics.add(GroupSubmissionStatistics(group.id, passedTests, it.allSubmissions.size))
                 }
 
                 model["tests"] = testCounts
@@ -162,9 +166,15 @@ class AssignmentService(
 
                     var nrTests = assignmentTests.size
                     var assignmentStatistics = computeStatistics(submissionStatistics, nrTests)
-                    var groupsOutsideNorm = assignmentStatistics.identifyGroupsOutsideStatisticalNorms(submissionStatistics)
+                    var groupsOutsideNorm = assignmentStatistics.identifyGroupsOutsideStatisticalNorms()
+                    
+                    // FIXME: maybe do the rounding to two decimal places in the Thymeleaf / View file
                     model["offTheAverage"] = groupsOutsideNorm
-                    model["assignmentAverageSubmissions"] = assignmentStatistics.average
+                    val df = java.text.DecimalFormat("#.##")
+                    model["assignmentAverageSubmissions"] = df.format(assignmentStatistics.average)
+                    model["assignmentStandardDeviation"] = df.format(assignmentStatistics.standardDeviation)
+                    val threshold = (assignmentStatistics.average - assignmentStatistics.standardDeviation)
+                    model["submissionsThreshold"] = df.format(threshold)
                     model["assignmentNrOfTests"] = nrTests
                 }
             }
@@ -174,6 +184,21 @@ class AssignmentService(
         model["countMarkedAsFinal"] = submissionInfoList.asSequence().filter { it.lastSubmission.markedAsFinal }.count()
         model["isAdmin"] = request.isUserInRole("DROP_PROJECT_ADMIN")
         model["mode"] = mode
+    }
+
+    /**
+     * Checks if a Submission was compiled correctly.
+     * @param submission is a [Submission]
+     * @return a Boolean
+     */
+    fun submissionCompilledCorrectly(submission: Submission): Boolean {
+        val reports = submissionReportRepository.findBySubmissionId(submission.id)
+        for(report in reports) {
+            if (report.indicator == Indicator.COMPILATION) {
+                return report.reportValue == "OK";
+            }
+        }
+        return false;
     }
 
     /**

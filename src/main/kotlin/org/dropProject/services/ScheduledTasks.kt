@@ -27,7 +27,10 @@ import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.logging.Logger
 
-
+/**
+ * Contains functionality related with scheduled tasks (tasks that are executed with a certain regularity; for example,
+ * cleaning expired submissions).
+ */
 @Component
 class ScheduledTasks(
         val submissionRepository: SubmissionRepository
