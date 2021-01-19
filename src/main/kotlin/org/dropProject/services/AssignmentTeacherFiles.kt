@@ -155,7 +155,7 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
         val suffix = if (wasRebuilt) "-mavenized-for-rebuild" else "-mavenized"
 
         val destinationPartialFolder = File(mavenizedProjectsRootLocation,
-                Submission.relativeUploadFolder(submission.assignmentId, Date()))
+                Submission.relativeUploadFolder(submission.assignmentId, submission.submissionDate))
         destinationPartialFolder.mkdirs()
 
         return File(destinationPartialFolder, projectFolder + suffix)
