@@ -38,7 +38,12 @@ class GitSubmissionService(
         val submissionReportRepository: SubmissionReportRepository,
         val projectGroupRepository: ProjectGroupRepository) {
 
-
+    /**
+     * Searches the [SubmissionRepository] for a [Submission] belonging to authorName and corresponding to a
+     * certain [Assignment]. Considers Submissions done by the author or to a group containing that author.
+     *
+     * @return a Submission or null
+     */
     fun findGitSubmissionBy(authorName: String, assignmentId: String): GitSubmission? {
         val groups = projectGroupRepository.getGroupsForAuthor(authorName)
         for (group in groups) {
@@ -47,7 +52,6 @@ class GitSubmissionService(
                 return submission
             }
         }
-
         return null
     }
 
