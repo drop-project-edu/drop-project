@@ -25,6 +25,9 @@ import org.dropProject.dao.Assignee
 import org.dropProject.dao.AssignmentACL
 import org.dropProject.dao.AssignmentTag
 
+/**
+ * Provides functions to query [AssignmentTag]s that have been persisted in the database.
+ */
 interface AssignmentTagRepository : JpaRepository<AssignmentTag, Long> {
     fun findByName(name: String): AssignmentTag?
 }

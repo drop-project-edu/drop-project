@@ -27,6 +27,9 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 
+/**
+ * Provides functions to query [SubmissionReport]s that have been persisted in the database.
+ */
 interface SubmissionReportRepository : JpaRepository<SubmissionReport, Long> {
 
     fun findBySubmissionId(submissionId: Long) : List<SubmissionReport>
