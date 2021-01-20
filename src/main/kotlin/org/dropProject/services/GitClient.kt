@@ -134,6 +134,11 @@ class GitClient {
         }
     }
 
+    /**
+     * Clones the Git repository identifyed by [uri].
+     *
+     * @return a [Git]
+     */
     fun clone(uri: String, directory: File, privateKey: ByteArray? = null) : Git {
         val git = Git.cloneRepository()
                     .setURI(uri)
@@ -143,6 +148,11 @@ class GitClient {
         return git
     }
 
+    /**
+     * Pulls code from the Git repository identified by [localRepository].
+     *
+     * @return a [Git]
+     */
     fun pull(localRepository: File, privateKey: ByteArray? = null) : Git {
 
         val git = Git.open(localRepository)
@@ -215,6 +225,11 @@ class GitClient {
         return username to reponame
     }
 
+    /**
+     * Returns the history of a Git repository.
+     *
+     * @return a List of [CommitInfo]
+     */
     fun getHistory(localRepository: File) : List<CommitInfo> {
         val git = Git.open(localRepository)
         // try main and master (github is changing the default branch to main - https://github.com/github/renaming)
