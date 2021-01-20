@@ -22,7 +22,8 @@ package org.dropProject.dao
 import javax.persistence.*
 
 /**
- * Represents a persisted Jacoco report.
+ * Represents a persisted Jacoco report. The Jacoco report contains the result of calculating the code
+ * coverage of a [Submission].
  *
  * @property id is a Long with a primary-key like generated id
  * @property submissionId is Long is a Long, identifying the [Submission] that the report is based on
