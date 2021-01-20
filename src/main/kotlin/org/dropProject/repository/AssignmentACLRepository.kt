@@ -24,6 +24,9 @@ import org.springframework.transaction.annotation.Transactional
 import org.dropProject.dao.Assignee
 import org.dropProject.dao.AssignmentACL
 
+/**
+ * Provides functions to query [AssignmentACL]s that have been persisted in the database.
+ */
 interface AssignmentACLRepository : JpaRepository<AssignmentACL, Long> {
 
     fun existsByAssignmentIdAndUserId(assignmentId: String, userId: String): Boolean

@@ -23,6 +23,9 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.transaction.annotation.Transactional
 import org.dropProject.dao.JacocoReport
 
+/**
+ * Provides functions to query [JacocoReport]s that have been persisted in the database.
+ */
 interface JacocoReportRepository : JpaRepository<JacocoReport, Long> {
 
     fun findBySubmissionId(submissionId: Long) : List<JacocoReport>?
