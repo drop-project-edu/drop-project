@@ -12,9 +12,12 @@ class TestMavenResult {
         var mvnResult = MavenResult(100, outputLines, true)
         assertTrue(mvnResult.expiredByTimeout)
         assertEquals(100, mvnResult.resultCode)
-        
+
         var mvnResult2 = MavenResult(200, outputLines, false)
         assertFalse(mvnResult2.expiredByTimeout)
         assertEquals(200, mvnResult2.resultCode)
+
+        mvnResult2.expiredByTimeout = true
+        assertTrue(mvnResult2.expiredByTimeout)
     }
 }
