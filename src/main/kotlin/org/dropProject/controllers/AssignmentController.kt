@@ -203,7 +203,7 @@ class AssignmentController(
 
             // TODO: check again for assignment integrity
 
-            updateAssignment(existingAssignment, assignmentForm)
+            assignmentService.updateAssignment(existingAssignment, assignmentForm)
 
             assignmentRepository.save(existingAssignment)
 
@@ -269,35 +269,6 @@ class AssignmentController(
                     ?: AssignmentTag(name = it.trim().toLowerCase()))
         }
         return newAssignment
-    }
-
-    /**
-     * Updates an existing Assignment with the contents of an AssignmentForm.
-     * @param existingAssignment, the Assignment that will be updated
-     * @param assignmentForm, the AssignmentForm from which the Assignment contents will be copied
-     */
-    private fun updateAssignment(existingAssignment: Assignment, assignmentForm: AssignmentForm) {
-        existingAssignment.name = assignmentForm.assignmentName!!
-        existingAssignment.packageName = assignmentForm.assignmentPackage
-        existingAssignment.language = assignmentForm.language!!
-        existingAssignment.dueDate = assignmentForm.dueDate
-        existingAssignment.submissionMethod = assignmentForm.submissionMethod!!
-        existingAssignment.acceptsStudentTests = assignmentForm.acceptsStudentTests
-        existingAssignment.minStudentTests = assignmentForm.minStudentTests
-        existingAssignment.calculateStudentTestsCoverage = assignmentForm.calculateStudentTestsCoverage
-        existingAssignment.cooloffPeriod = assignmentForm.cooloffPeriod
-        existingAssignment.maxMemoryMb = assignmentForm.maxMemoryMb
-        existingAssignment.showLeaderBoard = assignmentForm.leaderboardType != null
-        existingAssignment.hiddenTestsVisibility = assignmentForm.hiddenTestsVisibility
-        existingAssignment.leaderboardType = assignmentForm.leaderboardType
-
-        // update tags
-        val tagNames = assignmentForm.assignmentTags?.toLowerCase()?.split(",")
-        existingAssignment.tags.clear()
-        tagNames?.forEach {
-            existingAssignment.tags.add(assignmentTagRepository.findByName(it.trim().toLowerCase())
-                    ?: AssignmentTag(name = it.trim().toLowerCase()))
-        }
     }
 
     /**
