@@ -333,6 +333,14 @@ class UploadController(
         return ResponseEntity("{\"error\": \"Não foi possível processar o ficheiro\"}", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    /**
+     * Searches for a [ProjectGroup] that has a specific set of Authors. If no ProjectGroup is found,
+     * creates a new one.
+     *
+     * @param authors is a List of [AuthorDetails]
+     *
+     * @return a ProjectGroup
+     */
     private fun getOrCreateProjectGroup(authors: List<AuthorDetails>): ProjectGroup {
         val group = searchExistingProjectGroupOrCreateNew(authors)
         if (group.authors.isEmpty()) { // new group

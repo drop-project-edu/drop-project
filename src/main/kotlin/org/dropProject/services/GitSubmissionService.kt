@@ -55,7 +55,9 @@ class GitSubmissionService(
         return null
     }
 
-    // remove all submission reports and submissions
+    /**
+     * Remove all submission reports and submissions related with a [GitSubmission]
+     */
     fun deleteGitSubmission(gitSubmission: GitSubmission) {
 
         val submissions = submissionRepository.findByGitSubmissionId(gitSubmission.id)
