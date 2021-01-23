@@ -567,6 +567,7 @@ class UploadControllerTests {
         assertEquals(1, buildResult.junitSummaryAsObject(TestType.HIDDEN)?.numTests)
         assertEquals(0, buildResult.junitSummaryAsObject(TestType.HIDDEN)?.numFailures)
         assertEquals(1, buildResult.junitSummaryAsObject(TestType.HIDDEN)?.numErrors)
+        assertEquals("0/1", buildResult.junitSummaryAsObject(TestType.HIDDEN)?.toStr())
         val stackTraceHidden = buildResult.jUnitErrors(TestType.HIDDEN)
         assertEquals("""
             |ERROR: org.dropProject.sampleAssignments.testProj.TestTeacherHiddenProject.testFuncaoParaTestarQueNaoApareceAosAlunos
