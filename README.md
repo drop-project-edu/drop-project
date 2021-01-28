@@ -2,7 +2,7 @@
 
 # Drop Project - Continuous Auto-Grader
 
-[![Build Status](https://travis-ci.com/drop-project-edu/drop-project.svg?branch=master)](https://travis-ci.com/drop-project-edu/drop-project)
+[![Build Status](https://travis-ci.org/drop-project-edu/drop-project.svg?branch=master)](https://travis-ci.org/drop-project-edu/drop-project)
 [![codecov](https://codecov.io/gh/drop-project-edu/drop-project/branch/master/graph/badge.svg)](https://codecov.io/gh/drop-project-edu/drop-project)
 [![Apache License](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 
@@ -10,7 +10,6 @@
 
 
 A web application where students drop their projects to check for correctness and quality.
-
 
 Several checks are performed on each project:
 * Does it have the right folder structure and all the mandatory files?
