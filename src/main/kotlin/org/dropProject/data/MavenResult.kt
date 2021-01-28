@@ -21,6 +21,15 @@ package org.dropProject.data
 
 import org.dropProject.Constants
 
-data class MavenResult(val resultCode : Int, val outputLines: List<String>, var expiredByTimeout : Boolean = false) {
+/**
+ * Represents the Output of a Maven build process.
+ *
+ * @property resultCode is an Int
+ * @property outputLines is a List of String
+ * @property expiredByTimeout is a Boolean
+ */
+data class MavenResult(val resultCode : Int,
+                       val outputLines: List<String>,
+                       var expiredByTimeout : Boolean = false) {
     fun tooMuchOutput() = outputLines.size >= Constants.TOO_MUCH_OUTPUT_THRESHOLD
 }

@@ -24,6 +24,9 @@ import org.dropProject.dao.Author
 import org.dropProject.dao.ProjectGroup
 import org.dropProject.dao.Submission
 
+/**
+ * Provides functions to query [Author]s that have been persisted in the database.
+ */
 interface AuthorRepository : JpaRepository<Author, Long> {
 
     fun findByUserId(userId: String) : Author?

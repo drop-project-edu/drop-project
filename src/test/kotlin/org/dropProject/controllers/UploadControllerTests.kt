@@ -552,6 +552,7 @@ class UploadControllerTests {
         assertEquals(2, buildResult.junitSummaryAsObject(TestType.TEACHER)?.numTests)
         assertEquals(1, buildResult.junitSummaryAsObject(TestType.TEACHER)?.numFailures)
         assertEquals(0, buildResult.junitSummaryAsObject(TestType.TEACHER)?.numErrors)
+        assertEquals("1/2", buildResult.junitSummaryAsObject(TestType.TEACHER)?.toStr())
         val stackTraceTeacher = buildResult.jUnitErrors(TestType.TEACHER)
         assertEquals("""
             |FAILURE: org.dropProject.sampleAssignments.testProj.TestTeacherProject.testFuncaoParaTestar
@@ -566,6 +567,7 @@ class UploadControllerTests {
         assertEquals(1, buildResult.junitSummaryAsObject(TestType.HIDDEN)?.numTests)
         assertEquals(0, buildResult.junitSummaryAsObject(TestType.HIDDEN)?.numFailures)
         assertEquals(1, buildResult.junitSummaryAsObject(TestType.HIDDEN)?.numErrors)
+        assertEquals("0/1", buildResult.junitSummaryAsObject(TestType.HIDDEN)?.toStr())
         val stackTraceHidden = buildResult.jUnitErrors(TestType.HIDDEN)
         assertEquals("""
             |ERROR: org.dropProject.sampleAssignments.testProj.TestTeacherHiddenProject.testFuncaoParaTestarQueNaoApareceAosAlunos

@@ -25,6 +25,9 @@ import org.springframework.data.repository.query.Param
 import org.dropProject.dao.ProjectGroup
 import org.dropProject.dao.Submission
 
+/**
+ * Provides functions to query [ProjectGroup]s that have been persisted in the database.
+ */
 interface ProjectGroupRepository : JpaRepository<ProjectGroup, Long> {
 
     @Query("SELECT p FROM ProjectGroup p JOIN p.authors authors WHERE authors.userId = ?#{[0]}")

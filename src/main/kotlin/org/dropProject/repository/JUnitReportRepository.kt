@@ -26,6 +26,9 @@ import org.dropProject.dao.ProjectGroup
 import org.dropProject.dao.Submission
 import java.util.*
 
+/**
+ * Provides functions to query [JUnitReport]s that have been persisted in the database.
+ */
 interface JUnitReportRepository : JpaRepository<JUnitReport, Long> {
 
     fun findBySubmissionId(submissionId: Long) : List<JUnitReport>?

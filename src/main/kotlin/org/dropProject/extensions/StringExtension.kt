@@ -21,6 +21,10 @@ package org.dropProject.extensions
 
 import org.springframework.web.util.HtmlUtils
 
+/**
+ * This file contains extensions to the default String class.
+ */
+
 // remove weird characters such as \uFFeF
 fun String.sanitize(): String {
 

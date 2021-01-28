@@ -22,6 +22,7 @@ package org.dropProject.storage
 import net.lingala.zip4j.core.ZipFile
 import net.lingala.zip4j.exception.ZipException
 import org.dropProject.dao.Submission
+import org.dropProject.services.ZipService
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.util.StringUtils
@@ -35,21 +36,8 @@ import java.nio.file.StandardCopyOption
 import java.text.SimpleDateFormat
 import java.util.*
 
-
-fun unzip(file: Path, originalFilename: String?): File {
-    val destinationFileFile = file.toFile()
-    val destinationFolder = File(destinationFileFile.parent, destinationFileFile.nameWithoutExtension)
-    try {
-        val zipFile = ZipFile(destinationFileFile)
-        zipFile.extractAll(destinationFolder.absolutePath)
-    } catch (e: ZipException) {
-        throw StorageException("Failed to unzip ${originalFilename}", e)
-    }
-    return destinationFolder
-}
-
 @Service
-class FileSystemStorageService : StorageService  {
+class FileSystemStorageService (val zipService : ZipService) : StorageService {
 
     @Value("\${storage.rootLocation}/upload")
     val uploadRootLocation : String = "submissions/upload"
@@ -78,8 +66,7 @@ class FileSystemStorageService : StorageService  {
                     StandardCopyOption.REPLACE_EXISTING)
 
             if (filename.endsWith(".zip", ignoreCase = true)) {
-                val destinationFolder = unzip(destinationFile.toPath(), filename)
-
+                val destinationFolder = zipService.unzip(destinationFile.toPath(), filename)
                 return destinationFolder
             } else {
                 throw Exception("$filename doesn't end with .zip! This shouldn't happen.")

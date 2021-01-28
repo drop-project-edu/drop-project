@@ -28,6 +28,17 @@ import javax.persistence.*
  * Represents a [GitSubmission] which is a [Submission] performed by connecting to a GitHub repository and pulling
  * it's code.
  *
+ * @property id is a Long with a primary-key like generated value
+ * @property assignmentId is a String identifying the relevant Assignment
+ * @property submitterUserId is a String identifying the user that performed the submission
+ * @property createDate is a Date
+ * @property connected is a Boolean
+ * @property lastCommitDate is a Date with the date of the last commit performed in the GitHub repository
+ * @property lastSubmissionId is a Long
+ * @property gitRepositoryUrl is a String with the URL of the GitHub repository
+ * @property gitRepositoryPubKey is a String
+ * @property gitRepositoryPrivKey is a String
+ * @property group is a [ProjectGroup]
  */
 @Entity
 @Table(uniqueConstraints=[UniqueConstraint(columnNames = ["submitterUserId", "assignmentId"])])

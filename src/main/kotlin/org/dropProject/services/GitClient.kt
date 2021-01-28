@@ -55,6 +55,15 @@ class GitClient {
 
     val githubSshUrlRegex = """git@github.com:(.+)/(.+).git""".toRegex()
 
+    /**
+     * Represents information about a Git commit.
+     *
+     * @property sha1 is a String with the commit's hash
+     * @property date is the Date of the commit
+     * @property authorName is a String with the name of the author of the commit
+     * @property authorEmail is a String with the email of the author of the commit
+     * @property message is a String with the commit message
+     */
     data class CommitInfo(val sha1: String, val date: Date, val authorName: String,
                           val authorEmail: String, val message: String) {
 
@@ -89,7 +98,14 @@ class GitClient {
         }
     }
 
-
+    /**
+     * Represents the differences between two different commits.
+     *
+     * @property fileName
+     * @property additions is an Int representing the lines that were added between the commits
+     * @property replacements is an Int representing the lines that were changed between the commits
+     * @property deletions is an Int representing the lines that were deleted between the commits
+     */
     data class CommitDiff(val fileName: String, val additions: Int, val replacements: Int, val deletetions: Int)
 
     class MyJschConfigSessionFactory(val privateKey : ByteArray?) : JschConfigSessionFactory() {
@@ -118,6 +134,11 @@ class GitClient {
         }
     }
 
+    /**
+     * Clones the Git repository identifyed by [uri].
+     *
+     * @return a [Git]
+     */
     fun clone(uri: String, directory: File, privateKey: ByteArray? = null) : Git {
         val git = Git.cloneRepository()
                     .setURI(uri)
@@ -127,6 +148,11 @@ class GitClient {
         return git
     }
 
+    /**
+     * Pulls code from the Git repository identified by [localRepository].
+     *
+     * @return a [Git]
+     */
     fun pull(localRepository: File, privateKey: ByteArray? = null) : Git {
 
         val git = Git.open(localRepository)
@@ -159,7 +185,11 @@ class GitClient {
         return privKeyOutputStream.toByteArray() to publicKeyOutputStream.toByteArray()
     }
 
-
+    /**
+     * Returns information about the last commit that is available in a GitHub repository.
+     *
+     * @return a [CommitInfo]
+     */
     fun getLastCommitInfo(git: Git): CommitInfo? {
         // try main and master (github is changing the default branch to main - https://github.com/github/renaming)
         val objectId = git.repository.resolve("refs/heads/main") ?: git.repository.resolve("refs/heads/master")
@@ -195,6 +225,11 @@ class GitClient {
         return username to reponame
     }
 
+    /**
+     * Returns the history of a Git repository.
+     *
+     * @return a List of [CommitInfo]
+     */
     fun getHistory(localRepository: File) : List<CommitInfo> {
         val git = Git.open(localRepository)
         // try main and master (github is changing the default branch to main - https://github.com/github/renaming)
@@ -215,6 +250,15 @@ class GitClient {
         return emptyList()
     }
 
+    /**
+     * Calculates the differences between two Git commits
+     *
+     * @property repository is a [Repository]
+     * @property sha1FirstCommit is the hash of the first commit
+     * @property sha1SecondCommit is the hash of the second commit
+     *
+     * @return an ArrayList of [CommitDiff]
+     */
     private fun getDiffBetween(repository: Repository, sha1FirstCommit: String, sha1SecondCommit: String) : ArrayList<CommitDiff> {
 
         val firstCommit = repository.resolve("${sha1FirstCommit}^{tree}")

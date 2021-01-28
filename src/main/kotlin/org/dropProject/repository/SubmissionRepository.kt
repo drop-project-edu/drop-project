@@ -27,6 +27,9 @@ import org.dropProject.dao.Submission
 import org.dropProject.dao.SubmissionStatus
 import java.util.*
 
+/**
+ * Provides functions to query [Submission]s that have been persisted in the database.
+ */
 interface SubmissionRepository : JpaRepository<Submission, Long> {
 
     fun findByAssignmentId(assignmentId: String) : List<Submission>

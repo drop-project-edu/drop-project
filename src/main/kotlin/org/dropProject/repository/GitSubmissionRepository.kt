@@ -23,6 +23,9 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.dropProject.dao.GitSubmission
 import org.dropProject.dao.ProjectGroup
 
+/**
+ * Provides functions to query [GitSubmission]s that have been persisted in the database.
+ */
 interface GitSubmissionRepository : JpaRepository<GitSubmission, Long> {
 
     fun findByAssignmentId(assignmentId: String) : List<GitSubmission>

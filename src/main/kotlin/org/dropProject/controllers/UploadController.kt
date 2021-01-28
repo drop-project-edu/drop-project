@@ -52,7 +52,6 @@ import org.dropProject.extensions.realName
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.*
 import org.dropProject.services.*
-import org.dropProject.storage.unzip
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.io.InputStream
@@ -88,7 +87,8 @@ class UploadController(
         val assignmentTeacherFiles: AssignmentTeacherFiles,
         val gitClient: GitClient,
         val gitSubmissionService: GitSubmissionService,
-        val submissionService: SubmissionService
+        val submissionService: SubmissionService,
+        val zipService: ZipService
         ) {
 
     @Value("\${storage.rootLocation}/git")
@@ -333,6 +333,14 @@ class UploadController(
         return ResponseEntity("{\"error\": \"Não foi possível processar o ficheiro\"}", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    /**
+     * Searches for a [ProjectGroup] that has a specific set of Authors. If no ProjectGroup is found,
+     * creates a new one.
+     *
+     * @param authors is a List of [AuthorDetails]
+     *
+     * @return a ProjectGroup
+     */
     private fun getOrCreateProjectGroup(authors: List<AuthorDetails>): ProjectGroup {
         val group = searchExistingProjectGroupOrCreateNew(authors)
         if (group.authors.isEmpty()) { // new group
@@ -625,7 +633,7 @@ class UploadController(
                     // let's check if there is a zip file with this project
                     val projectZipFile = File("${projectFolder.absolutePath}.zip")
                     if (projectZipFile.exists()) {
-                        unzip(Paths.get(projectZipFile.path), projectFolder.name)
+                        zipService.unzip(Paths.get(projectZipFile.path), projectFolder.name)
                     }
                 }
 

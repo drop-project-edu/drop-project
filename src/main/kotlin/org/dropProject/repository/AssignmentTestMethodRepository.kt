@@ -24,6 +24,9 @@ import org.springframework.transaction.annotation.Transactional
 import org.dropProject.dao.Assignee
 import org.dropProject.dao.AssignmentTestMethod
 
+/**
+ * Provides functions to query [AssignmentTestMethodRepository] objects that have been persisted in the database.
+ */
 interface AssignmentTestMethodRepository : JpaRepository<AssignmentTestMethod, Long> {
 
     fun findByAssignmentId(assignmentId: String): List<AssignmentTestMethod>

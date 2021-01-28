@@ -23,6 +23,7 @@ import org.dropProject.controllers.ReportController
 import org.dropProject.dao.*
 import org.dropProject.data.*
 import org.dropProject.extensions.realName
+import org.dropProject.forms.AssignmentForm
 import org.dropProject.repository.*
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
@@ -41,7 +42,8 @@ class AssignmentService(
         val assigneeRepository: AssigneeRepository,
         val submissionService: SubmissionService,
         val assignmentTestMethodRepository: AssignmentTestMethodRepository,
-        val submissionReportRepository: SubmissionReportRepository
+        val submissionReportRepository: SubmissionReportRepository,
+        val assignmentTagRepository: AssignmentTagRepository
 ) {
 
     /**
@@ -246,6 +248,35 @@ class AssignmentService(
             }
         }
         return result
+    }
+
+    /**
+     * Updates an existing Assignment with the contents of an AssignmentForm.
+     * @param existingAssignment, the Assignment that will be updated
+     * @param assignmentForm, the AssignmentForm from which the Assignment contents will be copied
+     */
+    fun updateAssignment(existingAssignment: Assignment, assignmentForm: AssignmentForm) {
+        existingAssignment.name = assignmentForm.assignmentName!!
+        existingAssignment.packageName = assignmentForm.assignmentPackage
+        existingAssignment.language = assignmentForm.language!!
+        existingAssignment.dueDate = assignmentForm.dueDate
+        existingAssignment.submissionMethod = assignmentForm.submissionMethod!!
+        existingAssignment.acceptsStudentTests = assignmentForm.acceptsStudentTests
+        existingAssignment.minStudentTests = assignmentForm.minStudentTests
+        existingAssignment.calculateStudentTestsCoverage = assignmentForm.calculateStudentTestsCoverage
+        existingAssignment.cooloffPeriod = assignmentForm.cooloffPeriod
+        existingAssignment.maxMemoryMb = assignmentForm.maxMemoryMb
+        existingAssignment.showLeaderBoard = assignmentForm.leaderboardType != null
+        existingAssignment.hiddenTestsVisibility = assignmentForm.hiddenTestsVisibility
+        existingAssignment.leaderboardType = assignmentForm.leaderboardType
+
+        // update tags
+        val tagNames = assignmentForm.assignmentTags?.toLowerCase()?.split(",")
+        existingAssignment.tags.clear()
+        tagNames?.forEach {
+            existingAssignment.tags.add(assignmentTagRepository.findByName(it.trim().toLowerCase())
+                    ?: AssignmentTag(name = it.trim().toLowerCase()))
+        }
     }
 
 }

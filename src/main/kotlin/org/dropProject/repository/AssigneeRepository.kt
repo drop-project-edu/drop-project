@@ -23,6 +23,9 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.transaction.annotation.Transactional
 import org.dropProject.dao.Assignee
 
+/**
+ * Provides functions to query [Assignee]s that have been persisted in the database.
+ */
 interface AssigneeRepository : JpaRepository<Assignee, String> {
 
     fun existsByAssignmentId(assignmentId: String): Boolean

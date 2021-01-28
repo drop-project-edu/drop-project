@@ -24,6 +24,9 @@ import org.springframework.transaction.annotation.Transactional
 import org.dropProject.dao.Assignee
 import org.dropProject.dao.AssignmentReport
 
+/**
+ * Provides functions to query [AssignmentReport]s that have been persisted in the database.
+ */
 interface AssignmentReportRepository : JpaRepository<AssignmentReport, Long> {
 
     fun findByAssignmentId(assignmentId: String): List<AssignmentReport>

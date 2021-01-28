@@ -37,7 +37,6 @@ import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.*
 import org.dropProject.services.*
 import org.dropProject.storage.StorageService
-import org.dropProject.storage.unzip
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.io.FileSystemResource
@@ -405,7 +404,7 @@ class ReportController(
                     // let's check if there is a zip file with this project
                     val originalProjectZipFile = File("${originalProjectFolder.absolutePath}.zip")
                     if (originalProjectZipFile.exists()) {
-                        unzip(Paths.get(originalProjectZipFile.path), originalProjectFolder.name)
+                        zipService.unzip(Paths.get(originalProjectZipFile.path), originalProjectFolder.name)
                         hadToUnzip = true
                     }
                 }

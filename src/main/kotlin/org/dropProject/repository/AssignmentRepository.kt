@@ -25,6 +25,9 @@ import org.dropProject.dao.Author
 import org.dropProject.dao.ProjectGroup
 import org.dropProject.dao.Submission
 
+/**
+ * Provides functions to query [Assignment]s that have been persisted in the database.
+ */
 interface AssignmentRepository : JpaRepository<Assignment, String> {
 
     fun findByOwnerUserId(ownerUserId: String): List<Assignment>
