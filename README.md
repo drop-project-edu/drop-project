@@ -11,6 +11,7 @@
 
 A web application where students drop their projects to check for correctness and quality.
 
+
 Several checks are performed on each project:
 * Does it have the right folder structure and all the mandatory files?
 * Does it compile?
