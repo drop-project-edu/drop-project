@@ -12,17 +12,19 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
-      - name: test
-        run: whereis mvn
-#      - name: Cache Maven packages
-#        uses: actions/cache@v2
-#        with:
-#          path: ~/.m2
-#          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-#          restore-keys: ${{ runner.os }}-m2
-#      - name: Set up M2_HOME
-#        env:
-#          M2_HOME: hello-world
-#          DP_MVN_REPO: ~/.m2
-#      - name: Build with Maven
-#        run: mvn --batch-mode --update-snapshots verify
+      - name: Cache Maven packages
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+      - name: Build with Maven
+        env:
+          DP_M2_HOME: /usr/share/apache-maven-3.6.3
+          DP_MVN_REPO: ~/.m2
+        run: mvn --batch-mode --update-snapshots verify
+      - name: Upload coverage to codecov
+        uses: codecov/codecov-action@v1.2.1
+        with:
+          file: ./target/site/jacoco/jacoco.xml
+          flags: unittests
