@@ -56,6 +56,15 @@ class MavenInvoker {
 
     var showMavenOutput = false
 
+    /**
+     * Runs and project using Maven. This function executes the compilation and testing of a submitted project.
+     *
+     * @param mavenizedProjectFolder is a File containing the project's files
+     * @param principalName is a String
+     * @param maxMemoryMb is an Int
+     *
+     * @return a MavenResult
+     */
     fun run(mavenizedProjectFolder: File, principalName: String?, maxMemoryMb: Int?) : MavenResult {
 
         if (!File(mavenRepository).exists()) {
