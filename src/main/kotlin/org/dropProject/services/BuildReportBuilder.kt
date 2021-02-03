@@ -34,6 +34,9 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.util.logging.Logger
 
+/**
+ * This class contains functions that perform the creation of [BuildReport]s for both [Assignment]s and [Submission]s.
+ */
 @Service
 class BuildReportBuilder {
 
@@ -54,6 +57,16 @@ class BuildReportBuilder {
     @Autowired
     lateinit var assignmentTestMethodRepository: AssignmentTestMethodRepository
 
+    /**
+     * Builds a BuildReport
+     *
+     * @param mavenOutputLines is a List of String with the output of a Maven build process
+     * @param mavenizedProjectFolder is a String
+     * @param assignment is an [Assignment]
+     * @param submission is a [Submission]
+     *
+     * @return a [BuildReport]
+     */
     fun build(mavenOutputLines: List<String>,
               mavenizedProjectFolder: String,
               assignment: Assignment,
