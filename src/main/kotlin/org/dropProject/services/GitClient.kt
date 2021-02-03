@@ -171,6 +171,11 @@ class GitClient {
         return git
     }
 
+    /**
+     * Generates a pair of public/private keys.
+     *
+     * @return a Pair with two ByteArray
+     */
     fun generateKeyPair() : Pair<ByteArray,ByteArray> {
         val kpair = KeyPair.genKeyPair(JSch(), KeyPair.RSA, 2048)
         val privKeyOutputStream = ByteArrayOutputStream()
