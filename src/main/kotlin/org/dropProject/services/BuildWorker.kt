@@ -38,6 +38,9 @@ fun hasCoverageReport(mavenizedProjectFolder: File): Boolean {
     return pomFile.readText().contains("jacoco-maven-plugin")
 }
 
+/**
+ * This class contains functions that execute the build process for [Assignment]s and [Submission]s.
+ */
 @Service
 class BuildWorker(
         val mavenInvoker: MavenInvoker,
@@ -52,6 +55,17 @@ class BuildWorker(
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
+    /**
+     * Checks a [Submission], performing all relevant build and evalutation steps (for example, Compilation) and storing
+     * each step's results in the database.
+     *
+     * @param mavenizedProjectFolder is a File
+     * @param authorsStr is a String
+     * @param submission is a [Submission]
+     * @param principalName is a String
+     * @param dontChangeStatusDate is a Boolean
+     * @param rebuildByTeacher is a Boolean
+     */
     @Async
     @Transactional
     fun checkProject(mavenizedProjectFolder: File, authorsStr: String, submission: Submission,
@@ -228,6 +242,15 @@ class BuildWorker(
         submissionRepository.save(submission)
     }
 
+    /**
+     * Checks an [Assignment], performing all the relevant steps and generates the respective [BuildReport].
+     *
+     * @param assignmentFolder is a File
+     * @param assignment is an [Assignment]
+     * @param principalName is a String
+     *
+     * @return a [BuildReport] or null
+     */
     fun checkAssignment(assignmentFolder: File, assignment: Assignment, principalName: String?) : BuildReport? {
 
         LOG.info("Started maven invocation to check ${assignment.id}");
@@ -237,7 +260,6 @@ class BuildWorker(
         LOG.info("Finished maven invocation to check ${assignment.id}");
 
         if (!mavenResult.expiredByTimeout) {
-
             LOG.info("Maven invoker OK for ${assignment.id}")
             return buildReportBuilder.build(mavenResult.outputLines, assignmentFolder.absolutePath, assignment)
         } else {
