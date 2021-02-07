@@ -151,7 +151,10 @@ data class BuildReport(val mavenOutputLines: List<String>,
         // check if tests didn't run because of a crash or System.exit(). for the lack of better solution, I'll
         // consider this as a compilation error
         if (mavenOutputLines.any { it.contains("The forked VM terminated without properly saying goodbye.") }) {
-            errors.add("Invalid call to System.exit(). Please remove this instruction")
+           when (assignment.language) {
+               Language.JAVA -> errors.add("Invalid call to System.exit(). Please remove this instruction")
+               Language.KOTLIN ->  errors.add("Invalid call to System.exit() or exitProcess(). Please remove this instruction")
+            }
         }
 
         return errors

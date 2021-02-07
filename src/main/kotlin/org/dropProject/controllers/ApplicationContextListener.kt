@@ -118,85 +118,130 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
         }
         LOG.info("*************************************************")
 
-        // It it's a fresh instance, create an initial assignment just to play
+        // It it's a fresh instance, create two initial assignments (one in Java and the other in Kotlin) just to play
         val assignments = assignmentRepository.findAll()
         if (assignments == null || assignments.size == 0) {
+            createAndPopulateSampleJavaAssignment()
+            createAndPopulateSampleKotlinAssignment()
+        }
+    }
 
-            val assignment = Assignment(id = "sampleJavaProject", name = "Sample Java Assignment",
-                    packageName = "org.dropProject.samples.sampleJavaAssignment", ownerUserId = "teacher1",
-                    submissionMethod = SubmissionMethod.UPLOAD,
-                    gitRepositoryUrl = "git@github.com:drop-project-edu/sampleJavaAssignment.git",
-                    gitRepositoryPrivKey = sampleJavaAssignmentPrivateKey,
-                    gitRepositoryPubKey = sampleJavaAssignmentPublicKey,
-                    gitRepositoryFolder = "sampleJavaProject",
-                    active = true)
+    private fun createAndPopulateSampleJavaAssignment() {
+        val assignment = Assignment(id = "sampleJavaProject", name = "Sample Java Assignment",
+                packageName = "org.dropProject.samples.sampleJavaAssignment", ownerUserId = "teacher1",
+                submissionMethod = SubmissionMethod.UPLOAD,
+                gitRepositoryUrl = "git@github.com:drop-project-edu/sampleJavaAssignment.git",
+                gitRepositoryPrivKey = sampleJavaAssignmentPrivateKey,
+                gitRepositoryPubKey = sampleJavaAssignmentPublicKey,
+                gitRepositoryFolder = "sampleJavaProject",
+                active = true)
 
-            assignment.tags.add(AssignmentTag(name="sample"))
+        assignment.tags.add(AssignmentTag(name = "sample"))
 
-            assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "sampleJavaProject",
-                    testClass = "TestTeacherProject", testMethod = "testFindMax"))
-            assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "sampleJavaProject",
-                    testClass = "TestTeacherProject", testMethod = "testFindMaxWithNull"))
-            assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "sampleJavaProject",
-                    testClass = "TestTeacherProject", testMethod = "testFindMaxAllNegative"))
-            assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "sampleJavaProject",
-                    testClass = "TestTeacherProject", testMethod = "testFindMaxNegativeAndPositive"))
+        assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "sampleJavaProject",
+                testClass = "TestTeacherProject", testMethod = "testFindMax"))
+        assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "sampleJavaProject",
+                testClass = "TestTeacherProject", testMethod = "testFindMaxWithNull"))
+        assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "sampleJavaProject",
+                testClass = "TestTeacherProject", testMethod = "testFindMaxAllNegative"))
+        assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "sampleJavaProject",
+                testClass = "TestTeacherProject", testMethod = "testFindMaxNegativeAndPositive"))
 
-            val gitRepository = assignment.gitRepositoryUrl
-            var connected = false
-            try {
-                val directory = File(assignmentsRootLocation, assignment.id)
-                if (directory.exists()) {
-                    directory.deleteRecursively()
-                }
-                gitClient.clone(gitRepository, directory, assignment.gitRepositoryPrivKey!!.toByteArray())
-                LOG.info("[${assignment.id}] Successfuly cloned ${gitRepository} to ${directory}")
-                // only save if it successfully cloned the assignment
-                assignmentRepository.save(assignment)
-
-                assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student1"))
-                assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student2"))
-                assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student4"))
-                assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student5"))
-
-                connected = true
-
-            } catch (e: Exception) {
-                LOG.error("Error cloning ${gitRepository} - ${e}")
+        val gitRepository = assignment.gitRepositoryUrl
+        var connected = false
+        try {
+            val directory = File(assignmentsRootLocation, assignment.id)
+            if (directory.exists()) {
+                directory.deleteRecursively()
             }
+            gitClient.clone(gitRepository, directory, assignment.gitRepositoryPrivKey!!.toByteArray())
+            LOG.info("[${assignment.id}] Successfuly cloned ${gitRepository} to ${directory}")
+            // only save if it successfully cloned the assignment
+            assignmentRepository.save(assignment)
 
-            if (connected) {
+            assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student1"))
+            assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student2"))
+            assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student4"))
+            assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student5"))
 
-                val author = Author(name = "Student 1", userId = "student1")
-                authorRepository.save(author)
+            connected = true
 
-                uploadStudentSubmission(author, "2019-01-01T10:34:00", "javaSubmissionError", "NOK", 1, 2)
-                uploadStudentSubmission(author, "2019-01-02T11:05:03", "javaSubmissionOk", "OK", 2, 2)
+        } catch (e: Exception) {
+            LOG.error("Error cloning ${gitRepository} - ${e}")
+        }
 
-                val author2 = Author(name = "Student 2", userId = "student2")
-                authorRepository.save(author2)
-                uploadStudentSubmission(author2, "2019-01-02T14:55:30", "javaSubmissionOk", "OK", 2, 2)
+        if (connected) {
 
-                val author3 = Author(name = "BC", userId = "teacher1")
-                authorRepository.save(author3)
-                uploadStudentSubmission(author3, "2020-12-05T14:28:00", "javaSubmissionError", "NOK",0, 4)
-                uploadStudentSubmission(author3, "2020-12-05T14:37:00", "javaSubmission4Errors", "NOK",0, 4)
+            val author = Author(name = "Student 1", userId = "student1")
+            authorRepository.save(author)
 
-                val author4 = Author(name = "Neo The One", userId = "teacher2")
-                authorRepository.save(author4)
-                uploadStudentSubmission(author4, "2020-12-05T14:28:00", "javaSubmissionError", "NOK",0, 4)
-                uploadStudentSubmission(author4, "2020-12-05T14:37:00", "javaSubmission4Errors", "NOK",0, 4)
+            uploadStudentSubmission(author, "2019-01-01T10:34:00", "javaSubmissionError", "NOK", 1, 2)
+            uploadStudentSubmission(author, "2019-01-02T11:05:03", "javaSubmissionOk", "OK", 2, 2)
 
-                val author5 = Author(name="The Jackal", userId="student3")
-                authorRepository.save(author5)
-                uploadStudentSubmission(author5, "2020-12-18T14:37:00", "javaSubmission2Errors", "NOK", 2, 4)
+            val author2 = Author(name = "Student 2", userId = "student2")
+            authorRepository.save(author2)
+            uploadStudentSubmission(author2, "2019-01-02T14:55:30", "javaSubmissionOk", "OK", 2, 2)
 
-                val author6 = Author(name="Leo Da Vinci", userId="student4")
-                authorRepository.save(author6)
-                uploadStudentSubmission(author6, "2020-12-17T14:37:00", "javaSubmission2Errors", "NOK", 2, 4)
+            val author3 = Author(name = "BC", userId = "teacher1")
+            authorRepository.save(author3)
+            uploadStudentSubmission(author3, "2020-12-05T14:28:00", "javaSubmissionError", "NOK", 0, 4)
+            uploadStudentSubmission(author3, "2020-12-05T14:37:00", "javaSubmission4Errors", "NOK", 0, 4)
+
+            val author4 = Author(name = "Neo The One", userId = "teacher2")
+            authorRepository.save(author4)
+            uploadStudentSubmission(author4, "2020-12-05T14:28:00", "javaSubmissionError", "NOK", 0, 4)
+            uploadStudentSubmission(author4, "2020-12-05T14:37:00", "javaSubmission4Errors", "NOK", 0, 4)
+
+            val author5 = Author(name = "The Jackal", userId = "student3")
+            authorRepository.save(author5)
+            uploadStudentSubmission(author5, "2020-12-18T14:37:00", "javaSubmission2Errors", "NOK", 2, 4)
+
+            val author6 = Author(name = "Leo Da Vinci", userId = "student4")
+            authorRepository.save(author6)
+            uploadStudentSubmission(author6, "2020-12-17T14:37:00", "javaSubmission2Errors", "NOK", 2, 4)
 
 
+        }
+    }
+
+    private fun createAndPopulateSampleKotlinAssignment() {
+        val assignment = Assignment(id = "sampleKotlinProject", name = "Sample Kotlin Assignment",
+                packageName = "org.dropProject.samples.sampleKotlinAssignment", ownerUserId = "teacher1",
+                submissionMethod = SubmissionMethod.UPLOAD, language = Language.KOTLIN,
+                gitRepositoryUrl = "git@github.com:drop-project-edu/sampleKotlinAssignment.git",
+                gitRepositoryPrivKey = sampleJavaAssignmentPrivateKey,
+                gitRepositoryPubKey = sampleJavaAssignmentPublicKey,
+                gitRepositoryFolder = "sampleKotlinProject",
+                active = true)
+
+        assignment.tags.add(assignmentTagRepository.findByName("sample") ?: AssignmentTag(name = "sample"))
+        assignment.tags.add(assignmentTagRepository.findByName("kotlin") ?: AssignmentTag(name = "kotlin"))
+
+        assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "sampleKotlinProject",
+                testClass = "TestTeacherProject", testMethod = "testFindMax"))
+        assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "sampleKotlinProject",
+                testClass = "TestTeacherProject", testMethod = "testFindMaxAllNegative"))
+        assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "sampleKotlinProject",
+                testClass = "TestTeacherProject", testMethod = "testFindMaxNegativeAndPositive"))
+
+        val gitRepository = assignment.gitRepositoryUrl
+        try {
+            val directory = File(assignmentsRootLocation, assignment.id)
+            if (directory.exists()) {
+                directory.deleteRecursively()
             }
+            gitClient.clone(gitRepository, directory, assignment.gitRepositoryPrivKey!!.toByteArray())
+            LOG.info("[${assignment.id}] Successfuly cloned ${gitRepository} to ${directory}")
+            // only save if it successfully cloned the assignment
+            assignmentRepository.save(assignment)
+
+            assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student1"))
+            assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student2"))
+            assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student4"))
+            assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student5"))
+
+        } catch (e: Exception) {
+            LOG.error("Error cloning ${gitRepository} - ${e}")
         }
     }
 
