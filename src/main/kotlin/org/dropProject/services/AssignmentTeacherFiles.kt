@@ -70,6 +70,16 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
         }
     }
 
+    /**
+     * Builds a String with the expected project structure for an [Assignment], in order to help students configure
+     * their projects.
+     *
+     * @param packageName is a String with the Assignment's expected package name
+     * @param language is a Language, identifying the programming language that is used in the [Assignment]
+     * @param hasStudentTests is a Boolean indicating if the [Assignement] requires/allows student tests
+     *
+     * @return a String
+     */
     fun buildPackageTree(packageName: String?, language: Language, hasStudentTests: Boolean = false): String {
 
         val packages = packageName.orEmpty().split(".")

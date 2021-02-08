@@ -813,6 +813,7 @@ class ReportControllerTests {
         submissionStatistics.add(GroupSubmissionStatistics(3, 12, 20));
         var assignmentStatistics = computeStatistics(submissionStatistics, 20)
         var result = assignmentStatistics.identifyGroupsOutsideStatisticalNorms()
+        assertEquals(0, assignmentStatistics.groupsConsideredForStatistics.size)
         assert(result.isEmpty())
     }
 
@@ -833,6 +834,7 @@ class ReportControllerTests {
         var assignmentStatistics = computeStatistics(submissionStatistics, 20)
         var result = assignmentStatistics.identifyGroupsOutsideStatisticalNorms()
         assert(result.isEmpty())
+        assertEquals(1, assignmentStatistics.groupsConsideredForStatistics.size)
     }
 
     /**
@@ -856,7 +858,7 @@ class ReportControllerTests {
         submissionStatistics.add(gss5); // signalled
         var assignmentStatistics = computeStatistics(submissionStatistics, 20)
         var result = assignmentStatistics.identifyGroupsOutsideStatisticalNorms()
-        
+        assertEquals(2, assignmentStatistics.groupsConsideredForStatistics.size)
         assert(1 == result.size)
         assert(result.contains(gss5))
     }

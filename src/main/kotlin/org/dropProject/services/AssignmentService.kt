@@ -155,8 +155,6 @@ class AssignmentService(
 
                 model["tests"] = testCounts
 
-                //filter = "";
-
                 if(mode == "signalledSubmissions") {
                     val signalledGroups = groupGroupsByFailures(hashMap);
                     if(signalledGroups.isEmpty()) {

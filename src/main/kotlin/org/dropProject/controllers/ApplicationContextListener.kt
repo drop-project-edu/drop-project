@@ -245,6 +245,9 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
         }
     }
 
+    /**
+     * This is an auxiliary function to create fake submissions to place in the "in-memory" database.
+     */
     private fun uploadStudentSubmission(author: Author, submissionDate: String, submissionName: String,
                                         teacherTestsIndicator: String, teacherTestsProgress: Int,
                                         teacherTestsGoal: Int) : Long {
