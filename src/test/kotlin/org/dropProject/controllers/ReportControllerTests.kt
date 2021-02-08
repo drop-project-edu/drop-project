@@ -849,7 +849,7 @@ class ReportControllerTests {
      * Three Groups will be considered for the statistics.
      *
      * Any Group with at least 15 tests and less than 20.17 submissions will be signalled. There is only 1 Group in
-     * this situation.
+     * this situation (nr tests: 17, nr subs: 20).
      */
     @Test
     fun testIdentifyGroupsOutsideStatisticalNorms_MoreComplexScenario() {
