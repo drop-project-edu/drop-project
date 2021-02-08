@@ -845,7 +845,11 @@ class ReportControllerTests {
      * Average: 21.33
      * StdDev: 1.154
      * Average - StdDev = 20.17
-     * All Groups with at least 15 tests and less than 20.17 submissions will be signalled.
+     *
+     * Three Groups will be considered for the statistics.
+     *
+     * Any Group with at least 15 tests and less than 20.17 submissions will be signalled. There is only 1 Group in
+     * this situation (nr tests: 17, nr subs: 20).
      */
     @Test
     fun testIdentifyGroupsOutsideStatisticalNorms_MoreComplexScenario() {
@@ -858,7 +862,7 @@ class ReportControllerTests {
         submissionStatistics.add(gss5); // signalled
         var assignmentStatistics = computeStatistics(submissionStatistics, 20)
         var result = assignmentStatistics.identifyGroupsOutsideStatisticalNorms()
-        assertEquals(2, assignmentStatistics.groupsConsideredForStatistics.size)
+        assertEquals(3, assignmentStatistics.groupsConsideredForStatistics.size)
         assert(1 == result.size)
         assert(result.contains(gss5))
     }
