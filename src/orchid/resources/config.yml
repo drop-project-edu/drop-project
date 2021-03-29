@@ -1,0 +1,43 @@
+site:
+  about:
+    siteName: Kotlin Project
+    siteDescription:
+
+Editorial:
+  primaryColor: '#DE9149'
+  social:
+    github: 'brunompc/drop-project'
+  menu:
+    - type: 'separator'
+      title: 'Wiki'
+    - type: 'wiki'
+    - type: 'separator'
+      title: 'API Docs'
+    - type: 'kotlindocPackages'
+    - type: 'kotlindocClasses'
+    - type: 'sourcedocPages'
+      moduleType: 'kotlindoc'
+      node: 'classes'
+      asSubmenu: true
+      submenuTitle: 'Classes'
+    - type: 'sourcedocPages'
+      moduleType: 'kotlindoc'
+      node: 'packages'
+      asSubmenu: true
+      submenuTitle: 'Packages'
+
+kotlindoc:
+    sourceDirs: './../../../src/main/kotlin'
+    pages:
+      menu:
+        - type: "kotlindocClassLinks"
+          includeItems: true
+
+
+services:
+  publications:
+    stages:
+      ghPages:
+        - type: 'githubPages'
+          username: 'brunompc'
+          repo: 'drop-project'
