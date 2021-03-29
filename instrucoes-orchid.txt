@@ -1,0 +1,20 @@
+
+Tutorial
+
+	https://dev.to/cjbrooks12/how-to-document-a-kotlin-project-edc#deploy-on-github-pages
+
+-----
+
+Instruçóes Maven
+
+	https://orchid.run/wiki/user-manual/getting-started/quickstart
+
+-----
+
+Instrução de deploy "alternativas"
+
+	mvn -Denvironment=prod orchid:deploy
+
+	isto foi tirado daqui:
+
+	https://github.com/PebbleTemplates/pebble/pull/411
