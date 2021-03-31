@@ -58,6 +58,7 @@ class GitClient {
     /**
      * Represents information about a Git commit.
      *
+     * @property diffs is an ArrayList of [CommitDiff]s
      * @property sha1 is a String with the commit's hash
      * @property date is the Date of the commit
      * @property authorName is a String with the name of the author of the commit
