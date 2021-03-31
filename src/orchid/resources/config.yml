@@ -1,6 +1,7 @@
 site:
+  baseUrl: 'http://brunompc.github.io/drop-project-bruno.github.io/'
   about:
-    siteName: Kotlin Project
+    siteName: Drop Project
     siteDescription:
 
 Editorial:
