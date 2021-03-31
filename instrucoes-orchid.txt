@@ -18,3 +18,11 @@ Instrução de deploy "alternativas"
 	isto foi tirado daqui:
 
 	https://github.com/PebbleTemplates/pebble/pull/411
+
+---
+
+# Drop Project
+
+yada yada yada
+
+- [Codez](codez-allez.md)
