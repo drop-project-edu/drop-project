@@ -37,6 +37,9 @@ enum class Language {
 
 /**
  * Enum representing the types of visibility that can be applied to the results of the hidden unit tests.
+ *  - HIDE_EVERYTHING - students will receive no information about hidden tests;
+ *  - SHOW_OK_NOK - students will be informed about if they pass all the tests or if there is at least one failure;
+ *  - SHOW_PROGRESS - students will know how many tests exist and how many they are passing (e.g. nr passed/nr total).
  */
 enum class TestVisibility {
     HIDE_EVERYTHING,
