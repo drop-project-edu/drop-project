@@ -1,5 +1,5 @@
 site:
-  baseUrl: 'http://brunompc.github.io/drop-project-bruno.github.io/'
+  baseUrl: 'https://brunompc.github.io/drop-project-bruno.github.io/'
   about:
     siteName: Drop Project
     siteDescription:
