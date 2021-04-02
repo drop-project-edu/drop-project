@@ -39,6 +39,12 @@ data class Author(
     @ManyToOne
     lateinit var group: ProjectGroup
 
+    /**
+     * Creates an Author.
+     * @param name is a String
+     * @param number is a String
+     * @param group is the [ProjectGroup] that the Author belongs to
+     */
     constructor(name: String, number: String, group: ProjectGroup) : this(name = name, userId = number) {
         this.group = group
     }

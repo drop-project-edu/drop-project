@@ -33,6 +33,11 @@ import java.nio.file.Files
 import java.util.*
 import java.util.logging.Logger
 
+/**
+ * Determines if a project's POM file contains the configuration to calculate the code's test coverage report.
+ * @param mavenizedProjectFolder
+ * @return a Boolean
+ */
 fun hasCoverageReport(mavenizedProjectFolder: File): Boolean {
     val pomFile = File("${mavenizedProjectFolder}/pom.xml")
     return pomFile.readText().contains("jacoco-maven-plugin")

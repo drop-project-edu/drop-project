@@ -32,7 +32,7 @@ data class AssignmentStatistics(val average : Double,
                                 val groupsConsideredForStatistics : List<GroupSubmissionStatistics>) {
 
     /**
-     * Identifies [ProjectGroup]'s that have a result that is outside the nome (e.g. they pass "many tests" while having
+     * Identifies [ProjectGroup]'s that have a result that is outside the norm (e.g. they pass "many tests" while having
      * "little submissions" when compared with the other groups.
      *
      * @return is a List of [GroupSubmissionStatistics]
