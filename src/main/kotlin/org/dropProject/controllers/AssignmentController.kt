@@ -19,7 +19,11 @@
  */
 package org.dropProject.controllers
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.KotlinModule
 import org.dropProject.dao.*
+import org.dropProject.data.TestType
+import org.dropProject.extensions.formatDefault
 import org.dropProject.extensions.realName
 import org.dropProject.forms.AssignmentForm
 import org.dropProject.repository.*
@@ -29,7 +33,9 @@ import org.eclipse.jgit.api.errors.RefNotAdvertisedException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.CacheManager
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
 import org.springframework.ui.ModelMap
@@ -37,7 +43,9 @@ import org.springframework.validation.BindingResult
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.mvc.support.RedirectAttributes
 import java.io.File
+import java.math.RoundingMode
 import java.security.Principal
+import java.util.LinkedHashSet
 import javax.validation.Valid
 
 /**
@@ -732,6 +740,33 @@ class AssignmentController(
         redirectAttributes.addFlashAttribute("message", "All submissions for ${assignmentId} marked as final. " +
                 "Notice that these may not be their best submissions, just the last ones. You may now review each one individually.")
         return "redirect:/report/${assignmentId}"
+    }
+
+    /**
+     * Controller that handles the exportation of an Assignment's info to a JSON file.
+     * @param assignmentId is a String, identifying the relevant Assignment
+     * @return A ResponseEntity<String>
+     */
+    @RequestMapping(value = ["/export/{assignmentId}"], method = [(RequestMethod.GET)])
+    fun exportJSON(@PathVariable assignmentId: String,
+                  principal: Principal): ResponseEntity<String> {
+
+        val assignment = assignmentRepository.findById(assignmentId).orElse(null) ?:
+            throw IllegalArgumentException("assignment ${assignmentId} is not registered")
+
+        val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
+
+        if (principal.realName() != assignment.ownerUserId && acl.find { it.userId == principal.realName() } == null) {
+            throw IllegalAccessError("Exporting assignments is restricted to their owner or authorized teachers")
+        }
+
+        val mapper = ObjectMapper().registerModule(KotlinModule())
+        val assignmentAsJSon = mapper.writeValueAsString(assignment)
+
+        val headers = HttpHeaders()
+        headers.contentType = MediaType("application", "json")
+        headers.setContentDispositionFormData("attachment", "${assignmentId}_export.csv");
+        return ResponseEntity(assignmentAsJSon, headers, HttpStatus.OK);
     }
 
     /**

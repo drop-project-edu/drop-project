@@ -916,5 +916,56 @@ class AssignmentControllerTests {
         }
     }
 
+    @Test
+    @DirtiesContext
+    fun test_20_exportAssignment() {
+
+        try {
+            testsHelper.createAndSetupAssignment(mvc, assignmentRepository, "dummyAssignment1", "Dummy Assignment",
+                "org.dummy",
+                "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git"
+            )
+
+
+
+        val teacher = User("p1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
+
+        this.mvc.perform(get("/assignment/export/dummyAssignment1")
+            .with(user(teacher)))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType("application/json"))
+            .andExpect(content().json(
+                """
+                    { 
+                        'id': 'sample',
+                        'name': 'sample',
+                        'packageName': 'ppp',
+                        'dueDate': 'asd',
+                        'submissionMethod': 'UPLOAD',
+                        'language': 'JAVA',
+                        'acceptsStudentTests': 'true',
+                        'minStudentTests': 0,
+                        'calculateStudentTestsCoverage': 'false',
+                        'hiddenTestsVisibility': 'HIDE_EVERYTHING',
+                        'cooloffPeriod': 0,
+                        'maxMemoryMb': 0,
+                        'showLeaderBoard': 'false',
+                        'leaderboardType': 'bla',
+                        'gitRepositoryUrl': '...',
+                        'gitRepositoryPubKey': '...',
+                        'gitRepositoryPrivKey': '...',
+                        'gitRepositoryFolder': '...'
+                    }
+                """.trimIndent()))
+
+        } finally {
+
+            // cleanup assignment files
+            if (File(assignmentsRootLocation,"dummyAssignment1").exists()) {
+                File(assignmentsRootLocation,"dummyAssignment1").deleteRecursively()
+            }
+        }
+    }
+
 }
     
