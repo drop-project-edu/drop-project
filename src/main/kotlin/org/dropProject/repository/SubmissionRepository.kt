@@ -45,6 +45,7 @@ interface SubmissionRepository : JpaRepository<Submission, Long> {
     fun findFirstByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(group: ProjectGroup, assignmentId: String) : Submission?
     fun findByStatusAndStatusDateBefore(status: String, statusDate: Date): List<Submission>
     fun countByAssignmentId(assignmentId: String): Long
+    fun countByAssignmentIdAndSubmitterUserId(assignmentId: String, submitterUserId: String): Long
 
     fun findByGitSubmissionId(gitSubmissionId: Long) : List<Submission>
 

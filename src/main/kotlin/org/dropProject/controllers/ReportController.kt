@@ -713,7 +713,10 @@ class ReportController(
                 }
 
                 headersCSV.add("submission date")
-                resultCSV += submission.submissionDate.formatDefault()
+                resultCSV += submission.submissionDate.formatDefault() + ";"
+
+                headersCSV.add("# submissions")
+                resultCSV += submissionRepository.countByAssignmentIdAndSubmitterUserId(submission.assignmentId, author.userId)
 
                 resultCSV += "\n"
             }
