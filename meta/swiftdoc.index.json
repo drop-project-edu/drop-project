@@ -1,0 +1,19 @@
+{
+  "ownKey": "swiftdoc",
+  "childrenPages": {"swiftdoc": {
+    "ownKey": "swiftdoc",
+    "ownPages": [{
+      "reference": {
+        "path": "swiftdoc",
+        "baseUrl": "https://brunompc.github.io/drop-project-bruno.github.io",
+        "fileName": "",
+        "extension": "html",
+        "usePrettyUrl": true,
+        "link": "https://brunompc.github.io/drop-project-bruno.github.io/swiftdoc"
+      },
+      "description": "",
+      "title": "",
+      "content": ""
+    }]
+  }}
+}

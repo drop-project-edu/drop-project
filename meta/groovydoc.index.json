@@ -1,0 +1,19 @@
+{
+  "ownKey": "groovydoc",
+  "childrenPages": {"groovydoc": {
+    "ownKey": "groovydoc",
+    "ownPages": [{
+      "reference": {
+        "path": "groovydoc",
+        "baseUrl": "https://brunompc.github.io/drop-project-bruno.github.io",
+        "fileName": "",
+        "extension": "html",
+        "usePrettyUrl": true,
+        "link": "https://brunompc.github.io/drop-project-bruno.github.io/groovydoc"
+      },
+      "description": "",
+      "title": "",
+      "content": ""
+    }]
+  }}
+}

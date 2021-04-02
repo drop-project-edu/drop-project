@@ -1,0 +1,19 @@
+{
+  "ownKey": "javadoc",
+  "childrenPages": {"javadoc": {
+    "ownKey": "javadoc",
+    "ownPages": [{
+      "reference": {
+        "path": "javadoc",
+        "baseUrl": "https://brunompc.github.io/drop-project-bruno.github.io",
+        "fileName": "",
+        "extension": "html",
+        "usePrettyUrl": true,
+        "link": "https://brunompc.github.io/drop-project-bruno.github.io/javadoc"
+      },
+      "description": "",
+      "title": "",
+      "content": ""
+    }]
+  }}
+}

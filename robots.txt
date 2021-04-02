@@ -1,0 +1,8 @@
+User-agent: *
+
+Disallow: /
+
+
+
+Sitemap: https://brunompc.github.io/drop-project-bruno.github.io/sitemap.xml
+

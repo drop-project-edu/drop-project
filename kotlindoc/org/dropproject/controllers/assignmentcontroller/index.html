@@ -1,0 +1,2953 @@
+<!DOCTYPE HTML>
+<!--
+    Editorial by HTML5 UP
+    html5up.net | @ajlkn
+    Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+<head>
+
+
+
+
+
+
+<meta charset="utf-8"/>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no"/>
+<meta name="generator" content="Orchid 0.21.0"/>
+<link rel="icon" href="https://brunompc.github.io/drop-project-bruno.github.io/favicon.ico">
+
+
+<meta name="robots" content="index, follow">
+
+
+
+<title>AssignmentController</title>
+
+
+<meta name="description" content="">
+
+
+
+
+
+<!-- start:inject styles -->
+<link rel="stylesheet" type="text/css" href="https://brunompc.github.io/drop-project-bruno.github.io/Editorial/bc4137f1/assets/css/editorial_main.css"  />
+<link rel="stylesheet" type="text/css" href="https://brunompc.github.io/drop-project-bruno.github.io/Editorial/bc4137f1/assets/css/editorial_orchidCustomizations.css"  />
+<link rel="stylesheet" type="text/css" href="https://brunompc.github.io/drop-project-bruno.github.io/Editorial/bc4137f1/assets/css/orchidSearch.css"  />
+<link rel="stylesheet" type="text/css" href="https://brunompc.github.io/drop-project-bruno.github.io/assets/css/orchidSourceDoc.css"  />
+<!-- end:inject styles -->
+
+
+
+
+
+<!-- start:debug info -->
+
+<!-- THEME -->
+<!-- Type: Editorial -->
+<!-- Class: com.eden.orchid.editorial.EditorialTheme -->
+
+<!-- PAGE -->
+<!-- Type: classes -->
+<!-- Class: com.eden.orchid.sourcedoc.page.SourceDocPage -->
+<!-- Layout: index -->
+<!-- Resolved Layout: templates/layouts/index.peb -->
+<!-- Page Template: kotlindocClass, sourceDocPage, classes, page -->
+<!-- Resolved Page Template: templates/pages/sourceDocPage.peb -->
+
+<!-- RESOURCE -->
+<!-- Class: com.eden.orchid.sourcedoc.page.SourceDocResource -->
+<!-- Source Filename:  -->
+
+<!-- COMPLETE PAGE CONFIGURATION -->
+<script>
+    window.allData = {"reference":{"path":"kotlindoc","baseUrl":"https://brunompc.github.io/drop-project-bruno.github.io","fileName":"org/dropproject/controllers/assignmentcontroller","extension":"html","usePrettyUrl":true,"link":"https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/controllers/assignmentcontroller"},"description":"","title":"AssignmentController"};
+</script>
+
+<!-- end:debug info -->
+
+
+
+<script>
+    window.site = {"orchidVersion":"0.21.0","baseUrl":"https://brunompc.github.io/drop-project-bruno.github.io","environment":"debug","version":"0.9.3"};
+</script>
+
+
+    <!-- start:inject meta-components [head] -->
+    
+    <!-- end:inject meta-components [head] -->
+
+
+
+    <!-- start:inject meta-components [head] -->
+    
+    <!-- end:inject meta-components [head] -->
+
+
+
+
+
+
+
+</head>
+<body class="is-loading">
+
+
+
+
+
+    <!-- start:inject meta-components [bodyStart] -->
+    
+    <!-- end:inject meta-components [bodyStart] -->
+
+
+
+    <!-- start:inject meta-components [bodyStart] -->
+    
+    <!-- end:inject meta-components [bodyStart] -->
+
+
+
+
+
+<!-- Wrapper -->
+<div id="wrapper">
+
+    <!-- Main -->
+    <div id="main">
+        <div class="inner">
+
+            <!-- Header -->
+            
+                <header id="header">
+    <a href="https://brunompc.github.io/drop-project-bruno.github.io" class="logo">Drop Project</a>
+    <ul class="icons">
+    
+    
+        <li>
+            <a href="https://github.com/brunompc/drop-project" class="icon fa-github">
+                <span class="label">github</span>
+            </a>
+        </li>
+    
+    
+    </ul>
+</header>
+
+            
+            
+            
+            
+                <section id="pageContent">
+                    <header class="major"><h2>AssignmentController</h2></header>
+                    <article>
+                        
+    <!-- start:inject components -->
+    
+        
+            
+                
+                    
+                        <div class="sourcedoc-page orchid-sourcedoc content">
+  
+<div class="sourcedoc-section section-root section-level-1" id="AssignmentController">
+
+
+  
+
+  
+    <div class="sourcedoc-section section-element" id="b73f39d5c018d97be6badbf0a98af7489e16c507">
+      
+      <p class="sourcedoc-section section-signature">
+        <code>class AssignmentController: Any</code>
+      </p>
+
+      
+        
+    <!-- start:inject components -->
+    
+    <!-- end:inject components -->
+
+
+      
+
+      <div class="sourcedoc-section section-comments"><p>AssignmentController contains MVC controller functions that handle requests related with Assignments
+(for example, assignment creation, edition, etc.)</p>
+</div>
+
+      
+      
+        
+          
+<div class="sourcedoc-section section-root section-level-2" id="fields">
+
+
+  <p class="sourcedoc-section section-name"><strong>Fields</strong></p>
+
+  <div class="table-container">
+    <table class="table is-fullwidth is-bordered">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+      </thead>
+      <tbody>
+      
+      <tr class="sourcedoc-section section-element" id="d2e745a88ffe29def6ed01f7cdbfed3ea165f981">
+        <td class="sourcedoc-section section-signature">
+          <code>val assignmentsRootLocation: String</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="5c78462832b1aedc3054427f96d436beb38671be">
+        <td class="sourcedoc-section section-signature">
+          <code>val LOG: LoggerFactory.getLogger(this.javaClass.name)</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="ef80e3f3163acf4cb308fee8fbef8b9abaee8cb8">
+        <td class="sourcedoc-section section-signature">
+          <code>val assignmentRepository: AssignmentRepository</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="228d4ceff7519a1f4366fffd9c9b4cb5d11131ae">
+        <td class="sourcedoc-section section-signature">
+          <code>val assignmentReportRepository: AssignmentReportRepository</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="1bb4996534d599d3f3ade1e097def89eedb1e426">
+        <td class="sourcedoc-section section-signature">
+          <code>val assignmentTagRepository: AssignmentTagRepository</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="0f9e3a446c5b08dbcbc3676bdd12f6fcc39071c4">
+        <td class="sourcedoc-section section-signature">
+          <code>val assignmentTestMethodRepository: AssignmentTestMethodRepository</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="e61f8e097c942a833788847d2d4021a4192a8b4b">
+        <td class="sourcedoc-section section-signature">
+          <code>val assigneeRepository: AssigneeRepository</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="2c28a4ff6c632bb03e128f6807293764bd0e246f">
+        <td class="sourcedoc-section section-signature">
+          <code>val assignmentACLRepository: AssignmentACLRepository</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="561d1b93b6357e0eab52ffa0e5a29af9188107e2">
+        <td class="sourcedoc-section section-signature">
+          <code>val submissionRepository: SubmissionRepository</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="9016fc3d2b46f942084218c116cfb6dacfef6803">
+        <td class="sourcedoc-section section-signature">
+          <code>val gitSubmissionRepository: GitSubmissionRepository</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="70f9587cdb4a98612c0bfefd58310d9c51e9f54f">
+        <td class="sourcedoc-section section-signature">
+          <code>val gitClient: GitClient</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="04d1ef25a88d5505ee0373e771e1e07c9ca30be1">
+        <td class="sourcedoc-section section-signature">
+          <code>val assignmentTeacherFiles: AssignmentTeacherFiles</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="a097694caf1cc8d3757a47e6b9f527e7fa75c3cc">
+        <td class="sourcedoc-section section-signature">
+          <code>val submissionService: SubmissionService</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="e428fc8e3edf02636313c4ec898d7e2f3602454a">
+        <td class="sourcedoc-section section-signature">
+          <code>val assignmentService: AssignmentService</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="61f6f3021877f643091954b9fb1d7252a843caa3">
+        <td class="sourcedoc-section section-signature">
+          <code>val cacheManager: CacheManager</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      </tbody>
+    </table>
+  </div>
+
+
+</div>
+
+        
+          
+<div class="sourcedoc-section section-root section-level-2" id="constructors">
+
+
+  
+    <h2 class="sourcedoc-section section-name">Constructors</h2>
+  
+
+  
+    <div class="sourcedoc-section section-element" id="d933e2f986c55bc646238aa11b338e8fa64e00d0">
+      
+      <h3 class="sourcedoc-section element-name">&lt;init&gt;</h3>
+      
+      <p class="sourcedoc-section section-signature">
+        <code>constructor(assignmentRepository: AssignmentRepository, assignmentReportRepository: AssignmentReportRepository, assignmentTagRepository: AssignmentTagRepository, assignmentTestMethodRepository: AssignmentTestMethodRepository, assigneeRepository: AssigneeRepository, assignmentACLRepository: AssignmentACLRepository, submissionRepository: SubmissionRepository, gitSubmissionRepository: GitSubmissionRepository, gitClient: GitClient, assignmentTeacherFiles: AssignmentTeacherFiles, submissionService: SubmissionService, assignmentService: AssignmentService, cacheManager: CacheManager)</code>
+      </p>
+
+      
+
+      <div class="sourcedoc-section section-comments"><p>AssignmentController contains MVC controller functions that handle requests related with Assignments
+(for example, assignment creation, edition, etc.)</p>
+</div>
+
+      
+      
+        
+          
+<div class="sourcedoc-section section-root section-level-3" id="b8375dd57aa443a0cfe593867044c3ce2c81a47f">
+
+
+  <p class="sourcedoc-section section-name"><strong>Parameters</strong></p>
+
+  <div class="table-container">
+    <table class="table is-fullwidth is-bordered">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+      </thead>
+      <tbody>
+      
+      <tr class="sourcedoc-section section-element" id="5fddd0c041d8b19b1c2075a591f9703213fed623">
+        <td class="sourcedoc-section section-signature">
+          <code>assignmentRepository: AssignmentRepository</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="89b7dd546c96883cd9abf03c5efbdefab67870a9">
+        <td class="sourcedoc-section section-signature">
+          <code>assignmentReportRepository: AssignmentReportRepository</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="3a69674deeb6b1bf4bf4f039161ae9fb1fa29395">
+        <td class="sourcedoc-section section-signature">
+          <code>assignmentTagRepository: AssignmentTagRepository</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="414bf792b0c569425e99249124ecbc46fa2542b8">
+        <td class="sourcedoc-section section-signature">
+          <code>assignmentTestMethodRepository: AssignmentTestMethodRepository</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="88fd91e4d316bac2aedec0574e9e4178c03d90e2">
+        <td class="sourcedoc-section section-signature">
+          <code>assigneeRepository: AssigneeRepository</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="cc514a252f0a088317fe405aa9b1f2747d924464">
+        <td class="sourcedoc-section section-signature">
+          <code>assignmentACLRepository: AssignmentACLRepository</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="cb02c2b3e19fb759a76848a88fd6e0a2b9ca7eda">
+        <td class="sourcedoc-section section-signature">
+          <code>submissionRepository: SubmissionRepository</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="5c30d55c0da524b6920cbdd83768b53e46b03652">
+        <td class="sourcedoc-section section-signature">
+          <code>gitSubmissionRepository: GitSubmissionRepository</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="fe2ad28e958b6cbc3b646cba11f79276fffa6049">
+        <td class="sourcedoc-section section-signature">
+          <code>gitClient: GitClient</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="237d69c2658ad44a5867e33c38d9c800082dffb4">
+        <td class="sourcedoc-section section-signature">
+          <code>assignmentTeacherFiles: AssignmentTeacherFiles</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="6cf0d0672b7745241d286d61d7c92f7990c72b32">
+        <td class="sourcedoc-section section-signature">
+          <code>submissionService: SubmissionService</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="c46ed2bf6ab592a1c2e41ac53f22b98421e1d97c">
+        <td class="sourcedoc-section section-signature">
+          <code>assignmentService: AssignmentService</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="9dfa179be68d22f5c0b218907f965abd2abced24">
+        <td class="sourcedoc-section section-signature">
+          <code>cacheManager: CacheManager</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      </tbody>
+    </table>
+  </div>
+
+
+</div>
+
+        
+      
+    </div>
+  
+
+</div>
+
+        
+          
+<div class="sourcedoc-section section-root section-level-2" id="methods">
+
+
+  
+    <h2 class="sourcedoc-section section-name">Methods</h2>
+  
+
+  
+    <div class="sourcedoc-section section-element" id="d5636a9e1cecee67bd9e77ff70fc0dc23a348153">
+      
+      <h3 class="sourcedoc-section element-name">getNewAssignmentForm</h3>
+      
+      <p class="sourcedoc-section section-signature">
+        <code>fun getNewAssignmentForm(model: ModelMap): String</code>
+      </p>
+
+      
+
+      <div class="sourcedoc-section section-comments"><p>Controller that handles HTTP GET requests for the Assignment creation form.</p>
+</div>
+
+      
+      
+        
+          
+<div class="sourcedoc-section section-root section-level-3" id="d467fbedfd38442633221c47ed9358a7b18a4987">
+
+
+  <p class="sourcedoc-section section-name"><strong>Parameters</strong></p>
+
+  <div class="table-container">
+    <table class="table is-fullwidth is-bordered">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+      </thead>
+      <tbody>
+      
+      <tr class="sourcedoc-section section-element" id="7bbab4c0b613df8762e48d2ed8e46b5e7669935e">
+        <td class="sourcedoc-section section-signature">
+          <code>model: ModelMap</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a <a href="#">ModelMap</a> that will be populated with information to use in a View</p>
+
+        </td>
+      </tr>
+      
+      </tbody>
+    </table>
+  </div>
+
+
+</div>
+
+        
+          
+<div class="sourcedoc-section section-root section-level-3" id="7a89897e85d09207ca16e8bf572965051604413c">
+
+
+  <p class="sourcedoc-section section-name"><strong>ReturnValue</strong></p>
+
+  <div class="table-container">
+    <table class="table is-fullwidth is-bordered">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+      </thead>
+      <tbody>
+      
+      <tr class="sourcedoc-section section-element" id="3df63b7acb0522da685dad5fe84b81fdd7b25264">
+        <td class="sourcedoc-section section-signature">
+          <code>String</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>A String with the name of the relevant View</p>
+
+        </td>
+      </tr>
+      
+      </tbody>
+    </table>
+  </div>
+
+
+</div>
+
+        
+      
+    </div>
+  
+    <div class="sourcedoc-section section-element" id="2d1da32e89e1b305a9907ed029b243f921b4e5d6">
+      
+      <h3 class="sourcedoc-section element-name">createOrEditAssignment</h3>
+      
+      <p class="sourcedoc-section section-signature">
+        <code>fun createOrEditAssignment(assignmentForm: AssignmentForm, bindingResult: BindingResult, redirectAttributes: RedirectAttributes, principal: Principal): String</code>
+      </p>
+
+      
+
+      <div class="sourcedoc-section section-comments"><p>Controller that handles HTTP POST requests for the Assignment creation form.</p>
+</div>
+
+      
+      
+        
+          
+<div class="sourcedoc-section section-root section-level-3" id="342274b582ee322106bbc5f05f6d9757bce843e4">
+
+
+  <p class="sourcedoc-section section-name"><strong>Parameters</strong></p>
+
+  <div class="table-container">
+    <table class="table is-fullwidth is-bordered">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+      </thead>
+      <tbody>
+      
+      <tr class="sourcedoc-section section-element" id="f27c5c7c9427cda22d77e32d79bb625fc57afed2">
+        <td class="sourcedoc-section section-signature">
+          <code>assignmentForm: AssignmentForm</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is an AssignmentForm</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="df1820e6e382a303c9209cc1750976cfa2bd7230">
+        <td class="sourcedoc-section section-signature">
+          <code>bindingResult: BindingResult</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a <a href="#">BindingResult</a></p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="1f7bbd79109a60d79b96ef8876f1a117aeb4e2d2">
+        <td class="sourcedoc-section section-signature">
+          <code>redirectAttributes: RedirectAttributes</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a <a href="#">RedirectAttributes</a></p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="b84d7de29a9a11f8623caa40f04c53ced179d1af">
+        <td class="sourcedoc-section section-signature">
+          <code>principal: Principal</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a <a href="https://docs.oracle.com/javase/6/docs/api/java/security/Principal.html">Principal</a> representing the user making the request</p>
+
+        </td>
+      </tr>
+      
+      </tbody>
+    </table>
+  </div>
+
+
+</div>
+
+        
+          
+<div class="sourcedoc-section section-root section-level-3" id="bb191a892b1eb9acb2db6fa2cd52e470e6d2d0f3">
+
+
+  <p class="sourcedoc-section section-name"><strong>ReturnValue</strong></p>
+
+  <div class="table-container">
+    <table class="table is-fullwidth is-bordered">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+      </thead>
+      <tbody>
+      
+      <tr class="sourcedoc-section section-element" id="3df63b7acb0522da685dad5fe84b81fdd7b25264">
+        <td class="sourcedoc-section section-signature">
+          <code>String</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a String with the name of the relevant View</p>
+
+        </td>
+      </tr>
+      
+      </tbody>
+    </table>
+  </div>
+
+
+</div>
+
+        
+      
+    </div>
+  
+    <div class="sourcedoc-section section-element" id="e12aea17794ea5cd49fa9de3c78abac2c4d5929e">
+      
+      <h3 class="sourcedoc-section element-name">getAssignmentDetail</h3>
+      
+      <p class="sourcedoc-section section-signature">
+        <code>fun getAssignmentDetail(assignmentId: String, model: ModelMap, principal: Principal): String</code>
+      </p>
+
+      
+
+      <div class="sourcedoc-section section-comments"><p>Handles requests for for an Assignment's "Info" page.</p>
+</div>
+
+      
+      
+        
+          
+<div class="sourcedoc-section section-root section-level-3" id="477efe20da018075e567e73b944aed55f3b7e793">
+
+
+  <p class="sourcedoc-section section-name"><strong>Parameters</strong></p>
+
+  <div class="table-container">
+    <table class="table is-fullwidth is-bordered">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+      </thead>
+      <tbody>
+      
+      <tr class="sourcedoc-section section-element" id="7da0b17a8cdf90126efde33f948aa0226c0d46bb">
+        <td class="sourcedoc-section section-signature">
+          <code>assignmentId: String</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a String identifying the relevant Assignment</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="7bbab4c0b613df8762e48d2ed8e46b5e7669935e">
+        <td class="sourcedoc-section section-signature">
+          <code>model: ModelMap</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a <a href="#">ModelMap</a> that will be populated with information to use in a View</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="b84d7de29a9a11f8623caa40f04c53ced179d1af">
+        <td class="sourcedoc-section section-signature">
+          <code>principal: Principal</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a <a href="https://docs.oracle.com/javase/6/docs/api/java/security/Principal.html">Principal</a> representing the user making the request</p>
+
+        </td>
+      </tr>
+      
+      </tbody>
+    </table>
+  </div>
+
+
+</div>
+
+        
+          
+<div class="sourcedoc-section section-root section-level-3" id="aed06610736efd04aeaaa127e4da923a1bb9f17b">
+
+
+  <p class="sourcedoc-section section-name"><strong>ReturnValue</strong></p>
+
+  <div class="table-container">
+    <table class="table is-fullwidth is-bordered">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+      </thead>
+      <tbody>
+      
+      <tr class="sourcedoc-section section-element" id="3df63b7acb0522da685dad5fe84b81fdd7b25264">
+        <td class="sourcedoc-section section-signature">
+          <code>String</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>a String with the name of the relevant View</p>
+
+        </td>
+      </tr>
+      
+      </tbody>
+    </table>
+  </div>
+
+
+</div>
+
+        
+      
+    </div>
+  
+    <div class="sourcedoc-section section-element" id="eb2dd5ac20f619834ddf8b719b1128d934539b46">
+      
+      <h3 class="sourcedoc-section element-name">getEditAssignmentForm</h3>
+      
+      <p class="sourcedoc-section section-signature">
+        <code>fun getEditAssignmentForm(assignmentId: String, model: ModelMap, principal: Principal): String</code>
+      </p>
+
+      
+
+      <div class="sourcedoc-section section-comments"><p>Controller that handles HTTP GET requests for the Assignment edition form.</p>
+</div>
+
+      
+      
+        
+          
+<div class="sourcedoc-section section-root section-level-3" id="f68bad7b7d45fb114877429d8e021b5414e491e6">
+
+
+  <p class="sourcedoc-section section-name"><strong>Parameters</strong></p>
+
+  <div class="table-container">
+    <table class="table is-fullwidth is-bordered">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+      </thead>
+      <tbody>
+      
+      <tr class="sourcedoc-section section-element" id="7da0b17a8cdf90126efde33f948aa0226c0d46bb">
+        <td class="sourcedoc-section section-signature">
+          <code>assignmentId: String</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a String representing the relevant Assignment</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="7bbab4c0b613df8762e48d2ed8e46b5e7669935e">
+        <td class="sourcedoc-section section-signature">
+          <code>model: ModelMap</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a <a href="#">ModelMap</a> that will be populated with information to use in a View</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="b84d7de29a9a11f8623caa40f04c53ced179d1af">
+        <td class="sourcedoc-section section-signature">
+          <code>principal: Principal</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a <a href="https://docs.oracle.com/javase/6/docs/api/java/security/Principal.html">Principal</a> representing the user making the request</p>
+
+        </td>
+      </tr>
+      
+      </tbody>
+    </table>
+  </div>
+
+
+</div>
+
+        
+          
+<div class="sourcedoc-section section-root section-level-3" id="034d1f64f2f8d8dc226af4eceb67b53c1c297ff5">
+
+
+  <p class="sourcedoc-section section-name"><strong>ReturnValue</strong></p>
+
+  <div class="table-container">
+    <table class="table is-fullwidth is-bordered">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+      </thead>
+      <tbody>
+      
+      <tr class="sourcedoc-section section-element" id="3df63b7acb0522da685dad5fe84b81fdd7b25264">
+        <td class="sourcedoc-section section-signature">
+          <code>String</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>a String with the name of the relevant View</p>
+
+        </td>
+      </tr>
+      
+      </tbody>
+    </table>
+  </div>
+
+
+</div>
+
+        
+      
+    </div>
+  
+    <div class="sourcedoc-section section-element" id="ff2b099fd99e46908623a3c22b58a7640a23e119">
+      
+      <h3 class="sourcedoc-section element-name">refreshAssignmentGitRepository</h3>
+      
+      <p class="sourcedoc-section section-signature">
+        <code>fun refreshAssignmentGitRepository(assignmentId: String, principal: Principal): ResponseEntity<String>&lt;String&gt;</code>
+      </p>
+
+      
+
+      <div class="sourcedoc-section section-comments"><p>Controller that handles requests for the refreshing of the Assignment's configuration from its Git repository.</p>
+</div>
+
+      
+      
+        
+          
+<div class="sourcedoc-section section-root section-level-3" id="6dabd8650d055bf3f84b63fca94a01631428fbb2">
+
+
+  <p class="sourcedoc-section section-name"><strong>Parameters</strong></p>
+
+  <div class="table-container">
+    <table class="table is-fullwidth is-bordered">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+      </thead>
+      <tbody>
+      
+      <tr class="sourcedoc-section section-element" id="7da0b17a8cdf90126efde33f948aa0226c0d46bb">
+        <td class="sourcedoc-section section-signature">
+          <code>assignmentId: String</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a String, identifying the relevant assignment</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="b84d7de29a9a11f8623caa40f04c53ced179d1af">
+        <td class="sourcedoc-section section-signature">
+          <code>principal: Principal</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a <a href="https://docs.oracle.com/javase/6/docs/api/java/security/Principal.html">Principal</a> representing the user making the request</p>
+
+        </td>
+      </tr>
+      
+      </tbody>
+    </table>
+  </div>
+
+
+</div>
+
+        
+          
+<div class="sourcedoc-section section-root section-level-3" id="9287c4e0f4329ade0770a6d5bea2e9a3e51368b2">
+
+
+  <p class="sourcedoc-section section-name"><strong>ReturnValue</strong></p>
+
+  <div class="table-container">
+    <table class="table is-fullwidth is-bordered">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+      </thead>
+      <tbody>
+      
+      <tr class="sourcedoc-section section-element" id="826b7a25ff8753fb17ed6e9600d1da940fbc32a6">
+        <td class="sourcedoc-section section-signature">
+          <code>ResponseEntity<String>&lt;String&gt;</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>a ResponseEntity</p>
+
+        </td>
+      </tr>
+      
+      </tbody>
+    </table>
+  </div>
+
+
+</div>
+
+        
+      
+    </div>
+  
+    <div class="sourcedoc-section section-element" id="c10495ada15ad48dd597343870ea55bc4f7fef83">
+      
+      <h3 class="sourcedoc-section element-name">setupAssignmentToGitRepository</h3>
+      
+      <p class="sourcedoc-section section-signature">
+        <code>fun setupAssignmentToGitRepository(assignmentId: String, model: ModelMap, principal: Principal): String</code>
+      </p>
+
+      
+
+      <div class="sourcedoc-section section-comments"><p>Controller that handles requests for the creation of the connection between the Assignment and the Git repository
+that contains its configuration.</p>
+</div>
+
+      
+      
+        
+          
+<div class="sourcedoc-section section-root section-level-3" id="4596780a0944b099cd7667511f8efbb1059680ed">
+
+
+  <p class="sourcedoc-section section-name"><strong>Parameters</strong></p>
+
+  <div class="table-container">
+    <table class="table is-fullwidth is-bordered">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+      </thead>
+      <tbody>
+      
+      <tr class="sourcedoc-section section-element" id="7da0b17a8cdf90126efde33f948aa0226c0d46bb">
+        <td class="sourcedoc-section section-signature">
+          <code>assignmentId: String</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a String, identifying the relevant Assignment</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="7bbab4c0b613df8762e48d2ed8e46b5e7669935e">
+        <td class="sourcedoc-section section-signature">
+          <code>model: ModelMap</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a <a href="#">ModelMap</a> that will be populated with information to use in a View</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="b84d7de29a9a11f8623caa40f04c53ced179d1af">
+        <td class="sourcedoc-section section-signature">
+          <code>principal: Principal</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a <a href="https://docs.oracle.com/javase/6/docs/api/java/security/Principal.html">Principal</a> representing the user making the request</p>
+
+        </td>
+      </tr>
+      
+      </tbody>
+    </table>
+  </div>
+
+
+</div>
+
+        
+          
+<div class="sourcedoc-section section-root section-level-3" id="00f8a0bbc317c2d4a4c4a425de5bb472500b0b82">
+
+
+  <p class="sourcedoc-section section-name"><strong>ReturnValue</strong></p>
+
+  <div class="table-container">
+    <table class="table is-fullwidth is-bordered">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+      </thead>
+      <tbody>
+      
+      <tr class="sourcedoc-section section-element" id="3df63b7acb0522da685dad5fe84b81fdd7b25264">
+        <td class="sourcedoc-section section-signature">
+          <code>String</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>a String with the name of the relevant View</p>
+
+        </td>
+      </tr>
+      
+      </tbody>
+    </table>
+  </div>
+
+
+</div>
+
+        
+      
+    </div>
+  
+    <div class="sourcedoc-section section-element" id="c9cee4ed9ea783f0bdc649ac0064a13f61adec97">
+      
+      <h3 class="sourcedoc-section element-name">connectAssignmentToGitRepository</h3>
+      
+      <p class="sourcedoc-section section-signature">
+        <code>fun connectAssignmentToGitRepository(assignmentId: String, redirectAttributes: RedirectAttributes, model: ModelMap, principal: Principal): String</code>
+      </p>
+
+      
+
+      <div class="sourcedoc-section section-comments"><p>Controller to handle requests related with connecting an <a href="#">Assigment</a> with a git repository. This is needed
+to obtain the information that is defined by code (instructions, unit tests, etc).</p>
+</div>
+
+      
+      
+        
+          
+<div class="sourcedoc-section section-root section-level-3" id="a42299fcbd966bbef2c0d6500b35c2fcd1b8302c">
+
+
+  <p class="sourcedoc-section section-name"><strong>Parameters</strong></p>
+
+  <div class="table-container">
+    <table class="table is-fullwidth is-bordered">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+      </thead>
+      <tbody>
+      
+      <tr class="sourcedoc-section section-element" id="7da0b17a8cdf90126efde33f948aa0226c0d46bb">
+        <td class="sourcedoc-section section-signature">
+          <code>assignmentId: String</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a String representing the relevant Assignment</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="1f7bbd79109a60d79b96ef8876f1a117aeb4e2d2">
+        <td class="sourcedoc-section section-signature">
+          <code>redirectAttributes: RedirectAttributes</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a RedirectAttributes</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="7bbab4c0b613df8762e48d2ed8e46b5e7669935e">
+        <td class="sourcedoc-section section-signature">
+          <code>model: ModelMap</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a <a href="#">ModelMap</a> that will be populated with information to use in a View</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="b84d7de29a9a11f8623caa40f04c53ced179d1af">
+        <td class="sourcedoc-section section-signature">
+          <code>principal: Principal</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a <a href="https://docs.oracle.com/javase/6/docs/api/java/security/Principal.html">Principal</a> representing the user making the request</p>
+
+        </td>
+      </tr>
+      
+      </tbody>
+    </table>
+  </div>
+
+
+</div>
+
+        
+          
+<div class="sourcedoc-section section-root section-level-3" id="3afd7099c65ebe6a45b171a6b5e0335eaea5df27">
+
+
+  <p class="sourcedoc-section section-name"><strong>ReturnValue</strong></p>
+
+  <div class="table-container">
+    <table class="table is-fullwidth is-bordered">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+      </thead>
+      <tbody>
+      
+      <tr class="sourcedoc-section section-element" id="3df63b7acb0522da685dad5fe84b81fdd7b25264">
+        <td class="sourcedoc-section section-signature">
+          <code>String</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>A String with the name of the relevant View</p>
+
+        </td>
+      </tr>
+      
+      </tbody>
+    </table>
+  </div>
+
+
+</div>
+
+        
+      
+    </div>
+  
+    <div class="sourcedoc-section section-element" id="57b5f2f448bc4adc1222351d208231746aa86fc2">
+      
+      <h3 class="sourcedoc-section element-name">listMyAssignments</h3>
+      
+      <p class="sourcedoc-section section-signature">
+        <code>fun listMyAssignments(tags: String?, model: ModelMap, principal: Principal): String</code>
+      </p>
+
+      
+
+      <div class="sourcedoc-section section-comments"><p>Controller to handle the page that lists the Assignments to which the logged-in
+user has access.</p>
+</div>
+
+      
+      
+        
+          
+<div class="sourcedoc-section section-root section-level-3" id="114d5ba146f7d010a3306b28edf368f970ef833e">
+
+
+  <p class="sourcedoc-section section-name"><strong>Parameters</strong></p>
+
+  <div class="table-container">
+    <table class="table is-fullwidth is-bordered">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+      </thead>
+      <tbody>
+      
+      <tr class="sourcedoc-section section-element" id="bc959e9acbe3ef6a809d9cd82508b4889a6420f3">
+        <td class="sourcedoc-section section-signature">
+          <code>tags: String?</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a String containing the names of multiple tags. Each tag name is separated by a comma. Only the
+assignments that have all the tags will be placed in the model.</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="7bbab4c0b613df8762e48d2ed8e46b5e7669935e">
+        <td class="sourcedoc-section section-signature">
+          <code>model: ModelMap</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a <a href="#">ModelMap</a> that will be populated with information to use in a View</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="b84d7de29a9a11f8623caa40f04c53ced179d1af">
+        <td class="sourcedoc-section section-signature">
+          <code>principal: Principal</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a <a href="https://docs.oracle.com/javase/6/docs/api/java/security/Principal.html">Principal</a> representing the user making the request</p>
+
+        </td>
+      </tr>
+      
+      </tbody>
+    </table>
+  </div>
+
+
+</div>
+
+        
+          
+<div class="sourcedoc-section section-root section-level-3" id="06edf9e83fe25b87a3a38efd6971be2723f6873b">
+
+
+  <p class="sourcedoc-section section-name"><strong>ReturnValue</strong></p>
+
+  <div class="table-container">
+    <table class="table is-fullwidth is-bordered">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+      </thead>
+      <tbody>
+      
+      <tr class="sourcedoc-section section-element" id="3df63b7acb0522da685dad5fe84b81fdd7b25264">
+        <td class="sourcedoc-section section-signature">
+          <code>String</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>A String with the name of the relevant View</p>
+
+        </td>
+      </tr>
+      
+      </tbody>
+    </table>
+  </div>
+
+
+</div>
+
+        
+      
+    </div>
+  
+    <div class="sourcedoc-section section-element" id="12b5de647834d22fc7e05a4576b4292993ed2f7e">
+      
+      <h3 class="sourcedoc-section element-name">listMyArchivedAssignments</h3>
+      
+      <p class="sourcedoc-section section-signature">
+        <code>fun listMyArchivedAssignments(tags: String?, model: ModelMap, principal: Principal): String</code>
+      </p>
+
+      
+
+      <div class="sourcedoc-section section-comments"><p>Controller to handle the page that lists the <b>archived</b> assignments to which the logged-in
+teacher has access.</p>
+</div>
+
+      
+      
+        
+          
+<div class="sourcedoc-section section-root section-level-3" id="73170f46f7aa5553054b65aca9ca5fb6333d0a0c">
+
+
+  <p class="sourcedoc-section section-name"><strong>Parameters</strong></p>
+
+  <div class="table-container">
+    <table class="table is-fullwidth is-bordered">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+      </thead>
+      <tbody>
+      
+      <tr class="sourcedoc-section section-element" id="bc959e9acbe3ef6a809d9cd82508b4889a6420f3">
+        <td class="sourcedoc-section section-signature">
+          <code>tags: String?</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a String containing the names of multiple tags. Each tag name is separated by a comma. Only the
+assignments that have all the tags will be placed in the model.</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="7bbab4c0b613df8762e48d2ed8e46b5e7669935e">
+        <td class="sourcedoc-section section-signature">
+          <code>model: ModelMap</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a <a href="#">ModelMap</a> that will be populated with information to use in a View</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="b84d7de29a9a11f8623caa40f04c53ced179d1af">
+        <td class="sourcedoc-section section-signature">
+          <code>principal: Principal</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a <a href="https://docs.oracle.com/javase/6/docs/api/java/security/Principal.html">Principal</a> representing the user making the request</p>
+
+        </td>
+      </tr>
+      
+      </tbody>
+    </table>
+  </div>
+
+
+</div>
+
+        
+          
+<div class="sourcedoc-section section-root section-level-3" id="d7385b0036dc4240ecd448cefae74610c46d6fad">
+
+
+  <p class="sourcedoc-section section-name"><strong>ReturnValue</strong></p>
+
+  <div class="table-container">
+    <table class="table is-fullwidth is-bordered">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+      </thead>
+      <tbody>
+      
+      <tr class="sourcedoc-section section-element" id="3df63b7acb0522da685dad5fe84b81fdd7b25264">
+        <td class="sourcedoc-section section-signature">
+          <code>String</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>A String with the name of the relevant View</p>
+
+        </td>
+      </tr>
+      
+      </tbody>
+    </table>
+  </div>
+
+
+</div>
+
+        
+      
+    </div>
+  
+    <div class="sourcedoc-section section-element" id="93fe383cc3a070c5932d4cc890eb542eab003470">
+      
+      <h3 class="sourcedoc-section element-name">deleteAssignment</h3>
+      
+      <p class="sourcedoc-section section-signature">
+        <code>fun deleteAssignment(assignmentId: String, redirectAttributes: RedirectAttributes, principal: Principal): String</code>
+      </p>
+
+      
+
+      <div class="sourcedoc-section section-comments"><p>Controller to handle the deletion of an Assignment.</p>
+</div>
+
+      
+      
+        
+          
+<div class="sourcedoc-section section-root section-level-3" id="c5d57a6d266ae6f113a78fb8e582ba45a3658435">
+
+
+  <p class="sourcedoc-section section-name"><strong>Parameters</strong></p>
+
+  <div class="table-container">
+    <table class="table is-fullwidth is-bordered">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+      </thead>
+      <tbody>
+      
+      <tr class="sourcedoc-section section-element" id="7da0b17a8cdf90126efde33f948aa0226c0d46bb">
+        <td class="sourcedoc-section section-signature">
+          <code>assignmentId: String</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a String representing the relevant Assignment</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="1f7bbd79109a60d79b96ef8876f1a117aeb4e2d2">
+        <td class="sourcedoc-section section-signature">
+          <code>redirectAttributes: RedirectAttributes</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a RedirectAttributes</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="b84d7de29a9a11f8623caa40f04c53ced179d1af">
+        <td class="sourcedoc-section section-signature">
+          <code>principal: Principal</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a <a href="https://docs.oracle.com/javase/6/docs/api/java/security/Principal.html">Principal</a> representing the user making the request</p>
+
+        </td>
+      </tr>
+      
+      </tbody>
+    </table>
+  </div>
+
+
+</div>
+
+        
+          
+<div class="sourcedoc-section section-root section-level-3" id="da9db4fdd726e4e8dc2cae4b8bdf4c0a6b74979c">
+
+
+  <p class="sourcedoc-section section-name"><strong>ReturnValue</strong></p>
+
+  <div class="table-container">
+    <table class="table is-fullwidth is-bordered">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+      </thead>
+      <tbody>
+      
+      <tr class="sourcedoc-section section-element" id="3df63b7acb0522da685dad5fe84b81fdd7b25264">
+        <td class="sourcedoc-section section-signature">
+          <code>String</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>A String with the name of the relevant View</p>
+
+        </td>
+      </tr>
+      
+      </tbody>
+    </table>
+  </div>
+
+
+</div>
+
+        
+      
+    </div>
+  
+    <div class="sourcedoc-section section-element" id="ef090e31ec1e222fac1e80c420533c463d7f699d">
+      
+      <h3 class="sourcedoc-section element-name">toggleAssignmentStatus</h3>
+      
+      <p class="sourcedoc-section section-signature">
+        <code>fun toggleAssignmentStatus(assignmentId: String, redirectAttributes: RedirectAttributes, principal: Principal): String</code>
+      </p>
+
+      
+
+      <div class="sourcedoc-section section-comments"><p>Controller that allows toggling the status of an Assignment between "active" and "inactive".</p>
+</div>
+
+      
+      
+        
+          
+<div class="sourcedoc-section section-root section-level-3" id="a6e2149996f7b4f74ca67f47ce888fe43d303c58">
+
+
+  <p class="sourcedoc-section section-name"><strong>Parameters</strong></p>
+
+  <div class="table-container">
+    <table class="table is-fullwidth is-bordered">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+      </thead>
+      <tbody>
+      
+      <tr class="sourcedoc-section section-element" id="7da0b17a8cdf90126efde33f948aa0226c0d46bb">
+        <td class="sourcedoc-section section-signature">
+          <code>assignmentId: String</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a String representing the relevant Assignment</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="1f7bbd79109a60d79b96ef8876f1a117aeb4e2d2">
+        <td class="sourcedoc-section section-signature">
+          <code>redirectAttributes: RedirectAttributes</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a RedirectAttributes</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="b84d7de29a9a11f8623caa40f04c53ced179d1af">
+        <td class="sourcedoc-section section-signature">
+          <code>principal: Principal</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a <a href="https://docs.oracle.com/javase/6/docs/api/java/security/Principal.html">Principal</a> representing the user making the request</p>
+
+        </td>
+      </tr>
+      
+      </tbody>
+    </table>
+  </div>
+
+
+</div>
+
+        
+          
+<div class="sourcedoc-section section-root section-level-3" id="cdeb9874e75a0ef47edbe625b8de7d9e36265480">
+
+
+  <p class="sourcedoc-section section-name"><strong>ReturnValue</strong></p>
+
+  <div class="table-container">
+    <table class="table is-fullwidth is-bordered">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+      </thead>
+      <tbody>
+      
+      <tr class="sourcedoc-section section-element" id="3df63b7acb0522da685dad5fe84b81fdd7b25264">
+        <td class="sourcedoc-section section-signature">
+          <code>String</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>A String with the name of the relevant View</p>
+
+        </td>
+      </tr>
+      
+      </tbody>
+    </table>
+  </div>
+
+
+</div>
+
+        
+      
+    </div>
+  
+    <div class="sourcedoc-section section-element" id="b3f1df0b2703d69a79faa4f4aa92eca48003fb7f">
+      
+      <h3 class="sourcedoc-section element-name">archiveAssignment</h3>
+      
+      <p class="sourcedoc-section section-signature">
+        <code>fun archiveAssignment(assignmentId: String, redirectAttributes: RedirectAttributes, principal: Principal): String</code>
+      </p>
+
+      
+
+      <div class="sourcedoc-section section-comments"><p>Controller that allows the archiving of an Assignment.</p>
+</div>
+
+      
+      
+        
+          
+<div class="sourcedoc-section section-root section-level-3" id="e157b47e002abc9a5d84baf490882b5ec210e034">
+
+
+  <p class="sourcedoc-section section-name"><strong>Parameters</strong></p>
+
+  <div class="table-container">
+    <table class="table is-fullwidth is-bordered">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+      </thead>
+      <tbody>
+      
+      <tr class="sourcedoc-section section-element" id="7da0b17a8cdf90126efde33f948aa0226c0d46bb">
+        <td class="sourcedoc-section section-signature">
+          <code>assignmentId: String</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a String representing the relevant Assignment</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="1f7bbd79109a60d79b96ef8876f1a117aeb4e2d2">
+        <td class="sourcedoc-section section-signature">
+          <code>redirectAttributes: RedirectAttributes</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a RedirectAttributes</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="b84d7de29a9a11f8623caa40f04c53ced179d1af">
+        <td class="sourcedoc-section section-signature">
+          <code>principal: Principal</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a <a href="https://docs.oracle.com/javase/6/docs/api/java/security/Principal.html">Principal</a> representing the user making the request</p>
+
+        </td>
+      </tr>
+      
+      </tbody>
+    </table>
+  </div>
+
+
+</div>
+
+        
+          
+<div class="sourcedoc-section section-root section-level-3" id="05d59b14075cfee70c852a165d814734b7341d00">
+
+
+  <p class="sourcedoc-section section-name"><strong>ReturnValue</strong></p>
+
+  <div class="table-container">
+    <table class="table is-fullwidth is-bordered">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+      </thead>
+      <tbody>
+      
+      <tr class="sourcedoc-section section-element" id="3df63b7acb0522da685dad5fe84b81fdd7b25264">
+        <td class="sourcedoc-section section-signature">
+          <code>String</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>A String with the name of the relevant View</p>
+
+        </td>
+      </tr>
+      
+      </tbody>
+    </table>
+  </div>
+
+
+</div>
+
+        
+      
+    </div>
+  
+    <div class="sourcedoc-section section-element" id="e0c94527db50f25c8715180cb49da33dc8a3b4b0">
+      
+      <h3 class="sourcedoc-section element-name">markAllSubmissionsAsFinal</h3>
+      
+      <p class="sourcedoc-section section-signature">
+        <code>fun markAllSubmissionsAsFinal(assignmentId: String, redirectAttributes: RedirectAttributes, principal: Principal): String</code>
+      </p>
+
+      
+
+      <div class="sourcedoc-section section-comments"><p>Controller that allows marking the latest submission of each group as final.
+Note that the latest submission might not be the best one.</p>
+</div>
+
+      
+      
+        
+          
+<div class="sourcedoc-section section-root section-level-3" id="eb81351ab7484b21c7d300c3e99039268bdf5d8a">
+
+
+  <p class="sourcedoc-section section-name"><strong>Parameters</strong></p>
+
+  <div class="table-container">
+    <table class="table is-fullwidth is-bordered">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+      </thead>
+      <tbody>
+      
+      <tr class="sourcedoc-section section-element" id="7da0b17a8cdf90126efde33f948aa0226c0d46bb">
+        <td class="sourcedoc-section section-signature">
+          <code>assignmentId: String</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a String representing the relevant Assignment</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="1f7bbd79109a60d79b96ef8876f1a117aeb4e2d2">
+        <td class="sourcedoc-section section-signature">
+          <code>redirectAttributes: RedirectAttributes</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a RedirectAttributes</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="b84d7de29a9a11f8623caa40f04c53ced179d1af">
+        <td class="sourcedoc-section section-signature">
+          <code>principal: Principal</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a <a href="https://docs.oracle.com/javase/6/docs/api/java/security/Principal.html">Principal</a> representing the user making the request</p>
+
+        </td>
+      </tr>
+      
+      </tbody>
+    </table>
+  </div>
+
+
+</div>
+
+        
+          
+<div class="sourcedoc-section section-root section-level-3" id="15d624379c5f943002bb39987ace3eeef7b68744">
+
+
+  <p class="sourcedoc-section section-name"><strong>ReturnValue</strong></p>
+
+  <div class="table-container">
+    <table class="table is-fullwidth is-bordered">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+      </thead>
+      <tbody>
+      
+      <tr class="sourcedoc-section section-element" id="3df63b7acb0522da685dad5fe84b81fdd7b25264">
+        <td class="sourcedoc-section section-signature">
+          <code>String</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>A String with the name of the relevant View</p>
+
+        </td>
+      </tr>
+      
+      </tbody>
+    </table>
+  </div>
+
+
+</div>
+
+        
+      
+    </div>
+  
+
+</div>
+
+        
+      
+    </div>
+  
+
+</div>
+
+</div>
+
+
+
+
+
+
+                    
+                
+            
+        
+    
+    <!-- end:inject components -->
+
+
+                    </article>
+                </section>
+            
+        </div>
+        <hr>
+
+        <!-- Page Footer -->
+        <div class="inner">
+    <footer id="footer">
+        <div class="clearfix">
+            
+            
+        </div>
+    </footer>
+</div>
+
+    </div>
+
+    <!-- Sidebar -->
+    <div id="sidebar">
+    <div class="inner">
+
+        <!-- Search -->
+        <section id="search" class="alt">
+            <form data-orchid-search="">
+                <input type="text" name="query" id="query" placeholder="Search"/>
+            </form>
+            <div class="box" id="search-results" data-orchid-search-results style="display: none;">
+                <b>Search Results</b>
+                <ul></ul>
+            </div>
+            <div class="box" id="search-progress" data-orchid-search-progress style="display: none;">
+                <div class="loader">Loading...</div>
+            </div>
+        </section>
+
+        <!-- Menu -->
+        <nav id="siteNav" class="menu">
+            <header class="major">
+                <h2>Drop Project</h2>
+            </header>
+            <ul class="top-level">
+                
+                    
+    
+    <li>
+        <a class="subheader">Wiki</a>
+    </li>
+    
+
+                
+                    
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/wiki/concepts">Concepts</a>
+    </li>
+    
+
+                
+                    
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/wiki/assignment-creation">Assignment Creation Tutorial</a>
+    </li>
+    
+
+                
+                    
+    
+    <li>
+        <a class="subheader">API Docs</a>
+    </li>
+    
+
+                
+                    
+    <li>
+        <span class="opener">Classes</span>
+        <ul>
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/controllers/admincontroller">AdminController</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/forms/admindashboardform">AdminDashboardForm</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/controllers/apperrorcontroller">AppErrorController</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/controllers/applicationcontextlistener">ApplicationContextListener</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/assignee">Assignee</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/repository/assigneerepository">AssigneeRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/assignment">Assignment</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/assignmentacl">AssignmentACL</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/repository/assignmentaclrepository">AssignmentACLRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/controllers/assignmentcontroller">AssignmentController</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/forms/assignmentform">AssignmentForm</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/controllers/uploadcontroller/assignmentnotfoundexception">AssignmentNotFoundException</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/assignmentreport">AssignmentReport</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/repository/assignmentreportrepository">AssignmentReportRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/repository/assignmentrepository">AssignmentRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/assignmentservice">AssignmentService</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/data/assignmentstatistics">AssignmentStatistics</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/assignmenttag">AssignmentTag</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/repository/assignmenttagrepository">AssignmentTagRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/assignmentteacherfiles">AssignmentTeacherFiles</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/assignmenttestmethod">AssignmentTestMethod</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/repository/assignmenttestmethodrepository">AssignmentTestMethodRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/assignmentvalidator">AssignmentValidator</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/asyncconfig">AsyncConfig</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/asynctestconfig">AsyncTestConfig</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/author">Author</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/data/authordetails">AuthorDetails</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/repository/authorrepository">AuthorRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/buildreport">BuildReport</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/data/buildreport">BuildReport</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/buildreportbuilder">BuildReportBuilder</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/repository/buildreportrepository">BuildReportRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/buildworker">BuildWorker</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/cancellabletaskscheduler">CancellableTaskScheduler</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/gitclient/commitdiff">CommitDiff</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/gitclient/commitinfo">CommitInfo</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/constants">Constants</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/filters/controllerrequestsloggingfilter">ControllerRequestsLoggingFilter</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/controllerrequestsloggingfilterconfig">ControllerRequestsLoggingFilterConfig</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dropprojectapplication">DropProjectApplication</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/security/dropprojectsecurityconfig">DropProjectSecurityConfig</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/storage/filesystemstorageservice">FileSystemStorageService</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/gitclient">GitClient</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/gitsubmission">GitSubmission</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/repository/gitsubmissionrepository">GitSubmissionRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/gitsubmissionservice">GitSubmissionService</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/controllers/globalcontrolleradvice">GlobalControllerAdvice</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/controllers/globalexceptionhandler">GlobalExceptionHandler</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/data/groupsubmissionstatistics">GroupSubmissionStatistics</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/data/groupedprojectgroups">GroupedProjectGroups</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/indicator">Indicator</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/assignmentvalidator/info">Info</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/assignmentvalidator/infotype">InfoType</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/controllers/invalidprojectstructureexception">InvalidProjectStructureException</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/junitmethodresult">JUnitMethodResult</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/junitmethodresulttype">JUnitMethodResultType</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/junitreport">JUnitReport</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/repository/junitreportrepository">JUnitReportRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/junitresults">JUnitResults</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/data/junitsummary">JUnitSummary</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/jacocoreport">JacocoReport</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/repository/jacocoreportrepository">JacocoReportRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/jacocoresults">JacocoResults</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/jacocoresultsparser">JacocoResultsParser</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/junitresultsparser">JunitResultsParser</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/language">Language</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/leaderboardtype">LeaderboardType</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/controllers/logincontroller">LoginController</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/maveninvoker">MavenInvoker</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/data/mavenresult">MavenResult</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/myasyncuncaughtexceptionhandler">MyAsyncUncaughtExceptionHandler</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/gitclient/myjschconfigsessionfactory">MyJschConfigSessionFactory</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/gitclient/mytransportconfigcallback">MyTransportConfigCallback</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/oauth2websecurityconfig">OAuth2WebSecurityConfig</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/projectgroup">ProjectGroup</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/repository/projectgrouprepository">ProjectGroupRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/controllers/reportcontroller">ReportController</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/controllers/resourcenotfoundexception">ResourceNotFoundException</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/scheduledtasks">ScheduledTasks</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/simpleloginwebsecurityconfig">SimpleLoginWebSecurityConfig</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/storage/storageexception">StorageException</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/storage/storageservice">StorageService</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/submission">Submission</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/data/submissioninfo">SubmissionInfo</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/forms/submissionmethod">SubmissionMethod</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/controllers/uploadcontroller/submissionnotfoundexception">SubmissionNotFoundException</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/submissionreport">SubmissionReport</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/repository/submissionreportrepository">SubmissionReportRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/repository/submissionrepository">SubmissionRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/submissionservice">SubmissionService</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/submissionstatus">SubmissionStatus</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/data/testtype">TestType</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/testvisibility">TestVisibility</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/thymeleafconfig">ThymeleafConfig</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/controllers/uploadcontroller">UploadController</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/forms/uploadform">UploadForm</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/zipservice">ZipService</a>
+    </li>
+    
+
+        
+        </ul>
+    </li>
+
+                
+                    
+    <li>
+        <span class="opener">Packages</span>
+        <ul>
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject">org.dropProject</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/controllers">org.dropProject.controllers</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao">org.dropProject.dao</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/data">org.dropProject.data</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/extensions">org.dropProject.extensions</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/filters">org.dropProject.filters</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/forms">org.dropProject.forms</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/repository">org.dropProject.repository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/security">org.dropProject.security</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services">org.dropProject.services</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/storage">org.dropProject.storage</a>
+    </li>
+    
+
+        
+        </ul>
+    </li>
+
+                
+            </ul>
+        </nav>
+        
+        <nav class="menu">
+            <header class="major">
+                <h2>AssignmentController</h2>
+            </header>
+            <ul class="top-level">
+                
+            </ul>
+        </nav>
+        
+
+        <!-- Section -->
+        <section>
+            <p class="text-center">
+                Currently 0.9.3. Created with <a href="https://orchid.run">Orchid </a> and <b>Orchid Editorial Theme</b>.
+            </p>
+        </section>
+
+        <!-- Footer -->
+        <footer id="footer">
+            <p class="copyright text-center">&copy; Drop Project. All rights reserved.<br>Design by <a href="https://html5up.net">HTML5 UP</a></p>
+        </footer>
+
+    </div>
+</div>
+
+</div>
+
+
+
+
+
+
+    <!-- start:inject meta-components [bodyEnd] -->
+    
+    <!-- end:inject meta-components [bodyEnd] -->
+
+
+
+    <!-- start:inject meta-components [bodyEnd] -->
+    
+    <!-- end:inject meta-components [bodyEnd] -->
+
+
+
+
+<!-- start:inject scripts -->
+<script  src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script  src="https://cdnjs.cloudflare.com/ajax/libs/skel/3.0.1/skel.min.js"></script>
+<script  src="https://brunompc.github.io/drop-project-bruno.github.io/Editorial/bc4137f1/assets/js/editorial_util.js"></script>
+<script  src="https://brunompc.github.io/drop-project-bruno.github.io/Editorial/bc4137f1/assets/js/editorial_main.js"></script>
+<script  src="https://brunompc.github.io/drop-project-bruno.github.io/Editorial/bc4137f1/assets/js/editorial_orchidCustomizations.js"></script>
+<!-- end:inject scripts -->
+
+
+</body>
+</html>

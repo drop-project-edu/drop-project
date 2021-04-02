@@ -1,0 +1,800 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="fb54910c-e141-4076-ad26-a85b84905673" name="Default Changelist" comment="minor fix still related to the detekt plugin">
+      <change beforePath="$PROJECT_DIR$/src/main/resources/drop-project.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/drop-project.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/resources/drop-project-test.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/resources/drop-project-test.properties" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Kotlin Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="PREVIOUS_COMMIT_AUTHORS">
+      <list>
+        <option value="Pedro Alves &lt;pedro.alves@ulusofona.pt&gt;" />
+      </list>
+    </option>
+    <option name="PUSH_TAGS">
+      <GitPushTagMode>
+        <option name="argument" value="--follow-tags" />
+        <option name="title" value="Current Branch" />
+      </GitPushTagMode>
+    </option>
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="gh-pages" />
+      </map>
+    </option>
+    <option name="RECENT_COMMON_BRANCH" value="master" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="ROOT_SYNC" value="SYNC" />
+  </component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="mavenHome" value="$APPLICATION_HOME_DIR$/plugins/maven/lib/maven3" />
+      </MavenGeneralSettings>
+    </option>
+  </component>
+  <component name="ProjectId" id="1kEsL7yTXlrvoopelcD0PV8mdBt" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="flattenPackages" value="true" />
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="ExpandSpringBootJavaOptionsPanel" value="true" />
+    <property name="RequestMappingsPanelOrder0" value="0" />
+    <property name="RequestMappingsPanelOrder1" value="1" />
+    <property name="RequestMappingsPanelWidth0" value="75" />
+    <property name="RequestMappingsPanelWidth1" value="75" />
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/src/test/sampleProjects" />
+    <property name="node.js.detected.package.eslint" value="true" />
+    <property name="node.js.detected.package.tslint" value="true" />
+    <property name="node.js.path.for.package.eslint" value="project" />
+    <property name="node.js.path.for.package.tslint" value="project" />
+    <property name="node.js.selected.package.eslint" value="(autodetect)" />
+    <property name="node.js.selected.package.tslint" value="(autodetect)" />
+    <property name="nodejs_interpreter_path.stuck_in_default_project" value="/usr/local/bin/node" />
+    <property name="nodejs_npm_path_reset_for_default_project" value="true" />
+    <property name="nodejs_package_manager_path" value="npm" />
+    <property name="project.structure.last.edited" value="SDKs" />
+    <property name="project.structure.proportion" value="0.15" />
+    <property name="project.structure.side.proportion" value="0.09541985" />
+    <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyKotlinDeclarationDialog.RECENTS_KEY">
+      <recent name="org.dropProject.services" />
+    </key>
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/test/sampleProjects" />
+      <recent name="$PROJECT_DIR$/src/main/resources/templates" />
+      <recent name="$PROJECT_DIR$/src/test/sampleMavenOutputs" />
+      <recent name="$PROJECT_DIR$/src/test/sampleAssignments/testKotlinProj" />
+    </key>
+  </component>
+  <component name="RunManager" selected="JUnit.UploadControllerTests.uploadProjectJunitErrorsWithTwoTestFiles">
+    <configuration default="true" type="Applet" factoryName="Applet">
+      <option name="WIDTH" value="400" />
+      <option name="HEIGHT" value="300" />
+      <option name="POLICY_FILE" value="$APPLICATION_HOME_DIR$/bin/appletviewer.policy" />
+      <module />
+    </configuration>
+    <configuration default="true" type="Application" factoryName="Application">
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="ArquillianJUnit" factoryName="" nameIsGenerated="true">
+      <option name="arquillianRunConfiguration">
+        <value>
+          <option name="containerStateName" value="" />
+        </value>
+      </option>
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="All in drop-project" type="JUnit" factoryName="JUnit" nameIsGenerated="true">
+      <module name="drop-project" />
+      <useClassPathOnly />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="MAIN_CLASS_NAME" value="" />
+      <option name="METHOD_NAME" value="" />
+      <option name="TEST_OBJECT" value="package" />
+      <option name="PARAMETERS" value="" />
+      <option name="WORKING_DIRECTORY" value="$MODULE_DIR$" />
+      <envs>
+        <env name="DP_M2_HOME" value="/usr/local/Cellar/maven/3.6.3_1/libexec" />
+        <env name="DP_MVN_REPO" value="$MAVEN_REPOSITORY$" />
+      </envs>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="ReportControllerTests.exportCSV" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="drop-project" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="org.dropProject.controllers.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="org.dropProject.controllers" />
+      <option name="MAIN_CLASS_NAME" value="org.dropProject.controllers.ReportControllerTests" />
+      <option name="METHOD_NAME" value="exportCSV" />
+      <option name="TEST_OBJECT" value="method" />
+      <option name="WORKING_DIRECTORY" value="$MODULE_DIR$" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="ReportControllerTests.exportCSVWithStudentTests" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="drop-project" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="org.dropProject.controllers.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="org.dropProject.controllers" />
+      <option name="MAIN_CLASS_NAME" value="org.dropProject.controllers.ReportControllerTests" />
+      <option name="METHOD_NAME" value="exportCSVWithStudentTests" />
+      <option name="TEST_OBJECT" value="method" />
+      <option name="WORKING_DIRECTORY" value="$MODULE_DIR$" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="ReportControllerTests.testTestMatrix" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="drop-project" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="org.dropProject.controllers.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="org.dropProject.controllers" />
+      <option name="MAIN_CLASS_NAME" value="org.dropProject.controllers.ReportControllerTests" />
+      <option name="METHOD_NAME" value="testTestMatrix" />
+      <option name="TEST_OBJECT" value="method" />
+      <option name="WORKING_DIRECTORY" value="$MODULE_DIR$" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="UploadControllerTests.uploadProjectJunitErrorsWithTwoTestFiles" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="drop-project" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="org.dropProject.controllers.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="org.dropProject.controllers" />
+      <option name="MAIN_CLASS_NAME" value="org.dropProject.controllers.UploadControllerTests" />
+      <option name="METHOD_NAME" value="uploadProjectJunitErrorsWithTwoTestFiles" />
+      <option name="TEST_OBJECT" value="method" />
+      <option name="WORKING_DIRECTORY" value="$MODULE_DIR$" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="UploadControllerTests.uploadProjectJunitWithSkippedTests" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="drop-project" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="org.dropProject.controllers.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="org.dropProject.controllers" />
+      <option name="MAIN_CLASS_NAME" value="org.dropProject.controllers.UploadControllerTests" />
+      <option name="METHOD_NAME" value="uploadProjectJunitWithSkippedTests" />
+      <option name="TEST_OBJECT" value="method" />
+      <option name="WORKING_DIRECTORY" value="$MODULE_DIR$" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="JUnit" factoryName="JUnit">
+      <option name="TEST_OBJECT" value="class" />
+      <option name="WORKING_DIRECTORY" value="$MODULE_DIR$" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="DropProjectApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+      <module name="drop-project" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="org.dropProject.DropProjectApplication" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
+      <option name="ALTERNATIVE_JRE_PATH" value="14" />
+      <envs>
+        <env name="DP_M2_HOME" value="/usr/local/Cellar/maven/3.6.3_1/libexec" />
+        <env name="DP_MVN_REPO" value="$MAVEN_REPOSITORY$" />
+      </envs>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="TestNG">
+      <option name="TEST_OBJECT" value="CLASS" />
+      <option name="WORKING_DIRECTORY" value="$MODULE_DIR$" />
+      <properties />
+      <listeners />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="#org.jetbrains.idea.devkit.run.PluginConfigurationType">
+      <module name="" />
+      <option name="VM_PARAMETERS" value="-Xmx512m -Xms256m -XX:MaxPermSize=250m -ea" />
+      <option name="PROGRAM_PARAMETERS" />
+      <predefined_log_file enabled="true" id="idea.log" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <list>
+      <item itemvalue="JUnit.All in drop-project" />
+      <item itemvalue="Spring Boot.DropProjectApplication" />
+      <item itemvalue="JUnit.ReportControllerTests.exportCSV" />
+      <item itemvalue="JUnit.ReportControllerTests.exportCSVWithStudentTests" />
+      <item itemvalue="JUnit.UploadControllerTests.uploadProjectJunitErrorsWithTwoTestFiles" />
+      <item itemvalue="JUnit.UploadControllerTests.uploadProjectJunitWithSkippedTests" />
+      <item itemvalue="JUnit.ReportControllerTests.testTestMatrix" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="JUnit.ReportControllerTests.testTestMatrix" />
+        <item itemvalue="JUnit.UploadControllerTests.uploadProjectJunitWithSkippedTests" />
+        <item itemvalue="JUnit.UploadControllerTests.uploadProjectJunitErrorsWithTwoTestFiles" />
+        <item itemvalue="JUnit.ReportControllerTests.exportCSVWithStudentTests" />
+        <item itemvalue="JUnit.ReportControllerTests.exportCSV" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="fb54910c-e141-4076-ad26-a85b84905673" name="Default Changelist" comment="" />
+      <created>1605277028754</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1605277028754</updated>
+      <workItem from="1605277032355" duration="365000" />
+      <workItem from="1605288851794" duration="10000" />
+      <workItem from="1606666812621" duration="120000" />
+      <workItem from="1606673876443" duration="4356000" />
+      <workItem from="1606679921058" duration="1359000" />
+      <workItem from="1606682954713" duration="855000" />
+      <workItem from="1607460300575" duration="1326000" />
+      <workItem from="1607856306362" duration="410000" />
+      <workItem from="1607875409965" duration="742000" />
+      <workItem from="1607945381402" duration="997000" />
+      <workItem from="1608031669562" duration="165000" />
+      <workItem from="1608281096422" duration="1161000" />
+      <workItem from="1608303085485" duration="316000" />
+      <workItem from="1608559587129" duration="670000" />
+      <workItem from="1608647687292" duration="3558000" />
+      <workItem from="1608651555903" duration="4080000" />
+      <workItem from="1608804521646" duration="5118000" />
+      <workItem from="1608810411211" duration="2123000" />
+      <workItem from="1608887875916" duration="1256000" />
+      <workItem from="1608889337439" duration="1515000" />
+      <workItem from="1609193522428" duration="1062000" />
+      <workItem from="1609194760998" duration="2390000" />
+      <workItem from="1609197371431" duration="892000" />
+      <workItem from="1609241645931" duration="760000" />
+      <workItem from="1609242935361" duration="4883000" />
+      <workItem from="1609519271097" duration="1516000" />
+      <workItem from="1609616527557" duration="793000" />
+      <workItem from="1609748858815" duration="528000" />
+      <workItem from="1609751204479" duration="4206000" />
+      <workItem from="1609784165442" duration="5447000" />
+      <workItem from="1609836665062" duration="2000000" />
+      <workItem from="1609839132680" duration="2280000" />
+      <workItem from="1609845258388" duration="61000" />
+      <workItem from="1609862508711" duration="987000" />
+      <workItem from="1610230097165" duration="896000" />
+      <workItem from="1610232850640" duration="1113000" />
+      <workItem from="1610629298717" duration="642000" />
+      <workItem from="1610631147782" duration="299000" />
+      <workItem from="1610961312821" duration="473000" />
+      <workItem from="1611069944534" duration="1564000" />
+      <workItem from="1611857532887" duration="1274000" />
+      <workItem from="1611860406833" duration="1852000" />
+      <workItem from="1611868231599" duration="482000" />
+      <workItem from="1611873504528" duration="805000" />
+      <workItem from="1611911763845" duration="3882000" />
+      <workItem from="1611926787831" duration="573000" />
+      <workItem from="1612380062858" duration="215000" />
+      <workItem from="1612697111682" duration="3372000" />
+      <workItem from="1612701828090" duration="315000" />
+      <workItem from="1612703486119" duration="2377000" />
+      <workItem from="1617381171793" duration="2359000" />
+      <workItem from="1617386099317" duration="2476000" />
+      <workItem from="1617388934246" duration="510000" />
+      <workItem from="1617390100210" duration="6301000" />
+    </task>
+    <task id="LOCAL-00001" summary="fix issue #18 - Deleting an assignment doesn't remove its git local repository">
+      <created>1605277549518</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1605277549518</updated>
+    </task>
+    <task id="LOCAL-00002" summary="fix data gathering from detekt-maven-plugin output and make it compatible with multiple versions of the plugin">
+      <created>1606678540706</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1606678540706</updated>
+    </task>
+    <task id="LOCAL-00003" summary="fixes a test that started failing after the changes introduced in the previous commit">
+      <created>1606681302051</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1606681302051</updated>
+    </task>
+    <task id="LOCAL-00004" summary="minor fix">
+      <created>1606683378899</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1606683378899</updated>
+    </task>
+    <task id="LOCAL-00005" summary="minor fix">
+      <created>1606685621196</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1606685621196</updated>
+    </task>
+    <task id="LOCAL-00006" summary="minor fix still related to the detekt plugin">
+      <created>1607461057296</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1607461057296</updated>
+    </task>
+    <task id="LOCAL-00007" summary="update documentation to include a more appropriate way of launching the application (spring-boot:run). also, fixed configuration and the main class to support this. finally, upgraded jacoco version (it was throwing errors when running with java 14)">
+      <created>1608654761013</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1608654761013</updated>
+    </task>
+    <task id="LOCAL-00008" summary="fix exportCSV - sometimes columns were misaligned">
+      <created>1608810798385</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1608810798385</updated>
+    </task>
+    <task id="LOCAL-00009" summary="fix exportCSV - no longer exports deleted submissions">
+      <created>1608887971047</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1608887971047</updated>
+    </task>
+    <task id="LOCAL-00010" summary="add initial implementation for admin dashboard. for now, it only allows changing the maven output flag">
+      <created>1608890828856</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1608890828856</updated>
+    </task>
+    <task id="LOCAL-00011" summary="add a new admin feature that shows pending submissions and the possibility of manually aborting them">
+      <created>1609198255609</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1609198255609</updated>
+    </task>
+    <task id="LOCAL-00012" summary="handle better two types of errors: (1) System.exit called during the tests and (2) README.md is a folder instead of a file">
+      <created>1609253171848</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1609253171848</updated>
+    </task>
+    <task id="LOCAL-00013" summary="bump version to 0.9.3">
+      <created>1609254710798</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1609254710798</updated>
+    </task>
+    <task id="LOCAL-00014" summary="fix submission reports to conform with the updated sampleJavaAssignment">
+      <created>1609800001546</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1609800001546</updated>
+    </task>
+    <task id="LOCAL-00015" summary="revert change in drop-project.properties">
+      <created>1609837166688</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1609837166688</updated>
+    </task>
+    <task id="LOCAL-00016" summary="cosmetic improvements on the signalled submissions page">
+      <created>1609862834764</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1609862834764</updated>
+    </task>
+    <task id="LOCAL-00017" summary="fix invalid link in the signalled submissions page">
+      <created>1610233125730</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1610233125730</updated>
+    </task>
+    <task id="LOCAL-00018" summary="fix &quot;download mavenized submission&quot; for old submissions&#10;&#10;It was not taking into account the submission date to infer the folder name">
+      <created>1611071928673</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1611071928673</updated>
+    </task>
+    <task id="LOCAL-00019" summary="initial demo now includes a Kotlin assignment to play">
+      <created>1611865450997</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1611865450997</updated>
+    </task>
+    <task id="LOCAL-00020" summary="improve error message when the submission uses the exitProcess() function">
+      <created>1611865840649</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1611865840649</updated>
+    </task>
+    <task id="LOCAL-00021" summary="add configuration file for github actions">
+      <created>1611873656298</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1611873656299</updated>
+    </task>
+    <task id="LOCAL-00022" summary="experiment with github actions">
+      <created>1611912909497</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1611912909497</updated>
+    </task>
+    <task id="LOCAL-00023" summary="experiment with github actions">
+      <created>1611913141330</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1611913141330</updated>
+    </task>
+    <task id="LOCAL-00024" summary="experiment with github actions">
+      <created>1611913191083</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1611913191083</updated>
+    </task>
+    <task id="LOCAL-00025" summary="experiment with github actions">
+      <created>1611913928141</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1611913928141</updated>
+    </task>
+    <task id="LOCAL-00026" summary="experiment with github actions">
+      <created>1611914339457</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1611914339457</updated>
+    </task>
+    <task id="LOCAL-00027" summary="experiment with github actions">
+      <created>1611915180413</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1611915180413</updated>
+    </task>
+    <task id="LOCAL-00028" summary="fix configuration problems with github actions">
+      <created>1611916644014</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1611916644014</updated>
+    </task>
+    <task id="LOCAL-00029" summary="migrate CI from travis to github actions">
+      <created>1611927096276</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1611927096276</updated>
+    </task>
+    <task id="LOCAL-00030" summary="add the number of submissions to the exported CSV">
+      <created>1617383497046</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1617383497046</updated>
+    </task>
+    <task id="LOCAL-00031" summary="fix handling of skipped JUnit tests">
+      <created>1617383553102</created>
+      <option name="number" value="00031" />
+      <option name="presentableId" value="LOCAL-00031" />
+      <option name="project" value="LOCAL" />
+      <updated>1617383553102</updated>
+    </task>
+    <task id="LOCAL-00032" summary="add copyright headers">
+      <created>1617388909519</created>
+      <option name="number" value="00032" />
+      <option name="presentableId" value="LOCAL-00032" />
+      <option name="project" value="LOCAL" />
+      <updated>1617388909519</updated>
+    </task>
+    <task id="LOCAL-00033" summary="use enums instead of String for junit result tests">
+      <created>1617389189941</created>
+      <option name="number" value="00033" />
+      <option name="presentableId" value="LOCAL-00033" />
+      <option name="project" value="LOCAL" />
+      <updated>1617389189941</updated>
+    </task>
+    <task id="LOCAL-00034" summary="make the test uploadProjectJUnitErrorsWithTwoTestFiles independent of the order of the files">
+      <created>1617392333764</created>
+      <option name="number" value="00034" />
+      <option name="presentableId" value="LOCAL-00034" />
+      <option name="project" value="LOCAL" />
+      <updated>1617392333764</updated>
+    </task>
+    <task id="LOCAL-00035" summary="started implementing assignment export">
+      <created>1617398943407</created>
+      <option name="number" value="00035" />
+      <option name="presentableId" value="LOCAL-00035" />
+      <option name="project" value="LOCAL" />
+      <updated>1617398943407</updated>
+    </task>
+    <option name="localTasksCounter" value="36" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
+    <option name="CHECK_NEW_TODO" value="false" />
+    <ignored-roots>
+      <path value="$PROJECT_DIR$/assignments/sampleJavaProject" />
+      <path value="$PROJECT_DIR$/src/test/sampleAssignments/dummyAssignment6" />
+      <path value="$PROJECT_DIR$/assignments/sampleKotlinProject" />
+    </ignored-roots>
+    <MESSAGE value="minor fix still related to the detekt plugin" />
+    <MESSAGE value="update documentation to include a more appropriate way of launching the application (spring-boot:run). also, fixed configuration and the main class to support this. finally, upgraded jacoco version (it was throwing errors when running with java 14)" />
+    <MESSAGE value="fix exportCSV - sometimes columns were misaligned" />
+    <MESSAGE value="fix exportCSV - no longer exports deleted submissions" />
+    <MESSAGE value="add initial implementation for admin dashboard. for now, it only allows changing the maven output flag" />
+    <MESSAGE value="add a new admin feature that shows pending submissions and the possibility of manually aborting them" />
+    <MESSAGE value="handle better two types of errors: (1) System.exit called during the tests and (2) README.md is a folder instead of a file" />
+    <MESSAGE value="bump version to 0.9.3" />
+    <MESSAGE value="fix submission reports to conform with the updated sampleJavaAssignment" />
+    <MESSAGE value="revert change in drop-project.properties" />
+    <MESSAGE value="cosmetic improvements on the signalled submissions page" />
+    <MESSAGE value="fix invalid link in the signalled submissions page" />
+    <MESSAGE value="fix &quot;download mavenized submission&quot; for old submissions&#10;&#10;It was not taking into account the submission date to infer the folder name" />
+    <MESSAGE value="initial demo now includes a Kotlin assignment to play" />
+    <MESSAGE value="improve error message when the submission uses the exitProcess() function" />
+    <MESSAGE value="add configuration file for github actions" />
+    <MESSAGE value="experiment with github actions" />
+    <MESSAGE value="fix configuration problems with github actions" />
+    <MESSAGE value="migrate CI from travis to github actions" />
+    <MESSAGE value="add the number of submissions to the exported CSV" />
+    <MESSAGE value="fix handling of skipped JUnit tests" />
+    <MESSAGE value="add copyright headers" />
+    <MESSAGE value="use enums instead of String for junit result tests" />
+    <MESSAGE value="make the test uploadProjectJUnitErrorsWithTwoTestFiles independent of the order of the files" />
+    <MESSAGE value="started implementing assignment export" />
+    <option name="LAST_COMMIT_MESSAGE" value="started implementing assignment export" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="-22" y="-976" width="1207" height="772" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1609798332955">
+      <screen x="-227" y="-1057" width="1920" height="1057" />
+    </state>
+    <state x="-22" y="-976" width="1207" height="772" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.23.1440.823/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1609798332955" />
+    <state x="-125" y="-957" width="1524" height="818" key="#com.intellij.execution.junit2.states.ComparisonFailureState$DiffDialog" timestamp="1617387473966">
+      <screen x="-227" y="-1057" width="1920" height="1057" />
+    </state>
+    <state x="-125" y="-957" width="1524" height="818" key="#com.intellij.execution.junit2.states.ComparisonFailureState$DiffDialog/0.23.1440.821/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1617387473966" />
+    <state x="305" y="-863" key="#com.intellij.ide.util.frameworkSupport.AddFrameworkSupportDialog" timestamp="1609838760598">
+      <screen x="-227" y="-1057" width="1920" height="1057" />
+    </state>
+    <state x="305" y="-863" key="#com.intellij.ide.util.frameworkSupport.AddFrameworkSupportDialog/0.23.1440.821/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1609838760598" />
+    <state x="229" y="-1015" width="1156" height="754" key="#xdebugger.evaluate" timestamp="1617383071161">
+      <screen x="-227" y="-1057" width="1920" height="1057" />
+    </state>
+    <state x="229" y="-1015" width="1156" height="754" key="#xdebugger.evaluate/0.23.1440.821/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1617383071161" />
+    <state x="-128" y="-1057" width="1644" height="1009" key="CommitChangelistDialog2" timestamp="1617398943136">
+      <screen x="-227" y="-1057" width="1920" height="1057" />
+    </state>
+    <state x="-128" y="-1057" width="1644" height="1009" key="CommitChangelistDialog2/0.23.1440.821/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1617398943136" />
+    <state x="95" y="27" width="1059" height="717" key="CommitChangelistDialog2/0.23.1440.821/-227.-1057.1920.1057@0.23.1440.821" timestamp="1611927095738" />
+    <state x="220" y="-960" key="CommitChangelistDialog2/0.23.1440.822/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1610233125418" />
+    <state x="220" y="-960" key="CommitChangelistDialog2/0.23.1440.823/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1609796080692" />
+    <state width="1746" height="371" key="GridCell.Tab.0.bottom" timestamp="1617398861260">
+      <screen x="-227" y="-1057" width="1920" height="1057" />
+    </state>
+    <state width="1746" height="371" key="GridCell.Tab.0.bottom/0.23.1440.821/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1617398861260" />
+    <state width="1398" height="336" key="GridCell.Tab.0.bottom/0.23.1440.821@0.23.1440.821" timestamp="1609687942948" />
+    <state width="1685" height="353" key="GridCell.Tab.0.bottom/0.23.1440.822/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1610232072509" />
+    <state width="1398" height="336" key="GridCell.Tab.0.bottom/0.23.1440.822@0.23.1440.822" timestamp="1609696888832" />
+    <state width="1774" height="371" key="GridCell.Tab.0.bottom/0.23.1440.823/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1609798767414" />
+    <state width="1629" height="338" key="GridCell.Tab.0.bottom/0.23.1680.971@0.23.1680.971" timestamp="1610234680569" />
+    <state width="1746" height="371" key="GridCell.Tab.0.center" timestamp="1617398861259">
+      <screen x="-227" y="-1057" width="1920" height="1057" />
+    </state>
+    <state width="1746" height="371" key="GridCell.Tab.0.center/0.23.1440.821/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1617398861259" />
+    <state width="1398" height="336" key="GridCell.Tab.0.center/0.23.1440.821@0.23.1440.821" timestamp="1609687942946" />
+    <state width="1685" height="353" key="GridCell.Tab.0.center/0.23.1440.822/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1610232072508" />
+    <state width="1398" height="336" key="GridCell.Tab.0.center/0.23.1440.822@0.23.1440.822" timestamp="1609696888831" />
+    <state width="1774" height="371" key="GridCell.Tab.0.center/0.23.1440.823/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1609798767413" />
+    <state width="1629" height="338" key="GridCell.Tab.0.center/0.23.1680.971@0.23.1680.971" timestamp="1610234680569" />
+    <state width="1746" height="371" key="GridCell.Tab.0.left" timestamp="1617398861258">
+      <screen x="-227" y="-1057" width="1920" height="1057" />
+    </state>
+    <state width="1746" height="371" key="GridCell.Tab.0.left/0.23.1440.821/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1617398861258" />
+    <state width="1398" height="336" key="GridCell.Tab.0.left/0.23.1440.821@0.23.1440.821" timestamp="1609687942945" />
+    <state width="1685" height="353" key="GridCell.Tab.0.left/0.23.1440.822/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1610232072507" />
+    <state width="1398" height="336" key="GridCell.Tab.0.left/0.23.1440.822@0.23.1440.822" timestamp="1609696888830" />
+    <state width="1774" height="371" key="GridCell.Tab.0.left/0.23.1440.823/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1609798767412" />
+    <state width="1629" height="338" key="GridCell.Tab.0.left/0.23.1680.971@0.23.1680.971" timestamp="1610234680568" />
+    <state width="1746" height="371" key="GridCell.Tab.0.right" timestamp="1617398861259">
+      <screen x="-227" y="-1057" width="1920" height="1057" />
+    </state>
+    <state width="1746" height="371" key="GridCell.Tab.0.right/0.23.1440.821/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1617398861259" />
+    <state width="1398" height="336" key="GridCell.Tab.0.right/0.23.1440.821@0.23.1440.821" timestamp="1609687942947" />
+    <state width="1685" height="353" key="GridCell.Tab.0.right/0.23.1440.822/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1610232072508" />
+    <state width="1398" height="336" key="GridCell.Tab.0.right/0.23.1440.822@0.23.1440.822" timestamp="1609696888831" />
+    <state width="1774" height="371" key="GridCell.Tab.0.right/0.23.1440.823/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1609798767414" />
+    <state width="1629" height="338" key="GridCell.Tab.0.right/0.23.1680.971@0.23.1680.971" timestamp="1610234680569" />
+    <state width="1746" height="441" key="GridCell.Tab.1.bottom" timestamp="1617397764455">
+      <screen x="-227" y="-1057" width="1920" height="1057" />
+    </state>
+    <state width="1746" height="441" key="GridCell.Tab.1.bottom/0.23.1440.821/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1617397764455" />
+    <state width="1398" height="336" key="GridCell.Tab.1.bottom/0.23.1440.821@0.23.1440.821" timestamp="1609687942952" />
+    <state width="1685" height="353" key="GridCell.Tab.1.bottom/0.23.1440.822/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1610232072511" />
+    <state width="1398" height="336" key="GridCell.Tab.1.bottom/0.23.1440.822@0.23.1440.822" timestamp="1609696888833" />
+    <state width="1774" height="371" key="GridCell.Tab.1.bottom/0.23.1440.823/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1609798767418" />
+    <state width="1629" height="338" key="GridCell.Tab.1.bottom/0.23.1680.971@0.23.1680.971" timestamp="1610234680571" />
+    <state width="1746" height="441" key="GridCell.Tab.1.center" timestamp="1617397764453">
+      <screen x="-227" y="-1057" width="1920" height="1057" />
+    </state>
+    <state width="1746" height="441" key="GridCell.Tab.1.center/0.23.1440.821/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1617397764453" />
+    <state width="1398" height="336" key="GridCell.Tab.1.center/0.23.1440.821@0.23.1440.821" timestamp="1609687942950" />
+    <state width="1685" height="353" key="GridCell.Tab.1.center/0.23.1440.822/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1610232072510" />
+    <state width="1398" height="336" key="GridCell.Tab.1.center/0.23.1440.822@0.23.1440.822" timestamp="1609696888833" />
+    <state width="1774" height="371" key="GridCell.Tab.1.center/0.23.1440.823/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1609798767416" />
+    <state width="1629" height="338" key="GridCell.Tab.1.center/0.23.1680.971@0.23.1680.971" timestamp="1610234680570" />
+    <state width="1746" height="441" key="GridCell.Tab.1.left" timestamp="1617397764453">
+      <screen x="-227" y="-1057" width="1920" height="1057" />
+    </state>
+    <state width="1746" height="441" key="GridCell.Tab.1.left/0.23.1440.821/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1617397764453" />
+    <state width="1398" height="336" key="GridCell.Tab.1.left/0.23.1440.821@0.23.1440.821" timestamp="1609687942949" />
+    <state width="1685" height="353" key="GridCell.Tab.1.left/0.23.1440.822/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1610232072509" />
+    <state width="1398" height="336" key="GridCell.Tab.1.left/0.23.1440.822@0.23.1440.822" timestamp="1609696888832" />
+    <state width="1774" height="371" key="GridCell.Tab.1.left/0.23.1440.823/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1609798767415" />
+    <state width="1629" height="338" key="GridCell.Tab.1.left/0.23.1680.971@0.23.1680.971" timestamp="1610234680570" />
+    <state width="1746" height="441" key="GridCell.Tab.1.right" timestamp="1617397764454">
+      <screen x="-227" y="-1057" width="1920" height="1057" />
+    </state>
+    <state width="1746" height="441" key="GridCell.Tab.1.right/0.23.1440.821/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1617397764454" />
+    <state width="1398" height="336" key="GridCell.Tab.1.right/0.23.1440.821@0.23.1440.821" timestamp="1609687942951" />
+    <state width="1685" height="353" key="GridCell.Tab.1.right/0.23.1440.822/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1610232072510" />
+    <state width="1398" height="336" key="GridCell.Tab.1.right/0.23.1440.822@0.23.1440.822" timestamp="1609696888833" />
+    <state width="1774" height="371" key="GridCell.Tab.1.right/0.23.1440.823/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1609798767417" />
+    <state width="1629" height="338" key="GridCell.Tab.1.right/0.23.1680.971@0.23.1680.971" timestamp="1610234680571" />
+    <state width="1677" height="441" key="GridCell.Tab.2.bottom" timestamp="1617383653654">
+      <screen x="-227" y="-1057" width="1920" height="1057" />
+    </state>
+    <state width="1677" height="441" key="GridCell.Tab.2.bottom/0.23.1440.821/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1617383653654" />
+    <state width="1677" height="441" key="GridCell.Tab.2.center" timestamp="1617383653652">
+      <screen x="-227" y="-1057" width="1920" height="1057" />
+    </state>
+    <state width="1677" height="441" key="GridCell.Tab.2.center/0.23.1440.821/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1617383653652" />
+    <state width="1677" height="441" key="GridCell.Tab.2.left" timestamp="1617383653651">
+      <screen x="-227" y="-1057" width="1920" height="1057" />
+    </state>
+    <state width="1677" height="441" key="GridCell.Tab.2.left/0.23.1440.821/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1617383653651" />
+    <state width="1677" height="441" key="GridCell.Tab.2.right" timestamp="1617383653653">
+      <screen x="-227" y="-1057" width="1920" height="1057" />
+    </state>
+    <state width="1677" height="441" key="GridCell.Tab.2.right/0.23.1440.821/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1617383653653" />
+    <state x="321" y="-860" key="NewModule_or_Project.wizard" timestamp="1611858982813">
+      <screen x="-227" y="-1057" width="1920" height="1057" />
+    </state>
+    <state x="321" y="-860" key="NewModule_or_Project.wizard/0.23.1440.821/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1611858982813" />
+    <state x="602" y="-845" key="RollbackChangesDialog" timestamp="1609754716917">
+      <screen x="-227" y="-1057" width="1920" height="1057" />
+    </state>
+    <state x="602" y="-845" key="RollbackChangesDialog/0.23.1440.821/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1609754716917" />
+    <state x="173" y="-938" key="SettingsEditor" timestamp="1609838610976">
+      <screen x="-227" y="-1057" width="1920" height="1057" />
+    </state>
+    <state x="173" y="-938" key="SettingsEditor/0.23.1440.821/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1609838610976" />
+    <state x="213" y="-814" width="1178" height="546" key="Vcs.Push.Dialog.v2" timestamp="1617392336304">
+      <screen x="-227" y="-1057" width="1920" height="1057" />
+    </state>
+    <state x="213" y="-814" key="Vcs.Push.Dialog.v2/0.23.1440.821/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1617392336304" />
+    <state x="330" y="212" key="Vcs.Push.Dialog.v2/0.23.1440.821/-227.-1057.1920.1057@0.23.1440.821" timestamp="1611927099387" />
+    <state x="213" y="-814" width="1178" height="546" key="Vcs.Push.Dialog.v2/0.23.1440.822/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1610233129196" />
+    <state width="808" height="492" key="XDebugger.FullValuePopup" timestamp="1610629991952">
+      <screen x="-227" y="-1057" width="1920" height="1057" />
+    </state>
+    <state width="808" height="492" key="XDebugger.FullValuePopup/0.23.1440.821/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1610629991952" />
+    <state x="262" y="-962" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser" timestamp="1609840172233">
+      <screen x="-227" y="-1057" width="1920" height="1057" />
+    </state>
+    <state x="262" y="-962" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser/0.23.1440.821/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1609195679457" />
+    <state x="262" y="-962" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser/0.23.1440.822/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1609840172233" />
+    <state x="486" y="-638" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1617398960647">
+      <screen x="-227" y="-1057" width="1920" height="1057" />
+    </state>
+    <state x="486" y="-638" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.23.1440.821/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1617398960647" />
+    <state x="486" y="-638" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.23.1440.823/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1609796083796" />
+    <state x="294" y="-856" width="798" height="631" key="find.popup" timestamp="1617388186920">
+      <screen x="-227" y="-1057" width="1920" height="1057" />
+    </state>
+    <state x="294" y="-856" width="798" height="631" key="find.popup/0.23.1440.821/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1617388186920" />
+    <state x="391" y="179" width="598" height="490" key="find.popup/0.23.1440.821/-227.-1057.1920.1057@0.23.1440.821" timestamp="1612710973465" />
+    <state x="391" y="179" width="598" height="490" key="find.popup/0.23.1440.822/-227.-1057.1920.1057@0.23.1440.822" timestamp="1612380072583" />
+    <state x="336" y="-728" key="git4idea.ui.GitTagDialog" timestamp="1609254574035">
+      <screen x="-227" y="-1057" width="1920" height="1057" />
+    </state>
+    <state x="336" y="-728" key="git4idea.ui.GitTagDialog/0.23.1440.821/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1609254574035" />
+    <state x="104" y="-937" key="new project wizard" timestamp="1609797431764">
+      <screen x="-227" y="-1057" width="1920" height="1057" />
+    </state>
+    <state x="104" y="-937" key="new project wizard/0.23.1440.823/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1609797431764" />
+    <state x="425" y="191" width="670" height="526" key="search.everywhere.popup" timestamp="1612699464467">
+      <screen x="0" y="23" width="1440" height="821" />
+    </state>
+    <state x="339" y="-841" width="670" height="676" key="search.everywhere.popup/0.23.1440.821/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1611858510581" />
+    <state x="425" y="191" width="670" height="526" key="search.everywhere.popup/0.23.1440.821/-227.-1057.1920.1057@0.23.1440.821" timestamp="1612699464467" />
+    <state x="339" y="-841" width="670" height="676" key="search.everywhere.popup/0.23.1440.822/-227.-1057.1920.1057@-227.-1057.1920.1057" timestamp="1610234355727" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="kotlin-line">
+          <url>file://$PROJECT_DIR$/src/main/kotlin/org/dropProject/controllers/ReportController.kt</url>
+          <line>657</line>
+          <option name="timeStamp" value="3" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>

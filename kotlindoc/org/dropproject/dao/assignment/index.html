@@ -1,0 +1,1867 @@
+<!DOCTYPE HTML>
+<!--
+    Editorial by HTML5 UP
+    html5up.net | @ajlkn
+    Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+<head>
+
+
+
+
+
+
+<meta charset="utf-8"/>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no"/>
+<meta name="generator" content="Orchid 0.21.0"/>
+<link rel="icon" href="https://brunompc.github.io/drop-project-bruno.github.io/favicon.ico">
+
+
+<meta name="robots" content="index, follow">
+
+
+
+<title>Assignment</title>
+
+
+<meta name="description" content="">
+
+
+
+
+
+<!-- start:inject styles -->
+<link rel="stylesheet" type="text/css" href="https://brunompc.github.io/drop-project-bruno.github.io/Editorial/bc4137f1/assets/css/editorial_main.css"  />
+<link rel="stylesheet" type="text/css" href="https://brunompc.github.io/drop-project-bruno.github.io/Editorial/bc4137f1/assets/css/editorial_orchidCustomizations.css"  />
+<link rel="stylesheet" type="text/css" href="https://brunompc.github.io/drop-project-bruno.github.io/Editorial/bc4137f1/assets/css/orchidSearch.css"  />
+<link rel="stylesheet" type="text/css" href="https://brunompc.github.io/drop-project-bruno.github.io/assets/css/orchidSourceDoc.css"  />
+<!-- end:inject styles -->
+
+
+
+
+
+<!-- start:debug info -->
+
+<!-- THEME -->
+<!-- Type: Editorial -->
+<!-- Class: com.eden.orchid.editorial.EditorialTheme -->
+
+<!-- PAGE -->
+<!-- Type: classes -->
+<!-- Class: com.eden.orchid.sourcedoc.page.SourceDocPage -->
+<!-- Layout: index -->
+<!-- Resolved Layout: templates/layouts/index.peb -->
+<!-- Page Template: kotlindocClass, sourceDocPage, classes, page -->
+<!-- Resolved Page Template: templates/pages/sourceDocPage.peb -->
+
+<!-- RESOURCE -->
+<!-- Class: com.eden.orchid.sourcedoc.page.SourceDocResource -->
+<!-- Source Filename:  -->
+
+<!-- COMPLETE PAGE CONFIGURATION -->
+<script>
+    window.allData = {"reference":{"path":"kotlindoc","baseUrl":"https://brunompc.github.io/drop-project-bruno.github.io","fileName":"org/dropproject/dao/assignment","extension":"html","usePrettyUrl":true,"link":"https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/assignment"},"description":"","title":"Assignment"};
+</script>
+
+<!-- end:debug info -->
+
+
+
+<script>
+    window.site = {"orchidVersion":"0.21.0","baseUrl":"https://brunompc.github.io/drop-project-bruno.github.io","environment":"debug","version":"0.9.3"};
+</script>
+
+
+    <!-- start:inject meta-components [head] -->
+    
+    <!-- end:inject meta-components [head] -->
+
+
+
+    <!-- start:inject meta-components [head] -->
+    
+    <!-- end:inject meta-components [head] -->
+
+
+
+
+
+
+
+</head>
+<body class="is-loading">
+
+
+
+
+
+    <!-- start:inject meta-components [bodyStart] -->
+    
+    <!-- end:inject meta-components [bodyStart] -->
+
+
+
+    <!-- start:inject meta-components [bodyStart] -->
+    
+    <!-- end:inject meta-components [bodyStart] -->
+
+
+
+
+
+<!-- Wrapper -->
+<div id="wrapper">
+
+    <!-- Main -->
+    <div id="main">
+        <div class="inner">
+
+            <!-- Header -->
+            
+                <header id="header">
+    <a href="https://brunompc.github.io/drop-project-bruno.github.io" class="logo">Drop Project</a>
+    <ul class="icons">
+    
+    
+        <li>
+            <a href="https://github.com/brunompc/drop-project" class="icon fa-github">
+                <span class="label">github</span>
+            </a>
+        </li>
+    
+    
+    </ul>
+</header>
+
+            
+            
+            
+            
+                <section id="pageContent">
+                    <header class="major"><h2>Assignment</h2></header>
+                    <article>
+                        
+    <!-- start:inject components -->
+    
+        
+            
+                
+                    
+                        <div class="sourcedoc-page orchid-sourcedoc content">
+  
+<div class="sourcedoc-section section-root section-level-1" id="Assignment">
+
+
+  
+
+  
+    <div class="sourcedoc-section section-element" id="5611585e92fa307db4d32f3b33834a35697ca88a">
+      
+      <p class="sourcedoc-section section-signature">
+        <code>data class Assignment: Any</code>
+      </p>
+
+      
+        
+    <!-- start:inject components -->
+    
+    <!-- end:inject components -->
+
+
+      
+
+      <div class="sourcedoc-section section-comments"><p>Represents an Assignment, which is a problem to be solved by a student or group of students.</p>
+</div>
+
+      
+      
+        
+          
+<div class="sourcedoc-section section-root section-level-2" id="fields">
+
+
+  <p class="sourcedoc-section section-name"><strong>Fields</strong></p>
+
+  <div class="table-container">
+    <table class="table is-fullwidth is-bordered">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+      </thead>
+      <tbody>
+      
+      <tr class="sourcedoc-section section-element" id="cdd218480219bc888fde247a2eb72b7a77749c3b">
+        <td class="sourcedoc-section section-signature">
+          <code>val tags: @ManyToMany(cascade = [CascadeType.ALL])</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a Set of AssignmentTag.</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="4f245a11e536aa95574398f67106c3190c901097">
+        <td class="sourcedoc-section section-signature">
+          <code>val id: String</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a String that uniquely identifies the Assignment</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="d4b3e2f5324ee3aec5ef316f9958c507a9a6e2cd">
+        <td class="sourcedoc-section section-signature">
+          <code>var name: String</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a String representing the name of the Assignment</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="9541b2398292c078c8239a2471599bc01f07822f">
+        <td class="sourcedoc-section section-signature">
+          <code>var packageName: String?</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a String with the (optional) Assignment's expected package (e.g. all the code should be
+placed in this package)</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="2f4196cab995b72e02307ab38c9d270503af40bc">
+        <td class="sourcedoc-section section-signature">
+          <code>var dueDate: LocalDateTime?</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is an optional LocalDateTime with the submission deadline</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="ff4aa1fce635c69156566f169ff27a1ba2a07067">
+        <td class="sourcedoc-section section-signature">
+          <code>var submissionMethod: SubmissionMethod</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a SubmissionMethod</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="24a6c9319acd1f1b46d00dc7e643fb0d08f599f9">
+        <td class="sourcedoc-section section-signature">
+          <code>var language: Language</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is the programming Language that the code should be written in</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="fa75f4526cad47223fc38fe7dc6b692759f66fcd">
+        <td class="sourcedoc-section section-signature">
+          <code>var acceptsStudentTests: Boolean</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a Boolean, indicating if the students are allowed to submit their own unit tests</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="b82ea549758398b0c01d8ed615112066c9ea6f20">
+        <td class="sourcedoc-section section-signature">
+          <code>var minStudentTests: Int?</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is an optional Integer, indicating the minimum number of unit tests that students are
+asked to implement</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="353f8119c6917a5036bc906b09997a1f1a6a42ba">
+        <td class="sourcedoc-section section-signature">
+          <code>var calculateStudentTestsCoverage: Boolean</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is an optional Boolean, indicating if the test coverage should be calculated
+for student's own tests</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="5f20c4926f3a2fba3039333a60d37738cb79b55e">
+        <td class="sourcedoc-section section-signature">
+          <code>var hiddenTestsVisibility: TestVisibility?</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="f480d0de8c10ab22f6fb32a2a7f79cd7339a8262">
+        <td class="sourcedoc-section section-signature">
+          <code>var cooloffPeriod: Int?</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is an optional Integer with the number of minutes that students must wait between consecutive
+submissions</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="cdc2f5ab9951aeb18079ef2c0d6ff15f89b0a864">
+        <td class="sourcedoc-section section-signature">
+          <code>var maxMemoryMb: Int?</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is an optional Integer, indicating the maximum number of Mb that the student's code can use</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="d01741016b99dbfa7193f8020c02a011cfa82b6f">
+        <td class="sourcedoc-section section-signature">
+          <code>var showLeaderBoard: Boolean</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a Boolean, indicating if the leaderboard page should be active for this Assignment</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="ef884a5bb0fcd8c3c3fe7dff8058ea888a55cc75">
+        <td class="sourcedoc-section section-signature">
+          <code>var leaderboardType: LeaderboardType?</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a LeaderboardType</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="ffadf2f4522573f8c17aa4cd18b240bdda48896c">
+        <td class="sourcedoc-section section-signature">
+          <code>val gitRepositoryUrl: String</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a String with the location of the git repository used to create the Assignment</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="0ef31a1b4802745de219141304d0dda02fa07dc3">
+        <td class="sourcedoc-section section-signature">
+          <code>var gitRepositoryPubKey: String?</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a String with the Public Key of the git repository</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="cf254c7ccf1f84f2feda1d017a03f4f102164ee0">
+        <td class="sourcedoc-section section-signature">
+          <code>var gitRepositoryPrivKey: String?</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a String the Private Key of the git repository</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="2be9d18dfd07fc45ac54066f0f870afc5054c4d8">
+        <td class="sourcedoc-section section-signature">
+          <code>var gitRepositoryFolder: String</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="61590a396cd4dcd2d8ed7fcd5778e256af671754">
+        <td class="sourcedoc-section section-signature">
+          <code>val ownerUserId: String</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a String with the user id of the user that created the Assignment</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="ff3b75a8a702ad124886abc352a62acc71b33ee1">
+        <td class="sourcedoc-section section-signature">
+          <code>var active: Boolean</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a Boolean indicating if the Assignment can receive submissions from students</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="4ee667f1093f3de1da6a1dfbe720e7cfca61022a">
+        <td class="sourcedoc-section section-signature">
+          <code>var archived: Boolean</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a Boolean indicating if the Assignment has been archived</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="3bcab3978897942fdca332bca07de00c95c948c7">
+        <td class="sourcedoc-section section-signature">
+          <code>var buildReportId: Long?</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a Long, representing the Id of the Assignment's BuildReport</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="27388029d054762f50ee6bf99fbd4c79a8efb9b7">
+        <td class="sourcedoc-section section-signature">
+          <code>var numSubmissions: Int</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is an Int, representing to total number of submissions in the repository</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="5158321c806f7f0d9d5340f6143ab8bee2b89423">
+        <td class="sourcedoc-section section-signature">
+          <code>var numUniqueSubmitters: Int</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="1b8425f1b99d69c6665935611e09dc579e768870">
+        <td class="sourcedoc-section section-signature">
+          <code>var public: Boolean</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a Boolean, indicating if the assignment is accessible to everyone or only to registered Assignees</p>
+
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="588dc1dcb7c18de667122e83e81a0063f83ec18c">
+        <td class="sourcedoc-section section-signature">
+          <code>var lastSubmissionDate: Date?</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        <p>is a Date, containing the date of the last submission performed for this Assignment</p>
+
+        </td>
+      </tr>
+      
+      </tbody>
+    </table>
+  </div>
+
+
+</div>
+
+        
+          
+<div class="sourcedoc-section section-root section-level-2" id="constructors">
+
+
+  
+    <h2 class="sourcedoc-section section-name">Constructors</h2>
+  
+
+  
+    <div class="sourcedoc-section section-element" id="4f19c02e4f04e180c89b48265e1c6ebdc8063f61">
+      
+      <h3 class="sourcedoc-section element-name">&lt;init&gt;</h3>
+      
+      <p class="sourcedoc-section section-signature">
+        <code>constructor(id: String, name: String, packageName: String?, dueDate: LocalDateTime?, submissionMethod: SubmissionMethod, language: Language, acceptsStudentTests: Boolean, minStudentTests: Int?, calculateStudentTestsCoverage: Boolean, hiddenTestsVisibility: TestVisibility?, cooloffPeriod: Int?, maxMemoryMb: Int?, showLeaderBoard: Boolean, leaderboardType: LeaderboardType?, gitRepositoryUrl: String, gitRepositoryPubKey: String?, gitRepositoryPrivKey: String?, gitRepositoryFolder: String, ownerUserId: String, active: Boolean, archived: Boolean, buildReportId: Long?, numSubmissions: Int, numUniqueSubmitters: Int, public: Boolean, lastSubmissionDate: Date?)</code>
+      </p>
+
+      
+
+      <div class="sourcedoc-section section-comments"><p>Represents an Assignment, which is a problem to be solved by a student or group of students.</p>
+</div>
+
+      
+      
+        
+          
+<div class="sourcedoc-section section-root section-level-3" id="e055621e155908a1b1569205ad48420ee1a43904">
+
+
+  <p class="sourcedoc-section section-name"><strong>Parameters</strong></p>
+
+  <div class="table-container">
+    <table class="table is-fullwidth is-bordered">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+      </thead>
+      <tbody>
+      
+      <tr class="sourcedoc-section section-element" id="e1f6ec0980aa862c68cbaa8110e74551ae83ddd6">
+        <td class="sourcedoc-section section-signature">
+          <code>id: String</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="cf7d76aa18f0e598757d79a8a9df09d9c2aad977">
+        <td class="sourcedoc-section section-signature">
+          <code>name: String</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="7c59ffb33935a504cf1bd7e6da51072862fa6cd2">
+        <td class="sourcedoc-section section-signature">
+          <code>packageName: String?</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="cc0ac8218df2ee8714802ae2c2dfa8dcc9b656bf">
+        <td class="sourcedoc-section section-signature">
+          <code>dueDate: LocalDateTime?</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="f3e9f0dcf6a79def901261a67bcc9ad5d4812776">
+        <td class="sourcedoc-section section-signature">
+          <code>submissionMethod: SubmissionMethod</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="4e2b6ae3f90a2e8ab7d69c31c9f67c221efe00ed">
+        <td class="sourcedoc-section section-signature">
+          <code>language: Language</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="83a393e839e5ae00ba1508aa151f7685cff39a1e">
+        <td class="sourcedoc-section section-signature">
+          <code>acceptsStudentTests: Boolean</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="7733555fd2d3f9b18a862771ed8e1d5bd257352c">
+        <td class="sourcedoc-section section-signature">
+          <code>minStudentTests: Int?</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="2d6626f2fcd58170eb7e1cf3dfcf48ca5c8e4fbd">
+        <td class="sourcedoc-section section-signature">
+          <code>calculateStudentTestsCoverage: Boolean</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="0da07f3421d24ad37666211bc225bec8e57ba863">
+        <td class="sourcedoc-section section-signature">
+          <code>hiddenTestsVisibility: TestVisibility?</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="6329481286c1ac7a6fabe6e5fb7e7b6d3e70c924">
+        <td class="sourcedoc-section section-signature">
+          <code>cooloffPeriod: Int?</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="e56870a436ed31771743fb6978ea36778fd0b852">
+        <td class="sourcedoc-section section-signature">
+          <code>maxMemoryMb: Int?</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="68b70d2824d571fd7d570551392287b77f806586">
+        <td class="sourcedoc-section section-signature">
+          <code>showLeaderBoard: Boolean</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="50f5163a5ed947d8a957f0781391257e8110c918">
+        <td class="sourcedoc-section section-signature">
+          <code>leaderboardType: LeaderboardType?</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="9d24aa6542568cba2a293aaace0ce17919dd6845">
+        <td class="sourcedoc-section section-signature">
+          <code>gitRepositoryUrl: String</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="59d6d3616a6738493c39429378a6eb230439a519">
+        <td class="sourcedoc-section section-signature">
+          <code>gitRepositoryPubKey: String?</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="dbdae440d8045dc4be0d9264ce0bf8869748b1c9">
+        <td class="sourcedoc-section section-signature">
+          <code>gitRepositoryPrivKey: String?</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="48ddd7b003077b7bd0a9c401a763cfa0df23c38b">
+        <td class="sourcedoc-section section-signature">
+          <code>gitRepositoryFolder: String</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="cac0d06674de34e8de0e167622e71f99ad317edf">
+        <td class="sourcedoc-section section-signature">
+          <code>ownerUserId: String</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="f09b0e5e46b8a9f80c53144ce27a3232cdbd3daa">
+        <td class="sourcedoc-section section-signature">
+          <code>active: Boolean</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="809bfddd954233a0fb3c4209ea2b1c42279eaa26">
+        <td class="sourcedoc-section section-signature">
+          <code>archived: Boolean</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="6c221001d8a076f38f2cdc4e6f516e5cf831bce2">
+        <td class="sourcedoc-section section-signature">
+          <code>buildReportId: Long?</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="f0d35e46c2a92b4136dd6a61aac731040515ac72">
+        <td class="sourcedoc-section section-signature">
+          <code>numSubmissions: Int</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="4f76188d2164acc352369d7463059ac33e9346db">
+        <td class="sourcedoc-section section-signature">
+          <code>numUniqueSubmitters: Int</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="9406a9cc31f3ad80c76840e0c1f5b7cda7714482">
+        <td class="sourcedoc-section section-signature">
+          <code>public: Boolean</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      <tr class="sourcedoc-section section-element" id="6f5cf84693a72850dae3fab4517124e646f57644">
+        <td class="sourcedoc-section section-signature">
+          <code>lastSubmissionDate: Date?</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      </tbody>
+    </table>
+  </div>
+
+
+</div>
+
+        
+      
+    </div>
+  
+
+</div>
+
+        
+          
+<div class="sourcedoc-section section-root section-level-2" id="methods">
+
+
+  
+    <h2 class="sourcedoc-section section-name">Methods</h2>
+  
+
+  
+    <div class="sourcedoc-section section-element" id="8625757b543d572dbe2a14ac556ea11d0f5e69e2">
+      
+      <h3 class="sourcedoc-section element-name">dueDateFormatted</h3>
+      
+      <p class="sourcedoc-section section-signature">
+        <code>fun dueDateFormatted(): String?</code>
+      </p>
+
+      
+
+      <div class="sourcedoc-section section-comments"></div>
+
+      
+      
+        
+          
+<div class="sourcedoc-section section-root section-level-3" id="2a5ab1a00e5846c263395969ba93587dda00f41b">
+
+
+  <p class="sourcedoc-section section-name"><strong>ReturnValue</strong></p>
+
+  <div class="table-container">
+    <table class="table is-fullwidth is-bordered">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+      </thead>
+      <tbody>
+      
+      <tr class="sourcedoc-section section-element" id="ce29911ab38228bb2a41fe50f4edd1d765e1abcd">
+        <td class="sourcedoc-section section-signature">
+          <code>String?</code>
+        </td>
+        <td class="sourcedoc-section section-comments content">
+        
+        </td>
+      </tr>
+      
+      </tbody>
+    </table>
+  </div>
+
+
+</div>
+
+        
+      
+    </div>
+  
+
+</div>
+
+        
+      
+    </div>
+  
+
+</div>
+
+</div>
+
+
+
+
+
+
+                    
+                
+            
+        
+    
+    <!-- end:inject components -->
+
+
+                    </article>
+                </section>
+            
+        </div>
+        <hr>
+
+        <!-- Page Footer -->
+        <div class="inner">
+    <footer id="footer">
+        <div class="clearfix">
+            
+            
+        </div>
+    </footer>
+</div>
+
+    </div>
+
+    <!-- Sidebar -->
+    <div id="sidebar">
+    <div class="inner">
+
+        <!-- Search -->
+        <section id="search" class="alt">
+            <form data-orchid-search="">
+                <input type="text" name="query" id="query" placeholder="Search"/>
+            </form>
+            <div class="box" id="search-results" data-orchid-search-results style="display: none;">
+                <b>Search Results</b>
+                <ul></ul>
+            </div>
+            <div class="box" id="search-progress" data-orchid-search-progress style="display: none;">
+                <div class="loader">Loading...</div>
+            </div>
+        </section>
+
+        <!-- Menu -->
+        <nav id="siteNav" class="menu">
+            <header class="major">
+                <h2>Drop Project</h2>
+            </header>
+            <ul class="top-level">
+                
+                    
+    
+    <li>
+        <a class="subheader">Wiki</a>
+    </li>
+    
+
+                
+                    
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/wiki/concepts">Concepts</a>
+    </li>
+    
+
+                
+                    
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/wiki/assignment-creation">Assignment Creation Tutorial</a>
+    </li>
+    
+
+                
+                    
+    
+    <li>
+        <a class="subheader">API Docs</a>
+    </li>
+    
+
+                
+                    
+    <li>
+        <span class="opener">Classes</span>
+        <ul>
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/controllers/admincontroller">AdminController</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/forms/admindashboardform">AdminDashboardForm</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/controllers/apperrorcontroller">AppErrorController</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/controllers/applicationcontextlistener">ApplicationContextListener</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/assignee">Assignee</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/repository/assigneerepository">AssigneeRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/assignment">Assignment</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/assignmentacl">AssignmentACL</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/repository/assignmentaclrepository">AssignmentACLRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/controllers/assignmentcontroller">AssignmentController</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/forms/assignmentform">AssignmentForm</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/controllers/uploadcontroller/assignmentnotfoundexception">AssignmentNotFoundException</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/assignmentreport">AssignmentReport</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/repository/assignmentreportrepository">AssignmentReportRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/repository/assignmentrepository">AssignmentRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/assignmentservice">AssignmentService</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/data/assignmentstatistics">AssignmentStatistics</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/assignmenttag">AssignmentTag</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/repository/assignmenttagrepository">AssignmentTagRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/assignmentteacherfiles">AssignmentTeacherFiles</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/assignmenttestmethod">AssignmentTestMethod</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/repository/assignmenttestmethodrepository">AssignmentTestMethodRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/assignmentvalidator">AssignmentValidator</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/asyncconfig">AsyncConfig</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/asynctestconfig">AsyncTestConfig</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/author">Author</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/data/authordetails">AuthorDetails</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/repository/authorrepository">AuthorRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/buildreport">BuildReport</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/data/buildreport">BuildReport</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/buildreportbuilder">BuildReportBuilder</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/repository/buildreportrepository">BuildReportRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/buildworker">BuildWorker</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/cancellabletaskscheduler">CancellableTaskScheduler</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/gitclient/commitdiff">CommitDiff</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/gitclient/commitinfo">CommitInfo</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/constants">Constants</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/filters/controllerrequestsloggingfilter">ControllerRequestsLoggingFilter</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/controllerrequestsloggingfilterconfig">ControllerRequestsLoggingFilterConfig</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dropprojectapplication">DropProjectApplication</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/security/dropprojectsecurityconfig">DropProjectSecurityConfig</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/storage/filesystemstorageservice">FileSystemStorageService</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/gitclient">GitClient</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/gitsubmission">GitSubmission</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/repository/gitsubmissionrepository">GitSubmissionRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/gitsubmissionservice">GitSubmissionService</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/controllers/globalcontrolleradvice">GlobalControllerAdvice</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/controllers/globalexceptionhandler">GlobalExceptionHandler</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/data/groupsubmissionstatistics">GroupSubmissionStatistics</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/data/groupedprojectgroups">GroupedProjectGroups</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/indicator">Indicator</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/assignmentvalidator/info">Info</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/assignmentvalidator/infotype">InfoType</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/controllers/invalidprojectstructureexception">InvalidProjectStructureException</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/junitmethodresult">JUnitMethodResult</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/junitmethodresulttype">JUnitMethodResultType</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/junitreport">JUnitReport</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/repository/junitreportrepository">JUnitReportRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/junitresults">JUnitResults</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/data/junitsummary">JUnitSummary</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/jacocoreport">JacocoReport</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/repository/jacocoreportrepository">JacocoReportRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/jacocoresults">JacocoResults</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/jacocoresultsparser">JacocoResultsParser</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/junitresultsparser">JunitResultsParser</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/language">Language</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/leaderboardtype">LeaderboardType</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/controllers/logincontroller">LoginController</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/maveninvoker">MavenInvoker</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/data/mavenresult">MavenResult</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/myasyncuncaughtexceptionhandler">MyAsyncUncaughtExceptionHandler</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/gitclient/myjschconfigsessionfactory">MyJschConfigSessionFactory</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/gitclient/mytransportconfigcallback">MyTransportConfigCallback</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/oauth2websecurityconfig">OAuth2WebSecurityConfig</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/projectgroup">ProjectGroup</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/repository/projectgrouprepository">ProjectGroupRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/controllers/reportcontroller">ReportController</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/controllers/resourcenotfoundexception">ResourceNotFoundException</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/scheduledtasks">ScheduledTasks</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/simpleloginwebsecurityconfig">SimpleLoginWebSecurityConfig</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/storage/storageexception">StorageException</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/storage/storageservice">StorageService</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/submission">Submission</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/data/submissioninfo">SubmissionInfo</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/forms/submissionmethod">SubmissionMethod</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/controllers/uploadcontroller/submissionnotfoundexception">SubmissionNotFoundException</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/submissionreport">SubmissionReport</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/repository/submissionreportrepository">SubmissionReportRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/repository/submissionrepository">SubmissionRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/submissionservice">SubmissionService</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/submissionstatus">SubmissionStatus</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/data/testtype">TestType</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao/testvisibility">TestVisibility</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/thymeleafconfig">ThymeleafConfig</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/controllers/uploadcontroller">UploadController</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/forms/uploadform">UploadForm</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services/zipservice">ZipService</a>
+    </li>
+    
+
+        
+        </ul>
+    </li>
+
+                
+                    
+    <li>
+        <span class="opener">Packages</span>
+        <ul>
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject">org.dropProject</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/controllers">org.dropProject.controllers</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/dao">org.dropProject.dao</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/data">org.dropProject.data</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/extensions">org.dropProject.extensions</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/filters">org.dropProject.filters</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/forms">org.dropProject.forms</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/repository">org.dropProject.repository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/security">org.dropProject.security</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/services">org.dropProject.services</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://brunompc.github.io/drop-project-bruno.github.io/kotlindoc/org/dropproject/storage">org.dropProject.storage</a>
+    </li>
+    
+
+        
+        </ul>
+    </li>
+
+                
+            </ul>
+        </nav>
+        
+        <nav class="menu">
+            <header class="major">
+                <h2>Assignment</h2>
+            </header>
+            <ul class="top-level">
+                
+            </ul>
+        </nav>
+        
+
+        <!-- Section -->
+        <section>
+            <p class="text-center">
+                Currently 0.9.3. Created with <a href="https://orchid.run">Orchid </a> and <b>Orchid Editorial Theme</b>.
+            </p>
+        </section>
+
+        <!-- Footer -->
+        <footer id="footer">
+            <p class="copyright text-center">&copy; Drop Project. All rights reserved.<br>Design by <a href="https://html5up.net">HTML5 UP</a></p>
+        </footer>
+
+    </div>
+</div>
+
+</div>
+
+
+
+
+
+
+    <!-- start:inject meta-components [bodyEnd] -->
+    
+    <!-- end:inject meta-components [bodyEnd] -->
+
+
+
+    <!-- start:inject meta-components [bodyEnd] -->
+    
+    <!-- end:inject meta-components [bodyEnd] -->
+
+
+
+
+<!-- start:inject scripts -->
+<script  src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script  src="https://cdnjs.cloudflare.com/ajax/libs/skel/3.0.1/skel.min.js"></script>
+<script  src="https://brunompc.github.io/drop-project-bruno.github.io/Editorial/bc4137f1/assets/js/editorial_util.js"></script>
+<script  src="https://brunompc.github.io/drop-project-bruno.github.io/Editorial/bc4137f1/assets/js/editorial_main.js"></script>
+<script  src="https://brunompc.github.io/drop-project-bruno.github.io/Editorial/bc4137f1/assets/js/editorial_orchidCustomizations.js"></script>
+<!-- end:inject scripts -->
+
+
+</body>
+</html>
