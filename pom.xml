@@ -408,10 +408,10 @@
 				<configuration>
 					<!-- All properties are optional -->
 					<theme>Editorial</theme>
-					<version>${project.version}</version>                <!-- defaults to project version -->
-					<srcDir>src/orchid/resources</srcDir>        <!-- defaults to 'src/orchid/resources' -->
-					<destDir>target/docs/orchid</destDir> <!-- defaults to 'target/docs/orchid' -->
-					<runTask>build</runTask>                             <!-- specify a task to run with 'mvn orchid:run' -->
+					<version>${project.version}</version>
+					<srcDir>docs/resources</srcDir>
+					<destDir>target/docs/orchid</destDir>
+					<runTask>build</runTask>
 				</configuration>
 				<executions>
 					<execution>
