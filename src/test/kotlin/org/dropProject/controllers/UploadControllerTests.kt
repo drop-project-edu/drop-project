@@ -30,6 +30,7 @@ import org.dropProject.services.ZipService
 import org.dropProject.storage.StorageService
 import org.hamcrest.CoreMatchers
 import org.hamcrest.CoreMatchers.*
+import org.hamcrest.Matchers
 import org.hamcrest.Matchers.hasProperty
 import org.junit.After
 import org.junit.Assert.*
@@ -822,9 +823,12 @@ class UploadControllerTests {
 
         val junitReportsFromDB = jUnitReportRepository.findAll()
         assertEquals(2, junitReportsFromDB.size)
-        assertEquals("TEST-org.dropProject.sampleAssignments.testProj.TestProject1.xml", junitReportsFromDB[0].fileName)
-        assertEquals("TEST-org.dropProject.sampleAssignments.testProj.TestProject2.xml", junitReportsFromDB[1].fileName)
-
+        val expectedFileNames = listOf(
+            "TEST-org.dropProject.sampleAssignments.testProj.TestProject1.xml",
+            "TEST-org.dropProject.sampleAssignments.testProj.TestProject2.xml"
+        )
+        assertThat(expectedFileNames,
+            Matchers.containsInAnyOrder(junitReportsFromDB[0].fileName, junitReportsFromDB[1].fileName))
     }
 
     @Test
