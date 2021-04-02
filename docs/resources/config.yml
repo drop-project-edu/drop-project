@@ -7,7 +7,7 @@ site:
 Editorial:
   primaryColor: '#DE9149'
   social:
-    github: 'brunompc/drop-project'
+    github: 'drop-project-edu/drop-project'
   menu:
     - type: 'separator'
       title: 'Wiki'
