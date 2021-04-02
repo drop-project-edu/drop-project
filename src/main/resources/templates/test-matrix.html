@@ -74,9 +74,9 @@
                         <table class="fixed-width" th:style="${'width: ' + (tests.size() * 20) + 'px'}">
                             <tr>
                                 <td th:if="${submissionInfo.lastSubmission.testResults != null}" th:each="testResult : ${submissionInfo.lastSubmission.testResults}">
-                                    <img src="../img/if_sign-check_299110.png" th:if="${testResult.type == 'Success'}" th:alt="${testResult.methodName}" th:title="${testResult.methodName}" width="16" height="16" />
-                                    <img src="../img/if_sign-error_299045.png" th:if="${testResult.type != 'Success' and testResult.type !='Empty'}" th:alt="${testResult.methodName}" th:title="${testResult.methodName}" width="16" height="16" />
-                                    <img src="../img/if_sign-question-mark.png" th:if="${testResult.type == 'Empty'}" th:alt="${testResult.methodName}" th:title="${testResult.methodName}" width="16" height="16" />
+                                    <img src="../img/if_sign-check_299110.png" th:if="${testResult.type.value == 'Success'}" th:alt="${testResult.methodName}" th:title="${testResult.methodName}" width="16" height="16" />
+                                    <img src="../img/if_sign-error_299045.png" th:if="${testResult.type.value != 'Success' and testResult.type.value !='Empty'}" th:alt="${testResult.methodName}" th:title="${testResult.methodName}" width="16" height="16" />
+                                    <img src="../img/if_sign-question-mark.png" th:if="${testResult.type.value == 'Empty'}" th:alt="${testResult.methodName}" th:title="${testResult.methodName}" width="16" height="16" />
                                 </td>
                             </tr>
                         </table>

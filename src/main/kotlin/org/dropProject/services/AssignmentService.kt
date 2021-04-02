@@ -135,7 +135,7 @@ class AssignmentService(
                     var failed = java.util.ArrayList<String>()
 
                     it.lastSubmission.testResults?.forEach {
-                        if (it.type == "Success") {
+                        if (it.type == JUnitMethodResultType.SUCCESS) {
                             testCounts.computeIfPresent("${it.methodName}:${it.getClassName()}") { _, v -> v + 1 }
                             passedTests++
                         }

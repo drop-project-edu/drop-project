@@ -23,6 +23,7 @@ import org.dropProject.dao.Assignment
 import org.dropProject.dao.AssignmentTestMethod
 import org.dropProject.dao.Language
 import org.dropProject.services.JUnitMethodResult
+import org.dropProject.services.JUnitMethodResultType
 import org.dropProject.services.JUnitResults
 import org.dropProject.services.JacocoResults
 import org.slf4j.LoggerFactory
@@ -346,7 +347,7 @@ data class BuildReport(val mavenOutputLines: List<String>,
                     testType == TestType.STUDENT && junitResult.isStudent(assignment) ||
                     testType == TestType.HIDDEN && junitResult.isTeacherHidden()) {
                 result += junitResult.junitMethodResults
-                        .filter { it.type != "Success" }
+                        .filter { it.type != JUnitMethodResultType.SUCCESS && it.type != JUnitMethodResultType.IGNORED }
                         .map { it.filterStacktrace(assignment.packageName.orEmpty()); it }
                         .joinToString(separator = "\n")
             }

@@ -29,6 +29,14 @@ import org.dropProject.Constants
 import org.dropProject.dao.Assignment
 import java.io.ByteArrayInputStream
 
+enum class JUnitMethodResultType(val value: String) {
+    SUCCESS("Success"),
+    ERROR("Error"),
+    FAILURE("Failure"),
+    IGNORED("Ignored"),
+    EMPTY("Empty")
+}
+
 /**
  * Represents the result of executing a certain JUnit Test.
  *
@@ -41,14 +49,14 @@ import java.io.ByteArrayInputStream
  */
 data class JUnitMethodResult(val methodName: String,
                              val fullMethodName: String,
-                             val type: String,  // Success, Error or Failure
+                             val type: JUnitMethodResultType,
                              val failureType: String?,
                              val failureErrorLine: String?,
                              val failureDetail: String?) {
 
     companion object {
         fun empty(): JUnitMethodResult {
-            return JUnitMethodResult("", "", "Empty", null, null, null)
+            return JUnitMethodResult("", "", JUnitMethodResultType.EMPTY, null, null, null)
         }
     }
 
@@ -63,7 +71,7 @@ data class JUnitMethodResult(val methodName: String,
     }
 
     override fun toString(): String {
-        return "${type.toUpperCase()}: ${fullMethodName}\n${failureDetailLines?.joinToString("\n")}\n\n"
+        return "${type.value.toUpperCase()}: ${fullMethodName}\n${failureDetailLines?.joinToString("\n")}\n\n"
     }
 }
 
@@ -156,7 +164,9 @@ class JunitResultsParser {
         val testCases : List<ReportTestCase> = parseResult.testCases
 
         val junitMethodResults = testCases.map { JUnitMethodResult(it.name, it.fullName,
-                if (it.hasError()) "Error" else if (it.hasFailure()) "Failure" else if (it.hasSkipped()) "Ignored" else "Success",
+                if (it.hasError()) JUnitMethodResultType.ERROR
+                else if (it.hasFailure()) JUnitMethodResultType.FAILURE
+                else if (it.hasSkipped()) JUnitMethodResultType.IGNORED else JUnitMethodResultType.SUCCESS,
                 it.failureType, it.failureErrorLine,
                 it.failureDetail) }.toList()
 
