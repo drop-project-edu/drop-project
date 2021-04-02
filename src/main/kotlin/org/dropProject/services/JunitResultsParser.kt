@@ -156,7 +156,7 @@ class JunitResultsParser {
         val testCases : List<ReportTestCase> = parseResult.testCases
 
         val junitMethodResults = testCases.map { JUnitMethodResult(it.name, it.fullName,
-                if (it.hasError()) "Error" else if (it.hasFailure()) "Failure" else "Success",
+                if (it.hasError()) "Error" else if (it.hasFailure()) "Failure" else if (it.hasSkipped()) "Ignored" else "Success",
                 it.failureType, it.failureErrorLine,
                 it.failureDetail) }.toList()
 
