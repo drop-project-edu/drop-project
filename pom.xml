@@ -410,7 +410,7 @@
 					<theme>Editorial</theme>
 					<version>${project.version}</version>                <!-- defaults to project version -->
 					<srcDir>src/orchid/resources</srcDir>        <!-- defaults to 'src/orchid/resources' -->
-					<destDir>path/to/new/destination/directory</destDir> <!-- defaults to 'target/docs/orchid' -->
+					<destDir>target/docs/orchid</destDir> <!-- defaults to 'target/docs/orchid' -->
 					<runTask>build</runTask>                             <!-- specify a task to run with 'mvn orchid:run' -->
 				</configuration>
 				<executions>
