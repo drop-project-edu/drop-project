@@ -5,11 +5,11 @@
     "ownPages": [{
       "reference": {
         "path": "javadoc",
-        "baseUrl": "https://brunompc.github.io/drop-project-bruno.github.io",
+        "baseUrl": "https://drop-project-edu.github.io/drop-project",
         "fileName": "",
         "extension": "html",
         "usePrettyUrl": true,
-        "link": "https://brunompc.github.io/drop-project-bruno.github.io/javadoc"
+        "link": "https://drop-project-edu.github.io/drop-project/javadoc"
       },
       "description": "",
       "title": "",

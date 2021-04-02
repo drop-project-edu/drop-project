@@ -6,11 +6,11 @@
       {
         "reference": {
           "path": "meta",
-          "baseUrl": "https://brunompc.github.io/drop-project-bruno.github.io",
+          "baseUrl": "https://drop-project-edu.github.io/drop-project",
           "fileName": "assets.index",
           "extension": "json",
           "usePrettyUrl": false,
-          "link": "https://brunompc.github.io/drop-project-bruno.github.io/meta/assets.index.json"
+          "link": "https://drop-project-edu.github.io/drop-project/meta/assets.index.json"
         },
         "description": "",
         "title": "Assets . Index"
@@ -18,11 +18,11 @@
       {
         "reference": {
           "path": "meta",
-          "baseUrl": "https://brunompc.github.io/drop-project-bruno.github.io",
+          "baseUrl": "https://drop-project-edu.github.io/drop-project",
           "fileName": "changelog.index",
           "extension": "json",
           "usePrettyUrl": false,
-          "link": "https://brunompc.github.io/drop-project-bruno.github.io/meta/changelog.index.json"
+          "link": "https://drop-project-edu.github.io/drop-project/meta/changelog.index.json"
         },
         "description": "",
         "title": "Changelog . Index"
@@ -30,11 +30,11 @@
       {
         "reference": {
           "path": "meta",
-          "baseUrl": "https://brunompc.github.io/drop-project-bruno.github.io",
+          "baseUrl": "https://drop-project-edu.github.io/drop-project",
           "fileName": "forms.index",
           "extension": "json",
           "usePrettyUrl": false,
-          "link": "https://brunompc.github.io/drop-project-bruno.github.io/meta/forms.index.json"
+          "link": "https://drop-project-edu.github.io/drop-project/meta/forms.index.json"
         },
         "description": "",
         "title": "Forms . Index"
@@ -42,11 +42,11 @@
       {
         "reference": {
           "path": "meta",
-          "baseUrl": "https://brunompc.github.io/drop-project-bruno.github.io",
+          "baseUrl": "https://drop-project-edu.github.io/drop-project",
           "fileName": "groovydoc.index",
           "extension": "json",
           "usePrettyUrl": false,
-          "link": "https://brunompc.github.io/drop-project-bruno.github.io/meta/groovydoc.index.json"
+          "link": "https://drop-project-edu.github.io/drop-project/meta/groovydoc.index.json"
         },
         "description": "",
         "title": "Groovydoc . Index"
@@ -54,11 +54,11 @@
       {
         "reference": {
           "path": "meta",
-          "baseUrl": "https://brunompc.github.io/drop-project-bruno.github.io",
+          "baseUrl": "https://drop-project-edu.github.io/drop-project",
           "fileName": "home.index",
           "extension": "json",
           "usePrettyUrl": false,
-          "link": "https://brunompc.github.io/drop-project-bruno.github.io/meta/home.index.json"
+          "link": "https://drop-project-edu.github.io/drop-project/meta/home.index.json"
         },
         "description": "",
         "title": "Home . Index"
@@ -66,11 +66,11 @@
       {
         "reference": {
           "path": "meta",
-          "baseUrl": "https://brunompc.github.io/drop-project-bruno.github.io",
+          "baseUrl": "https://drop-project-edu.github.io/drop-project",
           "fileName": "javadoc.index",
           "extension": "json",
           "usePrettyUrl": false,
-          "link": "https://brunompc.github.io/drop-project-bruno.github.io/meta/javadoc.index.json"
+          "link": "https://drop-project-edu.github.io/drop-project/meta/javadoc.index.json"
         },
         "description": "",
         "title": "Javadoc . Index"
@@ -78,11 +78,11 @@
       {
         "reference": {
           "path": "meta",
-          "baseUrl": "https://brunompc.github.io/drop-project-bruno.github.io",
+          "baseUrl": "https://drop-project-edu.github.io/drop-project",
           "fileName": "kotlindoc.index",
           "extension": "json",
           "usePrettyUrl": false,
-          "link": "https://brunompc.github.io/drop-project-bruno.github.io/meta/kotlindoc.index.json"
+          "link": "https://drop-project-edu.github.io/drop-project/meta/kotlindoc.index.json"
         },
         "description": "",
         "title": "Kotlindoc . Index"
@@ -90,11 +90,11 @@
       {
         "reference": {
           "path": "meta",
-          "baseUrl": "https://brunompc.github.io/drop-project-bruno.github.io",
+          "baseUrl": "https://drop-project-edu.github.io/drop-project",
           "fileName": "styleguide.index",
           "extension": "json",
           "usePrettyUrl": false,
-          "link": "https://brunompc.github.io/drop-project-bruno.github.io/meta/styleguide.index.json"
+          "link": "https://drop-project-edu.github.io/drop-project/meta/styleguide.index.json"
         },
         "description": "",
         "title": "Styleguide . Index"
@@ -102,11 +102,11 @@
       {
         "reference": {
           "path": "meta",
-          "baseUrl": "https://brunompc.github.io/drop-project-bruno.github.io",
+          "baseUrl": "https://drop-project-edu.github.io/drop-project",
           "fileName": "netlifyCms.index",
           "extension": "json",
           "usePrettyUrl": false,
-          "link": "https://brunompc.github.io/drop-project-bruno.github.io/meta/netlifyCms.index.json"
+          "link": "https://drop-project-edu.github.io/drop-project/meta/netlifyCms.index.json"
         },
         "description": "",
         "title": "Netlify Cms . Index"
@@ -114,11 +114,11 @@
       {
         "reference": {
           "path": "meta",
-          "baseUrl": "https://brunompc.github.io/drop-project-bruno.github.io",
+          "baseUrl": "https://drop-project-edu.github.io/drop-project",
           "fileName": "pages.index",
           "extension": "json",
           "usePrettyUrl": false,
-          "link": "https://brunompc.github.io/drop-project-bruno.github.io/meta/pages.index.json"
+          "link": "https://drop-project-edu.github.io/drop-project/meta/pages.index.json"
         },
         "description": "",
         "title": "Pages . Index"
@@ -126,11 +126,11 @@
       {
         "reference": {
           "path": "meta",
-          "baseUrl": "https://brunompc.github.io/drop-project-bruno.github.io",
+          "baseUrl": "https://drop-project-edu.github.io/drop-project",
           "fileName": "posts.index",
           "extension": "json",
           "usePrettyUrl": false,
-          "link": "https://brunompc.github.io/drop-project-bruno.github.io/meta/posts.index.json"
+          "link": "https://drop-project-edu.github.io/drop-project/meta/posts.index.json"
         },
         "description": "",
         "title": "Posts . Index"
@@ -138,11 +138,11 @@
       {
         "reference": {
           "path": "meta",
-          "baseUrl": "https://brunompc.github.io/drop-project-bruno.github.io",
+          "baseUrl": "https://drop-project-edu.github.io/drop-project",
           "fileName": "presentations.index",
           "extension": "json",
           "usePrettyUrl": false,
-          "link": "https://brunompc.github.io/drop-project-bruno.github.io/meta/presentations.index.json"
+          "link": "https://drop-project-edu.github.io/drop-project/meta/presentations.index.json"
         },
         "description": "",
         "title": "Presentations . Index"
@@ -150,11 +150,11 @@
       {
         "reference": {
           "path": "meta",
-          "baseUrl": "https://brunompc.github.io/drop-project-bruno.github.io",
+          "baseUrl": "https://drop-project-edu.github.io/drop-project",
           "fileName": "snippets.index",
           "extension": "json",
           "usePrettyUrl": false,
-          "link": "https://brunompc.github.io/drop-project-bruno.github.io/meta/snippets.index.json"
+          "link": "https://drop-project-edu.github.io/drop-project/meta/snippets.index.json"
         },
         "description": "",
         "title": "Snippets . Index"
@@ -162,11 +162,11 @@
       {
         "reference": {
           "path": "meta",
-          "baseUrl": "https://brunompc.github.io/drop-project-bruno.github.io",
+          "baseUrl": "https://drop-project-edu.github.io/drop-project",
           "fileName": "swiftdoc.index",
           "extension": "json",
           "usePrettyUrl": false,
-          "link": "https://brunompc.github.io/drop-project-bruno.github.io/meta/swiftdoc.index.json"
+          "link": "https://drop-project-edu.github.io/drop-project/meta/swiftdoc.index.json"
         },
         "description": "",
         "title": "Swiftdoc . Index"
@@ -174,11 +174,11 @@
       {
         "reference": {
           "path": "meta",
-          "baseUrl": "https://brunompc.github.io/drop-project-bruno.github.io",
+          "baseUrl": "https://drop-project-edu.github.io/drop-project",
           "fileName": "wiki.index",
           "extension": "json",
           "usePrettyUrl": false,
-          "link": "https://brunompc.github.io/drop-project-bruno.github.io/meta/wiki.index.json"
+          "link": "https://drop-project-edu.github.io/drop-project/meta/wiki.index.json"
         },
         "description": "",
         "title": "Wiki . Index"
@@ -186,11 +186,11 @@
       {
         "reference": {
           "path": "meta",
-          "baseUrl": "https://brunompc.github.io/drop-project-bruno.github.io",
+          "baseUrl": "https://drop-project-edu.github.io/drop-project",
           "fileName": "taxonomies.index",
           "extension": "json",
           "usePrettyUrl": false,
-          "link": "https://brunompc.github.io/drop-project-bruno.github.io/meta/taxonomies.index.json"
+          "link": "https://drop-project-edu.github.io/drop-project/meta/taxonomies.index.json"
         },
         "description": "",
         "title": "Taxonomies . Index"
@@ -198,11 +198,11 @@
       {
         "reference": {
           "path": "meta",
-          "baseUrl": "https://brunompc.github.io/drop-project-bruno.github.io",
+          "baseUrl": "https://drop-project-edu.github.io/drop-project",
           "fileName": "sitemap.index",
           "extension": "json",
           "usePrettyUrl": false,
-          "link": "https://brunompc.github.io/drop-project-bruno.github.io/meta/sitemap.index.json"
+          "link": "https://drop-project-edu.github.io/drop-project/meta/sitemap.index.json"
         },
         "description": "",
         "title": "Sitemap . Index"
@@ -210,11 +210,11 @@
       {
         "reference": {
           "path": "meta",
-          "baseUrl": "https://brunompc.github.io/drop-project-bruno.github.io",
+          "baseUrl": "https://drop-project-edu.github.io/drop-project",
           "fileName": "feeds.index",
           "extension": "json",
           "usePrettyUrl": false,
-          "link": "https://brunompc.github.io/drop-project-bruno.github.io/meta/feeds.index.json"
+          "link": "https://drop-project-edu.github.io/drop-project/meta/feeds.index.json"
         },
         "description": "",
         "title": "Feeds . Index"
@@ -222,11 +222,11 @@
       {
         "reference": {
           "path": "meta",
-          "baseUrl": "https://brunompc.github.io/drop-project-bruno.github.io",
+          "baseUrl": "https://drop-project-edu.github.io/drop-project",
           "fileName": "indices.index",
           "extension": "json",
           "usePrettyUrl": false,
-          "link": "https://brunompc.github.io/drop-project-bruno.github.io/meta/indices.index.json"
+          "link": "https://drop-project-edu.github.io/drop-project/meta/indices.index.json"
         },
         "description": "",
         "title": "Indices . Index"
@@ -234,11 +234,11 @@
       {
         "reference": {
           "path": "meta",
-          "baseUrl": "https://brunompc.github.io/drop-project-bruno.github.io",
+          "baseUrl": "https://drop-project-edu.github.io/drop-project",
           "fileName": "all.index",
           "extension": "json",
           "usePrettyUrl": false,
-          "link": "https://brunompc.github.io/drop-project-bruno.github.io/meta/all.index.json"
+          "link": "https://drop-project-edu.github.io/drop-project/meta/all.index.json"
         },
         "description": "",
         "title": "All . Index"

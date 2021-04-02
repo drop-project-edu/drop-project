@@ -4,12 +4,12 @@
     xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd"
     xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-        <loc>https://brunompc.github.io/drop-project-bruno.github.io</loc>
+        <loc>https://drop-project-edu.github.io/drop-project</loc>
         <lastmod>2021-04-02</lastmod>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://brunompc.github.io/drop-project-bruno.github.io/404.html</loc>
+        <loc>https://drop-project-edu.github.io/drop-project/404.html</loc>
         <lastmod>2021-04-02</lastmod>
         <priority>0.5</priority>
     </url>

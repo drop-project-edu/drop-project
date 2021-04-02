@@ -5,8 +5,31 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="fb54910c-e141-4076-ad26-a85b84905673" name="Default Changelist" comment="minor fix still related to the detekt plugin">
-      <change beforePath="$PROJECT_DIR$/src/main/resources/drop-project.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/drop-project.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/resources/drop-project-test.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/resources/drop-project-test.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/404.html" beforeDir="false" afterPath="$PROJECT_DIR$/404.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/groovydoc/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/groovydoc/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/javadoc/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/javadoc/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kotlindoc/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/kotlindoc/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/meta/all.index.json" beforeDir="false" afterPath="$PROJECT_DIR$/meta/all.index.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/meta/groovydoc.index.json" beforeDir="false" afterPath="$PROJECT_DIR$/meta/groovydoc.index.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/meta/home.index.json" beforeDir="false" afterPath="$PROJECT_DIR$/meta/home.index.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/meta/index.json" beforeDir="false" afterPath="$PROJECT_DIR$/meta/index.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/meta/javadoc.index.json" beforeDir="false" afterPath="$PROJECT_DIR$/meta/javadoc.index.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/meta/kotlindoc.index.json" beforeDir="false" afterPath="$PROJECT_DIR$/meta/kotlindoc.index.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/meta/swiftdoc.index.json" beforeDir="false" afterPath="$PROJECT_DIR$/meta/swiftdoc.index.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/meta/wiki.index.json" beforeDir="false" afterPath="$PROJECT_DIR$/meta/wiki.index.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/robots.txt" beforeDir="false" afterPath="$PROJECT_DIR$/robots.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sitemap-groovydoc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/sitemap-groovydoc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sitemap-home.xml" beforeDir="false" afterPath="$PROJECT_DIR$/sitemap-home.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sitemap-javadoc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/sitemap-javadoc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sitemap-kotlindoc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/sitemap-kotlindoc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sitemap-swiftdoc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/sitemap-swiftdoc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sitemap-wiki.xml" beforeDir="false" afterPath="$PROJECT_DIR$/sitemap-wiki.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sitemap.xml" beforeDir="false" afterPath="$PROJECT_DIR$/sitemap.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/swiftdoc/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/swiftdoc/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wiki/assignment-creation/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/wiki/assignment-creation/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wiki/concepts/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/wiki/concepts/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wiki/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/wiki/index.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -98,17 +121,6 @@
     </configuration>
     <configuration default="true" type="Application" factoryName="Application">
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration default="true" type="ArquillianJUnit" factoryName="" nameIsGenerated="true">
-      <option name="arquillianRunConfiguration">
-        <value>
-          <option name="containerStateName" value="" />
-        </value>
-      </option>
-      <option name="TEST_OBJECT" value="class" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -255,12 +267,12 @@
     </configuration>
     <list>
       <item itemvalue="JUnit.All in drop-project" />
-      <item itemvalue="Spring Boot.DropProjectApplication" />
       <item itemvalue="JUnit.ReportControllerTests.exportCSV" />
       <item itemvalue="JUnit.ReportControllerTests.exportCSVWithStudentTests" />
       <item itemvalue="JUnit.UploadControllerTests.uploadProjectJunitErrorsWithTwoTestFiles" />
       <item itemvalue="JUnit.UploadControllerTests.uploadProjectJunitWithSkippedTests" />
       <item itemvalue="JUnit.ReportControllerTests.testTestMatrix" />
+      <item itemvalue="Spring Boot.DropProjectApplication" />
     </list>
     <recent_temporary>
       <list>
