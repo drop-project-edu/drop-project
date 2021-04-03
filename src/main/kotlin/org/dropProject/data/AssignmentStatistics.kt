@@ -78,7 +78,7 @@ data class GroupSubmissionStatistics(val groupID : Long,
  *
  * @param submissionStatistics is a List of [GroupSubmissionStatistics]. Each element contains the statistics for a ProjectGroup.
  * @param nrTests is an Int, indicating how many tests the assignment has.
- * @param inclusionTreshold is an Int, representing a min percentage that defines the threshold for inclusion of a ProjectGroup
+ * @param inclusionThreshold is an Int, representing a min percentage that defines the threshold for inclusion of a ProjectGroup
  * into the calculations. By default, 75% will be used.
  * @return An [AssignmentStatistics]
  */
