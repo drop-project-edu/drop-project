@@ -1,12 +1,8 @@
-Concepts
-
-Assignments
-and
-Submissions
+## Assignments and Submissions
 
 The best way to understand how Drop Project (DP) works is to start with its two main concepts: Assignments and Submissions. Assignments are created by teachers and Submissions are created by students, according to the assignment instructions. The students' goal is to pass all the tests.
 
-Assignments
+### Assignments
 
 The interesting thing is that assignments are just regular maven projects (in Java or Kotlin), stored in a regular git repository - there's nothing specific to DP in them.
 
@@ -14,7 +10,7 @@ Users with the TEACHER role will be able to create an assignment by connecting D
 
 The good thing is that you can code and test the assignments in your IDE, without using DP. After you finished, just connect DP to your repository. If you make further changes, just refresh the assignment in DP.
 
-Submissions
+### Submissions
 
 After the assignment is marked active, students will be able to submit their projects, trying to pass all the assignment junit tests. They can submit their project by dropping a zip file or by connecting DP to a git repository containing their submission (this is specified by the teacher when she creates the assignment).
 
