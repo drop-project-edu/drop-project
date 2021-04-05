@@ -22,8 +22,7 @@ package org.dropProject.controllers
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import org.dropProject.dao.*
-import org.dropProject.data.TestType
-import org.dropProject.extensions.formatDefault
+import org.dropProject.extensions.formatJustDate
 import org.dropProject.extensions.realName
 import org.dropProject.forms.AssignmentForm
 import org.dropProject.repository.*
@@ -41,11 +40,13 @@ import org.springframework.stereotype.Controller
 import org.springframework.ui.ModelMap
 import org.springframework.validation.BindingResult
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.servlet.mvc.support.RedirectAttributes
 import java.io.File
-import java.math.RoundingMode
+import java.nio.charset.StandardCharsets
 import java.security.Principal
-import java.util.LinkedHashSet
+import java.util.*
+import javax.servlet.http.HttpServletRequest
 import javax.validation.Valid
 
 /**
@@ -765,8 +766,84 @@ class AssignmentController(
 
         val headers = HttpHeaders()
         headers.contentType = MediaType("application", "json")
-        headers.setContentDispositionFormData("attachment", "${assignmentId}_export.csv");
+        headers.setContentDispositionFormData("attachment", "${assignmentId}_export_${Date().formatJustDate()}.json");
         return ResponseEntity(assignmentAsJSon, headers, HttpStatus.OK);
+    }
+
+    /**
+     * Controller that responds with the page to import assignments via upload
+     *
+     * @return the view name
+     */
+    @RequestMapping(value = ["/import"], method = [(RequestMethod.GET)])
+    fun showImportAssignmentPage(): String {
+        return "teacher-import-assignment"
+    }
+
+    /**
+     * Controller that handles the import of an Assignment through a previously exported JSON file
+     *
+     * @param file is a [MultipartFile]
+     * @param principal is a [Principal] representing the user making the request
+     * @param request is an HttpServletRequest
+     *
+     * @return a ResponseEntity<String>
+     */
+    @RequestMapping(value = ["/import"], method = [(RequestMethod.POST)])
+    fun importAssignment(@RequestParam("file") file: MultipartFile,
+               principal: Principal,
+               redirectAttributes: RedirectAttributes,
+               request: HttpServletRequest): String {
+
+        if (!file.originalFilename.endsWith(".json", ignoreCase = true)) {
+            redirectAttributes.addFlashAttribute("error", "Error: File must be .json")
+            return "redirect:/assignment/import"
+        }
+
+        LOG.info("[${principal.realName()}] uploaded ${file.originalFilename}")
+        val jsonContent = String(file.bytes, StandardCharsets.UTF_8)
+
+        val mapper = ObjectMapper().registerModule(KotlinModule())
+        val newAssignment = mapper.readValue(jsonContent, Assignment::class.java)
+
+        // check if already exists an assignment with this id
+        if (assignmentRepository.findById(newAssignment.id).orElse(null) != null) {
+            redirectAttributes.addFlashAttribute("error", "Error: There is already an assignment with this id")
+            return "redirect:/assignment/import"
+        }
+
+        if (assignmentRepository.findByGitRepositoryFolder(newAssignment.gitRepositoryFolder) != null) {
+            redirectAttributes.addFlashAttribute("error", "Error: There is already an assignment with this git repository folder")
+            return "redirect:/assignment/import"
+        }
+
+        newAssignment.ownerUserId = principal.realName()  // new assignment is now owned by who uploads
+
+        val gitRepository = newAssignment.gitRepositoryUrl
+        try {
+            val directory = File(assignmentsRootLocation, newAssignment.gitRepositoryFolder)
+            gitClient.clone(gitRepository, directory, newAssignment.gitRepositoryPrivKey!!.toByteArray())
+            LOG.info("[${newAssignment.id}] Successfuly cloned ${gitRepository} to ${directory}")
+        } catch (e: Exception) {
+            LOG.info("Error cloning ${gitRepository} - ${e}")
+            redirectAttributes.addFlashAttribute("error", "Error cloning ${gitRepository} - ${e.message}")
+            return "redirect:/assignment/import"
+        }
+
+        assignmentRepository.save(newAssignment)
+
+        // revalidate the assignment
+        val report = assignmentTeacherFiles.checkAssignmentFiles(newAssignment, principal)
+
+        // store the report in the DB (first, clear the previous report)
+        assignmentReportRepository.deleteByAssignmentId(newAssignment.id)
+        report.forEach {
+            assignmentReportRepository.save(AssignmentReport(assignmentId = newAssignment.id, type = it.type,
+                message = it.message, description = it.description))
+        }
+
+        redirectAttributes.addFlashAttribute("message", "Assignment was sucessfully imported")
+        return "redirect:/assignment/info/${newAssignment.id}"
     }
 
     /**

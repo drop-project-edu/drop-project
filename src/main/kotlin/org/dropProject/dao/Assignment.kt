@@ -118,7 +118,7 @@ data class Assignment(
         var gitRepositoryFolder: String,  // relative to assignment.root.location
 
         @Column(nullable = false)
-        val ownerUserId: String,
+        var ownerUserId: String = "",
 
         var active: Boolean = false,
         var archived: Boolean = false,

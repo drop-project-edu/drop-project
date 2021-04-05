@@ -42,6 +42,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.mock.web.MockMultipartFile
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.User
 import org.springframework.security.test.context.support.WithMockUser
@@ -55,6 +56,7 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import org.springframework.validation.BindingResult
@@ -176,8 +178,8 @@ class AssignmentControllerTests {
                 .param("calculateStudentTestsCoverage", "true")  // <<<<
                 .param("minStudentTests", "1")   // <<<<
         )
-                .andExpect(MockMvcResultMatchers.status().isFound())
-                .andExpect(MockMvcResultMatchers.header().string("Location", "/assignment/setup-git/assignmentId"))
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", "/assignment/setup-git/assignmentId"))
 
 
     }
@@ -926,37 +928,36 @@ class AssignmentControllerTests {
                 "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git"
             )
 
-
-
-        val teacher = User("p1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
+        val teacher = User("teacher1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
 
         this.mvc.perform(get("/assignment/export/dummyAssignment1")
             .with(user(teacher)))
             .andExpect(status().isOk())
             .andExpect(content().contentType("application/json"))
-            .andExpect(content().json(
-                """
-                    { 
-                        'id': 'sample',
-                        'name': 'sample',
-                        'packageName': 'ppp',
-                        'dueDate': 'asd',
-                        'submissionMethod': 'UPLOAD',
-                        'language': 'JAVA',
-                        'acceptsStudentTests': 'true',
-                        'minStudentTests': 0,
-                        'calculateStudentTestsCoverage': 'false',
-                        'hiddenTestsVisibility': 'HIDE_EVERYTHING',
-                        'cooloffPeriod': 0,
-                        'maxMemoryMb': 0,
-                        'showLeaderBoard': 'false',
-                        'leaderboardType': 'bla',
-                        'gitRepositoryUrl': '...',
-                        'gitRepositoryPubKey': '...',
-                        'gitRepositoryPrivKey': '...',
-                        'gitRepositoryFolder': '...'
-                    }
-                """.trimIndent()))
+            .andDo(MockMvcResultHandlers.print())
+//            .andExpect(content().json(
+//                """
+//                    {
+//                        "id": "dummyAssignment1",
+//                        "name": "Dummy Assignment",
+//                        "packageName": "org.dummy",
+//                        "dueDate": null,
+//                        "submissionMethod": "UPLOAD",
+//                        "language": "JAVA",
+//                        "acceptsStudentTests": false,
+//                        "minStudentTests": null,
+//                        "calculateStudentTestsCoverage": false,
+//                        "hiddenTestsVisibility": "SHOW_PROGRESS",
+//                        "cooloffPeriod": null,
+//                        "maxMemoryMb": null,
+//                        "showLeaderBoard": false,
+//                        "leaderboardType": null,
+//                        "gitRepositoryUrl": "git@github.com:palves-ulht/sampleJavaAssignment.git",
+//                        "gitRepositoryPubKey": "${TestsHelper.sampleJavaAssignmentPublicKey}",
+//                        "gitRepositoryPrivKey": "${TestsHelper.sampleJavaAssignmentPrivateKey}",
+//                        "gitRepositoryFolder": "dummyAssignment1"
+//                    }
+//                """.trimIndent()))
 
         } finally {
 
@@ -964,6 +965,62 @@ class AssignmentControllerTests {
             if (File(assignmentsRootLocation,"dummyAssignment1").exists()) {
                 File(assignmentsRootLocation,"dummyAssignment1").deleteRecursively()
             }
+        }
+    }
+
+    @Test
+    @DirtiesContext
+    fun test_21_importAssignment() {
+
+        try {
+            val teacher = User("teacher1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
+
+            val jsonContent = """
+                        { 
+                            "id": "dummyAssignment1",
+                            "name": "Dummy Assignment",
+                            "packageName": "org.dummy",
+                            "dueDate": null,
+                            "submissionMethod": "UPLOAD",
+                            "language": "JAVA",
+                            "acceptsStudentTests": false,
+                            "minStudentTests": null,
+                            "calculateStudentTestsCoverage": false,
+                            "hiddenTestsVisibility": "SHOW_PROGRESS",
+                            "cooloffPeriod": null,
+                            "maxMemoryMb": null,
+                            "showLeaderBoard": false,
+                            "leaderboardType": null,
+                            "gitRepositoryUrl": "git@github.com:palves-ulht/sampleJavaAssignment.git",
+                            "gitRepositoryPubKey": "${TestsHelper.sampleJavaAssignmentPublicKey.replace("\n","\\n")}",
+                            "gitRepositoryPrivKey": "${TestsHelper.sampleJavaAssignmentPrivateKey.replace("\n","\\n")}",
+                            "gitRepositoryFolder": "dummyAssignment1"
+                        }
+                    """.trimIndent()
+
+            val multipartFile = MockMultipartFile("file", "assignment.json", "application/json", jsonContent.toByteArray())
+
+            mvc.perform(MockMvcRequestBuilders.fileUpload("/assignment/import")
+                .file(multipartFile)
+                .with(user(teacher)))
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", "/assignment/info/dummyAssignment1"))
+
+
+            // let's check if it was well imported
+            val mvcResult = this.mvc.perform(get("/assignment/info/dummyAssignment1"))
+                .andExpect(status().isOk)
+                .andReturn()
+
+            val assignment = mvcResult.modelAndView.model["assignment"] as Assignment
+            assertEquals("dummyAssignment1", assignment.id)
+            assertEquals("teacher1", assignment.ownerUserId)
+            mvcResult.modelAndView.model["tests"]
+            mvcResult.modelAndView.model["report"]
+
+        } finally {
+            // remove the assignments files created during the test
+            File(assignmentsRootLocation, "dummyAssignment1").deleteRecursively()
         }
     }
 

@@ -31,5 +31,6 @@ import org.dropProject.dao.Submission
 interface AssignmentRepository : JpaRepository<Assignment, String> {
 
     fun findByOwnerUserId(ownerUserId: String): List<Assignment>
+    fun findByGitRepositoryFolder(gitRepositoryFolder: String): Assignment?
 
 }
