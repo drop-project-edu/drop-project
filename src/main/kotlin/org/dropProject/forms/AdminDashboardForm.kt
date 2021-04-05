@@ -19,6 +19,10 @@
  */
 package org.dropProject.forms
 
+/**
+ * Represents the contents of a form used to perform Administrative tasks over [Submission]s (for example, interrupt
+ * pending submissions).
+ */
 data class AdminDashboardForm(
         val showMavenOutput: Boolean
 )
