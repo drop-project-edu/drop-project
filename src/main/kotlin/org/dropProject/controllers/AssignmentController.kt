@@ -19,9 +19,11 @@
  */
 package org.dropProject.controllers
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import org.dropProject.dao.*
+import org.dropProject.data.SubmissionExport
 import org.dropProject.extensions.formatJustDate
 import org.dropProject.extensions.realName
 import org.dropProject.forms.AssignmentForm
@@ -32,6 +34,8 @@ import org.eclipse.jgit.api.errors.RefNotAdvertisedException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.CacheManager
+import org.springframework.core.io.FileSystemResource
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -44,9 +48,12 @@ import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.servlet.mvc.support.RedirectAttributes
 import java.io.File
 import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import java.security.Principal
 import java.util.*
 import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
 import javax.validation.Valid
 
 /**
@@ -63,11 +70,14 @@ class AssignmentController(
         val assigneeRepository: AssigneeRepository,
         val assignmentACLRepository: AssignmentACLRepository,
         val submissionRepository: SubmissionRepository,
+        val submissionReportRepository: SubmissionReportRepository,
         val gitSubmissionRepository: GitSubmissionRepository,
+        val buildReportRepository: BuildReportRepository,
         val gitClient: GitClient,
         val assignmentTeacherFiles: AssignmentTeacherFiles,
         val submissionService: SubmissionService,
         val assignmentService: AssignmentService,
+        val zipService: ZipService,
         val cacheManager: CacheManager) {
 
     @Value("\${assignments.rootLocation}")
@@ -749,7 +759,7 @@ class AssignmentController(
      * @return A ResponseEntity<String>
      */
     @RequestMapping(value = ["/export/{assignmentId}"], method = [(RequestMethod.GET)])
-    fun exportJSON(@PathVariable assignmentId: String,
+    fun exportAssignmentJSON(@PathVariable assignmentId: String,
                   principal: Principal): ResponseEntity<String> {
 
         val assignment = assignmentRepository.findById(assignmentId).orElse(null) ?:
@@ -787,7 +797,7 @@ class AssignmentController(
      * @param principal is a [Principal] representing the user making the request
      * @param request is an HttpServletRequest
      *
-     * @return a ResponseEntity<String>
+     * @return the view name
      */
     @RequestMapping(value = ["/import"], method = [(RequestMethod.POST)])
     fun importAssignment(@RequestParam("file") file: MultipartFile,
@@ -846,6 +856,98 @@ class AssignmentController(
         return "redirect:/assignment/info/${newAssignment.id}"
     }
 
+    @RequestMapping(value = ["/export-submissions/{assignmentIdParam}"], method = [(RequestMethod.GET)],
+        produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
+    @ResponseBody
+    fun exportSubmissions(@PathVariable assignmentIdParam: String,
+                          principal: Principal, response: HttpServletResponse): FileSystemResource {
+
+        val assignment = assignmentRepository.findById(assignmentIdParam).orElse(null) ?:
+        throw IllegalArgumentException("assignment ${assignmentIdParam} is not registered")
+
+        val acl = assignmentACLRepository.findByAssignmentId(assignmentIdParam)
+
+        if (principal.realName() != assignment.ownerUserId && acl.find { it.userId == principal.realName() } == null) {
+            throw IllegalAccessError("Exporting assignments is restricted to their owner or authorized teachers")
+        }
+
+        val submissions = submissionRepository.findByAssignmentId(assignmentIdParam)
+        val submissionsExport = mutableListOf<SubmissionExport>()
+
+        // for each submission, create the corresponding "full" SubmissionExport object
+        submissions.forEach {
+            with (it) {
+                val buildReport = if (buildReportId != null) buildReportRepository.findByIdOrNull(buildReportId)?.buildReport else null
+                val submissionReport = submissionReportRepository.findBySubmissionId(id).map {
+                    eachReport -> SubmissionExport.SubmissionReport(eachReport.reportKey, eachReport.reportValue,
+                                                                    eachReport.reportProgress, eachReport.reportGoal)
+                }
+                val submissionExport = SubmissionExport(id = id, submissionId = submissionId,
+                    gitSubmissionId = gitSubmissionId, submissionFolder = submissionFolder,
+                    submissionDate = submissionDate, submitterUserId = submitterUserId, status = getStatus().code,
+                    statusDate = statusDate, assignmentId = assignmentId, buildReport = buildReport,
+                    structureErrors = structureErrors, markedAsFinal = markedAsFinal,
+                    authors = group.authors.map { author ->  SubmissionExport.Author(author.userId, author.name) },
+                    submissionReport = submissionReport)
+                submissionsExport.add(submissionExport)
+            }
+        }
+
+        val fileName = "${assignmentIdParam}_submissions_${Date().formatJustDate()}"
+        val tempFolder = Files.createTempDirectory(fileName).toFile()
+        val jsonFile = File(tempFolder, "submissions.json")
+        val mapper = ObjectMapper().registerModule(KotlinModule())
+        try {
+            mapper.writeValue(jsonFile, submissionsExport)
+            val zipFile = zipService.createZipFromFolder(tempFolder.name, tempFolder)
+            LOG.info("Created ${zipFile.file.absolutePath} with submissions from ${assignmentIdParam}")
+
+            response.setHeader("Content-Disposition", "attachment; filename=${fileName}.zip")
+            return FileSystemResource(zipFile.file)
+        } finally {
+            tempFolder.delete()
+        }
+    }
+
+    /**
+     * Controller that handles the import of an Assignment through a previously exported JSON file
+     *
+     * @param file is a [MultipartFile]
+     * @param principal is a [Principal] representing the user making the request
+     * @param request is an HttpServletRequest
+     *
+     * @return the view name
+     */
+    @RequestMapping(value = ["/import-submissions"], method = [(RequestMethod.POST)])
+    fun importSubmissions(@RequestParam("file") file: MultipartFile,
+                         principal: Principal,
+                         redirectAttributes: RedirectAttributes,
+                         request: HttpServletRequest): String {
+
+        if (!file.originalFilename.endsWith(".zip", ignoreCase = true)) {
+            redirectAttributes.addFlashAttribute("error", "Error: File must be .zip")
+            return "redirect:/assignment/import-submissions"
+        }
+
+        LOG.info("[${principal.realName()}] uploaded ${file.originalFilename}")
+        var assignmentId = ""
+
+        val tempFolder = Files.createTempDirectory("submissions").toFile()
+        val destinationFile = File(tempFolder, "${System.currentTimeMillis()}-submissions.zip")
+        Files.copy(file.inputStream,
+            destinationFile.toPath(),
+            StandardCopyOption.REPLACE_EXISTING)
+
+        val destinationFolder = zipService.unzip(destinationFile.toPath(), "submissions-extracted")
+        val submissionsJSONFile = File(destinationFolder, "submissions.json")
+
+        val mapper = ObjectMapper().registerModule(KotlinModule())
+        val submissions = mapper.readValue(submissionsJSONFile, object : TypeReference<List<SubmissionExport?>?>() {})
+
+        redirectAttributes.addFlashAttribute("message", "Imported successfuly XXX submissions")
+        return "redirect:/report/${assignmentId}"
+    }
+
     /**
      * Collects [Assignment]s that have certain [tags] into the [model].
      * @param model is a [ModelMap] that will be populated with information to use in a View.
@@ -866,5 +968,7 @@ class AssignmentController(
                 .map { it.selected = tags?.split(",")?.contains(it.name) ?: false; it }
                 .sortedBy { it.name }
     }
+
+
 
 }
