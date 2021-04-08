@@ -4,7 +4,7 @@ The best way to understand how Drop Project (DP) works is to start with its two 
 
 #### Assignments
 
-The interesting thing is that assignments are just regular maven projects (in Java or Kotlin), stored in a regular git repository - there's nothing specific to DP in them.
+The interesting thing is that assignments are just regular Maven projects (in Java or Kotlin), stored in a regular git repository - there's nothing specific to DP in them.
 
     + assignment
     |--- pom.xml     (includes the checkstyle and junit plugins)
@@ -12,9 +12,9 @@ The interesting thing is that assignments are just regular maven projects (in Ja
     |--- instructions.html     (optional, the assignment instructions)
     |--- src
     |------ main
-    |--------- ...      (here goes the reference implementation, in maven structure)
+    |--------- ...      (here goes the reference implementation, in Maven structure)
     |------ test
-    |--------- ...      (junit tests that will validate students' submissions)
+    |--------- ...      (JUnit tests that will validate students' submissions)
 
 Users with the TEACHER role will be able to create an assignment by connecting DP with its repository and filling some information. You can see an example in https://github.com/palves-ulht/sampleJavaAssignment
 

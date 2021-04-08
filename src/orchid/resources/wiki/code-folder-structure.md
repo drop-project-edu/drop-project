@@ -1,6 +1,7 @@
 Drop Project's code itself follows the Maven folder structure. 
 
-The following figure presents the folder structure, as well as the main sub-folders and their description.
+The following figure represents DP's folder/directory structure. Below the figure, a description of
+ the contents of each sub-folder is given.
 
     . src
     +-- main
@@ -33,28 +34,28 @@ Contains the Data Access Object classes. This is where you will find the Assignm
 Contains auxiliary classes used in session.
 
 #### src/main/kotlin/drop-project/extensions
-Code that extends certain classes of the Java API (e.g. Date)
+Code that extends certain classes of the Java API (e.g. Date).
 
 #### src/main/kotlin/drop-project/filters
 Classes that intercept and pre-process HTTP requests.
 
 #### src/main/kotlin/drop-project/repositories
-Code that defines functions/interfaces to find persisted objects
+Code that defines functions/interfaces to find persisted objects.
 
 #### src/main/kotlin/drop-project/security
-Contains access control definitions
+Contains access control definitions.
 
 #### src/main/kotlin/drop-project/services
-Business logic code
+Business logic code.
 
 #### src/test/kotlin/drop-project/controllers
-Contains tests for controllers
+Contains tests for controllers.
 
 #### src/test/kotlin/drop-project/dao
-Contains tests for Data Access Object classes
+Contains tests for Data Access Object classes.
 
 #### src/test/kotlin/drop-project/data
-Contains tests for the auxiliary classes 
+Contains tests for the auxiliary classes .
 
 #### src/test/kotlin/drop-project/...
 Tests for other packages.
