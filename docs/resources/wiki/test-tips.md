@@ -5,7 +5,7 @@ DP uses JUnit for testing. JUnit provides some multiple ready to use assertion f
 
 - assertEquals()
 - assertTrue()
-- assertFalse
+- assertFalse()
 - assertNotNull()
 
 In some scenarios, the teacher might have specific comparison needs that not ensure by one of JUnit's assertions. 
@@ -44,5 +44,4 @@ In the following example, the test function will only be allowed 1000 millisecon
 If you prefer to create your evaluations using input/out matching instead of unit testing, you can include the 
 following tool in your assignment's tests:
 
-https://github.com/drop-project-edu/stdin-stdout-junit-helper
-
+[https://github.com/drop-project-edu/stdin-stdout-junit-helper](https://github.com/drop-project-edu/stdin-stdout-junit-helper)
