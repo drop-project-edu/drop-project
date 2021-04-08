@@ -6,7 +6,7 @@ https://github.com/drop-project-edu/sampleJavaAssignment
 
 https://github.com/drop-project-edu/sampleKotlinAssignment
 
-# Structure
+## Structure
 
 The structure of the repository must be the following:
 
@@ -20,6 +20,8 @@ The structure of the repository must be the following:
     |------ test
     |--------- ... (JUnit tests that will validate students' submissions)
 
+## Assignment creation
+
 After the creation of the repository, the following steps should be followed in the Drop Project web-application:
 
 1. Login with your teacher account
@@ -27,11 +29,13 @@ After the creation of the repository, the following steps should be followed in 
 3. Press the `Create Assignment` blue button that appears in the bottom of the page
 4. Fill in the form - below each field there is a short description of its purpose
 
-# How to create tests
+## Tests
 
 Public tests should be defined in a file whose name should be prefixed with the `TestTeacher`. For example, the tests 
 for a class `Person` should be defined in a file called `TestTeacherPerson`.
 
-Hidden tests should be defined in a file whose name should be prefixed with `TestTeacherHidden`. For example, `TestTeacherHiddenPerson`.
+Private (or Hidden) tests should be defined in a file whose name should be prefixed with `TestTeacherHidden`. For example, `TestTeacherHiddenPerson`.
 
-It is possible to have multiple test public and hidden test classes.
+It is possible to have multiple test public and private (hidden) test classes.
+
+For some ideas on how to design your tests, check our [test tips](test-tips.md) page.
