@@ -1,0 +1,1351 @@
+<!DOCTYPE HTML>
+<!--
+    Editorial by HTML5 UP
+    html5up.net | @ajlkn
+    Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+<head>
+
+
+
+
+
+
+<meta charset="utf-8"/>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no"/>
+<meta name="generator" content="Orchid 0.21.0"/>
+<link rel="icon" href="https://drop-project-edu.github.io/drop-project/favicon.ico">
+
+
+<meta name="robots" content="index, follow">
+
+
+
+<title>Test creation tips</title>
+
+
+<meta name="description" content="">
+
+
+
+<link rel="prev" href="https://drop-project-edu.github.io/drop-project/wiki/code-folder-structure">
+
+
+
+<!-- start:inject styles -->
+<link rel="stylesheet" type="text/css" href="https://drop-project-edu.github.io/drop-project/Editorial/d4c7d946/assets/css/editorial_main.css"  />
+<link rel="stylesheet" type="text/css" href="https://drop-project-edu.github.io/drop-project/Editorial/d4c7d946/assets/css/editorial_orchidCustomizations.css"  />
+<link rel="stylesheet" type="text/css" href="https://drop-project-edu.github.io/drop-project/Editorial/d4c7d946/assets/css/orchidSearch.css"  />
+<!-- end:inject styles -->
+
+
+
+
+
+<!-- start:debug info -->
+
+<!-- THEME -->
+<!-- Type: Editorial -->
+<!-- Class: com.eden.orchid.editorial.EditorialTheme -->
+
+<!-- PAGE -->
+<!-- Type: wiki -->
+<!-- Class: com.eden.orchid.wiki.pages.WikiPage -->
+<!-- Layout: index -->
+<!-- Resolved Layout: templates/layouts/index.peb -->
+<!-- Page Template: wiki, page -->
+<!-- Resolved Page Template: templates/pages/page.peb -->
+
+<!-- RESOURCE -->
+<!-- Class: com.eden.orchid.api.resources.resource.FileResource -->
+<!-- Source Filename: wiki/test-tips.md -->
+
+<!-- COMPLETE PAGE CONFIGURATION -->
+<script>
+    window.allData = {"reference":{"path":"wiki","baseUrl":"https://drop-project-edu.github.io/drop-project","fileName":"test-tips","extension":"html","usePrettyUrl":true,"link":"https://drop-project-edu.github.io/drop-project/wiki/test-tips"},"previous":{"path":"wiki","baseUrl":"https://drop-project-edu.github.io/drop-project","fileName":"code-folder-structure","extension":"html","usePrettyUrl":true,"link":"https://drop-project-edu.github.io/drop-project/wiki/code-folder-structure"},"description":"","title":"Test creation tips"};
+</script>
+
+<!-- end:debug info -->
+
+
+
+<script>
+    window.site = {"orchidVersion":"0.21.0","baseUrl":"https://drop-project-edu.github.io/drop-project","environment":"debug","version":"0.9.3"};
+</script>
+
+
+    <!-- start:inject meta-components [head] -->
+    
+    <!-- end:inject meta-components [head] -->
+
+
+
+    <!-- start:inject meta-components [head] -->
+    
+    <!-- end:inject meta-components [head] -->
+
+
+
+
+
+
+
+</head>
+<body class="is-loading">
+
+
+
+
+
+    <!-- start:inject meta-components [bodyStart] -->
+    
+    <!-- end:inject meta-components [bodyStart] -->
+
+
+
+    <!-- start:inject meta-components [bodyStart] -->
+    
+    <!-- end:inject meta-components [bodyStart] -->
+
+
+
+
+
+<!-- Wrapper -->
+<div id="wrapper">
+
+    <!-- Main -->
+    <div id="main">
+        <div class="inner">
+
+            <!-- Header -->
+            
+                <header id="header">
+    <a href="https://drop-project-edu.github.io/drop-project" class="logo">Drop Project</a>
+    <ul class="icons">
+    
+    
+        <li>
+            <a href="https://github.com/drop-project-edu/drop-project" class="icon fa-github">
+                <span class="label">github</span>
+            </a>
+        </li>
+    
+    
+    </ul>
+</header>
+
+            
+            
+            
+            
+                <section id="pageContent">
+                    <header class="major"><h2>Test creation tips</h2></header>
+                    <article>
+                        
+    <!-- start:inject components -->
+    
+        
+            
+                
+                    
+                        <p>This page presents some ideas to consider when creating the tests for your assignments.</p>
+<h5 id="junit-101"><a href="#junit-101" id="junit-101" class="anchor"></a>JUnit 101</h5>
+<p>DP uses JUnit for testing. JUnit provides some multiple ready to use assertion functions, such as:</p>
+<ul>
+<li>assertEquals()</li>
+<li>assertTrue()</li>
+<li>assertFalse()</li>
+<li>assertNotNull()</li>
+</ul>
+<p>In some scenarios, the teacher might have specific comparison needs that not ensure by one of JUnit's assertions.
+If this is the case, the teacher can use <code>fail()</code> to force the test to fail on a certain condition.</p>
+<h4 id="ensuring-test-execution-order"><a href="#ensuring-test-execution-order" id="ensuring-test-execution-order" class="anchor"></a>Ensuring test execution order</h4>
+<p>For pedagogical (or other) reasons, it might be interesting to ensure that the tests are executed in a certain order.
+This might help the student focus on more elementary issues before delving in to more complex problems.</p>
+<p>In JUnit this can be achieved by:</p>
+<ol>
+<li>Importing the <code>org.junit.FixMethodOrder</code> and <code>org.junit.runners.MethodSorters</code> packages;</li>
+<li>Using the <code>@FixMethodOrder(MethodSorters.NAME_ASCENDING)</code> annotation before the declaration of the Test class.</li>
+</ol>
+<p>Example:</p>
+<pre><code>import org.junit.FixMethodOrder;    
+import org.junit.runners.MethodSorters;
+
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+public class TestPerson {
+    ...
+}
+</code></pre>
+<h5 id="level-of-detail-in-feedback-messages"><a href="#level-of-detail-in-feedback-messages" id="level-of-detail-in-feedback-messages" class="anchor"></a>Level of detail in feedback messages</h5>
+<p>With the JUnit API, teachers have full control of the level of detail that is given by each assert.</p>
+<p>In this first example, the student will only receive a very generic message if the respective code fails the test (i.e. <code>java.lang.AssertionError</code>):</p>
+<pre><code>@Test
+public void test001() {
+    assertTrue(Main.isOdd(10));
+}
+</code></pre>
+<p>A teacher can give further information by using the alternative version of <code>assertTrue()</code> that receives a String as the first argument:</p>
+<pre><code>@Test(timeout=1000)
+public void test001() {
+    assertTrue(&quot;isOdd() returned false incorrectly&quot;, Main.isOdd(11));
+    assertFalse(&quot;isOdd() returned true incorrectly&quot;, Main.isOdd(20));
+}
+</code></pre>
+<h5 id="use-timeouts-to-prevent-infinite-loops-or-disallow-inefficient-solutions"><a href="#use-timeouts-to-prevent-infinite-loops-or-disallow-inefficient-solutions" id="use-timeouts-to-prevent-infinite-loops-or-disallow-inefficient-solutions" class="anchor"></a>Use <code>Timeouts</code> to prevent infinite loops or disallow inefficient solutions</h5>
+<p>In the following example, the test function will only be allowed 1000 milliseconds (i.e. 1 second) to run:</p>
+<pre><code>@Test(timeout=1000)
+public void test001() { 
+    ...
+}
+</code></pre>
+<h5 id="prevent-hardcoded-solutions-aka-overfitting"><a href="#prevent-hardcoded-solutions-aka-overfitting" id="prevent-hardcoded-solutions-aka-overfitting" class="anchor"></a>Prevent hardcoded solutions (aka Overfitting)</h5>
+<p>Some students might try to cheat the system by implementing hardcoded solutions that do not actually solve the general
+problem presented in the assignment, but work for some inputs (namely, the ones used on the assignment). To mitigate this
+situation, we suggest that teachers employ the following test design strategies:</p>
+<ul>
+<li>Multiple assertions</li>
+<li>Hide test case information: function arguments</li>
+<li>Hide test case information: function results</li>
+<li>Use private (or hidden) tests</li>
+</ul>
+<h6 id="multiple-assertions"><a href="#multiple-assertions" id="multiple-assertions" class="anchor"></a>Multiple assertions</h6>
+<p>Test functions should include multiple assertions, covering the range of valid return function values.</p>
+<p>For example, this should be avoided because a student's solution that always returns <code>true</code> will pass the test:</p>
+<pre><code>public void test001() { 
+    assertTrue(Main.isOdd(11));
+}
+</code></pre>
+<p>Instead, this alternative is preferable:</p>
+<pre><code>public void test001() { 
+    assertTrue(Main.isOdd(11));
+    assertFalse(Main.isOdd(20));
+}
+</code></pre>
+<h5 id="hide-test-case-information-function-arguments"><a href="#hide-test-case-information-function-arguments" id="hide-test-case-information-function-arguments" class="anchor"></a>Hide test case information: function arguments</h5>
+<p>Teachers should try to find a balance between exposing too much and loo little information.</p>
+<p>For example, the following test gives the student too much information about what is going on:</p>
+<pre><code>@Test
+public void test001() { 
+    assertTrue(&quot;isOdd(11) returned the wrong value&quot;, Main.isOdd(11));
+    assertTrue(&quot;isOdd(20) returned the wrong value&quot;, Main.isOdd(20));
+}
+</code></pre>
+<p>A safer alternative would be to give more generic information:</p>
+<pre><code>@Test
+public void test001() {
+    assertTrue(&quot;isOdd() returned the wrong value for an odd number larger than 10&quot;, Main.isOdd(11));
+    assertTrue(&quot;isOdd() return the wrong value for an even number larger than 10&quot;, Main.isOdd(20));
+}
+</code></pre>
+<p>The teacher can also mix asserts that have a lot of information with asserts that have little information,
+as displayed in the following example:</p>
+<pre><code>@Test
+public void test001() { 
+    assertTrue(&quot;isOdd(11) returned the wrong value&quot;, Main.isOdd(11));
+    assertTrue(&quot;isOdd(20) return the wrong value&quot;, Main.isOdd(20));
+    
+    assertTrue(&quot;isOdd() returned the wrong value&quot;, Main.isOdd(22));
+}
+</code></pre>
+<h5 id="hide-test-case-information-function-results"><a href="#hide-test-case-information-function-results" id="hide-test-case-information-function-results" class="anchor"></a>Hide test case information: function results</h5>
+<p>Although JUnit's assertion mechanism is very helpful when defining tests, sometimes it might expose too much
+information. For example, the following test will let the student know the expected contents of the function's
+output list:</p>
+<pre><code>@Test
+public void test001() {
+    List&lt;Integer&gt; expectedNumbers = new ArrayList&lt;&gt;();
+    expectedNumbers.add(1);
+    expectedNumbers.add(100);
+    
+    List&lt;Integer&gt; result = Main.getNumbers();
+    
+    assertEquals(&quot;getNumbers() returned an incorrect value&quot;, expectedNumbers, result);
+}
+</code></pre>
+<p>In this case, it might be preferable to &quot;manually&quot; perform the comparison:</p>
+<pre><code>@Test
+public void test001() {
+    List&lt;Integer&gt; expectedNumbers = new ArrayList&lt;&gt;();
+    expectedNumbers.add(1);
+    expectedNumbers.add(100);
+            
+    List&lt;Integer&gt; result = Main.getNumbers();
+    
+    if(result.get(0) != 1 || result.get(1) != 100) {
+        fail(&quot;getNumbers() returned an incorrect value&quot;);
+    }        
+}
+</code></pre>
+<p>Another alternative would be to perform other assertions before exposing the expected values. An example would be to test
+the size of the returned input, before giving more detail:</p>
+<pre><code>@Test
+public void test001() {
+    List&lt;Integer&gt; expectedNumbers = new ArrayList&lt;&gt;();
+    expectedNumbers.add(1);
+    expectedNumbers.add(100);
+
+    List&lt;Integer&gt; result = Main.getNumbers();
+
+    if(result.size() != 2) {
+        fail(&quot;getNumbers() returned a list with the wrong number of elements.&quot;);
+    }
+    
+    assertEquals(&quot;getNumbers() returned in incorrect value.&quot;, expectedNumbers, result);
+}
+</code></pre>
+<h6 id="use-private-or-hidden-tests"><a href="#use-private-or-hidden-tests" id="use-private-or-hidden-tests" class="anchor"></a>Use private (or hidden) tests</h6>
+<p>Finally, we recommend that any assignment used for student evaluation will contain a number of private tests.</p>
+<p>To define a private test in DP, just implement its function in a class prefixed by the <code>TestTeacherHidden</code> prefix, as in
+the following example:</p>
+<pre><code>public class TestTeacherHiddenPerson {
+    @Test
+    public void test001() {
+        ...
+    }
+}
+</code></pre>
+<h5 id="implement-tests-that-use-inputoutput-matching"><a href="#implement-tests-that-use-inputoutput-matching" id="implement-tests-that-use-inputoutput-matching" class="anchor"></a>Implement tests that use input/output matching</h5>
+<p>If you prefer to create your evaluations using input/out matching instead of unit testing, you can include the
+following tool in your assignment's tests:</p>
+<p><a href="https://github.com/drop-project-edu/stdin-stdout-junit-helper">https://github.com/drop-project-edu/stdin-stdout-junit-helper</a></p>
+
+                    
+                
+            
+        
+    
+    <!-- end:inject components -->
+
+
+                    </article>
+                </section>
+            
+        </div>
+        <hr>
+
+        <!-- Page Footer -->
+        <div class="inner">
+    <footer id="footer">
+        <div class="clearfix">
+            
+                <div class="float-left">
+                    <a href="https://drop-project-edu.github.io/drop-project/wiki/code-folder-structure" class="button special small pill">
+                        <span>&larr;</span> Source code structure
+                    </a>
+                </div>
+            
+            
+        </div>
+    </footer>
+</div>
+
+    </div>
+
+    <!-- Sidebar -->
+    <div id="sidebar">
+    <div class="inner">
+
+        <!-- Search -->
+        <section id="search" class="alt">
+            <form data-orchid-search="">
+                <input type="text" name="query" id="query" placeholder="Search"/>
+            </form>
+            <div class="box" id="search-results" data-orchid-search-results style="display: none;">
+                <b>Search Results</b>
+                <ul></ul>
+            </div>
+            <div class="box" id="search-progress" data-orchid-search-progress style="display: none;">
+                <div class="loader">Loading...</div>
+            </div>
+        </section>
+
+        <!-- Menu -->
+        <nav id="siteNav" class="menu">
+            <header class="major">
+                <h2>Drop Project</h2>
+            </header>
+            <ul class="top-level">
+                
+                    
+    
+    <li>
+        <a class="subheader">Wiki</a>
+    </li>
+    
+
+                
+                    
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/wiki/concepts">Concepts</a>
+    </li>
+    
+
+                
+                    
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/wiki/assignment-creation">Assignment Creation Tutorial</a>
+    </li>
+    
+
+                
+                    
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/wiki/code-folder-structure">Source code structure</a>
+    </li>
+    
+
+                
+                    
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/wiki/test-tips">Test creation tips</a>
+    </li>
+    
+
+                
+                    
+    
+    <li>
+        <a class="subheader">API Docs</a>
+    </li>
+    
+
+                
+                    
+    <li>
+        <span class="opener">Classes</span>
+        <ul>
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/controllers/admincontroller">AdminController</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/forms/admindashboardform">AdminDashboardForm</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/controllers/apperrorcontroller">AppErrorController</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/controllers/applicationcontextlistener">ApplicationContextListener</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/dao/assignee">Assignee</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/repository/assigneerepository">AssigneeRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/dao/assignment">Assignment</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/dao/assignmentacl">AssignmentACL</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/repository/assignmentaclrepository">AssignmentACLRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/controllers/assignmentcontroller">AssignmentController</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/forms/assignmentform">AssignmentForm</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/controllers/uploadcontroller/assignmentnotfoundexception">AssignmentNotFoundException</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/dao/assignmentreport">AssignmentReport</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/repository/assignmentreportrepository">AssignmentReportRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/repository/assignmentrepository">AssignmentRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/services/assignmentservice">AssignmentService</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/data/assignmentstatistics">AssignmentStatistics</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/dao/assignmenttag">AssignmentTag</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/repository/assignmenttagrepository">AssignmentTagRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/services/assignmentteacherfiles">AssignmentTeacherFiles</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/dao/assignmenttestmethod">AssignmentTestMethod</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/repository/assignmenttestmethodrepository">AssignmentTestMethodRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/services/assignmentvalidator">AssignmentValidator</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/asyncconfig">AsyncConfig</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/asynctestconfig">AsyncTestConfig</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/dao/author">Author</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/data/authordetails">AuthorDetails</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/repository/authorrepository">AuthorRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/dao/buildreport">BuildReport</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/data/buildreport">BuildReport</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/services/buildreportbuilder">BuildReportBuilder</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/repository/buildreportrepository">BuildReportRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/services/buildworker">BuildWorker</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/cancellabletaskscheduler">CancellableTaskScheduler</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/services/gitclient/commitdiff">CommitDiff</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/services/gitclient/commitinfo">CommitInfo</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/constants">Constants</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/filters/controllerrequestsloggingfilter">ControllerRequestsLoggingFilter</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/controllerrequestsloggingfilterconfig">ControllerRequestsLoggingFilterConfig</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/dropprojectapplication">DropProjectApplication</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/security/dropprojectsecurityconfig">DropProjectSecurityConfig</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/storage/filesystemstorageservice">FileSystemStorageService</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/services/gitclient">GitClient</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/dao/gitsubmission">GitSubmission</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/repository/gitsubmissionrepository">GitSubmissionRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/services/gitsubmissionservice">GitSubmissionService</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/controllers/globalcontrolleradvice">GlobalControllerAdvice</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/controllers/globalexceptionhandler">GlobalExceptionHandler</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/data/groupsubmissionstatistics">GroupSubmissionStatistics</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/data/groupedprojectgroups">GroupedProjectGroups</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/dao/indicator">Indicator</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/services/assignmentvalidator/info">Info</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/services/assignmentvalidator/infotype">InfoType</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/controllers/invalidprojectstructureexception">InvalidProjectStructureException</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/services/junitmethodresult">JUnitMethodResult</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/services/junitmethodresulttype">JUnitMethodResultType</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/dao/junitreport">JUnitReport</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/repository/junitreportrepository">JUnitReportRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/services/junitresults">JUnitResults</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/data/junitsummary">JUnitSummary</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/dao/jacocoreport">JacocoReport</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/repository/jacocoreportrepository">JacocoReportRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/services/jacocoresults">JacocoResults</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/services/jacocoresultsparser">JacocoResultsParser</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/services/junitresultsparser">JunitResultsParser</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/dao/language">Language</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/dao/leaderboardtype">LeaderboardType</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/controllers/logincontroller">LoginController</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/services/maveninvoker">MavenInvoker</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/data/mavenresult">MavenResult</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/services/myasyncuncaughtexceptionhandler">MyAsyncUncaughtExceptionHandler</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/services/gitclient/myjschconfigsessionfactory">MyJschConfigSessionFactory</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/services/gitclient/mytransportconfigcallback">MyTransportConfigCallback</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/oauth2websecurityconfig">OAuth2WebSecurityConfig</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/dao/projectgroup">ProjectGroup</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/repository/projectgrouprepository">ProjectGroupRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/controllers/reportcontroller">ReportController</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/controllers/resourcenotfoundexception">ResourceNotFoundException</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/services/scheduledtasks">ScheduledTasks</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/simpleloginwebsecurityconfig">SimpleLoginWebSecurityConfig</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/storage/storageexception">StorageException</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/storage/storageservice">StorageService</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/dao/submission">Submission</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/data/submissioninfo">SubmissionInfo</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/forms/submissionmethod">SubmissionMethod</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/controllers/uploadcontroller/submissionnotfoundexception">SubmissionNotFoundException</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/dao/submissionreport">SubmissionReport</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/repository/submissionreportrepository">SubmissionReportRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/repository/submissionrepository">SubmissionRepository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/services/submissionservice">SubmissionService</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/dao/submissionstatus">SubmissionStatus</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/data/testtype">TestType</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/dao/testvisibility">TestVisibility</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/thymeleafconfig">ThymeleafConfig</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/controllers/uploadcontroller">UploadController</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/forms/uploadform">UploadForm</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/services/zipservice">ZipService</a>
+    </li>
+    
+
+        
+        </ul>
+    </li>
+
+                
+                    
+    <li>
+        <span class="opener">Packages</span>
+        <ul>
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject">org.dropProject</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/controllers">org.dropProject.controllers</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/dao">org.dropProject.dao</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/data">org.dropProject.data</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/extensions">org.dropProject.extensions</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/filters">org.dropProject.filters</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/forms">org.dropProject.forms</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/repository">org.dropProject.repository</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/security">org.dropProject.security</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/services">org.dropProject.services</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/storage">org.dropProject.storage</a>
+    </li>
+    
+
+        
+        </ul>
+    </li>
+
+                
+            </ul>
+        </nav>
+        
+
+        <!-- Section -->
+        <section>
+            <p class="text-center">
+                Currently 0.9.3. Created with <a href="https://orchid.run">Orchid </a> and <b>Orchid Editorial Theme</b>.
+            </p>
+        </section>
+
+        <!-- Footer -->
+        <footer id="footer">
+            <p class="copyright text-center">&copy; Drop Project. All rights reserved.<br>Design by <a href="https://html5up.net">HTML5 UP</a></p>
+        </footer>
+
+    </div>
+</div>
+
+</div>
+
+
+
+
+
+
+    <!-- start:inject meta-components [bodyEnd] -->
+    
+    <!-- end:inject meta-components [bodyEnd] -->
+
+
+
+    <!-- start:inject meta-components [bodyEnd] -->
+    
+    <!-- end:inject meta-components [bodyEnd] -->
+
+
+
+
+<!-- start:inject scripts -->
+<script  src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script  src="https://cdnjs.cloudflare.com/ajax/libs/skel/3.0.1/skel.min.js"></script>
+<script  src="https://drop-project-edu.github.io/drop-project/Editorial/d4c7d946/assets/js/editorial_util.js"></script>
+<script  src="https://drop-project-edu.github.io/drop-project/Editorial/d4c7d946/assets/js/editorial_main.js"></script>
+<script  src="https://drop-project-edu.github.io/drop-project/Editorial/d4c7d946/assets/js/editorial_orchidCustomizations.js"></script>
+<!-- end:inject scripts -->
+
+
+</body>
+</html>

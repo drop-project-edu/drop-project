@@ -19945,9 +19945,2856 @@ collections:
         Page, which takes precedence over the title given by its generator.', label: Title,
       required: false}
     - {widget: markdown, name: body, label: Page Content}
-  - file: wiki/codez-allez.md
-    name: codez-allez
-    label: Codez
+  - file: wiki/code-folder-structure.md
+    name: code-folder-structure
+    label: Source code structure
+    fields:
+    - {widget: string, name: allData, description: All options passed to this object.,
+      label: All Data, required: false}
+    - {widget: string, name: changeFrequency, description: 'A rough estimate of how
+        frequently the content of this page changes, primarily to include in the generated
+        sitemap.xml. One of [always, hourly, daily, weekly, monthly, yearly, never].',
+      label: Change Frequency, required: false}
+    - types:
+      - widget: object
+        name: license
+        description: Locate and display your project's License file.
+        label: License
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: readme
+        description: Locate and display your project's Readme file.
+        label: Readme
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: pageContent
+        description: Compile and render the default page content. This is added to
+          all pages by default if no other components have been added by the user.
+        label: Page Content
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: boolean, name: noWrapper, description: Whether to include a wrapper
+            around the normal page content template., label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: template
+        description: Display a component with a user-defined template and data.
+        label: Template
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - {widget: string, name: data, description: Custom data to be rendered into
+            the custom template., label: Data, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: changelog
+        description: Display the full changelog
+        label: Changelog
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: form
+        description: Render one of your predefined forms, or create one inline
+        label: Form
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - widget: object
+          name: form
+          description: The Form to render. Can be either a key to an indexed form
+            definition, or a complete form definition for a one-off use.
+          label: Form
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: reftagger
+        description: Add the Kotlin Playground to your pages, to convert Kotlin code
+          snippets into interactive, embedded development playgrounds.
+        label: Kotlin Playground
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - {widget: string, name: bibleReader, description: '', label: Bible Reader,
+          required: false}
+        - {widget: string, name: bibleVersion, description: '', label: Bible Version,
+          required: false}
+        - {widget: boolean, name: darkMode, description: '', label: Dark Mode, required: false}
+        - {widget: boolean, name: dropShadow, description: '', label: Drop Shadow,
+          required: false}
+        - {widget: list, name: excludeClasses, description: '', label: Exclude Classes,
+          required: false}
+        - {widget: list, name: excludeTags, description: '', label: Exclude Tags,
+          required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: boolean, name: openInNewWindow, description: '', label: Open In
+            New Window, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: string, name: reftaggerSource, description: The base URL to load
+            Kotlin Playground JS files from., label: Reftagger Source, required: false}
+        - {widget: boolean, name: roundedCorners, description: '', label: Rounded
+            Corners, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: mermaid
+        description: Convert MermaidJS code snippets into diagrams in your browser.
+        label: Mermaid
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: mermaidSource, description: The base URL to load
+            Mermaid files from., label: Mermaid Source, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: string, name: selector, description: Select which elements on the
+            page are converted. Defaults to markdown code blocks with the `mermaid`
+            language., label: Selector, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: prism
+        description: Automatically find and highlight code snippets with Prism.js.
+          Markdown code snippets are immediately compatible with Prism.js and requires
+          no further configuration. This component simply attached the necessary scripts
+          and styles to the page, but needs no UI template of its own.
+        label: Prism.js
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: string, name: githubTheme, description: 'The unofficial Prism theme
+            to be used, from the ''PrismJS/prism-themes'' github repo.', label: Github
+            Theme, required: false}
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: list, name: languages, description: The Prism language definitions
+            to be included., label: Languages, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: list, name: plugins, description: The Prism plugins to be included.,
+          label: Plugins, required: false}
+        - {widget: string, name: prismSource, description: The base URL to load Prism
+            CSS and JS files from., label: Prism Source, required: false}
+        - {widget: boolean, name: scriptsOnly, description: 'If true, only include
+            the Prism Javascript files, opting to build the styles yourself.', label: Scripts
+            Only, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+        - {widget: string, name: theme, description: 'The official Prism theme to
+            be used. Alternatively, you may use a `githubTheme` to use one of the
+            themes provided from the ''PrismJS/prism-themes'' github repo.', label: Theme,
+          required: false}
+      - widget: object
+        name: kotlinPlayground
+        description: Add the Kotlin Playground to your pages, to convert Kotlin code
+          snippets into interactive, embedded development playgrounds.
+        label: Kotlin Playground
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: kotlinPlaygroundSource, description: The base URL
+            to load Kotlin Playground JS files from., label: Kotlin Playground Source,
+          required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: string, name: selector, description: Select which elements on the
+            page are converted. Defaults to markdown code blocks with the `run-kotlin`
+            language., label: Selector, required: false}
+        - {widget: string, name: server, description: The URL to a self-hosted server
+            instance for running code snippets., label: Server, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: pluginDocs
+        description: Show all options for your plugin's classes.
+        label: Plugin Documentation
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - {widget: list, name: classNames, description: A list of fully-qualified
+            class names to render options for., label: Class Names, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: list, name: packageNames, description: A list of fully-qualified
+            package names. All OptionsHolder classes in these packages will have their
+            options displayed., label: Package Names, required: false}
+        - {widget: string, name: tableClass, description: A fully-qualified class
+            name to render options for., label: Table Class, required: false}
+        - {widget: string, name: tableHeaderClass, description: A fully-qualified
+            class name to render options for., label: Table Header Class, required: false}
+        - {widget: string, name: tableLeaderClass, description: A fully-qualified
+            class name to render options for., label: Table Leader Class, required: false}
+        - {widget: string, name: tabsTemplate, description: A custom template to use
+            the for tabs tag used internally., label: Tabs Template, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: recentPosts
+        description: Render a list of the most recent blog posts.
+        label: Recent Posts
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - {widget: string, name: category, description: Only add latest posts from
+            a specific category., label: Category, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: limit, description: The maximum number of posts to
+            include in this component., label: Limit, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: disqus
+        description: Easily add comments to any page with Disqus.
+        label: Disqus
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: identifier, description: A site-wide unique identifier
+            for the comment section on this page. Defaults to the page's URL., label: Identifier,
+          required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: string, name: shortname, description: Your disqus shortname., label: Shortname,
+          required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: feedLinks
+        description: Add links to the page <head> with links to the post feeds.
+        label: Feed Links
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: presentation
+        description: Embed a Deck.js presentation.
+        label: Presentation
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - {widget: string, name: deckTheme, description: 'The Deck.js presentation
+            theme to use. Should be one of [''neon'', ''swiss'', ''web-2_0'']', label: Deck
+            Theme, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: string, name: presentation, description: The key of the Presentation
+            to display., label: Presentation, required: false}
+        - {widget: boolean, name: scriptsOnly, description: 'If true, only include
+            the Deck.js Javascript files, opting to build the styles yourself.', label: Scripts
+            Only, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+        - {widget: string, name: transitionTheme, description: 'The Deck.js transition
+            theme to use. Should be one of [''fade'', ''horizontal-slide'', ''vertical-slide'']',
+          label: Transition Theme, required: false}
+      - widget: object
+        name: orchidSearch
+        description: Adds the self-contained Lunr.js-based Orchid search component
+          to your page. Requires search indices to be generated.
+        label: Orchid Static Search
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: algoliaDocsearch
+        description: Add Algolia Docsearch to your site with minimal configuration.
+        label: Algolia DocSearch
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - {widget: string, name: apiKey, description: The API key for your site. Your
+            apiKey will be given to you once Algolia creates your config., label: Api
+            Key, required: false}
+        - {widget: boolean, name: debug, description: Set debug to true if you want
+            to inspect the dropdown., label: Debug, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: indexName, description: The API key for your site.
+            Your indexName will be given to you once Algolia creates your config.,
+          label: Index Name, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: string, name: selector, description: The selector for your search
+            input field., label: Selector, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: snippet
+        description: ''
+        label: Snippet Component
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: boolean, name: raw, description: render the raw snippet content
+            without compiling it first, label: Raw, required: false}
+        - {widget: string, name: snippetName, description: the snippet name, label: Snippet
+            Name, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: snippets
+        description: ''
+        label: Snippets Component
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: id, description: The ID to add to tabs. Defaults
+            to the tags used to query snippets., label: Id, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: boolean, name: raw, description: render the raw snippet content
+            without compiling it first, label: Raw, required: false}
+        - {widget: list, name: snippetTags, description: the snippet tags, label: Snippet
+            Tags, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: sourceDocSummary
+        description: ''
+        label: Sourcedoc Page Simple Summary
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: swaggerUi
+        description: Embed the Swagger UI and point it to your OpenApi.json spec.
+        label: Swagger UI
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - {widget: string, name: allSwaggerOptions, description: 'The full JSON object
+            that initializes the Swagger UI, allowing you to completely customize
+            it.', label: All Swagger Options, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: openApiSource, description: The URL containing the
+            OpenAPI definition., label: Open Api Source, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: string, name: swaggerElementId, description: The ID of the element
+            that should contain the Swagger UI., label: Swagger Element Id, required: false}
+        - {widget: string, name: swaggerUiVersion, description: The version of SwaggerUI
+            to use., label: Swagger Ui Version, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: taxonomy
+        description: Show a list of all Taxonomies.
+        label: Taxonomy
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: string, name: taxonomyType, description: The Taxonomy to include
+            terms from., label: Taxonomy Type, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: taxonomyTerm
+        description: Show a list of all terms in a Taxonomy.
+        label: Taxonomy Terms
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: string, name: taxonomyType, description: The Taxonomy to include
+            terms from., label: Taxonomy Type, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+        - {widget: string, name: termType, description: The Term within the Taxonomy
+            to include pages from., label: Term Type, required: false}
+      widget: list
+      typeKey: type
+      name: components
+      description: The components that comprise the main content body for this page.
+        The 'intrinsic content' of the page, which is typically the rendered markup
+        of the containing file, is added by default as a component of type `pageContent`
+        if none are specified. The full `pageContent` component is rendered within
+        the chosen page template. If a custom list of components is given, you will
+        need to add the `pageContent` component yourself.
+      label: Components
+      required: false
+    - {widget: string, name: defaultBreadcrumbs, description: The default breadcrumbs
+        to display for this page., label: Default Breadcrumbs, required: false}
+    - {widget: string, name: description, description: 'Specify a custom description
+        for this page, to include in the meta description tag.', label: Description,
+      required: false}
+    - {widget: boolean, name: draft, description: Set this page as currently being
+        a draft. Drafts will not be included in the rendered site., label: Draft,
+      required: false}
+    - {widget: datetime, name: expiryDate, description: 'Set when this page expires.
+        Pages with an expiry date in the past are considered a draft. Should be a
+        valid ISO-8601 date or datetime without timezone, such as `2018-01-01` or
+        `2018-01-01T08:15:30`.', label: Expiry Date, required: false}
+    - widget: list
+      name: extraCss
+      description: Attach extra CSS assets to this page.
+      label: Extra Css
+      fields:
+      - {widget: string, name: asset, description: '', label: Asset, required: false}
+      - {widget: string, name: attrs, description: Arbitrary attributes to apply to
+          this element when rendered to page, label: Attrs, required: false}
+      - {widget: boolean, name: download, description: '', label: Download, required: false}
+      - {widget: boolean, name: inlined, description: '', label: Inlined, required: false}
+      required: false
+    - widget: list
+      name: extraJs
+      description: Attach extra Javascript assets to this page.
+      label: Extra Js
+      fields:
+      - {widget: string, name: asset, description: '', label: Asset, required: false}
+      - {widget: boolean, name: async, description: '', label: Async, required: false}
+      - {widget: string, name: attrs, description: Arbitrary attributes to apply to
+          this element when rendered to page, label: Attrs, required: false}
+      - {widget: boolean, name: defer, description: '', label: Defer, required: false}
+      - {widget: boolean, name: download, description: '', label: Download, required: false}
+      - {widget: boolean, name: inlined, description: '', label: Inlined, required: false}
+      - {widget: boolean, name: module, description: '', label: Module, required: false}
+      - {widget: boolean, name: nomodule, description: '', label: Nomodule, required: false}
+      required: false
+    - {widget: datetime, name: lastModifiedDate, description: 'Set when this page
+        was last modified. Should be a valid ISO-8601 date or datetime without timezone,
+        such as `2018-01-01` or `2018-01-01T08:15:30`.', label: Last Modified Date,
+      required: false}
+    - {widget: string, name: layout, description: 'The layout to embed this page in,
+        or ''none'' to render the page content without a layout. A page''s default
+        layout, if none is specified, is `index`', label: Layout, required: false}
+    - types:
+      - widget: object
+        name: separator
+        description: A divider between sections of the menu, optionally with a title.
+        label: Divider
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - {widget: boolean, name: asSubmenu, description: 'Set all the menu items
+            from this as a dropdown, instead of including them directly at the root.',
+          label: As Submenu, required: false}
+        - {widget: string, name: order, description: 'By default, menu items are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual menu item. A higher value for order
+            will render that menu item earlier in the list.', label: Order, required: false}
+        - {widget: string, name: submenuTitle, description: The title the menu, label: Submenu
+            Title, required: false}
+        - {widget: string, name: title, description: 'An optional title for this divider,
+            to create a contextual section within the menu.', label: Title, required: false}
+      - widget: object
+        name: submenu
+        description: A generic inner menu, which holds a menu inside it.
+        label: Submenu
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - {widget: boolean, name: asSubmenu, description: 'Set all the menu items
+            from this as a dropdown, instead of including them directly at the root.',
+          label: As Submenu, required: false}
+        - types:
+          - widget: object
+            name: separator
+            description: A divider between sections of the menu, optionally with a
+              title.
+            label: Divider
+            fields: []
+          - widget: object
+            name: submenu
+            description: A generic inner menu, which holds a menu inside it.
+            label: Submenu
+            fields: []
+          - widget: object
+            name: link
+            description: A link to any generic URL.
+            label: Link
+            fields: []
+          - widget: object
+            name: generatorPages
+            description: Adds all pages from a generator to the menu.
+            label: Generator Pages
+            fields: []
+          - widget: object
+            name: page
+            description: A page in your site, referenced from a Collection. If no
+              page query is given, will use the current page.
+            label: Page
+            fields: []
+          - widget: object
+            name: collectionPages
+            description: A page in your site, referenced from a Collection. If no
+              page query is given, will use the current page.
+            label: Page
+            fields: []
+          - widget: object
+            name: pageParent
+            description: The parent of a page in your site, referenced from a Collection.
+              If no page query is given, will use the current page. The parent page
+              is the same as the next level up in the breadcrumb hierarchy.
+            label: Page Parent
+            fields: []
+          - widget: object
+            name: pageSiblings
+            description: The siblings of a page in your site, referenced from a Collection.
+              If no page query is given, will use the current page. The siblings of
+              a page are defined as the children of the parent Index, not necessarily
+              the Index at the parent Page.
+            label: Page Siblings
+            fields: []
+          - widget: object
+            name: pageChildren
+            description: The children of a page in your site, referenced from a Collection.
+              If no page query is given, will use the current page. The children are
+              defined as the children of the Index at the page path.
+            label: Page Children
+            fields: []
+          - widget: object
+            name: pageSubtree
+            description: The subtree of all pages starting at a page in your site,
+              referenced from a Collection. If no page query is given, will use the
+              current page. The subtree is defined as the Index at the page's path.
+            label: Page Sub-Tree
+            fields: []
+          - widget: object
+            name: github
+            description: ''
+            label: Github Menu Item
+            fields: []
+          - widget: object
+            name: styleguide
+            description: All pages in your styleguide, optionally by section.
+            label: Styleguide
+            fields: []
+          - widget: object
+            name: styleguideSections
+            description: Link to all the sections of your styleguide.
+            label: Styleguide Sections
+            fields: []
+          - widget: object
+            name: pages
+            description: Static pages, optionally by group.
+            label: Static Pages
+            fields: []
+          - widget: object
+            name: pageIds
+            description: Finds all headers with an ID within the page content and
+              creates menu items for each. All headers between the min and max levels
+              are used, such as h1-h3, or h2-h5. The default is all headers, h1-h6.
+              These header links can either be displayed in a flat list in the order
+              they were found on the page, or as a nested tree, where h2s are grouped
+              under their previous h1, etc.
+            label: Page Ids
+            fields: []
+          - widget: object
+            name: latestPosts
+            description: Latest posts, optionally by category.
+            label: Latest Posts
+            fields: []
+          - widget: object
+            name: sourcedocPageLinks
+            description: Links to the different sections within a Javadoc Class page,
+              optionally with their items nested underneath them.
+            label: Javadoc Class Sections
+            fields: []
+          - widget: object
+            name: sourcedocPages
+            description: Locate all source pages of a given kind.
+            label: Source Pages
+            fields: []
+          - widget: object
+            name: sourcedocModules
+            description: The module home pages for a given module type..
+            label: Source Pages
+            fields: []
+          - widget: object
+            name: taxonomies
+            description: Links to all the Taxonomy landing pages.
+            label: All Taxonomies
+            fields: []
+          - widget: object
+            name: taxonomy
+            description: Link to a specific Taxonomy landing page, optionally with
+              links to its Term landing pages underneath it.
+            label: Taxonomy
+            fields: []
+          - widget: object
+            name: taxonomyTerm
+            description: Link to a specific Taxonomy Term landing page, optionally
+              with links to its associated pages.
+            label: Taxonomy Term
+            fields: []
+          - widget: object
+            name: wiki
+            description: Links to all pages in your wiki, optionally by section.
+            label: Wiki Pages
+            fields: []
+          - widget: object
+            name: wikiSections
+            description: Links to each section in your wiki.
+            label: Wiki Sections
+            fields: []
+          widget: list
+          typeKey: type
+          name: menu
+          description: A new menu to nest under this menu item.
+          label: Menu
+          required: false
+        - {widget: string, name: order, description: 'By default, menu items are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual menu item. A higher value for order
+            will render that menu item earlier in the list.', label: Order, required: false}
+        - {widget: string, name: submenuTitle, description: The title the menu, label: Submenu
+            Title, required: false}
+        - {widget: string, name: title, description: The text of the root menu item.,
+          label: Title, required: false}
+      - widget: object
+        name: link
+        description: A link to any generic URL.
+        label: Link
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - {widget: boolean, name: asSubmenu, description: 'Set all the menu items
+            from this as a dropdown, instead of including them directly at the root.',
+          label: As Submenu, required: false}
+        - {widget: string, name: order, description: 'By default, menu items are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual menu item. A higher value for order
+            will render that menu item earlier in the list.', label: Order, required: false}
+        - {widget: string, name: submenuTitle, description: The title the menu, label: Submenu
+            Title, required: false}
+        - {widget: string, name: title, description: The title of this menu item,
+          label: Title, required: false}
+        - {widget: string, name: url, description: The URL of this menu item. A URL
+            of `/` links to the root of your site. A URL starting with a '#'will link
+            to an anchor on the current page., label: Url, required: false}
+      - widget: object
+        name: generatorPages
+        description: Adds all pages from a generator to the menu.
+        label: Generator Pages
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - {widget: boolean, name: asSubmenu, description: 'Set all the menu items
+            from this as a dropdown, instead of including them directly at the root.',
+          label: As Submenu, required: false}
+        - {widget: string, name: generator, description: The generator to show all
+            items for., label: Generator, required: false}
+        - {widget: string, name: order, description: 'By default, menu items are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual menu item. A higher value for order
+            will render that menu item earlier in the list.', label: Order, required: false}
+        - {widget: string, name: submenuTitle, description: The title the menu, label: Submenu
+            Title, required: false}
+        - {widget: string, name: title, description: The text of the root menu item.,
+          label: Title, required: false}
+      - widget: object
+        name: page
+        description: A page in your site, referenced from a Collection. If no page
+          query is given, will use the current page.
+        label: Page
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - {widget: string, name: anchor, description: The ID of an HTML element in
+            the page to link to as an anchor., label: Anchor, required: false}
+        - {widget: boolean, name: asSubmenu, description: 'Set all the menu items
+            from this as a dropdown, instead of including them directly at the root.',
+          label: As Submenu, required: false}
+        - {widget: string, name: collectionId, description: The specific Id of the
+            given collection type where the item is expected to come from., label: Collection
+            Id, required: false}
+        - {widget: string, name: collectionType, description: The type of collection
+            the item is expected to come from., label: Collection Type, required: false}
+        - {widget: string, name: itemId, description: The Id of an item to look up.,
+          label: Item Id, required: false}
+        - {widget: string, name: order, description: 'By default, menu items are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual menu item. A higher value for order
+            will render that menu item earlier in the list.', label: Order, required: false}
+        - {widget: string, name: submenuTitle, description: The title the menu, label: Submenu
+            Title, required: false}
+        - {widget: string, name: title, description: The title of this menu item.,
+          label: Title, required: false}
+      - widget: object
+        name: collectionPages
+        description: A page in your site, referenced from a Collection. If no page
+          query is given, will use the current page.
+        label: Page
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - {widget: boolean, name: asSubmenu, description: 'Set all the menu items
+            from this as a dropdown, instead of including them directly at the root.',
+          label: As Submenu, required: false}
+        - {widget: string, name: collectionId, description: The specific Id of the
+            given collection type where the items are expected to come from., label: Collection
+            Id, required: false}
+        - {widget: string, name: collectionType, description: The type of collection
+            the items are expected to come from., label: Collection Type, required: false}
+        - {widget: string, name: itemId, description: The Id of the items to link
+            to., label: Item Id, required: false}
+        - {widget: string, name: order, description: 'By default, menu items are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual menu item. A higher value for order
+            will render that menu item earlier in the list.', label: Order, required: false}
+        - {widget: string, name: pageIndex, description: Paginate results starting
+            at this page. Index starts at 1., label: Page Index, required: false}
+        - {widget: string, name: pageSize, description: Paginate results using this
+            as a page size, label: Page Size, required: false}
+        - {widget: string, name: submenuTitle, description: The title the menu, label: Submenu
+            Title, required: false}
+      - widget: object
+        name: pageParent
+        description: The parent of a page in your site, referenced from a Collection.
+          If no page query is given, will use the current page. The parent page is
+          the same as the next level up in the breadcrumb hierarchy.
+        label: Page Parent
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - {widget: boolean, name: asSubmenu, description: 'Set all the menu items
+            from this as a dropdown, instead of including them directly at the root.',
+          label: As Submenu, required: false}
+        - {widget: string, name: collectionId, description: The specific Id of the
+            given collection type where the item is expected to come from., label: Collection
+            Id, required: false}
+        - {widget: string, name: collectionType, description: The type of collection
+            the item is expected to come from., label: Collection Type, required: false}
+        - {widget: string, name: itemId, description: The Id of an item to look up.,
+          label: Item Id, required: false}
+        - {widget: string, name: order, description: 'By default, menu items are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual menu item. A higher value for order
+            will render that menu item earlier in the list.', label: Order, required: false}
+        - {widget: string, name: submenuTitle, description: The title the menu, label: Submenu
+            Title, required: false}
+        - {widget: string, name: title, description: The title of this menu item,
+          label: Title, required: false}
+      - widget: object
+        name: pageSiblings
+        description: The siblings of a page in your site, referenced from a Collection.
+          If no page query is given, will use the current page. The siblings of a
+          page are defined as the children of the parent Index, not necessarily the
+          Index at the parent Page.
+        label: Page Siblings
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - {widget: boolean, name: asSubmenu, description: 'Set all the menu items
+            from this as a dropdown, instead of including them directly at the root.',
+          label: As Submenu, required: false}
+        - {widget: string, name: collectionId, description: The specific Id of the
+            given collection type where the item is expected to come from., label: Collection
+            Id, required: false}
+        - {widget: string, name: collectionType, description: The type of collection
+            the item is expected to come from., label: Collection Type, required: false}
+        - {widget: string, name: itemId, description: The Id of an item to look up.,
+          label: Item Id, required: false}
+        - {widget: string, name: order, description: 'By default, menu items are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual menu item. A higher value for order
+            will render that menu item earlier in the list.', label: Order, required: false}
+        - {widget: string, name: submenuTitle, description: The title the menu, label: Submenu
+            Title, required: false}
+        - {widget: string, name: title, description: The title of this menu item.,
+          label: Title, required: false}
+      - widget: object
+        name: pageChildren
+        description: The children of a page in your site, referenced from a Collection.
+          If no page query is given, will use the current page. The children are defined
+          as the children of the Index at the page path.
+        label: Page Children
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - {widget: boolean, name: asSubmenu, description: 'Set all the menu items
+            from this as a dropdown, instead of including them directly at the root.',
+          label: As Submenu, required: false}
+        - {widget: string, name: collectionId, description: The specific Id of the
+            given collection type where the item is expected to come from., label: Collection
+            Id, required: false}
+        - {widget: string, name: collectionType, description: The type of collection
+            the item is expected to come from., label: Collection Type, required: false}
+        - {widget: string, name: itemId, description: The Id of an item to look up.,
+          label: Item Id, required: false}
+        - {widget: string, name: order, description: 'By default, menu items are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual menu item. A higher value for order
+            will render that menu item earlier in the list.', label: Order, required: false}
+        - {widget: string, name: submenuTitle, description: The title the menu, label: Submenu
+            Title, required: false}
+      - widget: object
+        name: pageSubtree
+        description: The subtree of all pages starting at a page in your site, referenced
+          from a Collection. If no page query is given, will use the current page.
+          The subtree is defined as the Index at the page's path.
+        label: Page Sub-Tree
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - {widget: boolean, name: asSubmenu, description: 'Set all the menu items
+            from this as a dropdown, instead of including them directly at the root.',
+          label: As Submenu, required: false}
+        - {widget: string, name: collectionId, description: The specific Id of the
+            given collection type where the item is expected to come from., label: Collection
+            Id, required: false}
+        - {widget: string, name: collectionType, description: The type of collection
+            the item is expected to come from., label: Collection Type, required: false}
+        - {widget: string, name: itemId, description: The Id of an item to look up.,
+          label: Item Id, required: false}
+        - {widget: string, name: order, description: 'By default, menu items are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual menu item. A higher value for order
+            will render that menu item earlier in the list.', label: Order, required: false}
+        - {widget: string, name: submenuTitle, description: The title the menu, label: Submenu
+            Title, required: false}
+      - widget: object
+        name: github
+        description: ''
+        label: Github Menu Item
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - {widget: boolean, name: asSubmenu, description: 'Set all the menu items
+            from this as a dropdown, instead of including them directly at the root.',
+          label: As Submenu, required: false}
+        - {widget: string, name: githubProject, description: '', label: Github Project,
+          required: false}
+        - {widget: string, name: order, description: 'By default, menu items are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual menu item. A higher value for order
+            will render that menu item earlier in the list.', label: Order, required: false}
+        - {widget: string, name: submenuTitle, description: The title the menu, label: Submenu
+            Title, required: false}
+        - {widget: string, name: title, description: '', label: Title, required: false}
+      - widget: object
+        name: styleguide
+        description: All pages in your styleguide, optionally by section.
+        label: Styleguide
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - {widget: boolean, name: asSubmenu, description: 'Set all the menu items
+            from this as a dropdown, instead of including them directly at the root.',
+          label: As Submenu, required: false}
+        - {widget: string, name: order, description: 'By default, menu items are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual menu item. A higher value for order
+            will render that menu item earlier in the list.', label: Order, required: false}
+        - {widget: string, name: section, description: The Styleguide section to get
+            pages for., label: Section, required: false}
+        - {widget: string, name: submenuTitle, description: The title the menu, label: Submenu
+            Title, required: false}
+      - widget: object
+        name: styleguideSections
+        description: Link to all the sections of your styleguide.
+        label: Styleguide Sections
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - {widget: boolean, name: asSubmenu, description: 'Set all the menu items
+            from this as a dropdown, instead of including them directly at the root.',
+          label: As Submenu, required: false}
+        - {widget: string, name: order, description: 'By default, menu items are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual menu item. A higher value for order
+            will render that menu item earlier in the list.', label: Order, required: false}
+        - {widget: string, name: submenuTitle, description: The title the menu, label: Submenu
+            Title, required: false}
+        - {widget: string, name: title, description: The title of the root menu item.,
+          label: Title, required: false}
+      - widget: object
+        name: pages
+        description: Static pages, optionally by group.
+        label: Static Pages
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - {widget: boolean, name: asSubmenu, description: 'Set all the menu items
+            from this as a dropdown, instead of including them directly at the root.',
+          label: As Submenu, required: false}
+        - {widget: string, name: group, description: 'Include only pages in a specific
+            page group, otherwise include all pages.', label: Group, required: false}
+        - {widget: string, name: order, description: 'By default, menu items are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual menu item. A higher value for order
+            will render that menu item earlier in the list.', label: Order, required: false}
+        - {widget: string, name: submenuTitle, description: The title the menu, label: Submenu
+            Title, required: false}
+      - widget: object
+        name: pageIds
+        description: Finds all headers with an ID within the page content and creates
+          menu items for each. All headers between the min and max levels are used,
+          such as h1-h3, or h2-h5. The default is all headers, h1-h6. These header
+          links can either be displayed in a flat list in the order they were found
+          on the page, or as a nested tree, where h2s are grouped under their previous
+          h1, etc.
+        label: Page Ids
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - {widget: boolean, name: asSubmenu, description: 'Set all the menu items
+            from this as a dropdown, instead of including them directly at the root.',
+          label: As Submenu, required: false}
+        - {widget: string, name: maxLevel, description: The first 'level' of header
+            to match. Defaults to h1., label: Max Level, required: false}
+        - {widget: string, name: minLevel, description: The last 'level' of header
+            to match. Defaults to h6., label: Min Level, required: false}
+        - {widget: string, name: order, description: 'By default, menu items are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual menu item. A higher value for order
+            will render that menu item earlier in the list.', label: Order, required: false}
+        - {widget: string, name: structure, description: 'The structure used to display
+            the items. One of [flat, nested].', label: Structure, required: false}
+        - {widget: string, name: submenuTitle, description: The title the menu, label: Submenu
+            Title, required: false}
+      - widget: object
+        name: latestPosts
+        description: Latest posts, optionally by category.
+        label: Latest Posts
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - {widget: boolean, name: asSubmenu, description: 'Set all the menu items
+            from this as a dropdown, instead of including them directly at the root.',
+          label: As Submenu, required: false}
+        - {widget: string, name: category, description: Only add latest posts from
+            a specific category., label: Category, required: false}
+        - {widget: string, name: limit, description: The maximum number of posts to
+            include in this menu item., label: Limit, required: false}
+        - {widget: string, name: order, description: 'By default, menu items are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual menu item. A higher value for order
+            will render that menu item earlier in the list.', label: Order, required: false}
+        - {widget: boolean, name: postsAtRoot, description: 'Whether to keep the terms
+            as children of a single menu item, or expand them all to the root.', label: Posts
+            At Root, required: false}
+        - {widget: string, name: submenuTitle, description: The title the menu, label: Submenu
+            Title, required: false}
+        - {widget: string, name: title, description: The title for the root menu item.,
+          label: Title, required: false}
+      - widget: object
+        name: sourcedocPageLinks
+        description: Links to the different sections within a Javadoc Class page,
+          optionally with their items nested underneath them.
+        label: Javadoc Class Sections
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - {widget: boolean, name: asSubmenu, description: 'Set all the menu items
+            from this as a dropdown, instead of including them directly at the root.',
+          label: As Submenu, required: false}
+        - {widget: boolean, name: includeItems, description: 'Whether to include the
+            items for each section. For example, including a menu item for each individual
+            constructor as children of `Constructors` or just a link to the `Constructors`
+            section.', label: Include Items, required: false}
+        - {widget: string, name: itemTitleType, description: '', label: Item Title
+            Type, required: false}
+        - {widget: string, name: order, description: 'By default, menu items are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual menu item. A higher value for order
+            will render that menu item earlier in the list.', label: Order, required: false}
+        - {widget: string, name: submenuTitle, description: The title the menu, label: Submenu
+            Title, required: false}
+      - widget: object
+        name: sourcedocPages
+        description: Locate all source pages of a given kind.
+        label: Source Pages
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - {widget: boolean, name: asSubmenu, description: 'Set all the menu items
+            from this as a dropdown, instead of including them directly at the root.',
+          label: As Submenu, required: false}
+        - {widget: string, name: itemTitleType, description: '', label: Item Title
+            Type, required: false}
+        - {widget: string, name: moduleName, description: '', label: Module Name,
+          required: false}
+        - {widget: string, name: moduleType, description: '', label: Module Type,
+          required: false}
+        - {widget: string, name: node, description: '', label: Node, required: false}
+        - {widget: string, name: order, description: 'By default, menu items are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual menu item. A higher value for order
+            will render that menu item earlier in the list.', label: Order, required: false}
+        - {widget: string, name: submenuTitle, description: The title the menu, label: Submenu
+            Title, required: false}
+        - {widget: string, name: title, description: '', label: Title, required: false}
+        - {widget: string, name: transform, description: '', label: Transform, required: false}
+        - {widget: string, name: transformAs, description: '', label: Transform As,
+          required: false}
+      - widget: object
+        name: sourcedocModules
+        description: The module home pages for a given module type..
+        label: Source Pages
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - {widget: boolean, name: asSubmenu, description: 'Set all the menu items
+            from this as a dropdown, instead of including them directly at the root.',
+          label: As Submenu, required: false}
+        - {widget: string, name: moduleGroup, description: '', label: Module Group,
+          required: false}
+        - {widget: string, name: moduleType, description: '', label: Module Type,
+          required: false}
+        - {widget: string, name: order, description: 'By default, menu items are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual menu item. A higher value for order
+            will render that menu item earlier in the list.', label: Order, required: false}
+        - {widget: string, name: submenuTitle, description: The title the menu, label: Submenu
+            Title, required: false}
+        - {widget: string, name: title, description: '', label: Title, required: false}
+      - widget: object
+        name: taxonomies
+        description: Links to all the Taxonomy landing pages.
+        label: All Taxonomies
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - {widget: boolean, name: asSubmenu, description: 'Set all the menu items
+            from this as a dropdown, instead of including them directly at the root.',
+          label: As Submenu, required: false}
+        - {widget: string, name: order, description: 'By default, menu items are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual menu item. A higher value for order
+            will render that menu item earlier in the list.', label: Order, required: false}
+        - {widget: string, name: submenuTitle, description: The title the menu, label: Submenu
+            Title, required: false}
+        - {widget: string, name: title, description: The menu item title., label: Title,
+          required: false}
+      - widget: object
+        name: taxonomy
+        description: Link to a specific Taxonomy landing page, optionally with links
+          to its Term landing pages underneath it.
+        label: Taxonomy
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - {widget: boolean, name: asSubmenu, description: 'Set all the menu items
+            from this as a dropdown, instead of including them directly at the root.',
+          label: As Submenu, required: false}
+        - {widget: boolean, name: includeTerms, description: 'Whether to have the
+            menu link out to the Taxonomy landing page, or include child menu items
+            with links out to the Term landing pages.', label: Include Terms, required: false}
+        - {widget: string, name: order, description: 'By default, menu items are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual menu item. A higher value for order
+            will render that menu item earlier in the list.', label: Order, required: false}
+        - {widget: string, name: submenuTitle, description: The title the menu, label: Submenu
+            Title, required: false}
+        - {widget: string, name: taxonomyType, description: The Taxonomy to include
+            terms from., label: Taxonomy Type, required: false}
+        - {widget: boolean, name: termsAtRoot, description: 'If `includeTerms` is
+            true, whether to keep the terms as children of a single menu item, or
+            expand them all to the root.', label: Terms At Root, required: false}
+      - widget: object
+        name: taxonomyTerm
+        description: Link to a specific Taxonomy Term landing page, optionally with
+          links to its associated pages.
+        label: Taxonomy Term
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - {widget: boolean, name: asSubmenu, description: 'Set all the menu items
+            from this as a dropdown, instead of including them directly at the root.',
+          label: As Submenu, required: false}
+        - {widget: boolean, name: includePages, description: 'Whether to have the
+            menu link out to the Term landing page, or include child menu items with
+            links out to the Term''s associated pages.', label: Include Pages, required: false}
+        - {widget: string, name: limit, description: The maximum number of associated
+            pages to include in this menu item., label: Limit, required: false}
+        - {widget: string, name: order, description: 'By default, menu items are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual menu item. A higher value for order
+            will render that menu item earlier in the list.', label: Order, required: false}
+        - {widget: boolean, name: pagesAtRoot, description: 'If `includePages` is
+            true, whether to keep the associated pages as children of a single menu
+            item, or expand them all to the root.', label: Pages At Root, required: false}
+        - {widget: string, name: submenuTitle, description: The title the menu, label: Submenu
+            Title, required: false}
+        - {widget: string, name: taxonomyType, description: The Taxonomy to include
+            terms from., label: Taxonomy Type, required: false}
+        - {widget: string, name: termType, description: The Term within the Taxonomy
+            to include pages from., label: Term Type, required: false}
+      - widget: object
+        name: wiki
+        description: Links to all pages in your wiki, optionally by section.
+        label: Wiki Pages
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - {widget: boolean, name: asSubmenu, description: 'Set all the menu items
+            from this as a dropdown, instead of including them directly at the root.',
+          label: As Submenu, required: false}
+        - {widget: string, name: order, description: 'By default, menu items are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual menu item. A higher value for order
+            will render that menu item earlier in the list.', label: Order, required: false}
+        - {widget: string, name: section, description: The wiki section to include
+            in this menu., label: Section, required: false}
+        - {widget: string, name: submenuTitle, description: The title the menu, label: Submenu
+            Title, required: false}
+      - widget: object
+        name: wikiSections
+        description: Links to each section in your wiki.
+        label: Wiki Sections
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - {widget: boolean, name: asSubmenu, description: 'Set all the menu items
+            from this as a dropdown, instead of including them directly at the root.',
+          label: As Submenu, required: false}
+        - {widget: string, name: order, description: 'By default, menu items are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual menu item. A higher value for order
+            will render that menu item earlier in the list.', label: Order, required: false}
+        - {widget: string, name: submenuTitle, description: The title the menu, label: Submenu
+            Title, required: false}
+      widget: list
+      typeKey: type
+      name: menu
+      description: The secondary only added to this page. It is common for generators
+        to add menu items to their pagesautomcatically, but the menu specified on
+        the page will take precedence over the generator's page.
+      label: Menu
+      required: false
+    - types:
+      - widget: object
+        name: license
+        description: Locate and display your project's License file.
+        label: License
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: readme
+        description: Locate and display your project's Readme file.
+        label: Readme
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: pageContent
+        description: Compile and render the default page content. This is added to
+          all pages by default if no other components have been added by the user.
+        label: Page Content
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: boolean, name: noWrapper, description: Whether to include a wrapper
+            around the normal page content template., label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: template
+        description: Display a component with a user-defined template and data.
+        label: Template
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - {widget: string, name: data, description: Custom data to be rendered into
+            the custom template., label: Data, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: changelog
+        description: Display the full changelog
+        label: Changelog
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: form
+        description: Render one of your predefined forms, or create one inline
+        label: Form
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - widget: object
+          name: form
+          description: The Form to render. Can be either a key to an indexed form
+            definition, or a complete form definition for a one-off use.
+          label: Form
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: reftagger
+        description: Add the Kotlin Playground to your pages, to convert Kotlin code
+          snippets into interactive, embedded development playgrounds.
+        label: Kotlin Playground
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - {widget: string, name: bibleReader, description: '', label: Bible Reader,
+          required: false}
+        - {widget: string, name: bibleVersion, description: '', label: Bible Version,
+          required: false}
+        - {widget: boolean, name: darkMode, description: '', label: Dark Mode, required: false}
+        - {widget: boolean, name: dropShadow, description: '', label: Drop Shadow,
+          required: false}
+        - {widget: list, name: excludeClasses, description: '', label: Exclude Classes,
+          required: false}
+        - {widget: list, name: excludeTags, description: '', label: Exclude Tags,
+          required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: boolean, name: openInNewWindow, description: '', label: Open In
+            New Window, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: string, name: reftaggerSource, description: The base URL to load
+            Kotlin Playground JS files from., label: Reftagger Source, required: false}
+        - {widget: boolean, name: roundedCorners, description: '', label: Rounded
+            Corners, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: mermaid
+        description: Convert MermaidJS code snippets into diagrams in your browser.
+        label: Mermaid
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: mermaidSource, description: The base URL to load
+            Mermaid files from., label: Mermaid Source, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: string, name: selector, description: Select which elements on the
+            page are converted. Defaults to markdown code blocks with the `mermaid`
+            language., label: Selector, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: prism
+        description: Automatically find and highlight code snippets with Prism.js.
+          Markdown code snippets are immediately compatible with Prism.js and requires
+          no further configuration. This component simply attached the necessary scripts
+          and styles to the page, but needs no UI template of its own.
+        label: Prism.js
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: string, name: githubTheme, description: 'The unofficial Prism theme
+            to be used, from the ''PrismJS/prism-themes'' github repo.', label: Github
+            Theme, required: false}
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: list, name: languages, description: The Prism language definitions
+            to be included., label: Languages, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: list, name: plugins, description: The Prism plugins to be included.,
+          label: Plugins, required: false}
+        - {widget: string, name: prismSource, description: The base URL to load Prism
+            CSS and JS files from., label: Prism Source, required: false}
+        - {widget: boolean, name: scriptsOnly, description: 'If true, only include
+            the Prism Javascript files, opting to build the styles yourself.', label: Scripts
+            Only, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+        - {widget: string, name: theme, description: 'The official Prism theme to
+            be used. Alternatively, you may use a `githubTheme` to use one of the
+            themes provided from the ''PrismJS/prism-themes'' github repo.', label: Theme,
+          required: false}
+      - widget: object
+        name: kotlinPlayground
+        description: Add the Kotlin Playground to your pages, to convert Kotlin code
+          snippets into interactive, embedded development playgrounds.
+        label: Kotlin Playground
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: kotlinPlaygroundSource, description: The base URL
+            to load Kotlin Playground JS files from., label: Kotlin Playground Source,
+          required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: string, name: selector, description: Select which elements on the
+            page are converted. Defaults to markdown code blocks with the `run-kotlin`
+            language., label: Selector, required: false}
+        - {widget: string, name: server, description: The URL to a self-hosted server
+            instance for running code snippets., label: Server, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: pluginDocs
+        description: Show all options for your plugin's classes.
+        label: Plugin Documentation
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - {widget: list, name: classNames, description: A list of fully-qualified
+            class names to render options for., label: Class Names, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: list, name: packageNames, description: A list of fully-qualified
+            package names. All OptionsHolder classes in these packages will have their
+            options displayed., label: Package Names, required: false}
+        - {widget: string, name: tableClass, description: A fully-qualified class
+            name to render options for., label: Table Class, required: false}
+        - {widget: string, name: tableHeaderClass, description: A fully-qualified
+            class name to render options for., label: Table Header Class, required: false}
+        - {widget: string, name: tableLeaderClass, description: A fully-qualified
+            class name to render options for., label: Table Leader Class, required: false}
+        - {widget: string, name: tabsTemplate, description: A custom template to use
+            the for tabs tag used internally., label: Tabs Template, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: recentPosts
+        description: Render a list of the most recent blog posts.
+        label: Recent Posts
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - {widget: string, name: category, description: Only add latest posts from
+            a specific category., label: Category, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: limit, description: The maximum number of posts to
+            include in this component., label: Limit, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: disqus
+        description: Easily add comments to any page with Disqus.
+        label: Disqus
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: identifier, description: A site-wide unique identifier
+            for the comment section on this page. Defaults to the page's URL., label: Identifier,
+          required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: string, name: shortname, description: Your disqus shortname., label: Shortname,
+          required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: feedLinks
+        description: Add links to the page <head> with links to the post feeds.
+        label: Feed Links
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: presentation
+        description: Embed a Deck.js presentation.
+        label: Presentation
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - {widget: string, name: deckTheme, description: 'The Deck.js presentation
+            theme to use. Should be one of [''neon'', ''swiss'', ''web-2_0'']', label: Deck
+            Theme, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: string, name: presentation, description: The key of the Presentation
+            to display., label: Presentation, required: false}
+        - {widget: boolean, name: scriptsOnly, description: 'If true, only include
+            the Deck.js Javascript files, opting to build the styles yourself.', label: Scripts
+            Only, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+        - {widget: string, name: transitionTheme, description: 'The Deck.js transition
+            theme to use. Should be one of [''fade'', ''horizontal-slide'', ''vertical-slide'']',
+          label: Transition Theme, required: false}
+      - widget: object
+        name: orchidSearch
+        description: Adds the self-contained Lunr.js-based Orchid search component
+          to your page. Requires search indices to be generated.
+        label: Orchid Static Search
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: algoliaDocsearch
+        description: Add Algolia Docsearch to your site with minimal configuration.
+        label: Algolia DocSearch
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - {widget: string, name: apiKey, description: The API key for your site. Your
+            apiKey will be given to you once Algolia creates your config., label: Api
+            Key, required: false}
+        - {widget: boolean, name: debug, description: Set debug to true if you want
+            to inspect the dropdown., label: Debug, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: indexName, description: The API key for your site.
+            Your indexName will be given to you once Algolia creates your config.,
+          label: Index Name, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: string, name: selector, description: The selector for your search
+            input field., label: Selector, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: snippet
+        description: ''
+        label: Snippet Component
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: boolean, name: raw, description: render the raw snippet content
+            without compiling it first, label: Raw, required: false}
+        - {widget: string, name: snippetName, description: the snippet name, label: Snippet
+            Name, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: snippets
+        description: ''
+        label: Snippets Component
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: id, description: The ID to add to tabs. Defaults
+            to the tags used to query snippets., label: Id, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: boolean, name: raw, description: render the raw snippet content
+            without compiling it first, label: Raw, required: false}
+        - {widget: list, name: snippetTags, description: the snippet tags, label: Snippet
+            Tags, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: sourceDocSummary
+        description: ''
+        label: Sourcedoc Page Simple Summary
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: swaggerUi
+        description: Embed the Swagger UI and point it to your OpenApi.json spec.
+        label: Swagger UI
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - {widget: string, name: allSwaggerOptions, description: 'The full JSON object
+            that initializes the Swagger UI, allowing you to completely customize
+            it.', label: All Swagger Options, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: openApiSource, description: The URL containing the
+            OpenAPI definition., label: Open Api Source, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: string, name: swaggerElementId, description: The ID of the element
+            that should contain the Swagger UI., label: Swagger Element Id, required: false}
+        - {widget: string, name: swaggerUiVersion, description: The version of SwaggerUI
+            to use., label: Swagger Ui Version, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: taxonomy
+        description: Show a list of all Taxonomies.
+        label: Taxonomy
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: string, name: taxonomyType, description: The Taxonomy to include
+            terms from., label: Taxonomy Type, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+      - widget: object
+        name: taxonomyTerm
+        description: Show a list of all terms in a Taxonomy.
+        label: Taxonomy Terms
+        fields:
+        - {widget: string, name: allData, description: All options passed to this
+            object., label: All Data, required: false}
+        - widget: list
+          name: extraCss
+          description: Attach extra CSS assets to this component, to be injected into
+            its page.
+          label: Extra Css
+          fields: []
+          required: false
+        - widget: list
+          name: extraJs
+          description: Attach extra Javascript assets to this component, to be injected
+            into its page.
+          label: Extra Js
+          fields: []
+          required: false
+        - {widget: boolean, name: hidden, description: 'When true, this component
+            will not have a template rendered on the page. Useful for Components that
+            only add extra CSS or JS, or for temporarily removing a component from
+            the page.', label: Hidden, required: false}
+        - {widget: string, name: metaLocation, description: '', label: Meta Location,
+          required: false}
+        - {widget: boolean, name: noWrapper, description: 'When true, this component
+            will not be wrapped in a wrapper element. The wrapper element is determinedby
+            the theme, and it is up to the theme to ensure this is implemented properly.',
+          label: No Wrapper, required: false}
+        - {widget: string, name: order, description: 'By default, components are rendered
+            in the order in which they are declared, but the ordering can be changed
+            by setting the order on any individual component. A higher value for order
+            will render that component earlier in the list.', label: Order, required: false}
+        - {widget: string, name: taxonomyType, description: The Taxonomy to include
+            terms from., label: Taxonomy Type, required: false}
+        - {widget: list, name: template, description: Specify a template or a list
+            of templates to use when rendering this component. The first template
+            that exists will be chosen for this component., label: Template, required: false}
+        - {widget: string, name: termType, description: The Term within the Taxonomy
+            to include pages from., label: Term Type, required: false}
+      widget: list
+      typeKey: type
+      name: metaComponents
+      description: The components that comprise the meta-info for this page. Typically
+        extra scripts or meta tags included in the `HEAD` of a page.
+      label: Meta Components
+      required: false
+    - widget: object
+      name: next
+      description: ''
+      label: Next
+      fields:
+      - {widget: string, name: collectionId, description: The specific Id of the given
+          collection type where the item is expected to come from., label: Collection
+          Id, required: false}
+      - {widget: string, name: collectionType, description: The type of collection
+          the item is expected to come from., label: Collection Type, required: false}
+      - {widget: string, name: itemId, description: The Id of an item to look up.,
+        label: Item Id, required: false}
+      required: false
+    - {widget: boolean, name: noFollow, description: Request that search engines do
+        not follow links from this page by adding a meta tag on in the page's head.,
+      label: No Follow, required: false}
+    - {widget: boolean, name: noIndex, description: Request that search engines do
+        not index this page by adding a meta tag on in the page's head., label: No
+        Index, required: false}
+    - widget: object
+      name: parent
+      description: ''
+      label: Parent
+      fields:
+      - {widget: string, name: collectionId, description: The specific Id of the given
+          collection type where the item is expected to come from., label: Collection
+          Id, required: false}
+      - {widget: string, name: collectionType, description: The type of collection
+          the item is expected to come from., label: Collection Type, required: false}
+      - {widget: string, name: itemId, description: The Id of an item to look up.,
+        label: Item Id, required: false}
+      required: false
+    - widget: object
+      name: previous
+      description: ''
+      label: Previous
+      fields:
+      - {widget: string, name: collectionId, description: The specific Id of the given
+          collection type where the item is expected to come from., label: Collection
+          Id, required: false}
+      - {widget: string, name: collectionType, description: The type of collection
+          the item is expected to come from., label: Collection Type, required: false}
+      - {widget: string, name: itemId, description: The Id of an item to look up.,
+        label: Item Id, required: false}
+      required: false
+    - {widget: datetime, name: publishDate, description: 'Set when this page was published.
+        Pages with a publish date in the future are considered a draft. Should be
+        a valid ISO-8601 date or datetime without timezone, such as `2018-01-01` or
+        `2018-01-01T08:15:30`. Note that some generators may choose to set this value
+        based on some external criteria, but the value in front matter should take
+        precedence over the generator''s determined publish date.', label: Publish
+        Date, required: false}
+    - {widget: string, name: relativePriority, description: The importance of this
+        page relative to the rest of the pages on your site. Should be a value between
+        0 and 1., label: Relative Priority, required: false}
+    - {widget: list, name: template, description: 'Specify a template or a list of
+        templates to use when rendering this page. The first template that exists
+        will be chosen for this page, otherwise the page''s default set of templates
+        will be searched for (which typically is customized by the generator that
+        produces this page).', label: Template, required: false}
+    - {widget: string, name: title, description: 'Specify a custom title for this
+        Page, which takes precedence over the title given by its generator.', label: Title,
+      required: false}
+    - {widget: markdown, name: body, label: Page Content}
+  - file: wiki/test-tips.md
+    name: test-tips
+    label: Test creation tips
     fields:
     - {widget: string, name: allData, description: All options passed to this object.,
       label: All Data, required: false}

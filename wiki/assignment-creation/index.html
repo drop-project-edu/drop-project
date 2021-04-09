@@ -33,11 +33,13 @@
 <link rel="prev" href="https://drop-project-edu.github.io/drop-project/wiki/concepts">
 
 
+<link rel="next" href="https://drop-project-edu.github.io/drop-project/wiki/code-folder-structure">
+
 
 <!-- start:inject styles -->
-<link rel="stylesheet" type="text/css" href="https://drop-project-edu.github.io/drop-project/Editorial/bfd1728b/assets/css/editorial_main.css"  />
-<link rel="stylesheet" type="text/css" href="https://drop-project-edu.github.io/drop-project/Editorial/bfd1728b/assets/css/editorial_orchidCustomizations.css"  />
-<link rel="stylesheet" type="text/css" href="https://drop-project-edu.github.io/drop-project/Editorial/bfd1728b/assets/css/orchidSearch.css"  />
+<link rel="stylesheet" type="text/css" href="https://drop-project-edu.github.io/drop-project/Editorial/d4c7d946/assets/css/editorial_main.css"  />
+<link rel="stylesheet" type="text/css" href="https://drop-project-edu.github.io/drop-project/Editorial/d4c7d946/assets/css/editorial_orchidCustomizations.css"  />
+<link rel="stylesheet" type="text/css" href="https://drop-project-edu.github.io/drop-project/Editorial/d4c7d946/assets/css/orchidSearch.css"  />
 <!-- end:inject styles -->
 
 
@@ -64,7 +66,7 @@
 
 <!-- COMPLETE PAGE CONFIGURATION -->
 <script>
-    window.allData = {"reference":{"path":"wiki","baseUrl":"https://drop-project-edu.github.io/drop-project","fileName":"assignment-creation","extension":"html","usePrettyUrl":true,"link":"https://drop-project-edu.github.io/drop-project/wiki/assignment-creation"},"previous":{"path":"wiki","baseUrl":"https://drop-project-edu.github.io/drop-project","fileName":"concepts","extension":"html","usePrettyUrl":true,"link":"https://drop-project-edu.github.io/drop-project/wiki/concepts"},"description":"","title":"Assignment Creation Tutorial"};
+    window.allData = {"reference":{"path":"wiki","baseUrl":"https://drop-project-edu.github.io/drop-project","fileName":"assignment-creation","extension":"html","usePrettyUrl":true,"link":"https://drop-project-edu.github.io/drop-project/wiki/assignment-creation"},"next":{"path":"wiki","baseUrl":"https://drop-project-edu.github.io/drop-project","fileName":"code-folder-structure","extension":"html","usePrettyUrl":true,"link":"https://drop-project-edu.github.io/drop-project/wiki/code-folder-structure"},"previous":{"path":"wiki","baseUrl":"https://drop-project-edu.github.io/drop-project","fileName":"concepts","extension":"html","usePrettyUrl":true,"link":"https://drop-project-edu.github.io/drop-project/wiki/concepts"},"description":"","title":"Assignment Creation Tutorial"};
 </script>
 
 <!-- end:debug info -->
@@ -153,8 +155,8 @@
                     
                         <p>This tutorial explains how a teacher can create a new Assignment in Drop Project.</p>
 <p>The first step is to create a git repository with the correct structure. The easiest way to do this is to clone one of the the following repositories:</p>
-<p>https://github.com/drop-project-edu/sampleJavaAssignment</p>
-<p>https://github.com/drop-project-edu/sampleKotlinAssignment</p>
+<p><a href="https://github.com/drop-project-edu/sampleJavaAssignment">https://github.com/drop-project-edu/sampleJavaAssignment</a></p>
+<p><a href="https://github.com/drop-project-edu/sampleKotlinAssignment">https://github.com/drop-project-edu/sampleKotlinAssignment</a></p>
 <h2 id="structure"><a href="#structure" id="structure" class="anchor"></a>Structure</h2>
 <p>The structure of the repository must be the following:</p>
 <pre><code>+ assignment
@@ -167,6 +169,7 @@
 |------ test
 |--------- ... (JUnit tests that will validate students' submissions)
 </code></pre>
+<h2 id="assignment-creation"><a href="#assignment-creation" id="assignment-creation" class="anchor"></a>Assignment creation</h2>
 <p>After the creation of the repository, the following steps should be followed in the Drop Project web-application:</p>
 <ol>
 <li>Login with your teacher account</li>
@@ -174,11 +177,12 @@
 <li>Press the <code>Create Assignment</code> blue button that appears in the bottom of the page</li>
 <li>Fill in the form - below each field there is a short description of its purpose</li>
 </ol>
-<h2 id="how-to-create-tests"><a href="#how-to-create-tests" id="how-to-create-tests" class="anchor"></a>How to create tests</h2>
+<h2 id="tests"><a href="#tests" id="tests" class="anchor"></a>Tests</h2>
 <p>Public tests should be defined in a file whose name should be prefixed with the <code>TestTeacher</code>. For example, the tests
 for a class <code>Person</code> should be defined in a file called <code>TestTeacherPerson</code>.</p>
-<p>Hidden tests should be defined in a file whose name should be prefixed with <code>TestTeacherHidden</code>. For example, <code>TestTeacherHiddenPerson</code>.</p>
-<p>It is possible to have multiple test public and hidden test classes.</p>
+<p>Private (or Hidden) tests should be defined in a file whose name should be prefixed with <code>TestTeacherHidden</code>. For example, <code>TestTeacherHiddenPerson</code>.</p>
+<p>It is possible to have multiple test public and private (hidden) test classes.</p>
+<p>For some ideas on how to design your tests, check our <a href="test-tips.md">test tips</a> page.</p>
 
                     
                 
@@ -205,6 +209,12 @@ for a class <code>Person</code> should be defined in a file called <code>TestTea
                     </a>
                 </div>
             
+            
+                <div class="float-right">
+                    <a href="https://drop-project-edu.github.io/drop-project/wiki/code-folder-structure" class="button special small pill">
+                        Source code structure<span>&rarr;</span>
+                    </a>
+                </div>
             
         </div>
     </footer>
@@ -257,6 +267,22 @@ for a class <code>Person</code> should be defined in a file called <code>TestTea
     
     <li>
         <a href="https://drop-project-edu.github.io/drop-project/wiki/assignment-creation">Assignment Creation Tutorial</a>
+    </li>
+    
+
+                
+                    
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/wiki/code-folder-structure">Source code structure</a>
+    </li>
+    
+
+                
+                    
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/wiki/test-tips">Test creation tips</a>
     </li>
     
 
@@ -710,6 +736,14 @@ for a class <code>Person</code> should be defined in a file called <code>TestTea
     
     <li>
         <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/services/junitmethodresult">JUnitMethodResult</a>
+    </li>
+    
+
+        
+            
+    
+    <li>
+        <a href="https://drop-project-edu.github.io/drop-project/kotlindoc/org/dropproject/services/junitmethodresulttype">JUnitMethodResultType</a>
     </li>
     
 
@@ -1185,9 +1219,9 @@ for a class <code>Person</code> should be defined in a file called <code>TestTea
 <!-- start:inject scripts -->
 <script  src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
 <script  src="https://cdnjs.cloudflare.com/ajax/libs/skel/3.0.1/skel.min.js"></script>
-<script  src="https://drop-project-edu.github.io/drop-project/Editorial/bfd1728b/assets/js/editorial_util.js"></script>
-<script  src="https://drop-project-edu.github.io/drop-project/Editorial/bfd1728b/assets/js/editorial_main.js"></script>
-<script  src="https://drop-project-edu.github.io/drop-project/Editorial/bfd1728b/assets/js/editorial_orchidCustomizations.js"></script>
+<script  src="https://drop-project-edu.github.io/drop-project/Editorial/d4c7d946/assets/js/editorial_util.js"></script>
+<script  src="https://drop-project-edu.github.io/drop-project/Editorial/d4c7d946/assets/js/editorial_main.js"></script>
+<script  src="https://drop-project-edu.github.io/drop-project/Editorial/d4c7d946/assets/js/editorial_orchidCustomizations.js"></script>
 <!-- end:inject scripts -->
 
 
