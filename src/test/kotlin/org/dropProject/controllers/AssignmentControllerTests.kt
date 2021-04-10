@@ -1127,7 +1127,7 @@ class AssignmentControllerTests {
 
     @Test
     @DirtiesContext
-    fun test_22_exportAssignmenAndSubmissions() {
+    fun test_22_exportAssignmentAndSubmissions() {
 
         val assignment01 = Assignment(
             id = "testJavaProj", name = "Test Project (for automatic tests)",
@@ -1151,7 +1151,7 @@ class AssignmentControllerTests {
                 .with(user(TEACHER_1))
                 .contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE))
             .andExpect(header().string("Content-Disposition",
-                "attachment; filename=testJavaProj_submissions_${Date().formatJustDate()}.dp"))
+                "attachment; filename=testJavaProj_${Date().formatJustDate()}.dp"))
             .andExpect(status().isOk)
             .andReturn()
 
