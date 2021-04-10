@@ -38,14 +38,19 @@
         <div class="tab-pane active" id="1">
             <p>&nbsp;</p>
             <div class="btn-group pull-right" role="group">
-                <a th:href="@{'/assignment/export/' + ${assignmentId}}"
-                   class="btn btn-default"
-                   data-placement="left"
-                   data-toggle="confirmation" data-title="Export"
-                   data-content="This will export this assignment as a JSON file, which can later be imported into this or another instance of Drop Project. Authorized teachers and allowed students are not exported. Submissions are not exported."
-                   data-btn-ok-label="Continue" data-btn-cancel-label="Cancel">
-                    <span class="glyphicon glyphicon-export"></span> Export
-                </a>
+                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <span class="glyphicon glyphicon-export"></span> Export <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a th:href="@{'/assignment/export/' + ${assignmentId}}"
+                           class="btn-group" title="Export only the assignment">Only assignment</a>
+                    </li>
+                    <li>
+                        <a th:href="@{'/assignment/export/' + ${assignmentId} + '?includeSubmissions=true'}"
+                           class="btn-group" title="Export the assignment and all its submissions">Assignment and submissions</a>
+                    </li>
+                </ul>
             </div>
             <p>&nbsp;</p>
 

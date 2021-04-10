@@ -12,9 +12,9 @@
 
     <h1 class="page-header">Import assignment</h1>
 
-    <div class="alert alert-info">This page allows you to upload a previously exported assignment, in JSON format.
-        The imported assignment can't have an identifier that is already being used.<br/>
-    At this moment, it doesn't import submissions, so the assignment will have zero submissions.</div>
+    <div class="alert alert-info">Here you can upload a previously exported .dp file, containing
+        all the information for a given assignment and possibly all its submissions.<br/>
+        The imported assignment can't have an identifier that is already being used.</div>
 
     <div th:if="${error}">
         <div class="alert alert-danger" th:text="${error}"/>
@@ -22,9 +22,9 @@
 
     <form method="post" th:action="@{/assignment/import}" class="form-horizontal" enctype="multipart/form-data">
         <div class="form-group">
-            <label for="file" class="col-sm-3 control-label">File to import (.json)</label>
+            <label for="file" class="col-sm-3 control-label">File to import (.dp)</label>
             <div class="col-sm-9">
-                <input type="file" class="form-control" id="file" name="file" accept=".json"  />
+                <input type="file" class="form-control" id="file" name="file" accept=".dp"  />
             </div>
         </div>
 

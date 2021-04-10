@@ -1045,38 +1045,40 @@ class AssignmentControllerTests {
                 "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git"
             )
 
-            this.mvc.perform(
-                get("/assignment/export/dummyAssignment1")
+
+            val result = this.mvc.perform(
+                get("/assignment/export/dummyAssignment1?includeSubmissions=false")
                     .with(user(TEACHER_1))
-            )
-                .andExpect(status().isOk())
-                .andExpect(content().contentType("application/json"))
-                .andExpect(
-                    content().json(
-                        """
-                    {
-                        "id": "dummyAssignment1",
-                        "name": "Dummy Assignment",
-                        "packageName": "org.dummy",
-                        "dueDate": null,
-                        "submissionMethod": "UPLOAD",
-                        "language": "JAVA",
-                        "acceptsStudentTests": false,
-                        "minStudentTests": null,
-                        "calculateStudentTestsCoverage": false,
-                        "hiddenTestsVisibility": "SHOW_PROGRESS",
-                        "cooloffPeriod": null,
-                        "maxMemoryMb": null,
-                        "showLeaderBoard": false,
-                        "leaderboardType": null,
-                        "gitRepositoryUrl": "git@github.com:palves-ulht/sampleJavaAssignment.git",
-                        "gitRepositoryPubKey": "${TestsHelper.sampleJavaAssignmentPublicKey}",
-                        "gitRepositoryPrivKey": "${TestsHelper.sampleJavaAssignmentPrivateKey}",
-                        "gitRepositoryFolder": "dummyAssignment1"
-                    }
-                """.trimIndent()
-                    )
-                )
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE))
+                .andExpect(header().string("Content-Disposition",
+                    "attachment; filename=dummyAssignment1_${Date().formatJustDate()}.dp"))
+                .andExpect(status().isOk)
+                .andReturn()
+
+            val downloadedFileContent = result.response.contentAsByteArray
+            val downloadedZipFile = File("result.zip")
+            val downloadedJSONFileName = File("result/assignment.json")
+            FileUtils.writeByteArrayToFile(downloadedZipFile, downloadedFileContent)
+            val downloadedFileAsZipObject = ZipFile(downloadedZipFile)
+            downloadedFileAsZipObject.extractFile("assignment.json", "result")
+
+            val mapper = ObjectMapper().registerModule(KotlinModule())
+            val node = mapper.readTree(downloadedJSONFileName)
+            assertEquals("dummyAssignment1", node.at("/id").asText())
+            assertEquals("Dummy Assignment", node.at("/name").asText())
+            assertEquals("org.dummy", node.at("/packageName").asText())
+            assertTrue(node.at("/dueDate").isNull)
+            assertEquals("UPLOAD", node.at("/submissionMethod").asText())
+            assertEquals("JAVA", node.at("/language").asText())
+            assertEquals("SHOW_PROGRESS", node.at("/hiddenTestsVisibility").asText())
+            assertFalse(node.at("/acceptsStudentTests").asBoolean())
+            assertEquals("git@github.com:palves-ulht/sampleJavaAssignment.git", node.at("/gitRepositoryUrl").asText())
+            assertEquals(TestsHelper.sampleJavaAssignmentPublicKey, node.at("/gitRepositoryPubKey").asText())
+            assertEquals(TestsHelper.sampleJavaAssignmentPrivateKey, node.at("/gitRepositoryPrivKey").asText())
+            assertEquals("dummyAssignment1", node.at("/gitRepositoryFolder").asText())
+
+            downloadedZipFile.delete()
+            downloadedJSONFileName.delete()
 
         } finally {
 
@@ -1089,39 +1091,12 @@ class AssignmentControllerTests {
 
     @Test
     @DirtiesContext
-    fun test_21_importAssignment() {
+    fun test_21_importAssignmentOnly() {
 
         try {
-            val jsonContent = """
-                        { 
-                            "id": "dummyAssignment1",
-                            "name": "Dummy Assignment",
-                            "packageName": "org.dummy",
-                            "dueDate": null,
-                            "submissionMethod": "UPLOAD",
-                            "language": "JAVA",
-                            "acceptsStudentTests": false,
-                            "minStudentTests": null,
-                            "calculateStudentTestsCoverage": false,
-                            "hiddenTestsVisibility": "SHOW_PROGRESS",
-                            "cooloffPeriod": null,
-                            "maxMemoryMb": null,
-                            "showLeaderBoard": false,
-                            "leaderboardType": null,
-                            "gitRepositoryUrl": "git@github.com:palves-ulht/sampleJavaAssignment.git",
-                            "gitRepositoryPubKey": "${TestsHelper.sampleJavaAssignmentPublicKey.replace("\n", "\\n")}",
-                            "gitRepositoryPrivKey": "${
-                TestsHelper.sampleJavaAssignmentPrivateKey.replace(
-                    "\n",
-                    "\\n"
-                )
-            }",
-                            "gitRepositoryFolder": "dummyAssignment1"
-                        }
-                    """.trimIndent()
-
+            val fileContent = File("src/test/sampleExports/export-only-assignment.dp").readBytes()
             val multipartFile =
-                MockMultipartFile("file", "assignment.json", "application/json", jsonContent.toByteArray())
+                MockMultipartFile("file", "export-only-assignment.dp", "application/zip", fileContent)
 
             mvc.perform(
                 MockMvcRequestBuilders.fileUpload("/assignment/import")
@@ -1129,6 +1104,7 @@ class AssignmentControllerTests {
                     .with(user(TEACHER_1))
             )
                 .andExpect(status().isFound())
+                .andExpect(flash().attribute("message", "Imported successfully dummyAssignment1. Submissions were not imported"))
                 .andExpect(header().string("Location", "/assignment/info/dummyAssignment1"))
 
 
@@ -1151,7 +1127,7 @@ class AssignmentControllerTests {
 
     @Test
     @DirtiesContext
-    fun test_22_exportSubmissions() {
+    fun test_22_exportAssignmenAndSubmissions() {
 
         val assignment01 = Assignment(
             id = "testJavaProj", name = "Test Project (for automatic tests)",
@@ -1171,11 +1147,11 @@ class AssignmentControllerTests {
         )
 
         val result = this.mvc.perform(
-            get("/assignment/export-submissions/testJavaProj")
+            get("/assignment/export/testJavaProj?includeSubmissions=true")
                 .with(user(TEACHER_1))
                 .contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE))
             .andExpect(header().string("Content-Disposition",
-                "attachment; filename=testJavaProj_submissions_${Date().formatJustDate()}.zip"))
+                "attachment; filename=testJavaProj_submissions_${Date().formatJustDate()}.dp"))
             .andExpect(status().isOk)
             .andReturn()
 
@@ -1219,25 +1195,20 @@ class AssignmentControllerTests {
 
     @Test
     @DirtiesContext
-    fun test_23_importSubmissions() {
+    fun test_23_importAssignmentAndSubmissions() {
 
         try {
-            testsHelper.createAndSetupAssignment(
-                mvc, assignmentRepository, "dummyAssignment1", "Dummy Assignment",
-                "org.dummy",
-                "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git"
-            )
-
-            val fileContent = File("src/test/sampleExports/export.zip").readBytes()
+            val fileContent = File("src/test/sampleExports/export-assignment-and-submissions.dp").readBytes()
             val multipartFile =
-                MockMultipartFile("file", "export.zip", "application/zip", fileContent)
+                MockMultipartFile("file", "export-assignment-and-submissions.dp", "application/zip", fileContent)
 
             mvc.perform(
-                MockMvcRequestBuilders.fileUpload("/assignment/import-submissions")
+                MockMvcRequestBuilders.fileUpload("/assignment/import")
                     .file(multipartFile)
                     .with(user(TEACHER_1))
             )
                 .andExpect(status().isFound())
+                .andExpect(flash().attribute("message", "Imported successfully dummyAssignment1 and all its submissions"))
                 .andExpect(header().string("Location", "/report/dummyAssignment1"))
 
         } finally {

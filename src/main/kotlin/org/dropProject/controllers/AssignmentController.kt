@@ -23,6 +23,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import org.dropProject.dao.*
+import org.dropProject.data.AuthorDetails
 import org.dropProject.data.SubmissionExport
 import org.dropProject.extensions.formatJustDate
 import org.dropProject.extensions.realName
@@ -36,9 +37,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.CacheManager
 import org.springframework.core.io.FileSystemResource
 import org.springframework.data.repository.findByIdOrNull
-import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
 import org.springframework.ui.ModelMap
@@ -63,6 +62,7 @@ import javax.validation.Valid
 @Controller
 @RequestMapping("/assignment")
 class AssignmentController(
+        val authorRepository: AuthorRepository,
         val assignmentRepository: AssignmentRepository,
         val assignmentReportRepository: AssignmentReportRepository,
         val assignmentTagRepository: AssignmentTagRepository,
@@ -78,7 +78,8 @@ class AssignmentController(
         val submissionService: SubmissionService,
         val assignmentService: AssignmentService,
         val zipService: ZipService,
-        val cacheManager: CacheManager) {
+        val cacheManager: CacheManager,
+        val projectGroupService: ProjectGroupService) {
 
     @Value("\${assignments.rootLocation}")
     val assignmentsRootLocation: String = ""
@@ -758,9 +759,12 @@ class AssignmentController(
      * @param assignmentId is a String, identifying the relevant Assignment
      * @return A ResponseEntity<String>
      */
-    @RequestMapping(value = ["/export/{assignmentId}"], method = [(RequestMethod.GET)])
-    fun exportAssignmentJSON(@PathVariable assignmentId: String,
-                  principal: Principal): ResponseEntity<String> {
+    @RequestMapping(value = ["/export/{assignmentId}"], method = [(RequestMethod.GET)],
+        produces = [org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE])
+    @ResponseBody
+    fun exportAssignment(@PathVariable assignmentId: String,
+                         @RequestParam(name="includeSubmissions", required = false) includeSubmissions: Boolean = false,
+                         principal: Principal, response: HttpServletResponse): FileSystemResource {
 
         val assignment = assignmentRepository.findById(assignmentId).orElse(null) ?:
             throw IllegalArgumentException("assignment ${assignmentId} is not registered")
@@ -771,13 +775,54 @@ class AssignmentController(
             throw IllegalAccessError("Exporting assignments is restricted to their owner or authorized teachers")
         }
 
-        val mapper = ObjectMapper().registerModule(KotlinModule())
-        val assignmentAsJSon = mapper.writeValueAsString(assignment)
+        val submissionsExport = mutableListOf<SubmissionExport>()
+        if (includeSubmissions) {
+            val submissions = submissionRepository.findByAssignmentId(assignmentId)
 
-        val headers = HttpHeaders()
-        headers.contentType = MediaType("application", "json")
-        headers.setContentDispositionFormData("attachment", "${assignmentId}_export_${Date().formatJustDate()}.json");
-        return ResponseEntity(assignmentAsJSon, headers, HttpStatus.OK);
+            // for each submission, create the corresponding "full" SubmissionExport object
+            submissions.forEach {
+                with(it) {
+                    val buildReport =
+                        if (buildReportId != null) buildReportRepository.findByIdOrNull(buildReportId)?.buildReport else null
+                    val submissionReport = submissionReportRepository.findBySubmissionId(id).map { eachReport ->
+                        SubmissionExport.SubmissionReport(
+                            eachReport.reportKey, eachReport.reportValue,
+                            eachReport.reportProgress, eachReport.reportGoal
+                        )
+                    }
+                    val submissionExport = SubmissionExport(
+                        id = id, submissionId = submissionId,
+                        gitSubmissionId = gitSubmissionId, submissionFolder = submissionFolder,
+                        submissionDate = submissionDate, submitterUserId = submitterUserId, status = getStatus().code,
+                        statusDate = statusDate, assignmentId = assignmentId, buildReport = buildReport,
+                        structureErrors = structureErrors, markedAsFinal = markedAsFinal,
+                        authors = group.authors.map { author -> SubmissionExport.Author(author.userId, author.name) },
+                        submissionReport = submissionReport
+                    )
+                    submissionsExport.add(submissionExport)
+                }
+            }
+        }
+
+        val fileName = "${assignmentId}_${Date().formatJustDate()}"
+        val tempFolder = Files.createTempDirectory(fileName).toFile()
+        val submissionsJsonFile = File(tempFolder, "submissions.json")
+        val assignmentJsonFile = File(tempFolder, "assignment.json")
+        val mapper = ObjectMapper().registerModule(KotlinModule())
+
+        try {
+            mapper.writeValue(assignmentJsonFile, assignment)
+            if (includeSubmissions) {
+                mapper.writeValue(submissionsJsonFile, submissionsExport)
+            }
+            val zipFile = zipService.createZipFromFolder(tempFolder.name, tempFolder)
+            LOG.info("Created ${zipFile.file.absolutePath} with submissions from ${assignmentId}")
+
+            response.setHeader("Content-Disposition", "attachment; filename=${fileName}.dp")
+            return FileSystemResource(zipFile.file)
+        } finally {
+            tempFolder.delete()
+        }
     }
 
     /**
@@ -790,8 +835,75 @@ class AssignmentController(
         return "teacher-import-assignment"
     }
 
+//    /**
+//     * Controller that handles the import of an Assignment through a previously exported JSON file
+//     *
+//     * @param file is a [MultipartFile]
+//     * @param principal is a [Principal] representing the user making the request
+//     * @param request is an HttpServletRequest
+//     *
+//     * @return the view name
+//     */
+//    @RequestMapping(value = ["/import"], method = [(RequestMethod.POST)])
+//    fun importAssignment(@RequestParam("file") file: MultipartFile,
+//               principal: Principal,
+//               redirectAttributes: RedirectAttributes,
+//               request: HttpServletRequest): String {
+//
+//        if (!file.originalFilename.endsWith(".json", ignoreCase = true)) {
+//            redirectAttributes.addFlashAttribute("error", "Error: File must be .json")
+//            return "redirect:/assignment/import"
+//        }
+//
+//        LOG.info("[${principal.realName()}] uploaded ${file.originalFilename}")
+//        val jsonContent = String(file.bytes, StandardCharsets.UTF_8)
+//
+//        val mapper = ObjectMapper().registerModule(KotlinModule())
+//        val newAssignment = mapper.readValue(jsonContent, Assignment::class.java)
+//
+//        // check if already exists an assignment with this id
+//        if (assignmentRepository.findById(newAssignment.id).orElse(null) != null) {
+//            redirectAttributes.addFlashAttribute("error", "Error: There is already an assignment with this id")
+//            return "redirect:/assignment/import"
+//        }
+//
+//        if (assignmentRepository.findByGitRepositoryFolder(newAssignment.gitRepositoryFolder) != null) {
+//            redirectAttributes.addFlashAttribute("error", "Error: There is already an assignment with this git repository folder")
+//            return "redirect:/assignment/import"
+//        }
+//
+//        newAssignment.ownerUserId = principal.realName()  // new assignment is now owned by who uploads
+//
+//        val gitRepository = newAssignment.gitRepositoryUrl
+//        try {
+//            val directory = File(assignmentsRootLocation, newAssignment.gitRepositoryFolder)
+//            gitClient.clone(gitRepository, directory, newAssignment.gitRepositoryPrivKey!!.toByteArray())
+//            LOG.info("[${newAssignment.id}] Successfuly cloned ${gitRepository} to ${directory}")
+//        } catch (e: Exception) {
+//            LOG.info("Error cloning ${gitRepository} - ${e}")
+//            redirectAttributes.addFlashAttribute("error", "Error cloning ${gitRepository} - ${e.message}")
+//            return "redirect:/assignment/import"
+//        }
+//
+//        assignmentRepository.save(newAssignment)
+//
+//        // revalidate the assignment
+//        val report = assignmentTeacherFiles.checkAssignmentFiles(newAssignment, principal)
+//
+//        // store the report in the DB (first, clear the previous report)
+//        assignmentReportRepository.deleteByAssignmentId(newAssignment.id)
+//        report.forEach {
+//            assignmentReportRepository.save(AssignmentReport(assignmentId = newAssignment.id, type = it.type,
+//                message = it.message, description = it.description))
+//        }
+//
+//        redirectAttributes.addFlashAttribute("message", "Assignment was sucessfully imported")
+//        return "redirect:/assignment/info/${newAssignment.id}"
+//    }
+
     /**
-     * Controller that handles the import of an Assignment through a previously exported JSON file
+     * Controller that handles the import of an Assignment and (possibly) its submissions through a previously exported
+     * .dp file
      *
      * @param file is a [MultipartFile]
      * @param principal is a [Principal] representing the user making the request
@@ -801,30 +913,141 @@ class AssignmentController(
      */
     @RequestMapping(value = ["/import"], method = [(RequestMethod.POST)])
     fun importAssignment(@RequestParam("file") file: MultipartFile,
-               principal: Principal,
-               redirectAttributes: RedirectAttributes,
-               request: HttpServletRequest): String {
+                         principal: Principal,
+                         redirectAttributes: RedirectAttributes,
+                         request: HttpServletRequest): String {
 
-        if (!file.originalFilename.endsWith(".json", ignoreCase = true)) {
-            redirectAttributes.addFlashAttribute("error", "Error: File must be .json")
+        if (!file.originalFilename.endsWith(".dp", ignoreCase = true)) {
+            redirectAttributes.addFlashAttribute("error", "Error: File must be .dp")
             return "redirect:/assignment/import"
         }
 
         LOG.info("[${principal.realName()}] uploaded ${file.originalFilename}")
-        val jsonContent = String(file.bytes, StandardCharsets.UTF_8)
 
-        val mapper = ObjectMapper().registerModule(KotlinModule())
-        val newAssignment = mapper.readValue(jsonContent, Assignment::class.java)
+        val tempFolder = Files.createTempDirectory("import").toFile()
+        val destinationFile = File(tempFolder, "${System.currentTimeMillis()}-${file.originalFilename}.zip")
+        Files.copy(file.inputStream,
+            destinationFile.toPath(),
+            StandardCopyOption.REPLACE_EXISTING)
 
-        // check if already exists an assignment with this id
-        if (assignmentRepository.findById(newAssignment.id).orElse(null) != null) {
-            redirectAttributes.addFlashAttribute("error", "Error: There is already an assignment with this id")
+        val destinationFolder = zipService.unzip(destinationFile.toPath(), "extracted")
+        val assignmentJSONFile = File(destinationFolder, "assignment.json")
+        val submissionsJSONFile = File(destinationFolder, "submissions.json")
+
+        if (!assignmentJSONFile.exists()) {
+            redirectAttributes.addFlashAttribute("error", "Error: File is not valid (missing assignment.json)")
             return "redirect:/assignment/import"
         }
 
-        if (assignmentRepository.findByGitRepositoryFolder(newAssignment.gitRepositoryFolder) != null) {
-            redirectAttributes.addFlashAttribute("error", "Error: There is already an assignment with this git repository folder")
+        val mapper = ObjectMapper().registerModule(KotlinModule())
+
+        val (assignmentId, errorMessage) = createAssignmentFromImportedFile(mapper, assignmentJSONFile, principal)
+        if (errorMessage != null) {
+            redirectAttributes.addFlashAttribute("error", errorMessage)
             return "redirect:/assignment/import"
+        }
+
+        if (submissionsJSONFile.exists()) {
+            val errorMessage2 = importSubmissionsFromImportedFile(mapper, submissionsJSONFile)
+            if (errorMessage2 != null) {
+                redirectAttributes.addFlashAttribute("error", errorMessage2)
+                return "redirect:/assignment/import"
+            }
+
+            redirectAttributes.addFlashAttribute("message", "Imported successfully ${assignmentId} and all its submissions")
+            return "redirect:/report/${assignmentId}"
+        } else {
+            redirectAttributes.addFlashAttribute("message", "Imported successfully ${assignmentId}. Submissions were not imported")
+            return "redirect:/assignment/info/${assignmentId}"
+        }
+    }
+
+
+    private fun importSubmissionsFromImportedFile(mapper: ObjectMapper,
+                                                  submissionsJSONFile: File): String? {
+
+        val submissions = mapper.readValue(submissionsJSONFile, object : TypeReference<List<SubmissionExport>?>() {})
+
+        if (submissions.isNullOrEmpty()) {
+            return "Error: File doesn't contain submissions"
+        }
+
+        // find the assignmentId and make sure it exists
+        val assignmentId = submissions[0]?.assignmentId ?: throw IllegalArgumentException("assignmentId is missing")
+        if (assignmentRepository.findById(assignmentId).isEmpty) {
+            return "Error: You are importing submissions to an assignment ($assignmentId) that doesn't exist. " +
+                    "First, please create that assignment."
+
+        }
+
+        // make sure there are no submissions for this assignment
+        val count = submissionRepository.countByAssignmentId(assignmentId)
+        if (count > 0) {
+            return "Error: You are importing submissions to an assignment ($assignmentId) that already has $count submissions. " +
+                    "First, please make sure the assignment is empty."
+        }
+
+        submissions.forEach {
+
+            val authorDetailsList = it.authors.map { a -> AuthorDetails(a.name, a.userId) }
+            val group = projectGroupService.getOrCreateProjectGroup(authorDetailsList)
+
+            val buildReportId: Long? =
+                if (it.buildReport != null) {
+                    val buildReport = BuildReport(buildReport = it.buildReport!!)
+                    buildReportRepository.save(buildReport)
+                    buildReport.id
+                } else {
+                    null
+                }
+
+            val submission = Submission(
+                submissionId = it.submissionId, submissionDate = it.submissionDate,
+                status = it.status, statusDate = it.statusDate, assignmentId = it.assignmentId,
+                submitterUserId = it.submitterUserId,
+                submissionFolder = it.submissionFolder,
+                gitSubmissionId = it.gitSubmissionId,
+                buildReportId = buildReportId,
+                structureErrors = it.structureErrors,
+                markedAsFinal = it.markedAsFinal
+            )
+
+            submission.group = group
+            submissionRepository.save(submission)
+
+            val reportElements: List<SubmissionReport> = it.submissionReport.map { r ->
+                val reportDB = SubmissionReport(
+                    submissionId = submission.id, reportKey = r.key,
+                    reportValue = r.value, reportProgress = r.progress, reportGoal = r.goal
+                )
+                submissionReportRepository.save(reportDB)
+                reportDB
+            }
+
+            submission.reportElements = reportElements
+            submissionRepository.save(submission)
+        }
+
+        return null
+    }
+
+    /**
+     * @return a Pair where the first item is the assignmentId and the second is null
+     * if the import succeeded or an error message it it failed
+     */
+    private fun createAssignmentFromImportedFile(mapper: ObjectMapper,
+                                                 assignmentJSONFile: File,
+                                                 principal: Principal): Pair<String,String?> {
+
+        val newAssignment = mapper.readValue(assignmentJSONFile, Assignment::class.java)
+
+        // check if already exists an assignment with this id
+        if (assignmentRepository.findById(newAssignment.id).orElse(null) != null) {
+            return Pair(newAssignment.id, "Error: There is already an assignment with this id (${newAssignment.id})")
+        }
+
+        if (assignmentRepository.findByGitRepositoryFolder(newAssignment.gitRepositoryFolder) != null) {
+            return Pair(newAssignment.id, "Error: There is already an assignment with this git repository folder")
         }
 
         newAssignment.ownerUserId = principal.realName()  // new assignment is now owned by who uploads
@@ -836,8 +1059,7 @@ class AssignmentController(
             LOG.info("[${newAssignment.id}] Successfuly cloned ${gitRepository} to ${directory}")
         } catch (e: Exception) {
             LOG.info("Error cloning ${gitRepository} - ${e}")
-            redirectAttributes.addFlashAttribute("error", "Error cloning ${gitRepository} - ${e.message}")
-            return "redirect:/assignment/import"
+            return Pair(newAssignment.id, "Error cloning ${gitRepository} - ${e.message}")
         }
 
         assignmentRepository.save(newAssignment)
@@ -848,104 +1070,15 @@ class AssignmentController(
         // store the report in the DB (first, clear the previous report)
         assignmentReportRepository.deleteByAssignmentId(newAssignment.id)
         report.forEach {
-            assignmentReportRepository.save(AssignmentReport(assignmentId = newAssignment.id, type = it.type,
-                message = it.message, description = it.description))
+            assignmentReportRepository.save(
+                AssignmentReport(
+                    assignmentId = newAssignment.id, type = it.type,
+                    message = it.message, description = it.description
+                )
+            )
         }
 
-        redirectAttributes.addFlashAttribute("message", "Assignment was sucessfully imported")
-        return "redirect:/assignment/info/${newAssignment.id}"
-    }
-
-    @RequestMapping(value = ["/export-submissions/{assignmentIdParam}"], method = [(RequestMethod.GET)],
-        produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
-    @ResponseBody
-    fun exportSubmissions(@PathVariable assignmentIdParam: String,
-                          principal: Principal, response: HttpServletResponse): FileSystemResource {
-
-        val assignment = assignmentRepository.findById(assignmentIdParam).orElse(null) ?:
-        throw IllegalArgumentException("assignment ${assignmentIdParam} is not registered")
-
-        val acl = assignmentACLRepository.findByAssignmentId(assignmentIdParam)
-
-        if (principal.realName() != assignment.ownerUserId && acl.find { it.userId == principal.realName() } == null) {
-            throw IllegalAccessError("Exporting assignments is restricted to their owner or authorized teachers")
-        }
-
-        val submissions = submissionRepository.findByAssignmentId(assignmentIdParam)
-        val submissionsExport = mutableListOf<SubmissionExport>()
-
-        // for each submission, create the corresponding "full" SubmissionExport object
-        submissions.forEach {
-            with (it) {
-                val buildReport = if (buildReportId != null) buildReportRepository.findByIdOrNull(buildReportId)?.buildReport else null
-                val submissionReport = submissionReportRepository.findBySubmissionId(id).map {
-                    eachReport -> SubmissionExport.SubmissionReport(eachReport.reportKey, eachReport.reportValue,
-                                                                    eachReport.reportProgress, eachReport.reportGoal)
-                }
-                val submissionExport = SubmissionExport(id = id, submissionId = submissionId,
-                    gitSubmissionId = gitSubmissionId, submissionFolder = submissionFolder,
-                    submissionDate = submissionDate, submitterUserId = submitterUserId, status = getStatus().code,
-                    statusDate = statusDate, assignmentId = assignmentId, buildReport = buildReport,
-                    structureErrors = structureErrors, markedAsFinal = markedAsFinal,
-                    authors = group.authors.map { author ->  SubmissionExport.Author(author.userId, author.name) },
-                    submissionReport = submissionReport)
-                submissionsExport.add(submissionExport)
-            }
-        }
-
-        val fileName = "${assignmentIdParam}_submissions_${Date().formatJustDate()}"
-        val tempFolder = Files.createTempDirectory(fileName).toFile()
-        val jsonFile = File(tempFolder, "submissions.json")
-        val mapper = ObjectMapper().registerModule(KotlinModule())
-        try {
-            mapper.writeValue(jsonFile, submissionsExport)
-            val zipFile = zipService.createZipFromFolder(tempFolder.name, tempFolder)
-            LOG.info("Created ${zipFile.file.absolutePath} with submissions from ${assignmentIdParam}")
-
-            response.setHeader("Content-Disposition", "attachment; filename=${fileName}.zip")
-            return FileSystemResource(zipFile.file)
-        } finally {
-            tempFolder.delete()
-        }
-    }
-
-    /**
-     * Controller that handles the import of an Assignment through a previously exported JSON file
-     *
-     * @param file is a [MultipartFile]
-     * @param principal is a [Principal] representing the user making the request
-     * @param request is an HttpServletRequest
-     *
-     * @return the view name
-     */
-    @RequestMapping(value = ["/import-submissions"], method = [(RequestMethod.POST)])
-    fun importSubmissions(@RequestParam("file") file: MultipartFile,
-                         principal: Principal,
-                         redirectAttributes: RedirectAttributes,
-                         request: HttpServletRequest): String {
-
-        if (!file.originalFilename.endsWith(".zip", ignoreCase = true)) {
-            redirectAttributes.addFlashAttribute("error", "Error: File must be .zip")
-            return "redirect:/assignment/import-submissions"
-        }
-
-        LOG.info("[${principal.realName()}] uploaded ${file.originalFilename}")
-        var assignmentId = ""
-
-        val tempFolder = Files.createTempDirectory("submissions").toFile()
-        val destinationFile = File(tempFolder, "${System.currentTimeMillis()}-submissions.zip")
-        Files.copy(file.inputStream,
-            destinationFile.toPath(),
-            StandardCopyOption.REPLACE_EXISTING)
-
-        val destinationFolder = zipService.unzip(destinationFile.toPath(), "submissions-extracted")
-        val submissionsJSONFile = File(destinationFolder, "submissions.json")
-
-        val mapper = ObjectMapper().registerModule(KotlinModule())
-        val submissions = mapper.readValue(submissionsJSONFile, object : TypeReference<List<SubmissionExport?>?>() {})
-
-        redirectAttributes.addFlashAttribute("message", "Imported successfuly XXX submissions")
-        return "redirect:/report/${assignmentId}"
+        return Pair(newAssignment.id, null)
     }
 
     /**

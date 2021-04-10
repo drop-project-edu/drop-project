@@ -23,6 +23,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.dropProject.dao.Author
 import org.dropProject.dao.ProjectGroup
 import org.dropProject.dao.Submission
+import org.springframework.data.jpa.repository.Query
 
 /**
  * Provides functions to query [Author]s that have been persisted in the database.
@@ -30,4 +31,7 @@ import org.dropProject.dao.Submission
 interface AuthorRepository : JpaRepository<Author, Long> {
 
     fun findByUserId(userId: String) : Author?
+
+    @Query("SELECT a1.group FROM Author a1, Author a2 WHERE a1.userId = ?1 and a2.userId = ?2 and a1.group = a2.group")
+    fun getGroupId(userId1: String, userId2: String): ProjectGroup?
 }
