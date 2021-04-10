@@ -1207,9 +1207,18 @@ class AssignmentControllerTests {
                     .file(multipartFile)
                     .with(user(TEACHER_1))
             )
-                .andExpect(status().isFound())
+                .andExpect(status().isFound)
                 .andExpect(flash().attribute("message", "Imported successfully dummyAssignment1 and all its submissions"))
                 .andExpect(header().string("Location", "/report/dummyAssignment1"))
+
+            val reportResult = this.mvc.perform(get("/report/dummyAssignment1")
+                .with(user(TEACHER_1)))
+                .andExpect(status().isOk())
+                .andReturn()
+
+            @Suppress("UNCHECKED_CAST")
+            val report = reportResult.modelAndView.modelMap["submissions"] as List<SubmissionInfo>
+            assertEquals(4, report.size)
 
         } finally {
 
