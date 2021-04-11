@@ -18,6 +18,9 @@
 <!--/*@thymesVar id="submissions" type="java.util.ArrayList<org.dropProject.data.SubmissionInfo>"*/-->
 <div class="container" style="max-width: 900px; margin-bottom: 65px">
 
+    <div class="alert alert-info" th:text="${message}" th:if="${message}" />
+    <div class="alert alert-danger" th:text="${error}" th:if="${error}" />
+
     <h1 class="page-header" th:text="${assignmentId} + ' submissions'"></h1>
 
     <ul class="nav nav-tabs" id="myTab">

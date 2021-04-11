@@ -22,6 +22,7 @@ package org.dropProject.data
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnore
 import java.util.*
+import javax.persistence.Column
 
 
 /**
@@ -45,7 +46,8 @@ data class SubmissionExport(
     var structureErrors: String? = null,
     var markedAsFinal: Boolean = false,
     var authors: List<Author>,
-    var submissionReport: List<SubmissionReport>
+    var submissionReport: List<SubmissionReport>,
+    var junitReports: List<JUnitReport>?
 )
 {
 
@@ -54,6 +56,7 @@ data class SubmissionExport(
                                 val value: String,
                                 val progress: Int?,
                                 val goal: Int?)
+    data class JUnitReport(val filename: String, val xmlReport: String)
 
 }
 

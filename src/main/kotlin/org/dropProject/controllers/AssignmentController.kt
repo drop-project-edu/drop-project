@@ -74,6 +74,7 @@ class AssignmentController(
         val submissionReportRepository: SubmissionReportRepository,
         val gitSubmissionRepository: GitSubmissionRepository,
         val buildReportRepository: BuildReportRepository,
+        val jUnitReportRepository: JUnitReportRepository,
         val gitClient: GitClient,
         val assignmentTeacherFiles: AssignmentTeacherFiles,
         val submissionService: SubmissionService,
@@ -792,6 +793,9 @@ class AssignmentController(
                             eachReport.reportProgress, eachReport.reportGoal
                         )
                     }
+                    val junitReports = jUnitReportRepository.findBySubmissionId(id)?.map { jUnitReport ->
+                        SubmissionExport.JUnitReport(jUnitReport.fileName, jUnitReport.xmlReport)
+                    }
                     val submissionExport = SubmissionExport(
                         id = id, submissionId = submissionId,
                         gitSubmissionId = gitSubmissionId, submissionFolder = submissionFolder,
@@ -799,7 +803,8 @@ class AssignmentController(
                         statusDate = statusDate, assignmentId = assignmentId, buildReport = buildReport,
                         structureErrors = structureErrors, markedAsFinal = markedAsFinal,
                         authors = group.authors.map { author -> SubmissionExport.Author(author.userId, author.name) },
-                        submissionReport = submissionReport
+                        submissionReport = submissionReport,
+                        junitReports = junitReports
                     )
                     submissionsExport.add(submissionExport)
                 }
@@ -836,72 +841,6 @@ class AssignmentController(
     fun showImportAssignmentPage(): String {
         return "teacher-import-assignment"
     }
-
-//    /**
-//     * Controller that handles the import of an Assignment through a previously exported JSON file
-//     *
-//     * @param file is a [MultipartFile]
-//     * @param principal is a [Principal] representing the user making the request
-//     * @param request is an HttpServletRequest
-//     *
-//     * @return the view name
-//     */
-//    @RequestMapping(value = ["/import"], method = [(RequestMethod.POST)])
-//    fun importAssignment(@RequestParam("file") file: MultipartFile,
-//               principal: Principal,
-//               redirectAttributes: RedirectAttributes,
-//               request: HttpServletRequest): String {
-//
-//        if (!file.originalFilename.endsWith(".json", ignoreCase = true)) {
-//            redirectAttributes.addFlashAttribute("error", "Error: File must be .json")
-//            return "redirect:/assignment/import"
-//        }
-//
-//        LOG.info("[${principal.realName()}] uploaded ${file.originalFilename}")
-//        val jsonContent = String(file.bytes, StandardCharsets.UTF_8)
-//
-//        val mapper = ObjectMapper().registerModule(KotlinModule())
-//        val newAssignment = mapper.readValue(jsonContent, Assignment::class.java)
-//
-//        // check if already exists an assignment with this id
-//        if (assignmentRepository.findById(newAssignment.id).orElse(null) != null) {
-//            redirectAttributes.addFlashAttribute("error", "Error: There is already an assignment with this id")
-//            return "redirect:/assignment/import"
-//        }
-//
-//        if (assignmentRepository.findByGitRepositoryFolder(newAssignment.gitRepositoryFolder) != null) {
-//            redirectAttributes.addFlashAttribute("error", "Error: There is already an assignment with this git repository folder")
-//            return "redirect:/assignment/import"
-//        }
-//
-//        newAssignment.ownerUserId = principal.realName()  // new assignment is now owned by who uploads
-//
-//        val gitRepository = newAssignment.gitRepositoryUrl
-//        try {
-//            val directory = File(assignmentsRootLocation, newAssignment.gitRepositoryFolder)
-//            gitClient.clone(gitRepository, directory, newAssignment.gitRepositoryPrivKey!!.toByteArray())
-//            LOG.info("[${newAssignment.id}] Successfuly cloned ${gitRepository} to ${directory}")
-//        } catch (e: Exception) {
-//            LOG.info("Error cloning ${gitRepository} - ${e}")
-//            redirectAttributes.addFlashAttribute("error", "Error cloning ${gitRepository} - ${e.message}")
-//            return "redirect:/assignment/import"
-//        }
-//
-//        assignmentRepository.save(newAssignment)
-//
-//        // revalidate the assignment
-//        val report = assignmentTeacherFiles.checkAssignmentFiles(newAssignment, principal)
-//
-//        // store the report in the DB (first, clear the previous report)
-//        assignmentReportRepository.deleteByAssignmentId(newAssignment.id)
-//        report.forEach {
-//            assignmentReportRepository.save(AssignmentReport(assignmentId = newAssignment.id, type = it.type,
-//                message = it.message, description = it.description))
-//        }
-//
-//        redirectAttributes.addFlashAttribute("message", "Assignment was sucessfully imported")
-//        return "redirect:/assignment/info/${newAssignment.id}"
-//    }
 
     /**
      * Controller that handles the import of an Assignment and (possibly) its submissions through a previously exported
@@ -947,6 +886,8 @@ class AssignmentController(
         if (errorMessage != null) {
             redirectAttributes.addFlashAttribute("error", errorMessage)
             return "redirect:/assignment/import"
+        } else {
+            LOG.info("Imported $assignmentId")
         }
 
         if (submissionsJSONFile.exists()) {
@@ -989,8 +930,7 @@ class AssignmentController(
                     "First, please make sure the assignment is empty."
         }
 
-        submissions.forEach {
-
+        submissions.forEachIndexed { index, it ->
             val authorDetailsList = it.authors.map { a -> AuthorDetails(a.name, a.userId) }
             val group = projectGroupService.getOrCreateProjectGroup(authorDetailsList)
 
@@ -1028,6 +968,13 @@ class AssignmentController(
 
             submission.reportElements = reportElements
             submissionRepository.save(submission)
+
+            it.junitReports?.forEach { r ->
+                jUnitReportRepository.save(JUnitReport(submissionId = submission.id, fileName = r.filename,
+                    xmlReport = r.xmlReport))
+            }
+
+            LOG.info("Imported submission $submission.id ($index/${submissions.size})")
         }
 
         return null
