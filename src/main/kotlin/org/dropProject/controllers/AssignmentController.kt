@@ -50,6 +50,7 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.security.Principal
+import java.time.ZoneId
 import java.util.*
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
@@ -272,7 +273,8 @@ class AssignmentController(
     private fun createAssignmentBasedOnForm(assignmentForm: AssignmentForm, principal: Principal): Assignment {
         val newAssignment = Assignment(id = assignmentForm.assignmentId!!, name = assignmentForm.assignmentName!!,
                 packageName = assignmentForm.assignmentPackage, language = assignmentForm.language!!,
-                dueDate = assignmentForm.dueDate, acceptsStudentTests = assignmentForm.acceptsStudentTests,
+                dueDate = if (assignmentForm.dueDate != null) java.sql.Timestamp.valueOf(assignmentForm.dueDate) else null,
+                acceptsStudentTests = assignmentForm.acceptsStudentTests,
                 minStudentTests = assignmentForm.minStudentTests,
                 calculateStudentTestsCoverage = assignmentForm.calculateStudentTestsCoverage,
                 cooloffPeriod = assignmentForm.cooloffPeriod,
@@ -379,7 +381,7 @@ class AssignmentController(
                 assignmentTags = if (assignment.tags.isEmpty()) null else assignment.tags.joinToString { t -> t.name },
                 assignmentPackage = assignment.packageName,
                 language = assignment.language,
-                dueDate = assignment.dueDate,
+                dueDate = assignment.dueDate?.toInstant()?.atZone(ZoneId.systemDefault())?.toLocalDateTime(),
                 submissionMethod = assignment.submissionMethod,
                 gitRepositoryUrl = assignment.gitRepositoryUrl,
                 acceptsStudentTests = assignment.acceptsStudentTests,

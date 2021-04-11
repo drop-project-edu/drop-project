@@ -1042,7 +1042,8 @@ class AssignmentControllerTests {
             testsHelper.createAndSetupAssignment(
                 mvc, assignmentRepository, "dummyAssignment1", "Dummy Assignment",
                 "org.dummy",
-                "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git"
+                "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git",
+                dueDate = "2022-10-31T01:30:00.000-00:00"
             )
 
 
@@ -1067,7 +1068,7 @@ class AssignmentControllerTests {
             assertEquals("dummyAssignment1", node.at("/id").asText())
             assertEquals("Dummy Assignment", node.at("/name").asText())
             assertEquals("org.dummy", node.at("/packageName").asText())
-            assertTrue(node.at("/dueDate").isNull)
+            assertEquals("2022-10-31 01:30:00", node.at("/dueDate").asText())
             assertEquals("UPLOAD", node.at("/submissionMethod").asText())
             assertEquals("JAVA", node.at("/language").asText())
             assertEquals("SHOW_PROGRESS", node.at("/hiddenTestsVisibility").asText())

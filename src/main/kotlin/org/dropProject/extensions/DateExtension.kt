@@ -26,13 +26,18 @@ import java.util.*
  * This file contains extensions to the default [Date] class.
  */
 
-fun Date.formatJustDate(): String{
+fun Date.formatJustDate(): String {
     val sdf= SimpleDateFormat("yyyyMMdd", Locale.getDefault())
     return sdf.format(this)
 }
 
-fun Date.formatDefault(): String{
+fun Date.formatDefault(): String {
     val sdf= SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+    return sdf.format(this)
+}
+
+fun Date.format(format: String): String {
+    val sdf= SimpleDateFormat(format, Locale.getDefault())
     return sdf.format(this)
 }
     
