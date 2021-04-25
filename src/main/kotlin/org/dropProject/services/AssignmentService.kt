@@ -19,17 +19,21 @@
  */
 package org.dropProject.services
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import org.dropProject.PendingTasks
 import org.dropProject.controllers.ReportController
 import org.dropProject.dao.*
+import org.dropProject.dao.BuildReport
 import org.dropProject.data.*
 import org.dropProject.extensions.formatJustDate
 import org.dropProject.extensions.realName
 import org.dropProject.forms.AssignmentForm
+import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.*
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.core.io.FileSystemResource
 import org.springframework.data.repository.findByIdOrNull
@@ -52,8 +56,10 @@ import kotlin.collections.LinkedHashMap
 @Service
 class AssignmentService(
         val assignmentRepository: AssignmentRepository,
+        val assignmentReportRepository: AssignmentReportRepository,
         val assignmentACLRepository: AssignmentACLRepository,
         val submissionRepository: SubmissionRepository,
+        val gitSubmissionRepository: GitSubmissionRepository,
         val assigneeRepository: AssigneeRepository,
         val submissionService: SubmissionService,
         val assignmentTestMethodRepository: AssignmentTestMethodRepository,
@@ -62,10 +68,16 @@ class AssignmentService(
         val buildReportRepository: BuildReportRepository,
         val jUnitReportRepository: JUnitReportRepository,
         val zipService: ZipService,
-        val pendingTasks: PendingTasks
+        val pendingTasks: PendingTasks,
+        val projectGroupService: ProjectGroupService,
+        val gitClient: GitClient,
+        val assignmentTeacherFiles: AssignmentTeacherFiles
 ) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
+
+    @Value("\${assignments.rootLocation}")
+    val assignmentsRootLocation: String = ""
 
     /**
      * Returns the [Assignment]s that a certain user can access. The returned assignments will be the ones
@@ -310,6 +322,7 @@ class AssignmentService(
         throw IllegalArgumentException("assignment ${assignmentId} is not registered")
 
         val submissionsExport = mutableListOf<SubmissionExport>()
+        val gitSubmissionsExport = mutableListOf<GitSubmissionExport>()
         if (includeSubmissions) {
             val submissions = submissionRepository.findByAssignmentId(assignment.id)
 
@@ -340,11 +353,29 @@ class AssignmentService(
                     submissionsExport.add(submissionExport)
                 }
             }
+
+            if (assignment.submissionMethod == SubmissionMethod.GIT) {
+                val gitSubmissions = gitSubmissionRepository.findByAssignmentId(assignmentId)
+                gitSubmissions.forEach {
+                    with(it) {
+                        val gitSubmissionExport = GitSubmissionExport(
+                            assignmentId = assignmentId, submitterUserId = submitterUserId,
+                            createDate = createDate, connected = connected, lastCommitDate = lastCommitDate,
+                            gitRepositoryUrl = gitRepositoryUrl, gitRepositoryPubKey = gitRepositoryPubKey,
+                            gitRepositoryPrivKey = gitRepositoryPrivKey,
+                            authors = group.authors.map { author -> GitSubmissionExport.Author(author.userId, author.name) }
+                        )
+
+                        gitSubmissionsExport.add(gitSubmissionExport)
+                    }
+                }
+            }
         }
 
         val fileName = "${assignment.id}_${Date().formatJustDate()}"
         val tempFolder = Files.createTempDirectory(fileName).toFile()
         val submissionsJsonFile = File(tempFolder, "submissions.json")
+        val gitSubmissionsJsonFile = File(tempFolder, "git-submissions.json")
         val assignmentJsonFile = File(tempFolder, "assignment.json")
         val mapper = ObjectMapper().registerModule(KotlinModule())
 
@@ -352,6 +383,9 @@ class AssignmentService(
             mapper.writeValue(assignmentJsonFile, assignment)
             if (includeSubmissions) {
                 mapper.writeValue(submissionsJsonFile, submissionsExport)
+                if (!gitSubmissionsExport.isEmpty()) {
+                    mapper.writeValue(gitSubmissionsJsonFile, gitSubmissionsExport)
+                }
             }
             val zipFile = zipService.createZipFromFolder(tempFolder.name, tempFolder)
             LOG.info("Created ${zipFile.file.absolutePath} with submissions from ${assignment.id}")
@@ -363,4 +397,165 @@ class AssignmentService(
         }
     }
 
+    fun importSubmissionsFromImportedFile(mapper: ObjectMapper,
+                                                  submissionsJSONFile: File): String? {
+
+        val submissions = mapper.readValue(submissionsJSONFile, object : TypeReference<List<SubmissionExport>?>() {})
+
+        if (submissions.isNullOrEmpty()) {
+            return "Error: File doesn't contain submissions"
+        }
+
+        // find the assignmentId and make sure it exists
+        val assignmentId = submissions[0]?.assignmentId ?: throw IllegalArgumentException("assignmentId is missing")
+        if (assignmentRepository.findById(assignmentId).isEmpty) {
+            return "Error: You are importing submissions to an assignment ($assignmentId) that doesn't exist. " +
+                    "First, please create that assignment."
+
+        }
+
+        // make sure there are no submissions for this assignment
+        val count = submissionRepository.countByAssignmentId(assignmentId)
+        if (count > 0) {
+            return "Error: You are importing submissions to an assignment ($assignmentId) that already has $count submissions. " +
+                    "First, please make sure the assignment is empty."
+        }
+
+        submissions.forEachIndexed { index, it ->
+            val authorDetailsList = it.authors.map { a -> AuthorDetails(a.name, a.userId) }
+            val group = projectGroupService.getOrCreateProjectGroup(authorDetailsList)
+
+            val buildReportId: Long? =
+                if (it.buildReport != null) {
+                    val buildReport = BuildReport(buildReport = it.buildReport!!)
+                    buildReportRepository.save(buildReport)
+                    buildReport.id
+                } else {
+                    null
+                }
+
+            val submission = Submission(
+                submissionId = it.submissionId, submissionDate = it.submissionDate,
+                status = it.status, statusDate = it.statusDate, assignmentId = it.assignmentId,
+                submitterUserId = it.submitterUserId,
+                submissionFolder = it.submissionFolder,
+                gitSubmissionId = it.gitSubmissionId,
+                buildReportId = buildReportId,
+                structureErrors = it.structureErrors,
+                markedAsFinal = it.markedAsFinal
+            )
+
+            submission.group = group
+            submissionRepository.save(submission)
+
+            val reportElements: List<SubmissionReport> = it.submissionReport.map { r ->
+                val reportDB = SubmissionReport(
+                    submissionId = submission.id, reportKey = r.key,
+                    reportValue = r.value, reportProgress = r.progress, reportGoal = r.goal
+                )
+                submissionReportRepository.save(reportDB)
+                reportDB
+            }
+
+            submission.reportElements = reportElements
+            submissionRepository.save(submission)
+
+            it.junitReports?.forEach { r ->
+                jUnitReportRepository.save(JUnitReport(submissionId = submission.id, fileName = r.filename,
+                    xmlReport = r.xmlReport))
+            }
+
+            LOG.info("Imported submission $submission.id ($index/${submissions.size})")
+        }
+
+        return null
+    }
+
+    /**
+     * @return a Pair where the first item is the assignmentId and the second is null
+     * if the import succeeded or an error message it it failed
+     */
+    fun createAssignmentFromImportedFile(mapper: ObjectMapper,
+                                                 assignmentJSONFile: File,
+                                                 principal: Principal): Pair<String,String?> {
+
+        val newAssignment = mapper.readValue(assignmentJSONFile, Assignment::class.java)
+
+        // check if already exists an assignment with this id
+        if (assignmentRepository.findById(newAssignment.id).orElse(null) != null) {
+            return Pair(newAssignment.id, "Error: There is already an assignment with this id (${newAssignment.id})")
+        }
+
+        if (assignmentRepository.findByGitRepositoryFolder(newAssignment.gitRepositoryFolder) != null) {
+            return Pair(newAssignment.id, "Error: There is already an assignment with this git repository folder")
+        }
+
+        newAssignment.ownerUserId = principal.realName()  // new assignment is now owned by who uploads
+
+        val gitRepository = newAssignment.gitRepositoryUrl
+        try {
+            val directory = File(assignmentsRootLocation, newAssignment.gitRepositoryFolder)
+            gitClient.clone(gitRepository, directory, newAssignment.gitRepositoryPrivKey!!.toByteArray())
+            LOG.info("[${newAssignment.id}] Successfuly cloned ${gitRepository} to ${directory}")
+        } catch (e: Exception) {
+            LOG.info("Error cloning ${gitRepository} - ${e}")
+            return Pair(newAssignment.id, "Error cloning ${gitRepository} - ${e.message}")
+        }
+
+        assignmentRepository.save(newAssignment)
+
+        // revalidate the assignment
+        val report = assignmentTeacherFiles.checkAssignmentFiles(newAssignment, principal)
+
+        // store the report in the DB (first, clear the previous report)
+        assignmentReportRepository.deleteByAssignmentId(newAssignment.id)
+        report.forEach {
+            assignmentReportRepository.save(
+                AssignmentReport(
+                    assignmentId = newAssignment.id, type = it.type,
+                    message = it.message, description = it.description
+                )
+            )
+        }
+
+        return Pair(newAssignment.id, null)
+    }
+
+    fun importGitSubmissionsFromImportedFile(mapper: ObjectMapper,
+                                          submissionsJSONFile: File): String? {
+
+        val gitSubmissions = mapper.readValue(submissionsJSONFile, object : TypeReference<List<GitSubmissionExport>?>() {})
+
+        if (gitSubmissions.isNullOrEmpty()) {
+            return "Error: File doesn't contain git submissions"
+        }
+
+        gitSubmissions.forEachIndexed { index, it ->
+            val authorDetailsList = it.authors.map { a -> AuthorDetails(a.name, a.userId) }
+            val group = projectGroupService.getOrCreateProjectGroup(authorDetailsList)
+            val submissions = submissionRepository.findByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(group, it.assignmentId)
+
+            val gitSubmission = GitSubmission(
+                assignmentId = it.assignmentId, submitterUserId = it.submitterUserId,
+                createDate = it.createDate, connected = it.connected, lastCommitDate = it.lastCommitDate,
+                gitRepositoryUrl = it.gitRepositoryUrl, gitRepositoryPubKey = it.gitRepositoryPubKey,
+                gitRepositoryPrivKey = it.gitRepositoryPrivKey)
+
+            gitSubmission.group = group
+            if (!submissions.isEmpty()) {
+                gitSubmission.lastSubmissionId = submissions[0].id
+            }
+            gitSubmissionRepository.save(gitSubmission)
+
+            // update FK on all submissions by this group
+            submissions.forEach {
+                it.gitSubmissionId = gitSubmission.id
+                submissionRepository.save(it)
+            }
+
+            LOG.info("Imported git submission $gitSubmission.id ($index/${submissions.size})")
+        }
+
+        return null
+    }
 }

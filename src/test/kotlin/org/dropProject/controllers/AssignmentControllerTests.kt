@@ -29,10 +29,7 @@ import org.dropProject.data.SubmissionInfo
 import org.dropProject.extensions.formatJustDate
 import org.dropProject.forms.AssignmentForm
 import org.dropProject.forms.SubmissionMethod
-import org.dropProject.repository.AssigneeRepository
-import org.dropProject.repository.AssignmentRepository
-import org.dropProject.repository.AssignmentTagRepository
-import org.dropProject.repository.SubmissionRepository
+import org.dropProject.repository.*
 import org.hamcrest.CoreMatchers.containsString
 import org.hamcrest.Matchers
 import org.hamcrest.Matchers.*
@@ -91,6 +88,9 @@ class AssignmentControllerTests {
 
     @Autowired
     lateinit var submissionRepository: SubmissionRepository
+
+    @Autowired
+    lateinit var gitSubmissionRepository: GitSubmissionRepository
 
     @Autowired
     lateinit var assignmentTagRepository: AssignmentTagRepository
@@ -1252,6 +1252,102 @@ class AssignmentControllerTests {
             @Suppress("UNCHECKED_CAST")
             val report = reportResult.modelAndView.modelMap["submissions"] as List<SubmissionInfo>
             assertEquals(4, report.size)
+
+        } finally {
+
+            // cleanup assignment files
+            if (File(assignmentsRootLocation, "dummyAssignment1").exists()) {
+                File(assignmentsRootLocation, "dummyAssignment1").deleteRecursively()
+            }
+        }
+
+
+    }
+
+    @Test
+    @DirtiesContext
+    fun test_24_exportAssignmentAndGitSubmissions() {
+
+        val assignment01 = Assignment(
+            id = "testJavaProj", name = "Test Project (for automatic tests)",
+            packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
+            submissionMethod = SubmissionMethod.GIT, active = true, gitRepositoryUrl = "git://dummyRepo",
+            gitRepositoryFolder = "testJavaProj"
+        )
+        assignmentRepository.save(assignment01)
+
+        testsHelper.connectToGitRepositoryAndBuildReport(mvc, gitSubmissionRepository, "testJavaProj",
+            "git@github.com:palves-ulht/sampleJavaSubmission.git", "student1")
+
+        val result = this.mvc.perform(
+            get("/assignment/export/testJavaProj?includeSubmissions=true")
+                .with(user(TEACHER_1)))
+            .andExpect(status().isFound)
+            .andReturn()
+
+        val redirectLocation = result.response.getHeader("Location")
+        assertNotNull(redirectLocation)
+
+        val result2 = this.mvc.perform(
+            get(redirectLocation)
+                .with(user(TEACHER_1))
+                .contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE))
+            .andExpect(
+                header().string(
+                    "Content-Disposition",
+                    "attachment; filename=testJavaProj_${Date().formatJustDate()}.dp"))
+            .andExpect(status().isOk)
+            .andReturn()
+
+        val downloadedFileContent = result2.response.contentAsByteArray
+        val downloadedZipFile = File("result.zip")
+        val downloadedJSONFileName = File("result/git-submissions.json")
+        FileUtils.writeByteArrayToFile(downloadedZipFile, downloadedFileContent)
+        val downloadedFileAsZipObject = ZipFile(downloadedZipFile)
+        downloadedFileAsZipObject.extractFile("git-submissions.json", "result")
+
+        val mapper = ObjectMapper().registerModule(KotlinModule())
+        val node = mapper.readTree(downloadedJSONFileName)
+        assertEquals("testJavaProj", node.at("/0/assignmentId").asText())
+        assertEquals("student1", node.at("/0/submitterUserId").asText())
+        assertEquals("2019-02-26 17:26:53", node.at("/0/lastCommitDate").asText())
+        assertEquals("git@github.com:palves-ulht/sampleJavaSubmission.git", node.at("/0/gitRepositoryUrl").asText())
+        assertEquals("student1", node.at("/0/authors/0/userId").asText())
+        assertEquals("student2", node.at("/0/authors/1/userId").asText())
+
+         downloadedZipFile.delete()
+         downloadedJSONFileName.delete()
+
+    }
+
+    @Test
+    @DirtiesContext
+    fun test_25_importAssignmentAndGitSubmissions() {
+
+        try {
+            val fileContent = File("src/test/sampleExports/export-assignment-and-git-submissions.dp").readBytes()
+            val multipartFile =
+                MockMultipartFile("file", "export-assignment-and-git-submissions.dp", "application/zip", fileContent)
+
+            mvc.perform(
+                MockMvcRequestBuilders.fileUpload("/assignment/import")
+                    .file(multipartFile)
+                    .with(user(TEACHER_1))
+            )
+                .andExpect(status().isFound)
+                .andExpect(flash().attribute("message", "Imported successfully dummyAssignment1 and all its submissions"))
+                .andExpect(header().string("Location", "/report/dummyAssignment1"))
+
+            val reportResult = this.mvc.perform(get("/report/dummyAssignment1")
+                .with(user(TEACHER_1)))
+                .andExpect(status().isOk())
+                .andReturn()
+
+            @Suppress("UNCHECKED_CAST")
+            val report = reportResult.modelAndView.modelMap["submissions"] as List<SubmissionInfo>
+            assertEquals(4, report.size)
+
+            // TODO check git submission
 
         } finally {
 

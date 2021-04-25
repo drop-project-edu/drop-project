@@ -597,7 +597,7 @@ class UploadController(
 
             } else if (submission.gitSubmissionId != null) {   // submission through git
                 val gitSubmission = gitSubmissionRepository.findById(submission.gitSubmissionId).orElse(null) ?:
-                                        throw SubmissionNotFoundException(submission.gitSubmissionId)
+                                        throw SubmissionNotFoundException(submission.gitSubmissionId!!)
 
                 File(gitSubmissionsRootLocation, gitSubmission.getFolderRelativeToStorageRoot())
 
