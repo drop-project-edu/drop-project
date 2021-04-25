@@ -20,5 +20,5 @@
 package org.dropProject.forms
 
 
-data class UploadForm(var assignmentId: String? = null, var async: Boolean = true)
+data class UploadForm(var assignmentId: String? = null)
     

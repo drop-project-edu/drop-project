@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="layout/layout :: head (pageTitle='Drop Project - Export status')">
+</head>
+
+<body>
+
+<div th:replace="layout/layout :: header"></div>
+
+<div class="container" style="max-width: 760px">
+
+    <h1 class="page-header">Export status</h1>
+
+    <div class="alert alert-info">
+        <i class="fa fa-spinner fa-spin" style="font-size:24px" th:if="${autoRefresh}"></i>
+        <span th:text="${message}"></span>
+    </div>
+</div>
+
+<div th:replace="layout/layout :: footer"></div>
+
+<script th:inline="javascript" th:if="${redirect}">
+    /*<![CDATA[*/
+    var context = [[@{/}]];
+    var locationRedirect = [[${redirect}]];
+    console.log(context)
+    console.log(locationRedirect)
+    alert("redirect")
+    window.location.replace(context + locationRedirect);
+    /*]]>*/
+</script>
+
+</body>
+</html>

@@ -275,7 +275,6 @@ class TestsHelper {
         val contentString = mvc.perform(MockMvcRequestBuilders.fileUpload("/upload")
                 .file(multipartFile)
                 .param("assignmentId", assignmentId)
-                .param("async", "false")
                 .with(SecurityMockMvcRequestPostProcessors.user(uploader)))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andReturn().response.contentAsString

@@ -1049,14 +1049,25 @@ class AssignmentControllerTests {
 
             val result = this.mvc.perform(
                 get("/assignment/export/dummyAssignment1?includeSubmissions=false")
+                    .with(user(TEACHER_1)))
+                .andExpect(status().isFound)
+                .andReturn()
+
+            val redirectLocation = result.response.getHeader("Location")
+            assertNotNull(redirectLocation)
+
+            val result2 = this.mvc.perform(
+                get(redirectLocation)
                     .with(user(TEACHER_1))
                     .contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE))
-                .andExpect(header().string("Content-Disposition",
-                    "attachment; filename=dummyAssignment1_${Date().formatJustDate()}.dp"))
+                .andExpect(
+                    header().string(
+                        "Content-Disposition",
+                        "attachment; filename=dummyAssignment1_${Date().formatJustDate()}.dp"))
                 .andExpect(status().isOk)
                 .andReturn()
 
-            val downloadedFileContent = result.response.contentAsByteArray
+            val downloadedFileContent = result2.response.contentAsByteArray
             val downloadedZipFile = File("result.zip")
             val downloadedJSONFileName = File("result/assignment.json")
             FileUtils.writeByteArrayToFile(downloadedZipFile, downloadedFileContent)
@@ -1149,14 +1160,25 @@ class AssignmentControllerTests {
 
         val result = this.mvc.perform(
             get("/assignment/export/testJavaProj?includeSubmissions=true")
+                .with(user(TEACHER_1)))
+            .andExpect(status().isFound)
+            .andReturn()
+
+        val redirectLocation = result.response.getHeader("Location")
+        assertNotNull(redirectLocation)
+
+        val result2 = this.mvc.perform(
+            get(redirectLocation)
                 .with(user(TEACHER_1))
                 .contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE))
-            .andExpect(header().string("Content-Disposition",
-                "attachment; filename=testJavaProj_${Date().formatJustDate()}.dp"))
+            .andExpect(
+                header().string(
+                    "Content-Disposition",
+                    "attachment; filename=testJavaProj_${Date().formatJustDate()}.dp"))
             .andExpect(status().isOk)
             .andReturn()
 
-        val downloadedFileContent = result.response.contentAsByteArray
+        val downloadedFileContent = result2.response.contentAsByteArray
         val downloadedZipFile = File("result.zip")
         val downloadedJSONFileName = File("result/submissions.json")
         FileUtils.writeByteArrayToFile(downloadedZipFile, downloadedFileContent)

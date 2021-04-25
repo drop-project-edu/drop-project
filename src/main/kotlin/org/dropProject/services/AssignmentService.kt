@@ -19,17 +19,32 @@
  */
 package org.dropProject.services
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.KotlinModule
+import org.dropProject.PendingTasks
 import org.dropProject.controllers.ReportController
 import org.dropProject.dao.*
 import org.dropProject.data.*
+import org.dropProject.extensions.formatJustDate
 import org.dropProject.extensions.realName
 import org.dropProject.forms.AssignmentForm
 import org.dropProject.repository.*
+import org.slf4j.LoggerFactory
 import org.springframework.cache.annotation.Cacheable
+import org.springframework.core.io.FileSystemResource
+import org.springframework.data.repository.findByIdOrNull
+import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.ui.ModelMap
+import java.io.File
+import java.nio.file.Files
 import java.security.Principal
+import java.util.*
 import javax.servlet.http.HttpServletRequest
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
+import kotlin.collections.LinkedHashMap
 
 /**
  * AssignmentService provides [Assignment] related functionality (e.g. list of assignments).
@@ -43,8 +58,14 @@ class AssignmentService(
         val submissionService: SubmissionService,
         val assignmentTestMethodRepository: AssignmentTestMethodRepository,
         val submissionReportRepository: SubmissionReportRepository,
-        val assignmentTagRepository: AssignmentTagRepository
+        val assignmentTagRepository: AssignmentTagRepository,
+        val buildReportRepository: BuildReportRepository,
+        val jUnitReportRepository: JUnitReportRepository,
+        val zipService: ZipService,
+        val pendingTasks: PendingTasks
 ) {
+
+    val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
     /**
      * Returns the [Assignment]s that a certain user can access. The returned assignments will be the ones
@@ -274,6 +295,71 @@ class AssignmentService(
         tagNames?.forEach {
             existingAssignment.tags.add(assignmentTagRepository.findByName(it.trim().toLowerCase())
                     ?: AssignmentTag(name = it.trim().toLowerCase()))
+        }
+    }
+
+    /**
+     * Handles the exportation of an assignment and (optionally) its submissions
+     * @return a pair with (filename, file)
+     */
+    @Async
+    @Transactional
+    fun exportAssignment(assignmentId: String, includeSubmissions: Boolean, taskId: String) {
+
+        val assignment = assignmentRepository.findById(assignmentId).orElse(null) ?:
+        throw IllegalArgumentException("assignment ${assignmentId} is not registered")
+
+        val submissionsExport = mutableListOf<SubmissionExport>()
+        if (includeSubmissions) {
+            val submissions = submissionRepository.findByAssignmentId(assignment.id)
+
+            // for each submission, create the corresponding "full" SubmissionExport object
+            submissions.forEach {
+                with(it) {
+                    val buildReport =
+                        if (buildReportId != null) buildReportRepository.findByIdOrNull(buildReportId)?.buildReport else null
+                    val submissionReport = submissionReportRepository.findBySubmissionId(id).map { eachReport ->
+                        SubmissionExport.SubmissionReport(
+                            eachReport.reportKey, eachReport.reportValue,
+                            eachReport.reportProgress, eachReport.reportGoal
+                        )
+                    }
+                    val junitReports = jUnitReportRepository.findBySubmissionId(id)?.map { jUnitReport ->
+                        SubmissionExport.JUnitReport(jUnitReport.fileName, jUnitReport.xmlReport)
+                    }
+                    val submissionExport = SubmissionExport(
+                        id = id, submissionId = submissionId,
+                        gitSubmissionId = gitSubmissionId, submissionFolder = submissionFolder,
+                        submissionDate = submissionDate, submitterUserId = submitterUserId, status = getStatus().code,
+                        statusDate = statusDate, assignmentId = assignmentId, buildReport = buildReport,
+                        structureErrors = structureErrors, markedAsFinal = markedAsFinal,
+                        authors = group.authors.map { author -> SubmissionExport.Author(author.userId, author.name) },
+                        submissionReport = submissionReport,
+                        junitReports = junitReports
+                    )
+                    submissionsExport.add(submissionExport)
+                }
+            }
+        }
+
+        val fileName = "${assignment.id}_${Date().formatJustDate()}"
+        val tempFolder = Files.createTempDirectory(fileName).toFile()
+        val submissionsJsonFile = File(tempFolder, "submissions.json")
+        val assignmentJsonFile = File(tempFolder, "assignment.json")
+        val mapper = ObjectMapper().registerModule(KotlinModule())
+
+        try {
+            mapper.writeValue(assignmentJsonFile, assignment)
+            if (includeSubmissions) {
+                mapper.writeValue(submissionsJsonFile, submissionsExport)
+            }
+            val zipFile = zipService.createZipFromFolder(tempFolder.name, tempFolder)
+            LOG.info("Created ${zipFile.file.absolutePath} with submissions from ${assignment.id}")
+
+            // put the result in the pending tasks so that the others can check it later
+            pendingTasks.put(taskId, Pair(fileName, zipFile.file))
+        } finally {
+            tempFolder.delete()
         }
     }
 

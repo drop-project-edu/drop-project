@@ -22,6 +22,7 @@ package org.dropProject.controllers
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import org.dropProject.PendingTasks
 import org.dropProject.dao.*
 import org.dropProject.data.AuthorDetails
 import org.dropProject.data.SubmissionExport
@@ -81,7 +82,8 @@ class AssignmentController(
         val assignmentService: AssignmentService,
         val zipService: ZipService,
         val cacheManager: CacheManager,
-        val projectGroupService: ProjectGroupService) {
+        val projectGroupService: ProjectGroupService,
+        val pendingTasks: PendingTasks) {
 
     @Value("\${assignments.rootLocation}")
     val assignmentsRootLocation: String = ""
@@ -758,16 +760,14 @@ class AssignmentController(
     }
 
     /**
-     * Controller that handles the exportation of an Assignment's info to a JSON file.
+     * Controller that handles the exportation of an assignment and (optionally) its submissions.
      * @param assignmentId is a String, identifying the relevant Assignment
      * @return A ResponseEntity<String>
      */
-    @RequestMapping(value = ["/export/{assignmentId}"], method = [(RequestMethod.GET)],
-        produces = [org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE])
-    @ResponseBody
-    fun exportAssignment(@PathVariable assignmentId: String,
+    @RequestMapping(value = ["/export/{assignmentId}"], method = [(RequestMethod.GET)])
+    fun startAssignmentExport(@PathVariable assignmentId: String,
                          @RequestParam(name="includeSubmissions", required = false) includeSubmissions: Boolean = false,
-                         principal: Principal, response: HttpServletResponse): FileSystemResource {
+                         principal: Principal): String {
 
         val assignment = assignmentRepository.findById(assignmentId).orElse(null) ?:
             throw IllegalArgumentException("assignment ${assignmentId} is not registered")
@@ -778,58 +778,50 @@ class AssignmentController(
             throw IllegalAccessError("Exporting assignments is restricted to their owner or authorized teachers")
         }
 
-        val submissionsExport = mutableListOf<SubmissionExport>()
-        if (includeSubmissions) {
-            val submissions = submissionRepository.findByAssignmentId(assignmentId)
+        val taskId = "${System.currentTimeMillis()}"
 
-            // for each submission, create the corresponding "full" SubmissionExport object
-            submissions.forEach {
-                with(it) {
-                    val buildReport =
-                        if (buildReportId != null) buildReportRepository.findByIdOrNull(buildReportId)?.buildReport else null
-                    val submissionReport = submissionReportRepository.findBySubmissionId(id).map { eachReport ->
-                        SubmissionExport.SubmissionReport(
-                            eachReport.reportKey, eachReport.reportValue,
-                            eachReport.reportProgress, eachReport.reportGoal
-                        )
-                    }
-                    val junitReports = jUnitReportRepository.findBySubmissionId(id)?.map { jUnitReport ->
-                        SubmissionExport.JUnitReport(jUnitReport.fileName, jUnitReport.xmlReport)
-                    }
-                    val submissionExport = SubmissionExport(
-                        id = id, submissionId = submissionId,
-                        gitSubmissionId = gitSubmissionId, submissionFolder = submissionFolder,
-                        submissionDate = submissionDate, submitterUserId = submitterUserId, status = getStatus().code,
-                        statusDate = statusDate, assignmentId = assignmentId, buildReport = buildReport,
-                        structureErrors = structureErrors, markedAsFinal = markedAsFinal,
-                        authors = group.authors.map { author -> SubmissionExport.Author(author.userId, author.name) },
-                        submissionReport = submissionReport,
-                        junitReports = junitReports
-                    )
-                    submissionsExport.add(submissionExport)
-                }
-            }
+        // this will run asynchronously (except for tests)
+        LOG.info("Started async export for assignment ${assignmentId} (taskId: $taskId)")
+        assignmentService.exportAssignment(assignmentId, includeSubmissions, taskId)
+
+        if (pendingTasks.get(taskId) != null) {
+            return "redirect:/assignment/export-result/${taskId}"
         }
 
-        val fileName = "${assignmentId}_${Date().formatJustDate()}"
-        val tempFolder = Files.createTempDirectory(fileName).toFile()
-        val submissionsJsonFile = File(tempFolder, "submissions.json")
-        val assignmentJsonFile = File(tempFolder, "assignment.json")
-        val mapper = ObjectMapper().registerModule(KotlinModule())
+        return "redirect:/assignment/export-status/${taskId}"
+    }
 
-        try {
-            mapper.writeValue(assignmentJsonFile, assignment)
-            if (includeSubmissions) {
-                mapper.writeValue(submissionsJsonFile, submissionsExport)
-            }
-            val zipFile = zipService.createZipFromFolder(tempFolder.name, tempFolder)
-            LOG.info("Created ${zipFile.file.absolutePath} with submissions from ${assignmentId}")
+    /**
+     * Checks the status of a given export. This is called from a page in "polling mode" - refreshing periodically
+     */
+    @RequestMapping(value = ["/export-status/{taskId}"], method = [(RequestMethod.GET)])
+    fun getAssignmentExportStatus(@PathVariable taskId: String, model: ModelMap) : String {
 
-            response.setHeader("Content-Disposition", "attachment; filename=${fileName}.dp")
-            return FileSystemResource(zipFile.file)
-        } finally {
-            tempFolder.delete()
+        if (pendingTasks.get(taskId) == null) {
+            // task hasn't finished
+            model["autoRefresh"] = true
+            model["message"] = "Export in progress... Please wait"
+            return "export-status"
+        } else {
+            // task has finished - redirect to the page that will download the file
+            model["autoRefresh"] = false
+            model["message"] = "Export successful"
+            model["redirect"] = "assignment/export-result/${taskId}"
+            return "export-status"
         }
+    }
+
+    @RequestMapping(value = ["/export-result/{taskId}"], method = [(RequestMethod.GET)],
+        produces = [org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE])
+    @ResponseBody
+    fun getAssignmentExportFile(@PathVariable taskId: String,
+                              response: HttpServletResponse): FileSystemResource {
+
+        val (filename, zipFile) = pendingTasks.get(taskId) as Pair<String,File>
+        response.setHeader("Content-Disposition", "attachment; filename=${filename}.dp")
+        return FileSystemResource(zipFile)
+
+        // TODO: delete the zipFile
     }
 
     /**
