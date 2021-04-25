@@ -30,6 +30,6 @@ jobs:
           flags: unittests
       - name: Upload war file to github releases
         uses: AButler/upload-release-assets@v2.0
-          with:
-            files: 'target/drop-project.war'
-            repo-token: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: 'target/drop-project.war'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
