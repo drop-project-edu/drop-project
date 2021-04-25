@@ -33,3 +33,4 @@ jobs:
         with:
           files: 'target/drop-project.war'
           repo-token: ${{ secrets.GITHUB_TOKEN }}
+          release-tag: 0.9.3
