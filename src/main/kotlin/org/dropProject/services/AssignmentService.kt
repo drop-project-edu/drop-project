@@ -33,6 +33,7 @@ import org.dropProject.extensions.realName
 import org.dropProject.forms.AssignmentForm
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.*
+import org.hibernate.Hibernate
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.annotation.Cacheable
@@ -102,13 +103,16 @@ class AssignmentService(
             value = ["archivedAssignmentsCache"],
             key = "#principal.name",
             condition = "#archived==true")
+    @Transactional(readOnly = true)  // because of assignment.tags forced loading
     fun getMyAssignments(principal: Principal, archived: Boolean): List<Assignment> {
         val assignmentsOwns = assignmentRepository.findByOwnerUserId(principal.realName())
 
         val assignmentsACL = assignmentACLRepository.findByUserId(principal.realName())
         val assignmentsAuthorized = ArrayList<Assignment>()
         for (assignmentACL in assignmentsACL) {
-            assignmentsAuthorized.add(assignmentRepository.findById(assignmentACL.assignmentId).get())
+            val optionalAssignment = assignmentRepository.findById(assignmentACL.assignmentId)
+            optionalAssignment.ifPresent { it.tags.size }  // force tags loading
+            assignmentsAuthorized.add(optionalAssignment.get())
         }
 
         val assignments = ArrayList<Assignment>()
@@ -424,7 +428,7 @@ class AssignmentService(
             with(it) {
                 if (submissionId != null) {  // submission by upload
                     val projectFolderFrom = File(uploadSubmissionsRootLocation, submissionFolder)
-                    val projectFolderTo = File(destinationFolder, submissionFolder)
+                    val projectFolderTo = File(destinationFolder, submissionFolder?.removeSuffix(submissionId))
                     projectFolderTo.mkdirs()
                     val projectFileFrom = File("${projectFolderFrom.absolutePath}.zip")  // for every folder, there is a corresponding zip file with the same name
 

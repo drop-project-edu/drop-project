@@ -19,14 +19,12 @@
  */
 package org.dropProject.controllers
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import org.apache.commons.io.FileUtils
 import org.dropProject.PendingTasks
 import org.dropProject.dao.*
 import org.dropProject.data.*
-import org.dropProject.extensions.formatJustDate
 import org.dropProject.extensions.realName
 import org.dropProject.forms.AssignmentForm
 import org.dropProject.forms.SubmissionMethod
@@ -34,21 +32,21 @@ import org.dropProject.repository.*
 import org.dropProject.services.*
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.RefNotAdvertisedException
+import org.hibernate.Hibernate
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.CacheManager
 import org.springframework.core.io.FileSystemResource
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.ui.ModelMap
 import org.springframework.validation.BindingResult
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.servlet.mvc.support.RedirectAttributes
 import java.io.File
-import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.security.Principal
@@ -125,6 +123,7 @@ class AssignmentController(
      * @return is a String with the name of the relevant View
      */
     @RequestMapping(value = ["/new"], method = [(RequestMethod.POST)])
+    @Transactional  // because of assignment.tags
     fun createOrEditAssignment(@Valid @ModelAttribute("assignmentForm") assignmentForm: AssignmentForm,
                                bindingResult: BindingResult,
                                redirectAttributes: RedirectAttributes,
@@ -316,9 +315,11 @@ class AssignmentController(
      * @return a String with the name of the relevant View
      */
     @RequestMapping(value = ["/info/{assignmentId}"], method = [(RequestMethod.GET)])
+    @Transactional(readOnly = true)  // because of assignment.tags forced loading
     fun getAssignmentDetail(@PathVariable assignmentId: String, model: ModelMap, principal: Principal): String {
 
         val assignment = assignmentRepository.getOne(assignmentId)
+        Hibernate.initialize(assignment.tags)
         val assignees = assigneeRepository.findByAssignmentIdOrderByAuthorUserId(assignmentId)
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
         val assignmentReports = assignmentReportRepository.findByAssignmentId(assignmentId)
@@ -361,6 +362,7 @@ class AssignmentController(
      * @return a String with the name of the relevant View
      */
     @RequestMapping(value = ["/edit/{assignmentId}"], method = [(RequestMethod.GET)])
+    @Transactional(readOnly = true)  // because of assignment.tags
     fun getEditAssignmentForm(@PathVariable assignmentId: String, model: ModelMap, principal: Principal): String {
 
         val assignment = assignmentRepository.getOne(assignmentId)
@@ -911,12 +913,7 @@ class AssignmentController(
             if (originalSubmissionsFolder.exists()) {
                 val assignment = assignmentRepository.getOne(assignmentId)
                 if (assignment.submissionMethod == SubmissionMethod.UPLOAD) {
-                    val destinationFolder = File(uploadSubmissionsRootLocation, assignmentId)
-                    if (destinationFolder.exists()) {
-                        LOG.warn("Original submissions folder for ${assignmentId} already exists. This shouldn't happen")
-                    }
-                    destinationFile.mkdirs()
-                    FileUtils.copyDirectory(originalSubmissionsFolder, destinationFolder)
+                    FileUtils.copyDirectory(originalSubmissionsFolder, File(uploadSubmissionsRootLocation))
                 }
             }
 
