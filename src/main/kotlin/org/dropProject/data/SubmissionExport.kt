@@ -47,7 +47,8 @@ data class SubmissionExport(
     var markedAsFinal: Boolean = false,
     var authors: List<Author>,
     var submissionReport: List<SubmissionReport>,
-    var junitReports: List<JUnitReport>?
+    var junitReports: List<JUnitReport>?,
+    var jacocoReports: List<JacocoReport>?
 )
 {
 
@@ -57,6 +58,7 @@ data class SubmissionExport(
                                 val progress: Int?,
                                 val goal: Int?)
     data class JUnitReport(val filename: String, val xmlReport: String)
+    data class JacocoReport(val filename: String, val csvReport: String)
 
 }
 

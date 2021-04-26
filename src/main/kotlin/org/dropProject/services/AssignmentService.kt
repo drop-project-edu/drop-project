@@ -67,6 +67,7 @@ class AssignmentService(
         val assignmentTagRepository: AssignmentTagRepository,
         val buildReportRepository: BuildReportRepository,
         val jUnitReportRepository: JUnitReportRepository,
+        val jacocoReportRepository: JacocoReportRepository,
         val zipService: ZipService,
         val pendingTasks: PendingTasks,
         val projectGroupService: ProjectGroupService,
@@ -340,6 +341,9 @@ class AssignmentService(
                     val junitReports = jUnitReportRepository.findBySubmissionId(id)?.map { jUnitReport ->
                         SubmissionExport.JUnitReport(jUnitReport.fileName, jUnitReport.xmlReport)
                     }
+                    val jacocoReports = jacocoReportRepository.findBySubmissionId(id)?.map { jacocoReport ->
+                        SubmissionExport.JacocoReport(jacocoReport.fileName, jacocoReport.csvReport)
+                    }
                     val submissionExport = SubmissionExport(
                         id = id, submissionId = submissionId,
                         gitSubmissionId = gitSubmissionId, submissionFolder = submissionFolder,
@@ -348,7 +352,7 @@ class AssignmentService(
                         structureErrors = structureErrors, markedAsFinal = markedAsFinal,
                         authors = group.authors.map { author -> SubmissionExport.Author(author.userId, author.name) },
                         submissionReport = submissionReport,
-                        junitReports = junitReports
+                        junitReports = junitReports, jacocoReports = jacocoReports
                     )
                     submissionsExport.add(submissionExport)
                 }
@@ -463,6 +467,11 @@ class AssignmentService(
             it.junitReports?.forEach { r ->
                 jUnitReportRepository.save(JUnitReport(submissionId = submission.id, fileName = r.filename,
                     xmlReport = r.xmlReport))
+            }
+
+            it.jacocoReports?.forEach { r ->
+                jacocoReportRepository.save(JacocoReport(submissionId = submission.id, fileName = r.filename,
+                    csvReport = r.csvReport))
             }
 
             LOG.info("Imported submission $submission.id ($index/${submissions.size})")
