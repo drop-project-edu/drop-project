@@ -22,6 +22,7 @@ package org.dropProject.services
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import org.apache.commons.io.FileUtils
 import org.dropProject.PendingTasks
 import org.dropProject.controllers.ReportController
 import org.dropProject.dao.*
@@ -79,6 +80,15 @@ class AssignmentService(
 
     @Value("\${assignments.rootLocation}")
     val assignmentsRootLocation: String = ""
+
+    @Value("\${mavenizedProjects.rootLocation}")
+    val mavenizedProjectsRootLocation: String = ""
+
+    @Value("\${storage.rootLocation}/upload")
+    val uploadSubmissionsRootLocation: String = "submissions/upload"
+
+    @Value("\${storage.rootLocation}/git")
+    val gitSubmissionsRootLocation: String = "submissions/git"
 
     /**
      * Returns the [Assignment]s that a certain user can access. The returned assignments will be the ones
@@ -378,9 +388,12 @@ class AssignmentService(
 
         val fileName = "${assignment.id}_${Date().formatJustDate()}"
         val tempFolder = Files.createTempDirectory(fileName).toFile()
-        val submissionsJsonFile = File(tempFolder, "submissions.json")
-        val gitSubmissionsJsonFile = File(tempFolder, "git-submissions.json")
-        val assignmentJsonFile = File(tempFolder, "assignment.json")
+        val submissionsJsonFile = File(tempFolder, EXPORTED_SUBMISSIONS_JSON_FILENAME)
+        val gitSubmissionsJsonFile = File(tempFolder, EXPORTED_GIT_SUBMISSIONS_JSON_FILENAME)
+        val assignmentJsonFile = File(tempFolder, EXPORTED_ASSIGNMENT_JSON_FILENAME)
+        val originalSubmissionsFolder = File(tempFolder, EXPORTED_ORIGINAL_SUBMISSIONS_FOLDER)
+        originalSubmissionsFolder.mkdirs()
+
         val mapper = ObjectMapper().registerModule(KotlinModule())
 
         try {
@@ -391,6 +404,9 @@ class AssignmentService(
                     mapper.writeValue(gitSubmissionsJsonFile, gitSubmissionsExport)
                 }
             }
+
+            exportOriginalSubmissionFilesTo(assignmentId, originalSubmissionsFolder)
+
             val zipFile = zipService.createZipFromFolder(tempFolder.name, tempFolder)
             LOG.info("Created ${zipFile.file.absolutePath} with submissions from ${assignment.id}")
 
@@ -398,6 +414,28 @@ class AssignmentService(
             pendingTasks.put(taskId, Pair(fileName, zipFile.file))
         } finally {
             tempFolder.delete()
+        }
+    }
+
+    fun exportOriginalSubmissionFilesTo(assignmentId: String, destinationFolder: File) {
+        val submissions = submissionRepository.findByAssignmentId(assignmentId)
+
+        submissions.forEachIndexed { index, it ->
+            with(it) {
+                if (submissionId != null) {  // submission by upload
+                    val projectFolderFrom = File(uploadSubmissionsRootLocation, submissionFolder)
+                    val projectFolderTo = File(destinationFolder, submissionFolder)
+                    projectFolderTo.mkdirs()
+                    val projectFileFrom = File("${projectFolderFrom.absolutePath}.zip")  // for every folder, there is a corresponding zip file with the same name
+
+                    if (!projectFileFrom.exists()) {
+                        LOG.warn("Did not found original file for submission $id - ${projectFileFrom.absolutePath}")
+                    }
+
+                    FileUtils.copyFileToDirectory(projectFileFrom, projectFolderTo)
+                    LOG.info("Copied ${projectFileFrom.absolutePath} to ${projectFolderTo.absolutePath} (${index+1}/${submissions.size})")
+                }
+            }
         }
     }
 
@@ -411,7 +449,7 @@ class AssignmentService(
         }
 
         // find the assignmentId and make sure it exists
-        val assignmentId = submissions[0]?.assignmentId ?: throw IllegalArgumentException("assignmentId is missing")
+        val assignmentId = submissions[0].assignmentId
         if (assignmentRepository.findById(assignmentId).isEmpty) {
             return "Error: You are importing submissions to an assignment ($assignmentId) that doesn't exist. " +
                     "First, please create that assignment."

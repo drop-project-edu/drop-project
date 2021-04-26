@@ -22,13 +22,14 @@ package org.dropProject.controllers
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import org.apache.commons.io.FileUtils
 import org.dropProject.PendingTasks
 import org.dropProject.dao.*
-import org.dropProject.data.AuthorDetails
-import org.dropProject.data.SubmissionExport
+import org.dropProject.data.*
 import org.dropProject.extensions.formatJustDate
 import org.dropProject.extensions.realName
 import org.dropProject.forms.AssignmentForm
+import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.*
 import org.dropProject.services.*
 import org.eclipse.jgit.api.Git
@@ -87,6 +88,15 @@ class AssignmentController(
 
     @Value("\${assignments.rootLocation}")
     val assignmentsRootLocation: String = ""
+
+    @Value("\${mavenizedProjects.rootLocation}")
+    val mavenizedProjectsRootLocation: String = ""
+
+    @Value("\${storage.rootLocation}/upload")
+    val uploadSubmissionsRootLocation: String = "submissions/upload"
+
+    @Value("\${storage.rootLocation}/git")
+    val gitSubmissionsRootLocation: String = "submissions/git"
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
@@ -859,14 +869,13 @@ class AssignmentController(
 
         val tempFolder = Files.createTempDirectory("import").toFile()
         val destinationFile = File(tempFolder, "${System.currentTimeMillis()}-${file.originalFilename}.zip")
-        Files.copy(file.inputStream,
-            destinationFile.toPath(),
-            StandardCopyOption.REPLACE_EXISTING)
+        Files.copy(file.inputStream, destinationFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
 
         val destinationFolder = zipService.unzip(destinationFile.toPath(), "extracted")
-        val assignmentJSONFile = File(destinationFolder, "assignment.json")
-        val submissionsJSONFile = File(destinationFolder, "submissions.json")
-        val gitSubmissionsJSONFile = File(destinationFolder, "git-submissions.json")
+        val assignmentJSONFile = File(destinationFolder, EXPORTED_ASSIGNMENT_JSON_FILENAME)
+        val submissionsJSONFile = File(destinationFolder, EXPORTED_SUBMISSIONS_JSON_FILENAME)
+        val gitSubmissionsJSONFile = File(destinationFolder, EXPORTED_GIT_SUBMISSIONS_JSON_FILENAME)
+        val originalSubmissionsFolder = File(destinationFolder, EXPORTED_ORIGINAL_SUBMISSIONS_FOLDER)
 
         if (!assignmentJSONFile.exists()) {
             redirectAttributes.addFlashAttribute("error", "Error: File is not valid (missing assignment.json)")
@@ -895,6 +904,19 @@ class AssignmentController(
                 if (errorMessage3 != null) {
                     redirectAttributes.addFlashAttribute("error", errorMessage3)
                     return "redirect:/assignment/import"
+                }
+            }
+
+            // import all the original submission files
+            if (originalSubmissionsFolder.exists()) {
+                val assignment = assignmentRepository.getOne(assignmentId)
+                if (assignment.submissionMethod == SubmissionMethod.UPLOAD) {
+                    val destinationFolder = File(uploadSubmissionsRootLocation, assignmentId)
+                    if (destinationFolder.exists()) {
+                        LOG.warn("Original submissions folder for ${assignmentId} already exists. This shouldn't happen")
+                    }
+                    destinationFile.mkdirs()
+                    FileUtils.copyDirectory(originalSubmissionsFolder, destinationFolder)
                 }
             }
 

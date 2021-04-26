@@ -24,6 +24,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import java.util.*
 import javax.persistence.Column
 
+const val EXPORTED_ASSIGNMENT_JSON_FILENAME = "assignment.json"
+const val EXPORTED_SUBMISSIONS_JSON_FILENAME = "submissions.json"
+const val EXPORTED_GIT_SUBMISSIONS_JSON_FILENAME = "git-submissions.json"
+const val EXPORTED_ORIGINAL_SUBMISSIONS_FOLDER = "original"
 
 /**
  * Represents all the data pertaining a submission, including "sibling" tables such as SubmissionReport, etc.
