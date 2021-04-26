@@ -28,7 +28,7 @@ Editorial:
       submenuTitle: 'Packages'
 
 kotlindoc:
-    sourceDirs: './../../../src/main/kotlin'
+    sourceDirs: './../../src/main/kotlin'
     pages:
       menu:
         - type: "kotlindocClassLinks"
