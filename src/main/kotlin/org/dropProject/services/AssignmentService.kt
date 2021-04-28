@@ -427,17 +427,20 @@ class AssignmentService(
         submissions.forEachIndexed { index, it ->
             with(it) {
                 if (submissionId != null) {  // submission by upload
-                    val projectFolderFrom = File(uploadSubmissionsRootLocation, submissionFolder)
-                    val projectFolderTo = File(destinationFolder, submissionFolder?.removeSuffix(submissionId))
-                    projectFolderTo.mkdirs()
-                    val projectFileFrom = File("${projectFolderFrom.absolutePath}.zip")  // for every folder, there is a corresponding zip file with the same name
+                    if (submissionFolder != null) {
+                        val projectFolderFrom = File(uploadSubmissionsRootLocation, submissionFolder)
+                        val projectFolderTo = File(destinationFolder, submissionFolder.removeSuffix(submissionId))
+                        projectFolderTo.mkdirs()
+                        val projectFileFrom =
+                            File("${projectFolderFrom.absolutePath}.zip")  // for every folder, there is a corresponding zip file with the same name
 
-                    if (!projectFileFrom.exists()) {
-                        LOG.warn("Did not found original file for submission $id - ${projectFileFrom.absolutePath}")
+                        if (!projectFileFrom.exists()) {
+                            LOG.warn("Did not found original file for submission $id - ${projectFileFrom.absolutePath}")
+                        }
+
+                        FileUtils.copyFileToDirectory(projectFileFrom, projectFolderTo)
+                        LOG.info("Copied ${projectFileFrom.absolutePath} to ${projectFolderTo.absolutePath} (${index + 1}/${submissions.size})")
                     }
-
-                    FileUtils.copyFileToDirectory(projectFileFrom, projectFolderTo)
-                    LOG.info("Copied ${projectFileFrom.absolutePath} to ${projectFolderTo.absolutePath} (${index+1}/${submissions.size})")
                 }
             }
         }
