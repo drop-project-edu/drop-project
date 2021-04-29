@@ -332,7 +332,7 @@ class AssignmentService(
 
         val assignment = assignmentRepository.findById(assignmentId).orElse(null)
             ?: throw IllegalArgumentException("assignment ${assignmentId} is not registered")
-        assignment.authorizedStudentIds = assignmentACLRepository.findByAssignmentId(assignmentId).map { it.userId }
+        assignment.authorizedStudentIds = assigneeRepository.findByAssignmentId(assignmentId).map { it.authorUserId }
 
         val submissionsExport = mutableListOf<SubmissionExport>()
         val gitSubmissionsExport = mutableListOf<GitSubmissionExport>()
