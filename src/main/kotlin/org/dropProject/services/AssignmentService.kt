@@ -24,7 +24,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import org.apache.commons.io.FileUtils
 import org.dropProject.PendingTasks
-import org.dropProject.controllers.ReportController
 import org.dropProject.dao.*
 import org.dropProject.dao.BuildReport
 import org.dropProject.data.*
@@ -33,11 +32,9 @@ import org.dropProject.extensions.realName
 import org.dropProject.forms.AssignmentForm
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.*
-import org.hibernate.Hibernate
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.annotation.Cacheable
-import org.springframework.core.io.FileSystemResource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
@@ -333,8 +330,9 @@ class AssignmentService(
     @Transactional
     fun exportAssignment(assignmentId: String, includeSubmissions: Boolean, taskId: String) {
 
-        val assignment = assignmentRepository.findById(assignmentId).orElse(null) ?:
-        throw IllegalArgumentException("assignment ${assignmentId} is not registered")
+        val assignment = assignmentRepository.findById(assignmentId).orElse(null)
+            ?: throw IllegalArgumentException("assignment ${assignmentId} is not registered")
+        assignment.authorizedStudentIds = assignmentACLRepository.findByAssignmentId(assignmentId).map { it.userId }
 
         val submissionsExport = mutableListOf<SubmissionExport>()
         val gitSubmissionsExport = mutableListOf<GitSubmissionExport>()
@@ -381,7 +379,12 @@ class AssignmentService(
                             createDate = createDate, connected = connected, lastCommitDate = lastCommitDate,
                             gitRepositoryUrl = gitRepositoryUrl, gitRepositoryPubKey = gitRepositoryPubKey,
                             gitRepositoryPrivKey = gitRepositoryPrivKey,
-                            authors = group.authors.map { author -> GitSubmissionExport.Author(author.userId, author.name) }
+                            authors = group.authors.map { author ->
+                                GitSubmissionExport.Author(
+                                    author.userId,
+                                    author.name
+                                )
+                            }
                         )
 
                         gitSubmissionsExport.add(gitSubmissionExport)
@@ -409,7 +412,7 @@ class AssignmentService(
                 }
             }
 
-            exportOriginalSubmissionFilesTo(assignmentId, originalSubmissionsFolder)
+            exportOriginalSubmissionFilesTo(assignment, originalSubmissionsFolder)
 
             val zipFile = zipService.createZipFromFolder(tempFolder.name, tempFolder)
             LOG.info("Created ${zipFile.file.absolutePath} with submissions from ${assignment.id}")
@@ -421,18 +424,20 @@ class AssignmentService(
         }
     }
 
-    fun exportOriginalSubmissionFilesTo(assignmentId: String, destinationFolder: File) {
-        val submissions = submissionRepository.findByAssignmentId(assignmentId)
+    fun exportOriginalSubmissionFilesTo(assignment: Assignment, destinationFolder: File) {
 
-        submissions.forEachIndexed { index, it ->
-            with(it) {
-                if (submissionId != null) {  // submission by upload
-                    if (submissionFolder != null) {
+        if (assignment.submissionMethod == SubmissionMethod.UPLOAD) {
+
+            val submissions = submissionRepository.findByAssignmentId(assignment.id)
+            submissions.forEachIndexed { index, it ->
+                with(it) {
+                    if (submissionId != null && submissionFolder != null) {
                         val projectFolderFrom = File(uploadSubmissionsRootLocation, submissionFolder)
                         val projectFolderTo = File(destinationFolder, submissionFolder.removeSuffix(submissionId))
                         projectFolderTo.mkdirs()
-                        val projectFileFrom =
-                            File("${projectFolderFrom.absolutePath}.zip")  // for every folder, there is a corresponding zip file with the same name
+
+                        // for every folder, there is a corresponding zip file with the same name
+                        val projectFileFrom = File("${projectFolderFrom.absolutePath}.zip")
 
                         if (!projectFileFrom.exists()) {
                             LOG.warn("Did not found original file for submission $id - ${projectFileFrom.absolutePath}")
@@ -443,6 +448,25 @@ class AssignmentService(
                     }
                 }
             }
+
+        } else if (assignment.submissionMethod == SubmissionMethod.GIT) {
+
+            val gitSubmissions = gitSubmissionRepository.findByAssignmentId(assignment.id)
+            gitSubmissions.forEachIndexed { index, it ->
+                val repositoryFolderFrom = File(gitSubmissionsRootLocation, it.getFolderRelativeToStorageRoot())
+                val repositoryFolderTo = File(destinationFolder, it.getFolderRelativeToStorageRoot())
+                repositoryFolderTo.mkdirs()
+
+                if (!repositoryFolderFrom.exists()) {
+                    LOG.warn("Did not found original file for submission $assignment.id - ${repositoryFolderFrom.absolutePath}")
+                }
+
+                FileUtils.copyDirectoryToDirectory(repositoryFolderFrom, repositoryFolderTo)
+                LOG.info("Copied ${repositoryFolderFrom.absolutePath} to ${repositoryFolderTo.absolutePath} (${index + 1}/${gitSubmissions.size})")
+            }
+
+        } else {
+            throw Exception("Invalid submission method for assignment ${assignment.id}")
         }
     }
 

@@ -137,7 +137,10 @@ data class Assignment(
         var public: Boolean = true,
 
         @Transient
-        var lastSubmissionDate: Date? = null
+        var lastSubmissionDate: Date? = null,
+
+        @Transient
+        var authorizedStudentIds: List<String>? = null
 ) {
 
     @ManyToMany(cascade = [CascadeType.ALL])
