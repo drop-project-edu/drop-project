@@ -25,6 +25,7 @@ import javax.persistence.*
  * Represents an Assignee of an [Assignment]. Some assignments are private in the sense that they can only be accessed
  * by students that were given a certain permission. This "role" of Assignee represents that permission.
  *
+ * @property id is primary-key like generated value
  * @property assignmentId is a String, identifying the Assignment
  * @property authorUserId is a String, corresponding to the author's user id (e.g. student number)
  */

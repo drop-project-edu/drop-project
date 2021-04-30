@@ -162,20 +162,26 @@ class AssignmentService(
                             model["message"] = "No groups identified as similar"
                         }
                     }
-                    model["signalledGroups"] = signalledGroups
+                    else {
+                        model["signalledGroups"] = signalledGroups
+                    }
 
                     var nrTests = assignmentTests.size
                     var assignmentStatistics = computeStatistics(submissionStatistics, nrTests)
                     var groupsOutsideNorm = assignmentStatistics.identifyGroupsOutsideStatisticalNorms()
-                    
-                    // FIXME: maybe do the rounding to two decimal places in the Thymeleaf / View file
-                    model["offTheAverage"] = groupsOutsideNorm
-                    val df = java.text.DecimalFormat("#.##")
-                    model["assignmentAverageSubmissions"] = df.format(assignmentStatistics.average)
-                    model["assignmentStandardDeviation"] = df.format(assignmentStatistics.standardDeviation)
-                    val threshold = (assignmentStatistics.average - assignmentStatistics.standardDeviation)
-                    model["submissionsThreshold"] = df.format(threshold)
-                    model["assignmentNrOfTests"] = nrTests
+                    if(groupsOutsideNorm.size > 0) {
+                        // FIXME: maybe do the rounding to two decimal places in the Thymeleaf / View file
+                        model["offTheAverage"] = groupsOutsideNorm
+                        val df = java.text.DecimalFormat("#.##")
+                        model["assignmentAverageSubmissions"] = df.format(assignmentStatistics.average)
+                        model["assignmentStandardDeviation"] = df.format(assignmentStatistics.standardDeviation)
+                        val threshold = (assignmentStatistics.average - assignmentStatistics.standardDeviation)
+                        model["submissionsThreshold"] = df.format(threshold)
+                        model["assignmentNrOfTests"] = nrTests
+                    }
+                    else {
+                        model["otherMessage"] = "No groups outside norms"
+                    }
                 }
             }
         }
