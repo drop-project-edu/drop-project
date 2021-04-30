@@ -28,9 +28,9 @@ jobs:
         with:
           file: ./target/site/jacoco/jacoco.xml
           flags: unittests
-      - name: Upload war file to github releases
-        uses: AButler/upload-release-assets@v2.0
-        with:
-          files: 'target/drop-project.war'
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          release-tag: 0.9.3
+#      - name: Upload war file to github releases
+#        uses: AButler/upload-release-assets@v2.0
+#        with:
+#          files: 'target/drop-project.war'
+#          repo-token: ${{ secrets.GITHUB_TOKEN }}
+#          release-tag: 0.9.3
