@@ -48,7 +48,7 @@ class AdminController(val mavenInvoker: MavenInvoker,
 
     /**
      * Controller to handle HTTP GET requests related with the admin dashboard.
-     * @param modelMap is a ModelMap
+     * @param modelMap is a [ModelMap] that will be populated with the information to use in a View
      * @return A String with the name of the relevant View
      */
     @RequestMapping(value = ["/dashboard"], method = [(RequestMethod.GET)])
@@ -59,7 +59,7 @@ class AdminController(val mavenInvoker: MavenInvoker,
 
     /**
      * Controller to handle HTTP POST requests related with the admin dashboard.
-     * @param modelMap is a ModelMap
+     * @param modelMap is a [ModelMap] that will be populated with the information to use in a View
      * @return A String with the name of the relevant View
      */
     @RequestMapping(value = ["/dashboard"], method = [(RequestMethod.POST)])
@@ -79,7 +79,7 @@ class AdminController(val mavenInvoker: MavenInvoker,
 
     /**
      * Controller to handle requests related with the list of pending assignments.
-     * @model is a ModelMap
+     * @model is a [ModelMap] that will be populated with the information to use in a View
      * @return A String with the name of the relevant View
      */
     @RequestMapping(value = ["/showPending"], method = [(RequestMethod.GET)])
