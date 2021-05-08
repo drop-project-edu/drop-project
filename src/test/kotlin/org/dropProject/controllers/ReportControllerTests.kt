@@ -557,7 +557,7 @@ class ReportControllerTests {
      * - The other does not fail any test.
      * Expectations:
      * - The MVC controller function should place in the Model:
-     * -- a List of size 0; and
+     * -- a null List; and
      * -- a String with a message saying that there are no signalled groups.
      */
     @Test
@@ -576,11 +576,10 @@ class ReportControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val message = reportResult.modelAndView.modelMap["message"] as String
-        val list = reportResult.modelAndView.modelMap["signalledGroups"] as List<GroupedProjectGroups>
+        val list = reportResult.modelAndView.modelMap["signalledGroups"]
 
-        assert(message != null)
+        assertNull(list)
         assertEquals("No groups identified as similar", message)
-        assert(list.isEmpty())
     }
 
     /**

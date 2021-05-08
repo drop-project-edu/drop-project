@@ -454,7 +454,7 @@ class AssignmentService(
             val gitSubmissions = gitSubmissionRepository.findByAssignmentId(assignment.id)
             gitSubmissions.forEachIndexed { index, it ->
                 val repositoryFolderFrom = File(gitSubmissionsRootLocation, it.getFolderRelativeToStorageRoot())
-                val repositoryFolderTo = File(destinationFolder, it.getFolderRelativeToStorageRoot())
+                val repositoryFolderTo = File(destinationFolder, it.getParentFolderRelativeToStorageRoot())
                 repositoryFolderTo.mkdirs()
 
                 if (!repositoryFolderFrom.exists()) {

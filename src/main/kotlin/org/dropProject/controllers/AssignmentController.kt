@@ -912,8 +912,9 @@ class AssignmentController(
             // import all the original submission files
             if (originalSubmissionsFolder.exists()) {
                 val assignment = assignmentRepository.getOne(assignmentId)
-                if (assignment.submissionMethod == SubmissionMethod.UPLOAD) {
-                    FileUtils.copyDirectory(originalSubmissionsFolder, File(uploadSubmissionsRootLocation))
+                when (assignment.submissionMethod) {
+                    SubmissionMethod.UPLOAD -> FileUtils.copyDirectory(originalSubmissionsFolder, File(uploadSubmissionsRootLocation))
+                    SubmissionMethod.GIT -> FileUtils.copyDirectory(originalSubmissionsFolder, File(gitSubmissionsRootLocation))
                 }
             }
 
