@@ -22,6 +22,7 @@ package org.dropProject.controllers
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import net.lingala.zip4j.core.ZipFile
+import net.lingala.zip4j.model.FileHeader
 import org.apache.commons.io.FileUtils
 import org.dropProject.TestsHelper
 import org.dropProject.dao.*
@@ -1221,6 +1222,13 @@ class AssignmentControllerTests {
         assertEquals("student5", node.at("/3/authors/0/userId").asText())
         assertEquals("student4", node.at("/3/authors/1/userId").asText())
 
+        val fileHeaders = downloadedFileAsZipObject.fileHeaders as List<FileHeader>
+        assertEquals(9, fileHeaders.size)
+        assertEquals("original/testJavaProj/19-21/", fileHeaders[3].fileName)
+        for (i in 4..7) {
+            assertTrue(fileHeaders[i].fileName.endsWith(".zip"))
+        }
+
         downloadedZipFile.delete()
         downloadedJSONFileName.delete()
 
@@ -1315,9 +1323,14 @@ class AssignmentControllerTests {
         assertEquals("student1", node.at("/0/authors/0/userId").asText())
         assertEquals("student2", node.at("/0/authors/1/userId").asText())
 
-         downloadedZipFile.delete()
-         downloadedJSONFileName.delete()
+        val fileHeaders = downloadedFileAsZipObject.fileHeaders as List<FileHeader>
+        assertEquals(41, fileHeaders.size)
+        assertEquals("original/testJavaProj/19-21/", fileHeaders[3].fileName)
+        // use a regex because the timestamp (mutable) is part of the name
+        assertThat(fileHeaders[4].fileName, matchesPattern("original/testJavaProj/19-21/[0-9]+-sampleJavaSubmission/"))
 
+        downloadedZipFile.delete()
+        downloadedJSONFileName.delete()
     }
 
     @Test
