@@ -576,10 +576,11 @@ class ReportControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val message = reportResult.modelAndView.modelMap["message"] as String
-        val list = reportResult.modelAndView.modelMap["signalledGroups"]
+        val list = reportResult.modelAndView.modelMap["signalledGroups"] as List<GroupedProjectGroups>
 
-        assertNull(list)
+        assertNotNull(message)
         assertEquals("No groups identified as similar", message)
+        assertTrue(list.isEmpty())
     }
 
     /**
