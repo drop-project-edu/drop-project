@@ -578,7 +578,7 @@ class ReportControllerTests {
         val message = reportResult.modelAndView.modelMap["message"] as String
         val list = reportResult.modelAndView.modelMap["signalledGroups"]
         assertNull(list)
-        assert(message != null)
+        assertNotNull(message)
         assertEquals("No groups identified as similar", message)
     }
 
