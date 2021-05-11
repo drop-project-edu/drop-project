@@ -72,7 +72,12 @@ data class GitSubmission(
 
     fun getFolderRelativeToStorageRoot() : String {
         val repoName = GitClient().getGitRepoInfo(gitRepositoryUrl).second
-        return "${assignmentId}/${SimpleDateFormat("w-yy").format(createDate)}/${createDate.time}-${repoName}"
+        return "${getParentFolderRelativeToStorageRoot()}/${createDate.time}-${repoName}"
+    }
+
+    // returns the parent folder of the repo (needed for the export)
+    fun getParentFolderRelativeToStorageRoot() : String {
+        return "${assignmentId}/${SimpleDateFormat("w-yy").format(createDate)}"
     }
 
 }

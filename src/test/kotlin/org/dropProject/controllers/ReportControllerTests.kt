@@ -557,7 +557,7 @@ class ReportControllerTests {
      * - The other does not fail any test.
      * Expectations:
      * - The MVC controller function should place in the Model:
-     * -- a null List; and
+     * -- a List of size 0; and
      * -- a String with a message saying that there are no signalled groups.
      */
     @Test

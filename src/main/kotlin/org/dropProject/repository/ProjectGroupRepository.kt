@@ -30,6 +30,6 @@ import org.dropProject.dao.Submission
  */
 interface ProjectGroupRepository : JpaRepository<ProjectGroup, Long> {
 
-    @Query("SELECT p FROM ProjectGroup p JOIN p.authors authors WHERE authors.userId = ?#{[0]}")
+    @Query("SELECT p FROM ProjectGroup p JOIN p.authors authors WHERE authors.userId = ?1")
     fun getGroupsForAuthor(authorNumber: String) : List<ProjectGroup>
 }

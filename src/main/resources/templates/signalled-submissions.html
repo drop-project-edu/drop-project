@@ -82,13 +82,13 @@
                 <p th:text="${assignmentNrOfTests}"/>
             </div>
 
-            <table border="1" th:if="${offTheAverage}">
+            <table class="table" th:if="${offTheAverage}">
                 <thead>
                     <tr>
-                        <td><b>Group ID</b></td>
-                        <td><b>View Submissions</b></td>
-                        <td><b>Nr of Submissions</b></td>
-                        <td><b>Nr of Passed Tests</b></td>
+                        <th>Group ID</th>
+                        <th>View Submissions</th>
+                        <th>Nr of Submissions</th>
+                        <th>Nr of Passed Tests</th>
                     </tr>
                 </thead>
                 <tr th:each="groupStats: ${offTheAverage}">

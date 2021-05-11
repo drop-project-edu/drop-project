@@ -2,7 +2,7 @@
  * ========================LICENSE_START=================================
  * DropProject
  * %%
- * Copyright (C) 2019 Pedro Alves
+ * Copyright (C) 2019 - 2021 Pedro Alves
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,28 +17,35 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.extensions
+package org.dropProject
 
-import java.text.SimpleDateFormat
-import java.util.*
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Scope
 
 /**
- * This file contains extensions to the default [Date] class.
+ * Manages tasks that are executed asynchronously such as assignments export
  */
+class PendingTasks {
 
-fun Date.formatJustDate(): String {
-    val sdf= SimpleDateFormat("yyyyMMdd", Locale.getDefault())
-    return sdf.format(this)
+    // key is the id of the task
+    val pendingTasks = HashMap<String,Any>()
+
+    fun get(taskId: String) : Any? {
+        return pendingTasks[taskId]
+    }
+
+    fun put(taskId: String, data: Any) {
+        pendingTasks[taskId] = data
+    }
 }
 
-fun Date.formatDefault(): String {
-    val sdf= SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-    return sdf.format(this)
-}
+@Configuration
+class PendingTasksConfig {
 
-fun Date.format(format: String): String {
-    val sdf= SimpleDateFormat(format, Locale.getDefault())
-    return sdf.format(this)
+    @Bean
+    @Scope("singleton")
+    fun pendingTasks(): PendingTasks {
+        return PendingTasks()
+    }
 }
-    
-    

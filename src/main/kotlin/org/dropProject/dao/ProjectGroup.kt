@@ -20,10 +20,7 @@
 package org.dropProject.dao
 
 import java.util.HashSet
-import javax.persistence.Entity
-import javax.persistence.GeneratedValue
-import javax.persistence.Id
-import javax.persistence.OneToMany
+import javax.persistence.*
 
 /**
  * Represents a set of [Author]s (for example, students) that interact with Drop Project as a group.
@@ -37,7 +34,7 @@ data class ProjectGroup(
         @Id @GeneratedValue
         val id: Long = 0
 ){
-    @OneToMany(mappedBy = "group")
+    @OneToMany(mappedBy = "group", fetch = FetchType.EAGER)
     val authors: MutableSet<Author> = HashSet()
 
     @OneToMany(mappedBy = "group")

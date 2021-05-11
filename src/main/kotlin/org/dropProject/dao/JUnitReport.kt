@@ -26,7 +26,7 @@ import javax.persistence.*
  *
  * @property id is a Long with a primary-key like generated id
  * @property submissionId is a Long, identifying the [Submission] that the report is based on
- * @property fileName is a String with the name of the Jacoco report file
+ * @property fileName is a String with the name of the JUnit report file
  * @property xmlReport is a String with the XML version of the report
  */
 @Entity

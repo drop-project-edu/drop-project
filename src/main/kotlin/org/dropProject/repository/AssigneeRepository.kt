@@ -32,6 +32,7 @@ interface AssigneeRepository : JpaRepository<Assignee, String> {
     fun existsByAssignmentIdAndAuthorUserId(assignmentId: String, authorUserId: String): Boolean
     fun findByAssignmentIdOrderByAuthorUserId(assignmentId: String): List<Assignee>
     fun findByAuthorUserId(authorUserId: String): List<Assignee>
+    fun findByAssignmentId(assignmentId: String): List<Assignee>
 
     @Transactional
     fun deleteByAssignmentId(assignmentId: String): List<Assignee>
