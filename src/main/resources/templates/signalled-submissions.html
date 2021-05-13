@@ -29,10 +29,6 @@
         <div role="tabpanel" class="tab-pane active">
             <p>&nbsp;</p>
 
-            <div th:if="${signalledGroups}">
-                <h3>Groups that fail the same tests</h3>
-            </div>
-
             <h3>Groups that fail the same tests</h3>
 
             <div th:if="${message}">
@@ -86,6 +82,7 @@
                 <thead>
                     <tr>
                         <th>Group ID</th>
+                        <th>Group Members</th>
                         <th>View Submissions</th>
                         <th>Nr of Submissions</th>
                         <th>Nr of Passed Tests</th>
@@ -93,6 +90,7 @@
                 </thead>
                 <tr th:each="groupStats: ${offTheAverage}">
                     <td th:text="${groupStats.groupID}"/></td>
+                    <td th:text="${groupStats.group.authorsNameStr()}"></td>
                     <td>
                         <a th:each="groupID: ${groupStats.groupID}" th:href="'/submissions/?assignmentId=' + ${assignmentId} + '&groupId=' + ${groupID}">View submissions</a>
                     </td>

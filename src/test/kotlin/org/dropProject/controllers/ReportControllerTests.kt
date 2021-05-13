@@ -732,16 +732,19 @@ class ReportControllerTests {
         var groups = testDataForGroupGroupsByFailures();
         var submissionStatistics = mutableListOf<GroupSubmissionStatistics>()
 
-        submissionStatistics.add(GroupSubmissionStatistics(groups[0].id, 15, 20));
-        submissionStatistics.add(GroupSubmissionStatistics(groups[1].id, 10, 22)); // ignored
-        submissionStatistics.add(GroupSubmissionStatistics(groups[2].id, 17, 18));
-        submissionStatistics.add(GroupSubmissionStatistics(groups[3].id, 15, 5)); // suspicious
-        submissionStatistics.add(GroupSubmissionStatistics(groups[4].id, 20, 20));
+        // hack : since the test is not testing the ProjectGroup objects, so we can use this dummy group
+        val pGroup = ProjectGroup(-1)
+
+        submissionStatistics.add(GroupSubmissionStatistics(groups[0].id, 15, 20, groups[0]));
+        submissionStatistics.add(GroupSubmissionStatistics(groups[1].id, 10, 22, groups[1])); // ignored
+        submissionStatistics.add(GroupSubmissionStatistics(groups[2].id, 17, 18, groups[2]));
+        submissionStatistics.add(GroupSubmissionStatistics(groups[3].id, 15, 5, groups[3])); // suspicious
+        submissionStatistics.add(GroupSubmissionStatistics(groups[4].id, 20, 20, groups[4]));
 
         if(nrSuspiciousCases == 2) {
-            submissionStatistics.add(GroupSubmissionStatistics(6, 16, 6)) // suspicious
-            submissionStatistics.add(GroupSubmissionStatistics(7, 17, 19))
-            submissionStatistics.add(GroupSubmissionStatistics(8, 14, 14)) // ignored
+            submissionStatistics.add(GroupSubmissionStatistics(6, 16, 6, groups[6])) // suspicious
+            submissionStatistics.add(GroupSubmissionStatistics(7, 17, 19, groups[7]))
+            submissionStatistics.add(GroupSubmissionStatistics(8, 14, 14, groups[8])) // ignored
         }
 
         return submissionStatistics
@@ -773,7 +776,9 @@ class ReportControllerTests {
     fun testIdentifyGroupsOutsideStatisticalNorms() {
         var submissionStatistics = testDataForComputeStatistics(1)
         var assignmentStatistics = computeStatistics(submissionStatistics, 20)
-        var expected = listOf<GroupSubmissionStatistics>(GroupSubmissionStatistics(4, 15, 5))
+        // hack
+        val pGroup = ProjectGroup(-1)
+        var expected = listOf<GroupSubmissionStatistics>(GroupSubmissionStatistics(4, 15, 5, pGroup))
         var result = assignmentStatistics.identifyGroupsOutsideStatisticalNorms()
         assert(1 == result.size)
         assertEquals(expected, result)
@@ -789,8 +794,14 @@ class ReportControllerTests {
     fun testIdentifyGroupsOutsideStatisticalNorms_MoreThanOneSuspiciousGroup() {
         var submissionStatistics = testDataForComputeStatistics(2)
         var assignmentStatistics = computeStatistics(submissionStatistics, 20)
-        var gss1 = GroupSubmissionStatistics(4, 15, 5)
-        var gss2 = GroupSubmissionStatistics(6, 16, 6)
+
+        // hack
+        // create a dummy ProjectGroup just to respect GroupSubmissionStatistics' protocol
+        // the test does not check the ProjectGroups, so we can use the same object
+        val pGroup = ProjectGroup(-1)
+
+        var gss1 = GroupSubmissionStatistics(4, 15, 5, pGroup)
+        var gss2 = GroupSubmissionStatistics(6, 16, 6, pGroup)
         var expected = listOf<GroupSubmissionStatistics>(gss1, gss2)
         var result = assignmentStatistics.identifyGroupsOutsideStatisticalNorms()
         assert(2 == result.size)
@@ -806,10 +817,12 @@ class ReportControllerTests {
     @Test
     fun testIdentifyGroupsOutsideStatisticalNorms_NoGroupsOverThreshold() {
         var submissionStatistics = mutableListOf<GroupSubmissionStatistics>()
+        // hack : since the test is not testing the ProjectGroup objects, we can use this dummy group in all objects
+        val pGroup = ProjectGroup(-1);
         // all the groups are below the 75% threshold
-        submissionStatistics.add(GroupSubmissionStatistics(1, 10, 20));
-        submissionStatistics.add(GroupSubmissionStatistics(2, 10, 22));
-        submissionStatistics.add(GroupSubmissionStatistics(3, 12, 20));
+        submissionStatistics.add(GroupSubmissionStatistics(1, 10, 20, pGroup));
+        submissionStatistics.add(GroupSubmissionStatistics(2, 10, 22, pGroup));
+        submissionStatistics.add(GroupSubmissionStatistics(3, 12, 20, pGroup));
         var assignmentStatistics = computeStatistics(submissionStatistics, 20)
         var result = assignmentStatistics.identifyGroupsOutsideStatisticalNorms()
         assertEquals(0, assignmentStatistics.groupsConsideredForStatistics.size)
@@ -826,10 +839,12 @@ class ReportControllerTests {
     @Test
     fun testIdentifyGroupsOutsideStatisticalNorms_OnlyTheOneGroupIsOverThreshold() {
         var submissionStatistics = mutableListOf<GroupSubmissionStatistics>()
+        // hack : since the test is not testing the ProjectGroup objects, we can use this dummy group in all objects
+        val pGroup = ProjectGroup(-1)
         // 2 of the 3 groups are below the 75% threshold
-        submissionStatistics.add(GroupSubmissionStatistics(1, 10, 20)); // ignored
-        submissionStatistics.add(GroupSubmissionStatistics(2, 15, 22));
-        submissionStatistics.add(GroupSubmissionStatistics(3, 12, 20)); // ignored
+        submissionStatistics.add(GroupSubmissionStatistics(1, 10, 20, pGroup)); // ignored
+        submissionStatistics.add(GroupSubmissionStatistics(2, 15, 22, pGroup));
+        submissionStatistics.add(GroupSubmissionStatistics(3, 12, 20, pGroup)); // ignored
         var assignmentStatistics = computeStatistics(submissionStatistics, 20)
         var result = assignmentStatistics.identifyGroupsOutsideStatisticalNorms()
         assert(result.isEmpty())
@@ -853,11 +868,15 @@ class ReportControllerTests {
     @Test
     fun testIdentifyGroupsOutsideStatisticalNorms_MoreComplexScenario() {
         var submissionStatistics = mutableListOf<GroupSubmissionStatistics>()
-        submissionStatistics.add(GroupSubmissionStatistics(1, 10, 20)); // ignored because below 75% of tests
-        submissionStatistics.add(GroupSubmissionStatistics(2, 15, 22));
-        submissionStatistics.add(GroupSubmissionStatistics(3, 10, 10)); // ignored low tests & low subs
-        submissionStatistics.add(GroupSubmissionStatistics(4, 15, 22));
-        val gss5 = GroupSubmissionStatistics(5, 17, 20)
+
+        // hack : since the test is not testing the ProjectGroup objects, we can use this dummy group in all objects
+        val pGroup = ProjectGroup(-1)
+
+        submissionStatistics.add(GroupSubmissionStatistics(1, 10, 20, pGroup)); // ignored because below 75% of tests
+        submissionStatistics.add(GroupSubmissionStatistics(2, 15, 22, pGroup));
+        submissionStatistics.add(GroupSubmissionStatistics(3, 10, 10, pGroup)); // ignored low tests & low subs
+        submissionStatistics.add(GroupSubmissionStatistics(4, 15, 22, pGroup));
+        val gss5 = GroupSubmissionStatistics(5, 17, 20, pGroup)
         submissionStatistics.add(gss5); // signalled
         var assignmentStatistics = computeStatistics(submissionStatistics, 20)
         var result = assignmentStatistics.identifyGroupsOutsideStatisticalNorms()
