@@ -732,9 +732,6 @@ class ReportControllerTests {
         var groups = testDataForGroupGroupsByFailures();
         var submissionStatistics = mutableListOf<GroupSubmissionStatistics>()
 
-        // hack : since the test is not testing the ProjectGroup objects, so we can use this dummy group
-        val pGroup = ProjectGroup(-1)
-
         submissionStatistics.add(GroupSubmissionStatistics(groups[0].id, 15, 20, groups[0]));
         submissionStatistics.add(GroupSubmissionStatistics(groups[1].id, 10, 22, groups[1])); // ignored
         submissionStatistics.add(GroupSubmissionStatistics(groups[2].id, 17, 18, groups[2]));
@@ -742,9 +739,9 @@ class ReportControllerTests {
         submissionStatistics.add(GroupSubmissionStatistics(groups[4].id, 20, 20, groups[4]));
 
         if(nrSuspiciousCases == 2) {
-            submissionStatistics.add(GroupSubmissionStatistics(6, 16, 6, groups[6])) // suspicious
-            submissionStatistics.add(GroupSubmissionStatistics(7, 17, 19, groups[7]))
-            submissionStatistics.add(GroupSubmissionStatistics(8, 14, 14, groups[8])) // ignored
+            submissionStatistics.add(GroupSubmissionStatistics(6, 16, 6, ProjectGroup(6))) // suspicious
+            submissionStatistics.add(GroupSubmissionStatistics(7, 17, 19, ProjectGroup(7)))
+            submissionStatistics.add(GroupSubmissionStatistics(8, 14, 14, ProjectGroup(8))) // ignored
         }
 
         return submissionStatistics
