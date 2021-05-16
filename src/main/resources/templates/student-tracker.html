@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en">
+<head th:replace="layout/layout :: head (pageTitle='Drop Project - Signalled Students')">
+</head>
+<body>
+
+<div th:if="${submissions}">
+    <div class="alert alert-info" th:text="${submissions}"/>
+</div>
+
+</body>
+</html>

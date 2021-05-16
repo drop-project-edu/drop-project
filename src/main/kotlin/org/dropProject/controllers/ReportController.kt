@@ -778,6 +778,39 @@ class ReportController(
         return "leaderboard"
     }
 
+    @RequestMapping(value = ["/studentTracker/{studentId}"], method = [(RequestMethod.GET)])
+    fun getStudentTracker(@PathVariable studentId: String, model: ModelMap,
+                       principal: Principal, request: HttpServletRequest): String {
+
+        val projectGroups = projectGroupRepository.getGroupsForAuthor(studentId)
+        
+        /*
+        val assignments = assignmentService.getAssignmentsByAuthor(studentId)
+
+        println(">> " + assignments)
+        println(">> " + projectGroups)
+        */
+
+        val allSubmissions = submissionRepository.findAll();
+
+        println(">> " + allSubmissions)
+        println(">> Subs totais: " + allSubmissions.size)
+
+        var submissions = mutableListOf<Submission>()
+
+        for(submission in allSubmissions) {
+            if(projectGroups.contains(submission.group)) {
+                submissions.add(submission);
+            }
+        }
+
+        println(">> Subs filtradas: " + submissions.size)
+
+        model["submissions"] = submissions
+
+        return "student-tracker";
+    }
+
     @RequestMapping(value = ["/migrate/{idx1}/{idx2}"], method = [(RequestMethod.GET)])
     fun migrate(@PathVariable idx1: Long, @PathVariable idx2: Long) {
 
