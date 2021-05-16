@@ -29,7 +29,6 @@ import org.commonmark.renderer.html.HtmlRenderer
 import org.dropProject.MAVEN_MAX_EXECUTION_TIME
 import org.dropProject.dao.*
 import org.dropProject.data.AuthorDetails
-import org.dropProject.data.GroupedProjectGroups
 import org.dropProject.data.TestType
 import org.dropProject.extensions.formatDefault
 import org.dropProject.extensions.realName
@@ -59,8 +58,6 @@ import java.security.Principal
 import java.util.*
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
-import kotlin.collections.HashMap
-import kotlin.collections.LinkedHashMap
 
 /**
  * ReportController contains MVC controller functions to handle requests related with submission reports
@@ -783,7 +780,7 @@ class ReportController(
                        principal: Principal, request: HttpServletRequest): String {
 
         val projectGroups = projectGroupRepository.getGroupsForAuthor(studentId)
-        
+
         /*
         val assignments = assignmentService.getAssignmentsByAuthor(studentId)
 
@@ -797,16 +794,28 @@ class ReportController(
         println(">> Subs totais: " + allSubmissions.size)
 
         var submissions = mutableListOf<Submission>()
+        var assignments = mutableListOf<Assignment>()
 
+        // FIXME: for better performance, replace this logic
+        // with a function that gets the data straight from the DB
         for(submission in allSubmissions) {
             if(projectGroups.contains(submission.group)) {
                 submissions.add(submission);
+                val assignment = assignmentRepository.findById(submission.assignmentId).get()
+                if(!assignments.contains(assignment)) {
+                    assignments.add(assignment);
+                }
             }
         }
 
         println(">> Subs filtradas: " + submissions.size)
 
+        // 1- gather all assignments
+        // 2- where was the student signalleed?
+        // 3- students he works it
+
         model["submissions"] = submissions
+        model["assignments"] = assignments
 
         return "student-tracker";
     }
