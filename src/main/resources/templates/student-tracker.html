@@ -15,5 +15,21 @@
     <div class="alert alert-info" th:text="${assignments}"/>
 </div>
 
+<table class="table" th:if="${assignments}">
+    <thead>
+    <tr>
+        <th>Assignment ID</th>
+        <th>Failing Tests</th>
+        <th>IDE</th>
+    </tr>
+    </thead>
+    <!--/*@thymesVar id="signalledGroups" type="java.util.ArrayList<org.dropProject.data.GroupedProjectGroups>"*/-->
+    <tr th:each="assignment: ${assignments}">
+        <td th:text="${assignment.name}"/></td>
+        <td>...</td>
+        <td>.....</td>
+    </tr>
+</table>
+
 </body>
 </html>
