@@ -19,6 +19,8 @@
  */
 package org.dropProject.data
 
+import org.dropProject.dao.ProjectGroup;
+
 /**
  * Represents statistics about the submissions done for an [Assignment].
  *
@@ -55,10 +57,12 @@ data class AssignmentStatistics(val average : Double,
  * @property groupID is a Long, identifying the ProjectGroup
  * @property nrPassedTests is an Int, representing how many tests the group's (last) submission passes
  * @property nrSubmissions is an Int, representing the number of submissions that the group performed
+ * @property group is a ProjectGroup
  */
 data class GroupSubmissionStatistics(val groupID : Long,
                                      val nrPassedTests : Int,
-                                     val nrSubmissions : Int) {
+                                     val nrSubmissions : Int,
+                                     val group : ProjectGroup) {
 
     override fun equals(other: Any?): Boolean {
         if(this === other) return true

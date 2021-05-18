@@ -194,7 +194,8 @@ class AssignmentService(
                         if (!failed.isEmpty()) {
                             hashMap.put(group, failed)
                         }
-                        submissionStatistics.add(GroupSubmissionStatistics(group.id, passedTests, it.allSubmissions.size))
+                        val groupStats = GroupSubmissionStatistics(group.id, passedTests, it.allSubmissions.size, group)
+                        submissionStatistics.add(groupStats)
                     }
                 }
 
