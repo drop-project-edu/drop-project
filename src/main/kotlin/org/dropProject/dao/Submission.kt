@@ -87,7 +87,7 @@ data class Submission(
         @Id @GeneratedValue
         val id: Long = 0,
         val submissionId: String? = null,
-        val gitSubmissionId: Long? = null,
+        var gitSubmissionId: Long? = null,
 
         val submissionFolder: String? = null,  // TODO: For now, this is null for git submissions
 

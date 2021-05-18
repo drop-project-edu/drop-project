@@ -29,15 +29,13 @@
         <div role="tabpanel" class="tab-pane active">
             <p>&nbsp;</p>
 
+            <h3>Groups that fail the same tests</h3>
+
             <div th:if="${message}">
                 <div class="alert alert-info" th:text="${message}"/>
             </div>
 
-            <div th:if="${signalledGroups}">
-                <h3>Groups that fail the same tests</h3>
-            </div>
-
-            <table class="table">
+            <table class="table" th:if="${signalledGroups}">
                 <thead>
                     <tr>
                         <th>Students</th>
@@ -64,8 +62,13 @@
 
             <hr>
 
+            <h3>Groups passing many tests with relatively little submissions</h3>
+
+            <div th:if="${otherMessage}">
+                <div class="alert alert-info" th:text="${otherMessage}"/>
+            </div>
+
             <div th:if="${offTheAverage}">
-                <h3>Groups passing many tests with relatively little submissions</h3>
                 <p>Groups needed, on average, <b th:text="${assignmentAverageSubmissions}"/> (+-
                     <b th:text="${assignmentStandardDeviation}" />) submissions to pass 75% (or more) tests. The groups
                     below are signalled because they only needed <b th:text="${submissionsThreshold}" /> (or less)
@@ -75,17 +78,19 @@
                 <p th:text="${assignmentNrOfTests}"/>
             </div>
 
-            <table border="1">
+            <table class="table" th:if="${offTheAverage}">
                 <thead>
                     <tr>
-                        <td><b>Group ID</b></td>
-                        <td><b>View Submissions</b></td>
-                        <td><b>Nr of Submissions</b></td>
-                        <td><b>Nr of Passed Tests</b></td>
+                        <th>Group ID</th>
+                        <th>Group Members</th>
+                        <th>View Submissions</th>
+                        <th>Nr of Submissions</th>
+                        <th>Nr of Passed Tests</th>
                     </tr>
                 </thead>
                 <tr th:each="groupStats: ${offTheAverage}">
                     <td th:text="${groupStats.groupID}"/></td>
+                    <td th:text="${groupStats.group.authorsNameStr()}"></td>
                     <td>
                         <a th:each="groupID: ${groupStats.groupID}" th:href="'/submissions/?assignmentId=' + ${assignmentId} + '&groupId=' + ${groupID}">View submissions</a>
                     </td>

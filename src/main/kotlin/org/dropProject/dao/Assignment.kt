@@ -19,14 +19,14 @@
  */
 package org.dropProject.dao
 
+import com.fasterxml.jackson.annotation.JsonFormat
 import org.dropProject.Constants
+import org.dropProject.extensions.format
 import org.dropProject.forms.SubmissionMethod
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import java.util.*
 import javax.persistence.*
 
-val formatter = DateTimeFormatter.ofPattern("dd MMM HH:mm")
+val formatter = "dd MMM HH:mm"
 
 /**
  * Enum representing the programming languages that Drop Project supports.
@@ -98,7 +98,9 @@ data class Assignment(
         var name: String,
 
         var packageName: String? = null,
-        var dueDate: LocalDateTime? = null,
+
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
+        var dueDate: Date? = null,
 
         @Column(nullable = false)
         var submissionMethod: SubmissionMethod,
@@ -124,7 +126,7 @@ data class Assignment(
         var gitRepositoryFolder: String,  // relative to assignment.root.location
 
         @Column(nullable = false)
-        val ownerUserId: String,
+        var ownerUserId: String = "",
 
         var active: Boolean = false,
         var archived: Boolean = false,
@@ -141,7 +143,10 @@ data class Assignment(
         var public: Boolean = true,
 
         @Transient
-        var lastSubmissionDate: Date? = null
+        var lastSubmissionDate: Date? = null,
+
+        @Transient
+        var authorizedStudentIds: List<String>? = null
 ) {
 
     @ManyToMany(cascade = [CascadeType.ALL])

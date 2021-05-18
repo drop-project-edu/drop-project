@@ -19,18 +19,23 @@
  */
 package org.dropProject.controllers
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.KotlinModule
+import net.lingala.zip4j.core.ZipFile
+import net.lingala.zip4j.model.FileHeader
+import org.apache.commons.io.FileUtils
 import org.dropProject.TestsHelper
 import org.dropProject.dao.*
 import org.dropProject.data.SubmissionInfo
+import org.dropProject.extensions.formatJustDate
 import org.dropProject.forms.AssignmentForm
 import org.dropProject.forms.SubmissionMethod
-import org.dropProject.repository.AssigneeRepository
-import org.dropProject.repository.AssignmentRepository
-import org.dropProject.repository.AssignmentTagRepository
-import org.dropProject.repository.SubmissionRepository
+import org.dropProject.repository.*
 import org.hamcrest.CoreMatchers.containsString
 import org.hamcrest.Matchers
+import org.hamcrest.Matchers.*
 import org.hamcrest.collection.IsCollectionWithSize.hasSize
+import org.hamcrest.core.IsNull
 import org.json.JSONObject
 import org.junit.Assert.*
 import org.junit.FixMethodOrder
@@ -42,6 +47,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.http.MediaType
+import org.springframework.mock.web.MockMultipartFile
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.User
 import org.springframework.security.test.context.support.WithMockUser
@@ -55,22 +62,24 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import org.springframework.validation.BindingResult
 import java.io.File
+import java.util.*
 
 
 @RunWith(SpringRunner::class)
 @AutoConfigureMockMvc
 @SpringBootTest
-@TestPropertySource(locations=["classpath:drop-project-test.properties"])
+@TestPropertySource(locations = ["classpath:drop-project-test.properties"])
 @ActiveProfiles("test")
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 class AssignmentControllerTests {
 
     @Autowired
-    lateinit var mvc : MockMvc
+    lateinit var mvc: MockMvc
 
     @Autowired
     lateinit var assignmentRepository: AssignmentRepository
@@ -82,35 +91,41 @@ class AssignmentControllerTests {
     lateinit var submissionRepository: SubmissionRepository
 
     @Autowired
+    lateinit var gitSubmissionRepository: GitSubmissionRepository
+
+    @Autowired
     lateinit var assignmentTagRepository: AssignmentTagRepository
 
     @Autowired
     lateinit var testsHelper: TestsHelper
 
     @Value("\${assignments.rootLocation}")
-    val assignmentsRootLocation : String = ""
+    val assignmentsRootLocation: String = ""
+
+    val TEACHER_1 = User("teacher1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
 
     @Test
-    @WithMockUser("teacher1",roles=["TEACHER"])
+    @WithMockUser("teacher1", roles = ["TEACHER"])
     @DirtiesContext
     fun test_00_getNewAssignmentForm() {
         this.mvc.perform(get("/assignment/new"))
-                .andExpect(status().isOk)
+            .andExpect(status().isOk)
     }
 
 
     @Test
-    @WithMockUser("teacher1",roles=["TEACHER"])
+    @WithMockUser("teacher1", roles = ["TEACHER"])
     @DirtiesContext
     fun test_01_createInvalidAssignment() {
 
         mvc.perform(post("/assignment/new"))
-                .andExpect(status().isOk)
-                .andExpect(view().name("assignment-form"))
-                .andExpect(model().attributeHasFieldErrors("assignmentForm","assignmentId"))
+            .andExpect(status().isOk)
+            .andExpect(view().name("assignment-form"))
+            .andExpect(model().attributeHasFieldErrors("assignmentForm", "assignmentId"))
 
 
-        mvc.perform(post("/assignment/new")
+        mvc.perform(
+            post("/assignment/new")
                 .param("assignmentId", "assignmentId")
                 .param("assignmentName", "assignmentName")
                 .param("assignmentPackage", "assignmentPackage")
@@ -119,11 +134,12 @@ class AssignmentControllerTests {
                 .param("gitRepositoryUrl", "git://dummy")
                 .param("acceptsStudentTests", "true")  // <<<<<
         )
-                .andExpect(status().isOk())
-                .andExpect(view().name("assignment-form"))
-                .andExpect(model().attributeHasFieldErrors("assignmentForm","acceptsStudentTests"))
+            .andExpect(status().isOk())
+            .andExpect(view().name("assignment-form"))
+            .andExpect(model().attributeHasFieldErrors("assignmentForm", "acceptsStudentTests"))
 
-        mvc.perform(post("/assignment/new")
+        mvc.perform(
+            post("/assignment/new")
                 .param("assignmentId", "assignmentId")
                 .param("assignmentName", "assignmentName")
                 .param("assignmentPackage", "assignmentPackage")
@@ -132,11 +148,12 @@ class AssignmentControllerTests {
                 .param("gitRepositoryUrl", "git://dummy")
                 .param("minStudentTests", "1")  // <<<<<
         )
-                .andExpect(status().isOk())
-                .andExpect(view().name("assignment-form"))
-                .andExpect(model().attributeHasFieldErrors("assignmentForm","acceptsStudentTests"))
+            .andExpect(status().isOk())
+            .andExpect(view().name("assignment-form"))
+            .andExpect(model().attributeHasFieldErrors("assignmentForm", "acceptsStudentTests"))
 
-        mvc.perform(post("/assignment/new")
+        mvc.perform(
+            post("/assignment/new")
                 .param("assignmentId", "assignmentId")
                 .param("assignmentName", "assignmentName")
                 .param("assignmentPackage", "assignmentPackage")
@@ -145,11 +162,12 @@ class AssignmentControllerTests {
                 .param("gitRepositoryUrl", "git://dummy")
                 .param("calculateStudentTestsCoverage", "true") // <<<<<
         )
-                .andExpect(status().isOk())
-                .andExpect(view().name("assignment-form"))
-                .andExpect(model().attributeHasFieldErrors("assignmentForm","acceptsStudentTests"))
+            .andExpect(status().isOk())
+            .andExpect(view().name("assignment-form"))
+            .andExpect(model().attributeHasFieldErrors("assignmentForm", "acceptsStudentTests"))
 
-        mvc.perform(post("/assignment/new")
+        mvc.perform(
+            post("/assignment/new")
                 .param("assignmentId", "assignmentId")
                 .param("assignmentName", "assignmentName")
                 .param("assignmentPackage", "assignmentPackage")
@@ -161,11 +179,12 @@ class AssignmentControllerTests {
                 .param("minStudentTests", "1")
                 .param("acl", "teacher1,teacher2")  // <<<<< acl should not include the session owner (teacher1)
         )
-                .andExpect(status().isOk())
-                .andExpect(view().name("assignment-form"))
-                .andExpect(model().attributeHasFieldErrors("assignmentForm","acl"))
+            .andExpect(status().isOk())
+            .andExpect(view().name("assignment-form"))
+            .andExpect(model().attributeHasFieldErrors("assignmentForm", "acl"))
 
-        mvc.perform(post("/assignment/new")
+        mvc.perform(
+            post("/assignment/new")
                 .param("assignmentId", "assignmentId")
                 .param("assignmentName", "assignmentName")
                 .param("assignmentPackage", "assignmentPackage")
@@ -176,41 +195,43 @@ class AssignmentControllerTests {
                 .param("calculateStudentTestsCoverage", "true")  // <<<<
                 .param("minStudentTests", "1")   // <<<<
         )
-                .andExpect(MockMvcResultMatchers.status().isFound())
-                .andExpect(MockMvcResultMatchers.header().string("Location", "/assignment/setup-git/assignmentId"))
+            .andExpect(status().isFound())
+            .andExpect(header().string("Location", "/assignment/setup-git/assignmentId"))
 
 
     }
 
     @Test
-    @WithMockUser("teacher1",roles=["TEACHER"])
+    @WithMockUser("teacher1", roles = ["TEACHER"])
     @DirtiesContext
     fun test_02_createNewAssignmentAndConnectWithGithub() {
 
         try {
-            testsHelper.createAndSetupAssignment(mvc, assignmentRepository, "dummyAssignment1", "Dummy Assignment",
-                    "org.dummy",
-                    "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git"
-                    )
+            testsHelper.createAndSetupAssignment(
+                mvc, assignmentRepository, "dummyAssignment1", "Dummy Assignment",
+                "org.dummy",
+                "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git"
+            )
 
         } finally {
 
             // cleanup assignment files
-            if (File(assignmentsRootLocation,"dummyAssignment1").exists()) {
-                File(assignmentsRootLocation,"dummyAssignment1").deleteRecursively()
+            if (File(assignmentsRootLocation, "dummyAssignment1").exists()) {
+                File(assignmentsRootLocation, "dummyAssignment1").deleteRecursively()
             }
         }
     }
 
     @Ignore("THIS TEST IS FAILING BECAUSE BITBUCKET DOESNT RECOGNIZE THE PUBLIC KEY")
     @Test
-    @WithMockUser("teacher1",roles=["TEACHER"])
+    @WithMockUser("teacher1", roles = ["TEACHER"])
     @DirtiesContext
     fun test_03_createNewAssignmentAndConnectWithBitbucket() {
 
         try {
             // post form
-            this.mvc.perform(post("/assignment/new")
+            this.mvc.perform(
+                post("/assignment/new")
                     .param("assignmentId", "dummyAssignment2")
                     .param("assignmentName", "Dummy Assignment")
                     .param("assignmentPackage", "org.dummy")
@@ -219,13 +240,13 @@ class AssignmentControllerTests {
                     .param("gitRepositoryUrl", "git@bitbucket.org:palves-ulht/projecto-modelo-aed-2017-18.git")
 //                    .param("gitRepositoryUrl", "git@bitbucket.org:pedrohalves/projecto-modelo-aed-2017-18.git")
             )
-                    .andExpect(status().isFound())
-                    .andExpect(header().string("Location", "/assignment/setup-git/dummyAssignment2"))
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", "/assignment/setup-git/dummyAssignment2"))
 
 
             // get assignment detail
             this.mvc.perform(get("/assignment/setup-git/dummyAssignment2"))
-                    .andExpect(status().isOk)
+                .andExpect(status().isOk)
 
             // inject private and public key to continue
             val assignment = assignmentRepository.getOne("dummyAssignment2")
@@ -268,9 +289,14 @@ class AssignmentControllerTests {
 
             // connect to git repository
             this.mvc.perform(post("/assignment/setup-git/dummyAssignment2"))
-                    .andExpect(status().isFound())
-                    .andExpect(header().string("Location", "/assignment/info/dummyAssignment2"))
-                    .andExpect(flash().attribute("message","Assignment was successfully created and connected to git repository"))
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", "/assignment/info/dummyAssignment2"))
+                .andExpect(
+                    flash().attribute(
+                        "message",
+                        "Assignment was successfully created and connected to git repository"
+                    )
+                )
 
             val updatedAssignment = assignmentRepository.getOne("dummyAssignment2")
             assert(updatedAssignment.active == false)
@@ -278,18 +304,19 @@ class AssignmentControllerTests {
         } finally {
 
             // cleanup assignment files
-            if (File(assignmentsRootLocation,"dummyAssignment2").exists()) {
-                File(assignmentsRootLocation,"dummyAssignment2").deleteRecursively()
+            if (File(assignmentsRootLocation, "dummyAssignment2").exists()) {
+                File(assignmentsRootLocation, "dummyAssignment2").deleteRecursively()
             }
         }
     }
 
     @Test
-    @WithMockUser("teacher1",roles=["TEACHER"])
+    @WithMockUser("teacher1", roles = ["TEACHER"])
     @DirtiesContext
     fun test_04_createAssignmentWithInvalidGitRepository() {
 
-        val mvcResult = this.mvc.perform(post("/assignment/new")
+        val mvcResult = this.mvc.perform(
+            post("/assignment/new")
                 .param("assignmentId", "dummyAssignment3")
                 .param("assignmentName", "Dummy Assignment")
                 .param("assignmentPackage", "org.dummy")
@@ -297,12 +324,16 @@ class AssignmentControllerTests {
                 .param("language", "JAVA")
                 .param("gitRepositoryUrl", "git@githuu.com:someuser/cs1Assigment1.git")
         )
-                .andExpect(status().isOk())
-                .andExpect(model().attributeHasFieldErrors("assignmentForm", "gitRepositoryUrl"))
-                .andReturn()
+            .andExpect(status().isOk())
+            .andExpect(model().attributeHasFieldErrors("assignmentForm", "gitRepositoryUrl"))
+            .andReturn()
 
-        val result = mvcResult.modelAndView.model.get(BindingResult.MODEL_KEY_PREFIX + "assignmentForm") as BindingResult
-        assertEquals("Error cloning git repository. Are you sure the url is right?", result.getFieldError("gitRepositoryUrl").defaultMessage)
+        val result =
+            mvcResult.modelAndView.model.get(BindingResult.MODEL_KEY_PREFIX + "assignmentForm") as BindingResult
+        assertEquals(
+            "Error cloning git repository. Are you sure the url is right?",
+            result.getFieldError("gitRepositoryUrl").defaultMessage
+        )
 
         try {
             assignmentRepository.getOne("dummyAssignment3")
@@ -319,25 +350,31 @@ class AssignmentControllerTests {
         val user = User("p1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
 
         try {// list assigments should return empty
-            this.mvc.perform(get("/assignment/my")
-                    .with(SecurityMockMvcRequestPostProcessors.user(user)))
-                    .andExpect(status().isOk())
-                    .andExpect(model().hasNoErrors())
-                    .andExpect(model().attribute("assignments", emptyList<Assignment>()))
+            this.mvc.perform(
+                get("/assignment/my")
+                    .with(SecurityMockMvcRequestPostProcessors.user(user))
+            )
+                .andExpect(status().isOk())
+                .andExpect(model().hasNoErrors())
+                .andExpect(model().attribute("assignments", emptyList<Assignment>()))
 
             // create assignment
-            testsHelper.createAndSetupAssignment(mvc, assignmentRepository, "dummyAssignment4", "Dummy Assignment",
-                    "org.dummy",
-                    "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git",
-                    teacherId = "p1", activateRightAfterCloning = false)
+            testsHelper.createAndSetupAssignment(
+                mvc, assignmentRepository, "dummyAssignment4", "Dummy Assignment",
+                "org.dummy",
+                "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git",
+                teacherId = "p1", activateRightAfterCloning = false
+            )
 
             // list assignments should return one assignment
-            val mvcResult = this.mvc.perform(get("/assignment/my")
-                    .with(SecurityMockMvcRequestPostProcessors.user(user)))
-                    .andExpect(status().isOk())
-                    .andExpect(model().hasNoErrors())
-                    .andExpect(model().attribute("assignments", hasSize<Assignment>(1)))
-                    .andReturn()
+            val mvcResult = this.mvc.perform(
+                get("/assignment/my")
+                    .with(SecurityMockMvcRequestPostProcessors.user(user))
+            )
+                .andExpect(status().isOk())
+                .andExpect(model().hasNoErrors())
+                .andExpect(model().attribute("assignments", hasSize<Assignment>(1)))
+                .andReturn()
 
             @Suppress("UNCHECKED_CAST")
             val assignments = mvcResult.modelAndView.modelMap["assignments"] as List<Assignment>
@@ -353,19 +390,20 @@ class AssignmentControllerTests {
 
         } finally {
             // cleanup assignment files
-            if (File(assignmentsRootLocation,"dummyAssignment4").exists()) {
-                File(assignmentsRootLocation,"dummyAssignment4").deleteRecursively()
+            if (File(assignmentsRootLocation, "dummyAssignment4").exists()) {
+                File(assignmentsRootLocation, "dummyAssignment4").deleteRecursively()
             }
         }
     }
 
     @Test
-    @WithMockUser("teacher1",roles=["TEACHER"])
+    @WithMockUser("teacher1", roles = ["TEACHER"])
     @DirtiesContext
     fun test_06_createNewAssignmentAndForgetToConnectWithGithub() {  // assignment should be marked as inactive
 
         // post form
-        this.mvc.perform(post("/assignment/new")
+        this.mvc.perform(
+            post("/assignment/new")
                 .param("assignmentId", "dummyAssignment5")
                 .param("assignmentName", "Dummy Assignment")
                 .param("assignmentPackage", "org.dummy")
@@ -373,74 +411,82 @@ class AssignmentControllerTests {
                 .param("language", "JAVA")
                 .param("gitRepositoryUrl", "git@github.com:palves-ulht/sampleJavaAssignment.git")
         )
-                .andExpect(status().isFound())
-                .andExpect(header().string("Location", "/assignment/setup-git/dummyAssignment5"))
+            .andExpect(status().isFound())
+            .andExpect(header().string("Location", "/assignment/setup-git/dummyAssignment5"))
 
 
         // get assignment detail
         this.mvc.perform(get("/assignment/setup-git/dummyAssignment5"))
-                .andExpect(status().isOk)
+            .andExpect(status().isOk)
 
         val assignment = assignmentRepository.getOne("dummyAssignment5")
         assert(assignment.active == false)
     }
 
     @Test
-    @WithMockUser("teacher1",roles=["TEACHER"])
+    @WithMockUser("teacher1", roles = ["TEACHER"])
     @DirtiesContext
     fun test_07_showOnlyActiveAssignments() {
 
         try {
             // create an assignment with white-list. it will start as inactive
-            testsHelper.createAndSetupAssignment(mvc, assignmentRepository, "dummyAssignment6", "Dummy Assignment",
-                    "org.dummy",
-                    "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git",
-                    assignees = "21800000")
+            testsHelper.createAndSetupAssignment(
+                mvc, assignmentRepository, "dummyAssignment6", "Dummy Assignment",
+                "org.dummy",
+                "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git",
+                assignees = "21800000"
+            )
 
             // login as 21800000 and get an empty list of assignments
-            this.mvc.perform(get("/")
-                    .with(SecurityMockMvcRequestPostProcessors.user("21800000")))
-                    .andExpect(status().isOk)
-                    .andExpect(model().hasNoErrors())
-                    .andExpect(model().attribute("assignments", hasSize<Assignment>(0)))
+            this.mvc.perform(
+                get("/")
+                    .with(SecurityMockMvcRequestPostProcessors.user("21800000"))
+            )
+                .andExpect(status().isOk)
+                .andExpect(model().hasNoErrors())
+                .andExpect(model().attribute("assignments", hasSize<Assignment>(0)))
 
             // mark the assignment as active
             this.mvc.perform(get("/assignment/toggle-status/dummyAssignment6"))
-                    .andExpect(status().isFound)
-                    .andExpect(header().string("Location", "/assignment/my"))
-                    .andExpect(flash().attribute("message","Assignment was marked active"))
+                .andExpect(status().isFound)
+                .andExpect(header().string("Location", "/assignment/my"))
+                .andExpect(flash().attribute("message", "Assignment was marked active"))
 
             // login again as 21800000 and get a redirect to the assignment
-            this.mvc.perform(get("/")
-                    .with(SecurityMockMvcRequestPostProcessors.user("21800000")))
-                    .andExpect(status().isFound)
-                    .andExpect(header().string("Location", "/upload/dummyAssignment6"))
+            this.mvc.perform(
+                get("/")
+                    .with(SecurityMockMvcRequestPostProcessors.user("21800000"))
+            )
+                .andExpect(status().isFound)
+                .andExpect(header().string("Location", "/upload/dummyAssignment6"))
 
         } finally {
 
             // cleanup assignment files
-            if (File(assignmentsRootLocation,"dummyAssignment6").exists()) {
-                File(assignmentsRootLocation,"dummyAssignment6").deleteRecursively()
+            if (File(assignmentsRootLocation, "dummyAssignment6").exists()) {
+                File(assignmentsRootLocation, "dummyAssignment6").deleteRecursively()
             }
         }
     }
 
     @Test
-    @WithMockUser(username="teacher1",roles=["TEACHER"])
+    @WithMockUser(username = "teacher1", roles = ["TEACHER"])
     @DirtiesContext
     fun test_08_createAssignmentWithOtherTeachers() {
 
         try {
 
-            testsHelper.createAndSetupAssignment(mvc, assignmentRepository, "dummyAssignment7", "Dummy Assignment",
-                    "org.dummy",
-                    "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git",
-                    acl = "p1000, p1001")
+            testsHelper.createAndSetupAssignment(
+                mvc, assignmentRepository, "dummyAssignment7", "Dummy Assignment",
+                "org.dummy",
+                "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git",
+                acl = "p1000, p1001"
+            )
 
             // get assignment detail
             val mvcResult = this.mvc.perform(get("/assignment/info/dummyAssignment7"))
-                    .andExpect(status().isOk)
-                    .andReturn()
+                .andExpect(status().isOk)
+                .andReturn()
 
             @Suppress("UNCHECKED_CAST")
             val aclList = mvcResult.modelAndView.modelMap["acl"] as List<AssignmentACL>
@@ -450,98 +496,117 @@ class AssignmentControllerTests {
 
             // accessing "/assignments/my" with p1000 should give one assignment
             val user = User("p1000", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
-            this.mvc.perform(get("/assignment/my")
-                    .with(SecurityMockMvcRequestPostProcessors.user(user)))
-                    .andExpect(status().isOk)
-                    .andExpect(model().hasNoErrors())
-                    .andExpect(model().attribute("assignments", hasSize<Assignment>(1)))
+            this.mvc.perform(
+                get("/assignment/my")
+                    .with(SecurityMockMvcRequestPostProcessors.user(user))
+            )
+                .andExpect(status().isOk)
+                .andExpect(model().hasNoErrors())
+                .andExpect(model().attribute("assignments", hasSize<Assignment>(1)))
 
         } finally {
 
             // cleanup assignment files
-            if (File(assignmentsRootLocation,"dummyAssignment7").exists()) {
-                File(assignmentsRootLocation,"dummyAssignment7").deleteRecursively()
+            if (File(assignmentsRootLocation, "dummyAssignment7").exists()) {
+                File(assignmentsRootLocation, "dummyAssignment7").deleteRecursively()
             }
         }
     }
 
     @Test
-    @WithMockUser("teacher1",roles=["TEACHER"])
+    @WithMockUser("teacher1", roles = ["TEACHER"])
     @DirtiesContext
     fun test_09_createNewAssignmentAndEdit() {
 
         try {
-            testsHelper.createAndSetupAssignment(mvc, assignmentRepository, "dummyAssignment8", "Dummy Assignment",
-                    "org.dummy",
-                    "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git")
+            testsHelper.createAndSetupAssignment(
+                mvc, assignmentRepository, "dummyAssignment8", "Dummy Assignment",
+                "org.dummy",
+                "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git"
+            )
 
             // get edit form
             this.mvc.perform(get("/assignment/edit/dummyAssignment8"))
-                    .andExpect(status().isOk)
-                    .andExpect(model().hasNoErrors())
-                    .andExpect(model().attribute("assignmentForm",
-                            AssignmentForm(assignmentId = "dummyAssignment8",
-                                    assignmentName = "Dummy Assignment",
-                                    assignmentPackage = "org.dummy",
-                                    submissionMethod = SubmissionMethod.UPLOAD,
-                                    language = Language.JAVA,
-                                    gitRepositoryUrl = "git@github.com:palves-ulht/sampleJavaAssignment.git",
-                                    hiddenTestsVisibility= TestVisibility.SHOW_PROGRESS,
-                                    editMode = true)))
+                .andExpect(status().isOk)
+                .andExpect(model().hasNoErrors())
+                .andExpect(
+                    model().attribute(
+                        "assignmentForm",
+                        AssignmentForm(
+                            assignmentId = "dummyAssignment8",
+                            assignmentName = "Dummy Assignment",
+                            assignmentPackage = "org.dummy",
+                            submissionMethod = SubmissionMethod.UPLOAD,
+                            language = Language.JAVA,
+                            gitRepositoryUrl = "git@github.com:palves-ulht/sampleJavaAssignment.git",
+                            hiddenTestsVisibility = TestVisibility.SHOW_PROGRESS,
+                            editMode = true
+                        )
+                    )
+                )
 
             // post a change
-            mvc.perform(post("/assignment/new")
+            mvc.perform(
+                post("/assignment/new")
                     .param("assignmentId", "dummyAssignment8")
                     .param("assignmentName", "New Name")
                     .param("editMode", "true")
-                    .param("submissionMethod","UPLOAD")
+                    .param("submissionMethod", "UPLOAD")
                     .param("language", "JAVA")
                     .param("gitRepositoryUrl", "git@github.com:palves-ulht/sampleJavaAssignment.git")
                     .param("leaderboardType", "ELLAPSED")
             )
-                    .andExpect(status().isFound())
-                    .andExpect(header().string("Location", "/assignment/info/dummyAssignment8"))
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", "/assignment/info/dummyAssignment8"))
 
             // get edit form again
             this.mvc.perform(get("/assignment/edit/dummyAssignment8"))
-                    .andExpect(status().isOk)
-                    .andExpect(model().hasNoErrors())
-                    .andExpect(model().attribute("assignmentForm",
-                            AssignmentForm(assignmentId = "dummyAssignment8",
-                                    assignmentName = "New Name",
-                                    submissionMethod = SubmissionMethod.UPLOAD,
-                                    language = Language.JAVA,
-                                    gitRepositoryUrl = "git@github.com:palves-ulht/sampleJavaAssignment.git",
-                                    editMode = true,
-                                    leaderboardType = LeaderboardType.ELLAPSED)))
+                .andExpect(status().isOk)
+                .andExpect(model().hasNoErrors())
+                .andExpect(
+                    model().attribute(
+                        "assignmentForm",
+                        AssignmentForm(
+                            assignmentId = "dummyAssignment8",
+                            assignmentName = "New Name",
+                            submissionMethod = SubmissionMethod.UPLOAD,
+                            language = Language.JAVA,
+                            gitRepositoryUrl = "git@github.com:palves-ulht/sampleJavaAssignment.git",
+                            editMode = true,
+                            leaderboardType = LeaderboardType.ELLAPSED
+                        )
+                    )
+                )
 
 
         } finally {
 
             // cleanup assignment files
-            if (File(assignmentsRootLocation,"dummyAssignment8").exists()) {
-                File(assignmentsRootLocation,"dummyAssignment8").deleteRecursively()
+            if (File(assignmentsRootLocation, "dummyAssignment8").exists()) {
+                File(assignmentsRootLocation, "dummyAssignment8").deleteRecursively()
             }
         }
     }
 
     @Test
-    @WithMockUser("teacher1",roles=["TEACHER"])
+    @WithMockUser("teacher1", roles = ["TEACHER"])
     @DirtiesContext
     fun test_10_checkAssignmentHasNoErrors() {
 
         // create initial assignment
-        val assignment01 = Assignment(id = "testJavaProj", name = "Test Project (for automatic tests)",
-                packageName = "org.testProj", ownerUserId = "teacher1",
-                submissionMethod = SubmissionMethod.UPLOAD, active = false, gitRepositoryUrl = "git://dummyRepo",
-                gitRepositoryFolder = "testJavaProj", hiddenTestsVisibility = TestVisibility.HIDE_EVERYTHING)
+        val assignment01 = Assignment(
+            id = "testJavaProj", name = "Test Project (for automatic tests)",
+            packageName = "org.testProj", ownerUserId = "teacher1",
+            submissionMethod = SubmissionMethod.UPLOAD, active = false, gitRepositoryUrl = "git://dummyRepo",
+            gitRepositoryFolder = "testJavaProj", hiddenTestsVisibility = TestVisibility.HIDE_EVERYTHING
+        )
         assignmentRepository.save(assignment01)
 
         // toggle status
         this.mvc.perform(get("/assignment/toggle-status/testJavaProj"))
-                .andExpect(status().isFound)
-                .andExpect(header().string("Location", "/assignment/my"))
-                .andExpect(flash().attribute("message","Assignment was marked active"))
+            .andExpect(status().isFound)
+            .andExpect(header().string("Location", "/assignment/my"))
+            .andExpect(flash().attribute("message", "Assignment was marked active"))
 
         // confirm it is now active
         val assignment = assignmentRepository.getOne("testJavaProj")
@@ -550,24 +615,26 @@ class AssignmentControllerTests {
 
 
     @Test
-    @WithMockUser("teacher1",roles=["TEACHER"])
+    @WithMockUser("teacher1", roles = ["TEACHER"])
     @DirtiesContext
     fun test_11_getAssignmentInfo() {
 
         // create initial assignment
-        val assignment = Assignment(id = "testJavaProj", name = "Test Project (for automatic tests)",
-                packageName = "org.testProj", ownerUserId = "teacher1",
-                submissionMethod = SubmissionMethod.UPLOAD, active = false, gitRepositoryUrl = "git://dummyRepo",
-                gitRepositoryFolder = "testJavaProj", public = false)
+        val assignment = Assignment(
+            id = "testJavaProj", name = "Test Project (for automatic tests)",
+            packageName = "org.testProj", ownerUserId = "teacher1",
+            submissionMethod = SubmissionMethod.UPLOAD, active = false, gitRepositoryUrl = "git://dummyRepo",
+            gitRepositoryFolder = "testJavaProj", public = false
+        )
         assignmentRepository.save(assignment)
         assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student1"))
 
         this.mvc.perform(get("/assignment/info/testJavaProj"))
-                .andExpect(status().isOk)
-                .andExpect(view().name("assignment-detail"))
-                .andExpect(model().hasNoErrors())
-                .andExpect(model().attribute("assignment", assignment))
-                .andExpect(content().string(containsString(assignment.id)))
+            .andExpect(status().isOk)
+            .andExpect(view().name("assignment-detail"))
+            .andExpect(model().hasNoErrors())
+            .andExpect(model().attribute("assignment", assignment))
+            .andExpect(content().string(containsString(assignment.id)))
 
     }
 
@@ -579,33 +646,40 @@ class AssignmentControllerTests {
         val TEACHER_1 = User("teacher1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
 
         // create initial assignment
-        val assignment = Assignment(id = "testJavaProj", name = "Test Project (for automatic tests)",
-                packageName = "org.testProj", ownerUserId = "teacher1",
-                submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
-                gitRepositoryFolder = "testJavaProj", public = false)
+        val assignment = Assignment(
+            id = "testJavaProj", name = "Test Project (for automatic tests)",
+            packageName = "org.testProj", ownerUserId = "teacher1",
+            submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
+            gitRepositoryFolder = "testJavaProj", public = false
+        )
         assignmentRepository.save(assignment)
         assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student1"))
 
 
         // make a submission
-        val submissionId = testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", "testJavaProj", STUDENT_1).toLong()
+        val submissionId =
+            testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", "testJavaProj", STUDENT_1).toLong()
 
         // try to delete the assignment but DP will issue an error since it has submissions
-        this.mvc.perform(post("/assignment/delete/testJavaProj")
-                .with(user(TEACHER_1)))
-                .andExpect(status().isFound)
-                .andExpect(header().string("Location", "/assignment/my"))
-                .andExpect(flash().attribute("error","Assignment can't be deleted because it has submissions"))
+        this.mvc.perform(
+            post("/assignment/delete/testJavaProj")
+                .with(user(TEACHER_1))
+        )
+            .andExpect(status().isFound)
+            .andExpect(header().string("Location", "/assignment/my"))
+            .andExpect(flash().attribute("error", "Assignment can't be deleted because it has submissions"))
 
         // remove the submission
         submissionRepository.deleteById(submissionId)
 
         // try to delete the assignment again, this time with success
-        this.mvc.perform(post("/assignment/delete/testJavaProj")
-                .with(user(TEACHER_1)))
-                .andExpect(status().isFound)
-                .andExpect(header().string("Location", "/assignment/my"))
-                .andExpect(flash().attribute("message","Assignment was successfully deleted"))
+        this.mvc.perform(
+            post("/assignment/delete/testJavaProj")
+                .with(user(TEACHER_1))
+        )
+            .andExpect(status().isFound)
+            .andExpect(header().string("Location", "/assignment/my"))
+            .andExpect(flash().attribute("message", "Assignment was successfully deleted"))
 
     }
 
@@ -616,39 +690,54 @@ class AssignmentControllerTests {
         val user = User("p1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
 
         try {// list archived assignments should return empty
-            this.mvc.perform(get("/assignment/archived")
-                    .with(SecurityMockMvcRequestPostProcessors.user(user)))
-                    .andExpect(status().isOk())
-                    .andExpect(model().hasNoErrors())
-                    .andExpect(model().attribute("assignments", emptyList<Assignment>()))
+            this.mvc.perform(
+                get("/assignment/archived")
+                    .with(SecurityMockMvcRequestPostProcessors.user(user))
+            )
+                .andExpect(status().isOk())
+                .andExpect(model().hasNoErrors())
+                .andExpect(model().attribute("assignments", emptyList<Assignment>()))
 
             // create assignment
-            testsHelper.createAndSetupAssignment(mvc, assignmentRepository, "dummyAssignment4", "Dummy Assignment",
-                    "org.dummy",
-                    "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git",
-                    teacherId = "p1", activateRightAfterCloning = false)
+            testsHelper.createAndSetupAssignment(
+                mvc, assignmentRepository, "dummyAssignment4", "Dummy Assignment",
+                "org.dummy",
+                "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git",
+                teacherId = "p1", activateRightAfterCloning = false
+            )
 
             // list archived assignments should still return empty
-            this.mvc.perform(get("/assignment/archived")
-                    .with(SecurityMockMvcRequestPostProcessors.user(user)))
-                    .andExpect(status().isOk())
-                    .andExpect(model().hasNoErrors())
-                    .andExpect(model().attribute("assignments", emptyList<Assignment>()))
+            this.mvc.perform(
+                get("/assignment/archived")
+                    .with(SecurityMockMvcRequestPostProcessors.user(user))
+            )
+                .andExpect(status().isOk())
+                .andExpect(model().hasNoErrors())
+                .andExpect(model().attribute("assignments", emptyList<Assignment>()))
 
             // archive assignment
-            this.mvc.perform(post("/assignment/archive/dummyAssignment4")
-                    .with(SecurityMockMvcRequestPostProcessors.user(user)))
-                    .andExpect(status().isFound)
-                    .andExpect(header().string("Location", "/assignment/my"))
-                    .andExpect(flash().attribute("message","Assignment was archived. You can now find it in the Archived assignments page"))
+            this.mvc.perform(
+                post("/assignment/archive/dummyAssignment4")
+                    .with(SecurityMockMvcRequestPostProcessors.user(user))
+            )
+                .andExpect(status().isFound)
+                .andExpect(header().string("Location", "/assignment/my"))
+                .andExpect(
+                    flash().attribute(
+                        "message",
+                        "Assignment was archived. You can now find it in the Archived assignments page"
+                    )
+                )
 
             // list archived assignments should now return 1 assignment
-            val mvcResult = this.mvc.perform(get("/assignment/archived")
-                    .with(SecurityMockMvcRequestPostProcessors.user(user)))
-                    .andExpect(status().isOk())
-                    .andExpect(model().hasNoErrors())
-                    .andExpect(model().attribute("assignments", hasSize<Assignment>(1)))
-                    .andReturn()
+            val mvcResult = this.mvc.perform(
+                get("/assignment/archived")
+                    .with(SecurityMockMvcRequestPostProcessors.user(user))
+            )
+                .andExpect(status().isOk())
+                .andExpect(model().hasNoErrors())
+                .andExpect(model().attribute("assignments", hasSize<Assignment>(1)))
+                .andReturn()
 
             @Suppress("UNCHECKED_CAST")
             val assignments = mvcResult.modelAndView.modelMap["assignments"] as List<Assignment>
@@ -659,27 +748,28 @@ class AssignmentControllerTests {
 
         } finally {
             // cleanup assignment files
-            if (File(assignmentsRootLocation,"dummyAssignment4").exists()) {
-                File(assignmentsRootLocation,"dummyAssignment4").deleteRecursively()
+            if (File(assignmentsRootLocation, "dummyAssignment4").exists()) {
+                File(assignmentsRootLocation, "dummyAssignment4").deleteRecursively()
             }
         }
     }
 
     // refreshAssignmentGitRepository
     @Test
-    @WithMockUser("teacher1",roles=["TEACHER"])
+    @WithMockUser("teacher1", roles = ["TEACHER"])
     @DirtiesContext
     fun test_14_refreshAssignmentGitRepository() {
 
         try {
-            testsHelper.createAndSetupAssignment(mvc, assignmentRepository, "dummyAssignment1", "Dummy Assignment",
-                    "org.dummy",
-                    "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git"
+            testsHelper.createAndSetupAssignment(
+                mvc, assignmentRepository, "dummyAssignment1", "Dummy Assignment",
+                "org.dummy",
+                "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git"
             )
 
             val contentString = this.mvc.perform(post("/assignment/refresh-git/dummyAssignment1"))
-                    .andExpect(status().isOk)
-                    .andReturn().response.contentAsString
+                .andExpect(status().isOk)
+                .andReturn().response.contentAsString
 
             val contentJSON = JSONObject(contentString)
             assertEquals(true, contentJSON.getBoolean("success"))
@@ -687,8 +777,8 @@ class AssignmentControllerTests {
         } finally {
 
             // cleanup assignment files
-            if (File(assignmentsRootLocation,"dummyAssignment1").exists()) {
-                File(assignmentsRootLocation,"dummyAssignment1").deleteRecursively()
+            if (File(assignmentsRootLocation, "dummyAssignment1").exists()) {
+                File(assignmentsRootLocation, "dummyAssignment1").deleteRecursively()
             }
         }
     }
@@ -700,30 +790,39 @@ class AssignmentControllerTests {
         val assignmentId = testsHelper.defaultAssignmentId
 
         // create assignment
-        val assignment01 = Assignment(id = assignmentId, name = "Test Project (for automatic tests)",
-                packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = testsHelper.TEACHER_1.username,
-                submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
-                gitRepositoryFolder = "testJavaProj")
+        val assignment01 = Assignment(
+            id = assignmentId, name = "Test Project (for automatic tests)",
+            packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = testsHelper.TEACHER_1.username,
+            submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
+            gitRepositoryFolder = "testJavaProj"
+        )
         assignmentRepository.save(assignment01)
 
         // make several submissions for that assignment
         testsHelper.makeSeveralSubmissions(
-                listOf("projectInvalidStructure1",
-                        "projectInvalidStructure1",
-                        "projectInvalidStructure1",
-                        "projectInvalidStructure1"), mvc)
+            listOf(
+                "projectInvalidStructure1",
+                "projectInvalidStructure1",
+                "projectInvalidStructure1",
+                "projectInvalidStructure1"
+            ), mvc
+        )
 
         // mark all as final
-        this.mvc.perform(post("/assignment/markAllAsFinal/${assignmentId}")
-                .with(user(testsHelper.TEACHER_1)))
-                .andExpect(status().isFound())
-                .andExpect(header().string("Location", "/report/${assignmentId}"))
+        this.mvc.perform(
+            post("/assignment/markAllAsFinal/${assignmentId}")
+                .with(user(testsHelper.TEACHER_1))
+        )
+            .andExpect(status().isFound())
+            .andExpect(header().string("Location", "/report/${assignmentId}"))
 
         // check results
-        val reportResult = this.mvc.perform(get("/report/testJavaProj")
-                .with(user(testsHelper.TEACHER_1)))
-                .andExpect(status().isOk())
-                .andReturn()
+        val reportResult = this.mvc.perform(
+            get("/report/testJavaProj")
+                .with(user(testsHelper.TEACHER_1))
+        )
+            .andExpect(status().isOk())
+            .andReturn()
 
         @Suppress("UNCHECKED_CAST")
         val report = reportResult.modelAndView.modelMap["submissions"] as List<SubmissionInfo>
@@ -734,7 +833,7 @@ class AssignmentControllerTests {
     }
 
     @Test
-    @WithMockUser("teacher1",roles=["TEACHER"])
+    @WithMockUser("teacher1", roles = ["TEACHER"])
     @DirtiesContext
     fun test_16_createNewAssignmentWithTags() {
 
@@ -744,7 +843,8 @@ class AssignmentControllerTests {
         assertEquals(0, globalTags.size)
 
         // post form
-        this.mvc.perform(post("/assignment/new")
+        this.mvc.perform(
+            post("/assignment/new")
                 .param("assignmentId", "dummyAssignmentTags")
                 .param("assignmentName", "Dummy Assignment")
                 .param("assignmentPackage", "org.dummy")
@@ -753,13 +853,13 @@ class AssignmentControllerTests {
                 .param("gitRepositoryUrl", "git@github.com:palves-ulht/sampleJavaAssignment.git")
                 .param("assignmentTags", "sample,test,simple")
         )
-                .andExpect(status().isFound())
-                .andExpect(header().string("Location", "/assignment/setup-git/dummyAssignmentTags"))
+            .andExpect(status().isFound())
+            .andExpect(header().string("Location", "/assignment/setup-git/dummyAssignmentTags"))
 
         // get assignment detail
         val mvcResult = this.mvc.perform(get("/assignment/info/dummyAssignmentTags"))
-                .andExpect(status().isOk)
-                .andReturn()
+            .andExpect(status().isOk)
+            .andReturn()
 
         @Suppress("UNCHECKED_CAST")
         val assignment = mvcResult.modelAndView.modelMap["assignment"] as Assignment
@@ -779,13 +879,16 @@ class AssignmentControllerTests {
     fun test_17_updateAssignmentWithTags() {
 
         try {
-            testsHelper.createAndSetupAssignment(mvc, assignmentRepository, "dummyAssignmentTags", "Dummy Assignment",
-                    "org.dummy",
-                    "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git",
-                    tags = "sample,test,simple")  // <<<<
+            testsHelper.createAndSetupAssignment(
+                mvc, assignmentRepository, "dummyAssignmentTags", "Dummy Assignment",
+                "org.dummy",
+                "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git",
+                tags = "sample,test,simple"
+            )  // <<<<
 
             // add one tag and remove 2 tags
-            mvc.perform(post("/assignment/new")
+            mvc.perform(
+                post("/assignment/new")
                     .param("assignmentId", "dummyAssignmentTags")
                     .param("assignmentName", "Dummy Assignment")
                     .param("assignmentPackage", "org.dummy")
@@ -795,13 +898,13 @@ class AssignmentControllerTests {
                     .param("editMode", "true")
                     .param("assignmentTags", "sample,complex") // <<<<
             )
-                    .andExpect(status().isFound())
-                    .andExpect(header().string("Location", "/assignment/info/dummyAssignmentTags"))
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", "/assignment/info/dummyAssignmentTags"))
 
             // get assignment detail
             val mvcResult = this.mvc.perform(get("/assignment/info/dummyAssignmentTags"))
-                    .andExpect(status().isOk)
-                    .andReturn()
+                .andExpect(status().isOk)
+                .andReturn()
 
             @Suppress("UNCHECKED_CAST")
             val assignment = mvcResult.modelAndView.modelMap["assignment"] as Assignment
@@ -825,18 +928,20 @@ class AssignmentControllerTests {
     }
 
     @Test
-    @WithMockUser("teacher1",roles=["TEACHER"])
+    @WithMockUser("teacher1", roles = ["TEACHER"])
     @DirtiesContext
     fun test_18_createNewAssignmentAndInfoWithTestMethods() {
 
         try {
-            testsHelper.createAndSetupAssignment(mvc, assignmentRepository, "dummyAssignmentTests", "Dummy Assignment",
-                    "org.dummy",
-                    "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git")
+            testsHelper.createAndSetupAssignment(
+                mvc, assignmentRepository, "dummyAssignmentTests", "Dummy Assignment",
+                "org.dummy",
+                "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git"
+            )
 
             val mvcResult = this.mvc.perform(get("/assignment/info/dummyAssignmentTests"))
-                    .andExpect(status().isOk)
-                    .andReturn()
+                .andExpect(status().isOk)
+                .andReturn()
 
             @Suppress("UNCHECKED_CAST")
             val testMethods = mvcResult.modelAndView.modelMap["tests"] as List<AssignmentTestMethod>
@@ -859,61 +964,413 @@ class AssignmentControllerTests {
         val user = User("p1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
 
         try {// list assigments should return empty
-            this.mvc.perform(get("/assignment/my")
-                    .with(SecurityMockMvcRequestPostProcessors.user(user)))
-                    .andExpect(status().isOk())
-                    .andExpect(model().hasNoErrors())
-                    .andExpect(model().attribute("assignments", emptyList<Assignment>()))
+            this.mvc.perform(
+                get("/assignment/my")
+                    .with(SecurityMockMvcRequestPostProcessors.user(user))
+            )
+                .andExpect(status().isOk())
+                .andExpect(model().hasNoErrors())
+                .andExpect(model().attribute("assignments", emptyList<Assignment>()))
 
             // create two assignments
-            testsHelper.createAndSetupAssignment(mvc, assignmentRepository, "dummyAssignment4", "Dummy Assignment",
-                    "org.dummy",
-                    "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git",
-                    teacherId = "p1", activateRightAfterCloning = false, tags = "sample,test")
+            testsHelper.createAndSetupAssignment(
+                mvc, assignmentRepository, "dummyAssignment4", "Dummy Assignment",
+                "org.dummy",
+                "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git",
+                teacherId = "p1", activateRightAfterCloning = false, tags = "sample,test"
+            )
 
-            testsHelper.createAndSetupAssignment(mvc, assignmentRepository, "dummyAssignment5", "Dummy Assignment",
-                    "org.dummy",
-                    "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git",
-                    teacherId = "p1", activateRightAfterCloning = false, tags = "other,test")
+            testsHelper.createAndSetupAssignment(
+                mvc, assignmentRepository, "dummyAssignment5", "Dummy Assignment",
+                "org.dummy",
+                "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git",
+                teacherId = "p1", activateRightAfterCloning = false, tags = "other,test"
+            )
 
             // list assignments filtered by tag "sample" should return one assignment
-            this.mvc.perform(get("/assignment/my?tags=sample")
-                    .with(SecurityMockMvcRequestPostProcessors.user(user)))
-                    .andExpect(status().isOk())
-                    .andExpect(model().hasNoErrors())
-                    .andExpect(model().attribute("assignments", hasSize<Assignment>(1)))
+            this.mvc.perform(
+                get("/assignment/my?tags=sample")
+                    .with(SecurityMockMvcRequestPostProcessors.user(user))
+            )
+                .andExpect(status().isOk())
+                .andExpect(model().hasNoErrors())
+                .andExpect(model().attribute("assignments", hasSize<Assignment>(1)))
 
             // list assignments filtered by tag "notexistent" should return zero assignments
-            this.mvc.perform(get("/assignment/my?tags=notexistent")
-                    .with(SecurityMockMvcRequestPostProcessors.user(user)))
-                    .andExpect(status().isOk())
-                    .andExpect(model().hasNoErrors())
-                    .andExpect(model().attribute("assignments", hasSize<Assignment>(0)))
+            this.mvc.perform(
+                get("/assignment/my?tags=notexistent")
+                    .with(SecurityMockMvcRequestPostProcessors.user(user))
+            )
+                .andExpect(status().isOk())
+                .andExpect(model().hasNoErrors())
+                .andExpect(model().attribute("assignments", hasSize<Assignment>(0)))
 
             // list assignments filtered by tag "test" should return two assignments
-            this.mvc.perform(get("/assignment/my?tags=test")
-                    .with(SecurityMockMvcRequestPostProcessors.user(user)))
-                    .andExpect(status().isOk())
-                    .andExpect(model().hasNoErrors())
-                    .andExpect(model().attribute("assignments", hasSize<Assignment>(2)))
+            this.mvc.perform(
+                get("/assignment/my?tags=test")
+                    .with(SecurityMockMvcRequestPostProcessors.user(user))
+            )
+                .andExpect(status().isOk())
+                .andExpect(model().hasNoErrors())
+                .andExpect(model().attribute("assignments", hasSize<Assignment>(2)))
 
             // list assignments filtered by tag "sample,other" should return zero assignments
-            this.mvc.perform(get("/assignment/my?tags=sample,other")
-                    .with(SecurityMockMvcRequestPostProcessors.user(user)))
-                    .andExpect(status().isOk())
-                    .andExpect(model().hasNoErrors())
-                    .andExpect(model().attribute("assignments", hasSize<Assignment>(0)))
+            this.mvc.perform(
+                get("/assignment/my?tags=sample,other")
+                    .with(SecurityMockMvcRequestPostProcessors.user(user))
+            )
+                .andExpect(status().isOk())
+                .andExpect(model().hasNoErrors())
+                .andExpect(model().attribute("assignments", hasSize<Assignment>(0)))
 
         } finally {
             // cleanup assignment files
-            if (File(assignmentsRootLocation,"dummyAssignment4").exists()) {
-                File(assignmentsRootLocation,"dummyAssignment4").deleteRecursively()
+            if (File(assignmentsRootLocation, "dummyAssignment4").exists()) {
+                File(assignmentsRootLocation, "dummyAssignment4").deleteRecursively()
             }
 
-            if (File(assignmentsRootLocation,"dummyAssignment5").exists()) {
-                File(assignmentsRootLocation,"dummyAssignment5").deleteRecursively()
+            if (File(assignmentsRootLocation, "dummyAssignment5").exists()) {
+                File(assignmentsRootLocation, "dummyAssignment5").deleteRecursively()
             }
         }
+    }
+
+    @Test
+    @DirtiesContext
+    fun test_20_exportAssignment() {
+
+        try {
+            testsHelper.createAndSetupAssignment(
+                mvc, assignmentRepository, "dummyAssignment1", "Dummy Assignment",
+                "org.dummy",
+                "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git",
+                dueDate = "2022-10-31T01:30:00.000-00:00"
+            )
+
+
+            val result = this.mvc.perform(
+                get("/assignment/export/dummyAssignment1?includeSubmissions=false")
+                    .with(user(TEACHER_1)))
+                .andExpect(status().isFound)
+                .andReturn()
+
+            val redirectLocation = result.response.getHeader("Location")
+            assertNotNull(redirectLocation)
+
+            val result2 = this.mvc.perform(
+                get(redirectLocation)
+                    .with(user(TEACHER_1))
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE))
+                .andExpect(
+                    header().string(
+                        "Content-Disposition",
+                        "attachment; filename=dummyAssignment1_${Date().formatJustDate()}.dp"))
+                .andExpect(status().isOk)
+                .andReturn()
+
+            val downloadedFileContent = result2.response.contentAsByteArray
+            val downloadedZipFile = File("result.zip")
+            val downloadedJSONFileName = File("result/assignment.json")
+            FileUtils.writeByteArrayToFile(downloadedZipFile, downloadedFileContent)
+            val downloadedFileAsZipObject = ZipFile(downloadedZipFile)
+            downloadedFileAsZipObject.extractFile("assignment.json", "result")
+
+            val mapper = ObjectMapper().registerModule(KotlinModule())
+            val node = mapper.readTree(downloadedJSONFileName)
+            assertEquals("dummyAssignment1", node.at("/id").asText())
+            assertEquals("Dummy Assignment", node.at("/name").asText())
+            assertEquals("org.dummy", node.at("/packageName").asText())
+            assertEquals("2022-10-31 01:30:00", node.at("/dueDate").asText())
+            assertEquals("UPLOAD", node.at("/submissionMethod").asText())
+            assertEquals("JAVA", node.at("/language").asText())
+            assertEquals("SHOW_PROGRESS", node.at("/hiddenTestsVisibility").asText())
+            assertFalse(node.at("/acceptsStudentTests").asBoolean())
+            assertEquals("git@github.com:palves-ulht/sampleJavaAssignment.git", node.at("/gitRepositoryUrl").asText())
+            assertEquals(TestsHelper.sampleJavaAssignmentPublicKey, node.at("/gitRepositoryPubKey").asText())
+            assertEquals(TestsHelper.sampleJavaAssignmentPrivateKey, node.at("/gitRepositoryPrivKey").asText())
+            assertEquals("dummyAssignment1", node.at("/gitRepositoryFolder").asText())
+
+            downloadedZipFile.delete()
+            downloadedJSONFileName.delete()
+
+        } finally {
+
+            // cleanup assignment files
+            if (File(assignmentsRootLocation, "dummyAssignment1").exists()) {
+                File(assignmentsRootLocation, "dummyAssignment1").deleteRecursively()
+            }
+        }
+    }
+
+    @Test
+    @DirtiesContext
+    fun test_21_importAssignmentOnly() {
+
+        try {
+            val fileContent = File("src/test/sampleExports/export-only-assignment.dp").readBytes()
+            val multipartFile =
+                MockMultipartFile("file", "export-only-assignment.dp", "application/zip", fileContent)
+
+            mvc.perform(
+                MockMvcRequestBuilders.fileUpload("/assignment/import")
+                    .file(multipartFile)
+                    .with(user(TEACHER_1))
+            )
+                .andExpect(status().isFound())
+                .andExpect(flash().attribute("message", "Imported successfully dummyAssignment1. Submissions were not imported"))
+                .andExpect(header().string("Location", "/assignment/info/dummyAssignment1"))
+
+
+            // let's check if it was well imported
+            val mvcResult = this.mvc.perform(get("/assignment/info/dummyAssignment1"))
+                .andExpect(status().isOk)
+                .andReturn()
+
+            val assignment = mvcResult.modelAndView.model["assignment"] as Assignment
+            assertEquals("dummyAssignment1", assignment.id)
+            assertEquals("teacher1", assignment.ownerUserId)
+            mvcResult.modelAndView.model["tests"]
+            mvcResult.modelAndView.model["report"]
+
+        } finally {
+            // remove the assignments files created during the test
+            File(assignmentsRootLocation, "dummyAssignment1").deleteRecursively()
+        }
+    }
+
+    @Test
+    @DirtiesContext
+    fun test_22_exportAssignmentAndSubmissions() {
+
+        val assignment01 = Assignment(
+            id = "testJavaProj", name = "Test Project (for automatic tests)",
+            packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
+            submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
+            gitRepositoryFolder = "testJavaProj"
+        )
+        assignmentRepository.save(assignment01)
+
+        testsHelper.makeSeveralSubmissions(
+            listOf(
+                "projectInvalidStructure1",
+                "projectInvalidStructure1",
+                "projectOK",
+                "projectInvalidStructure1"
+            ), mvc
+        )
+
+        val result = this.mvc.perform(
+            get("/assignment/export/testJavaProj?includeSubmissions=true")
+                .with(user(TEACHER_1)))
+            .andExpect(status().isFound)
+            .andReturn()
+
+        val redirectLocation = result.response.getHeader("Location")
+        assertNotNull(redirectLocation)
+
+        val result2 = this.mvc.perform(
+            get(redirectLocation)
+                .with(user(TEACHER_1))
+                .contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE))
+            .andExpect(
+                header().string(
+                    "Content-Disposition",
+                    "attachment; filename=testJavaProj_${Date().formatJustDate()}.dp"))
+            .andExpect(status().isOk)
+            .andReturn()
+
+        val downloadedFileContent = result2.response.contentAsByteArray
+        val downloadedZipFile = File("result.zip")
+        val downloadedJSONFileName = File("result/submissions.json")
+        FileUtils.writeByteArrayToFile(downloadedZipFile, downloadedFileContent)
+        val downloadedFileAsZipObject = ZipFile(downloadedZipFile)
+        downloadedFileAsZipObject.extractFile("submissions.json", "result")
+
+        val mapper = ObjectMapper().registerModule(KotlinModule())
+        val node = mapper.readTree(downloadedJSONFileName)
+        assertEquals("testJavaProj", node.at("/0/assignmentId").asText())
+        assertEquals("student1", node.at("/0/submitterUserId").asText())
+        assertEquals("V", node.at("/0/status").asText())
+        assertTrue(node.at("/0/buildReport").isNull)
+        assertEquals("student1", node.at("/0/authors/0/userId").asText())
+        assertEquals("PS", node.at("/0/submissionReport/0/key").asText())
+        assertEquals("NOK", node.at("/0/submissionReport/0/value").asText())
+
+        assertEquals("student2", node.at("/1/submitterUserId").asText())
+        assertEquals("student2", node.at("/1/authors/0/userId").asText())
+
+        assertFalse(node.at("/2/buildReport").isNull)
+        assertEquals("PS", node.at("/2/submissionReport/0/key").asText())
+        assertEquals("OK", node.at("/2/submissionReport/0/value").asText())
+        assertEquals("C", node.at("/2/submissionReport/1/key").asText())
+        assertEquals("OK", node.at("/2/submissionReport/1/value").asText())
+        assertEquals("TT", node.at("/2/submissionReport/3/key").asText())
+        assertEquals("OK", node.at("/2/submissionReport/3/value").asText())
+        assertEquals(2, node.at("/2/submissionReport/3/progress").asInt())
+        assertEquals(2, node.at("/2/submissionReport/3/goal").asInt())
+        assertEquals("TEST-org.dropProject.sampleAssignments.testProj.TestTeacherHiddenProject.xml",
+                     node.at("/2/junitReports/0/filename").asText())
+        if (!node.at("/2/junitReports/0/xmlReport").asText().contains("<testsuite tests=\"1\" failures=\"0\"")) {
+            fail("invalid xmlReport")
+        }
+        assertEquals("TEST-org.dropProject.sampleAssignments.testProj.TestTeacherProject.xml",
+            node.at("/2/junitReports/1/filename").asText())
+        if (!node.at("/2/junitReports/1/xmlReport").asText().contains("<testsuite tests=\"2\" failures=\"0\"")) {
+            fail("invalid xmlReport")
+        }
+
+        assertEquals("student5", node.at("/3/authors/0/userId").asText())
+        assertEquals("student4", node.at("/3/authors/1/userId").asText())
+
+        val fileHeaders = downloadedFileAsZipObject.fileHeaders as List<FileHeader>
+        assertEquals(9, fileHeaders.size)
+        assertThat(fileHeaders[3].fileName, matchesPattern("original/testJavaProj/[0-9][0-9]-[0-9][0-9]/"))
+        for (i in 4..7) {
+            assertTrue(fileHeaders[i].fileName.endsWith(".zip"))
+        }
+
+        downloadedZipFile.delete()
+        downloadedJSONFileName.delete()
+
+    }
+
+    @Test
+    @DirtiesContext
+    fun test_23_importAssignmentAndSubmissions() {
+
+        try {
+            val fileContent = File("src/test/sampleExports/export-assignment-and-submissions.dp").readBytes()
+            val multipartFile =
+                MockMultipartFile("file", "export-assignment-and-submissions.dp", "application/zip", fileContent)
+
+            mvc.perform(
+                MockMvcRequestBuilders.fileUpload("/assignment/import")
+                    .file(multipartFile)
+                    .with(user(TEACHER_1))
+            )
+                .andExpect(status().isFound)
+                .andExpect(flash().attribute("message", "Imported successfully dummyAssignment1 and all its submissions"))
+                .andExpect(header().string("Location", "/report/dummyAssignment1"))
+
+            val reportResult = this.mvc.perform(get("/report/dummyAssignment1")
+                .with(user(TEACHER_1)))
+                .andExpect(status().isOk())
+                .andReturn()
+
+            @Suppress("UNCHECKED_CAST")
+            val report = reportResult.modelAndView.modelMap["submissions"] as List<SubmissionInfo>
+            assertEquals(4, report.size)
+
+        } finally {
+
+            // cleanup assignment files
+            if (File(assignmentsRootLocation, "dummyAssignment1").exists()) {
+                File(assignmentsRootLocation, "dummyAssignment1").deleteRecursively()
+            }
+        }
+
+
+    }
+
+    @Test
+    @DirtiesContext
+    fun test_24_exportAssignmentAndGitSubmissions() {
+
+        val assignment01 = Assignment(
+            id = "testJavaProj", name = "Test Project (for automatic tests)",
+            packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
+            submissionMethod = SubmissionMethod.GIT, active = true, gitRepositoryUrl = "git://dummyRepo",
+            gitRepositoryFolder = "testJavaProj"
+        )
+        assignmentRepository.save(assignment01)
+
+        testsHelper.connectToGitRepositoryAndBuildReport(mvc, gitSubmissionRepository, "testJavaProj",
+            "git@github.com:palves-ulht/sampleJavaSubmission.git", "student1")
+
+        val result = this.mvc.perform(
+            get("/assignment/export/testJavaProj?includeSubmissions=true")
+                .with(user(TEACHER_1)))
+            .andExpect(status().isFound)
+            .andReturn()
+
+        val redirectLocation = result.response.getHeader("Location")
+        assertNotNull(redirectLocation)
+
+        val result2 = this.mvc.perform(
+            get(redirectLocation)
+                .with(user(TEACHER_1))
+                .contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE))
+            .andExpect(
+                header().string(
+                    "Content-Disposition",
+                    "attachment; filename=testJavaProj_${Date().formatJustDate()}.dp"))
+            .andExpect(status().isOk)
+            .andReturn()
+
+        val downloadedFileContent = result2.response.contentAsByteArray
+        val downloadedZipFile = File("result.zip")
+        val downloadedJSONFileName = File("result/git-submissions.json")
+        FileUtils.writeByteArrayToFile(downloadedZipFile, downloadedFileContent)
+        val downloadedFileAsZipObject = ZipFile(downloadedZipFile)
+        downloadedFileAsZipObject.extractFile("git-submissions.json", "result")
+
+        val mapper = ObjectMapper().registerModule(KotlinModule())
+        val node = mapper.readTree(downloadedJSONFileName)
+        assertEquals("testJavaProj", node.at("/0/assignmentId").asText())
+        assertEquals("student1", node.at("/0/submitterUserId").asText())
+        assertEquals("2019-02-26 17:26:53", node.at("/0/lastCommitDate").asText())
+        assertEquals("git@github.com:palves-ulht/sampleJavaSubmission.git", node.at("/0/gitRepositoryUrl").asText())
+        assertEquals("student1", node.at("/0/authors/0/userId").asText())
+        assertEquals("student2", node.at("/0/authors/1/userId").asText())
+
+        val fileHeaders = downloadedFileAsZipObject.fileHeaders as List<FileHeader>
+        assertEquals(41, fileHeaders.size)
+        // use a regex because the timestamp (mutable) is part of the name
+//        assertThat(fileHeaders[3].fileName, matchesPattern("original/testJavaProj/[0-9][0-9]-[0-9][0-9]/"))
+//        assertThat(fileHeaders[4].fileName, matchesPattern("original/testJavaProj/[0-9][0-9]-[0-9][0-9]/[0-9]+-sampleJavaSubmission/"))
+
+        downloadedZipFile.delete()
+        downloadedJSONFileName.delete()
+    }
+
+    @Test
+    @DirtiesContext
+    fun test_25_importAssignmentAndGitSubmissions() {
+
+        try {
+            val fileContent = File("src/test/sampleExports/export-assignment-and-git-submissions.dp").readBytes()
+            val multipartFile =
+                MockMultipartFile("file", "export-assignment-and-git-submissions.dp", "application/zip", fileContent)
+
+            mvc.perform(
+                MockMvcRequestBuilders.fileUpload("/assignment/import")
+                    .file(multipartFile)
+                    .with(user(TEACHER_1))
+            )
+                .andExpect(status().isFound)
+                .andExpect(flash().attribute("message", "Imported successfully dummyAssignment1 and all its submissions"))
+                .andExpect(header().string("Location", "/report/dummyAssignment1"))
+
+            val reportResult = this.mvc.perform(get("/report/dummyAssignment1")
+                .with(user(TEACHER_1)))
+                .andExpect(status().isOk())
+                .andReturn()
+
+            @Suppress("UNCHECKED_CAST")
+            val report = reportResult.modelAndView.modelMap["submissions"] as List<SubmissionInfo>
+            assertEquals(4, report.size)
+
+            // TODO check git submission
+
+        } finally {
+
+            // cleanup assignment files
+            if (File(assignmentsRootLocation, "dummyAssignment1").exists()) {
+                File(assignmentsRootLocation, "dummyAssignment1").deleteRecursively()
+            }
+        }
+
+
     }
 
 }

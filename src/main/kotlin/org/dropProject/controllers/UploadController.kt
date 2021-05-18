@@ -88,7 +88,8 @@ class UploadController(
         val gitClient: GitClient,
         val gitSubmissionService: GitSubmissionService,
         val submissionService: SubmissionService,
-        val zipService: ZipService
+        val zipService: ZipService,
+        val projectGroupService: ProjectGroupService
         ) {
 
     @Value("\${storage.rootLocation}/git")
@@ -305,7 +306,7 @@ class UploadController(
                 throw InvalidProjectStructureException("O utilizador que está a submeter tem que ser um dos elementos do grupo.")
             }
 
-            val group = getOrCreateProjectGroup(authors)
+            val group = projectGroupService.getOrCreateProjectGroup(authors)
 
             // verify that there is not another submission with the Submitted status
             val existingSubmissions = submissionRepository
@@ -331,31 +332,6 @@ class UploadController(
         }
 
         return ResponseEntity("{\"error\": \"Não foi possível processar o ficheiro\"}", HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-
-    /**
-     * Searches for a [ProjectGroup] that has a specific set of Authors. If no ProjectGroup is found,
-     * creates a new one.
-     *
-     * @param authors is a List of [AuthorDetails]
-     *
-     * @return a ProjectGroup
-     */
-    private fun getOrCreateProjectGroup(authors: List<AuthorDetails>): ProjectGroup {
-        val group = searchExistingProjectGroupOrCreateNew(authors)
-        if (group.authors.isEmpty()) { // new group
-            projectGroupRepository.save(group)
-
-            for (authorDetails in authors) {
-                val authorDB = Author(name = authorDetails.name, userId = authorDetails.number)
-                authorDB.group = group
-                authorRepository.save(authorDB)
-            }
-            LOG.info("New group created with students ${authors.joinToString(separator = "|")}")
-        } else {
-            LOG.info("Group already exists for students ${authors.joinToString(separator = "|")}")
-        }
-        return group
     }
 
     /**
@@ -435,26 +411,6 @@ class UploadController(
         }
 
         return erros
-    }
-
-    /**
-     * Searches for a [ProjectGroup] object that contains the authors described by [authors]. If none is found, then a
-     * new ProjectGroup is created.
-     *
-     * @param authors is a List of [AuthorDetail]s.
-     *
-     * @return a [ProjectGroup]
-     */
-    private fun searchExistingProjectGroupOrCreateNew(authors: List<AuthorDetails>): ProjectGroup {
-        val groups = projectGroupRepository.getGroupsForAuthor(authors.first().number)
-        for (group in groups) {
-            if (group.authors.size == authors.size &&
-                    group.authors.map { it -> it.userId }.containsAll(authors.map { it -> it.number })) {
-                // it's the same group
-                return group
-            }
-        }
-        return ProjectGroup()
     }
 
     /**
@@ -641,7 +597,7 @@ class UploadController(
 
             } else if (submission.gitSubmissionId != null) {   // submission through git
                 val gitSubmission = gitSubmissionRepository.findById(submission.gitSubmissionId).orElse(null) ?:
-                                        throw SubmissionNotFoundException(submission.gitSubmissionId)
+                                        throw SubmissionNotFoundException(submission.gitSubmissionId!!)
 
                 File(gitSubmissionsRootLocation, gitSubmission.getFolderRelativeToStorageRoot())
 
@@ -849,7 +805,7 @@ class UploadController(
                     throw InvalidProjectStructureException("O utilizador que está a submeter tem que ser um dos elementos do grupo.")
                 }
 
-                val group = getOrCreateProjectGroup(authors)
+                val group = projectGroupService.getOrCreateProjectGroup(authors)
                 gitSubmission.group = group
 
                 val lastCommitInfo = gitClient.getLastCommitInfo(git)

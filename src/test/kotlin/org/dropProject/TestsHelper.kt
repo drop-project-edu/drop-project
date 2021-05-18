@@ -142,7 +142,8 @@ class TestsHelper {
                                  teacherId: String = "teacher1", language: String = "JAVA",
                                  activateRightAfterCloning: Boolean = false,
                                  hiddenTestsVisibility: String = "SHOW_PROGRESS",
-                                 tags: String? = null) {
+                                 tags: String? = null,
+                                 dueDate: String? = null) {
 
         val user = User(teacherId, "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
 
@@ -159,6 +160,7 @@ class TestsHelper {
                 .param("acl", acl)
                 .param("hiddenTestsVisibility", hiddenTestsVisibility)
                 .param("assignmentTags", tags)
+                .param("dueDate", dueDate)
         )
                 .andExpect(MockMvcResultMatchers.status().isFound())
                 .andExpect(MockMvcResultMatchers.header().string("Location", "/assignment/setup-git/${assignmentId}"))
@@ -273,7 +275,6 @@ class TestsHelper {
         val contentString = mvc.perform(MockMvcRequestBuilders.fileUpload("/upload")
                 .file(multipartFile)
                 .param("assignmentId", assignmentId)
-                .param("async", "false")
                 .with(SecurityMockMvcRequestPostProcessors.user(uploader)))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andReturn().response.contentAsString

@@ -19,25 +19,41 @@
  */
 package org.dropProject.controllers
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.KotlinModule
+import org.apache.commons.io.FileUtils
+import org.dropProject.PendingTasks
 import org.dropProject.dao.*
+import org.dropProject.data.*
 import org.dropProject.extensions.realName
 import org.dropProject.forms.AssignmentForm
+import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.*
 import org.dropProject.services.*
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.RefNotAdvertisedException
+import org.hibernate.Hibernate
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.CacheManager
+import org.springframework.core.io.FileSystemResource
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.ui.ModelMap
 import org.springframework.validation.BindingResult
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.servlet.mvc.support.RedirectAttributes
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import java.security.Principal
+import java.time.ZoneId
+import java.util.*
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
 import javax.validation.Valid
 
 /**
@@ -47,6 +63,7 @@ import javax.validation.Valid
 @Controller
 @RequestMapping("/assignment")
 class AssignmentController(
+        val authorRepository: AuthorRepository,
         val assignmentRepository: AssignmentRepository,
         val assignmentReportRepository: AssignmentReportRepository,
         val assignmentTagRepository: AssignmentTagRepository,
@@ -54,15 +71,30 @@ class AssignmentController(
         val assigneeRepository: AssigneeRepository,
         val assignmentACLRepository: AssignmentACLRepository,
         val submissionRepository: SubmissionRepository,
+        val submissionReportRepository: SubmissionReportRepository,
         val gitSubmissionRepository: GitSubmissionRepository,
+        val buildReportRepository: BuildReportRepository,
+        val jUnitReportRepository: JUnitReportRepository,
         val gitClient: GitClient,
         val assignmentTeacherFiles: AssignmentTeacherFiles,
         val submissionService: SubmissionService,
         val assignmentService: AssignmentService,
-        val cacheManager: CacheManager) {
+        val zipService: ZipService,
+        val cacheManager: CacheManager,
+        val projectGroupService: ProjectGroupService,
+        val pendingTasks: PendingTasks) {
 
     @Value("\${assignments.rootLocation}")
     val assignmentsRootLocation: String = ""
+
+    @Value("\${mavenizedProjects.rootLocation}")
+    val mavenizedProjectsRootLocation: String = ""
+
+    @Value("\${storage.rootLocation}/upload")
+    val uploadSubmissionsRootLocation: String = "submissions/upload"
+
+    @Value("\${storage.rootLocation}/git")
+    val gitSubmissionsRootLocation: String = "submissions/git"
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
@@ -91,6 +123,7 @@ class AssignmentController(
      * @return is a String with the name of the relevant View
      */
     @RequestMapping(value = ["/new"], method = [(RequestMethod.POST)])
+    @Transactional  // because of assignment.tags
     fun createOrEditAssignment(@Valid @ModelAttribute("assignmentForm") assignmentForm: AssignmentForm,
                                bindingResult: BindingResult,
                                redirectAttributes: RedirectAttributes,
@@ -252,7 +285,8 @@ class AssignmentController(
     private fun createAssignmentBasedOnForm(assignmentForm: AssignmentForm, principal: Principal): Assignment {
         val newAssignment = Assignment(id = assignmentForm.assignmentId!!, name = assignmentForm.assignmentName!!,
                 packageName = assignmentForm.assignmentPackage, language = assignmentForm.language!!,
-                dueDate = assignmentForm.dueDate, acceptsStudentTests = assignmentForm.acceptsStudentTests,
+                dueDate = if (assignmentForm.dueDate != null) java.sql.Timestamp.valueOf(assignmentForm.dueDate) else null,
+                acceptsStudentTests = assignmentForm.acceptsStudentTests,
                 minStudentTests = assignmentForm.minStudentTests,
                 calculateStudentTestsCoverage = assignmentForm.calculateStudentTestsCoverage,
                 cooloffPeriod = assignmentForm.cooloffPeriod,
@@ -281,9 +315,11 @@ class AssignmentController(
      * @return a String with the name of the relevant View
      */
     @RequestMapping(value = ["/info/{assignmentId}"], method = [(RequestMethod.GET)])
+    @Transactional(readOnly = true)  // because of assignment.tags forced loading
     fun getAssignmentDetail(@PathVariable assignmentId: String, model: ModelMap, principal: Principal): String {
 
         val assignment = assignmentRepository.getOne(assignmentId)
+        Hibernate.initialize(assignment.tags)
         val assignees = assigneeRepository.findByAssignmentIdOrderByAuthorUserId(assignmentId)
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
         val assignmentReports = assignmentReportRepository.findByAssignmentId(assignmentId)
@@ -326,6 +362,7 @@ class AssignmentController(
      * @return a String with the name of the relevant View
      */
     @RequestMapping(value = ["/edit/{assignmentId}"], method = [(RequestMethod.GET)])
+    @Transactional(readOnly = true)  // because of assignment.tags
     fun getEditAssignmentForm(@PathVariable assignmentId: String, model: ModelMap, principal: Principal): String {
 
         val assignment = assignmentRepository.getOne(assignmentId)
@@ -359,7 +396,7 @@ class AssignmentController(
                 assignmentTags = if (assignment.tags.isEmpty()) null else assignment.tags.joinToString { t -> t.name },
                 assignmentPackage = assignment.packageName,
                 language = assignment.language,
-                dueDate = assignment.dueDate,
+                dueDate = assignment.dueDate?.toInstant()?.atZone(ZoneId.systemDefault())?.toLocalDateTime(),
                 submissionMethod = assignment.submissionMethod,
                 gitRepositoryUrl = assignment.gitRepositoryUrl,
                 acceptsStudentTests = assignment.acceptsStudentTests,
@@ -735,6 +772,164 @@ class AssignmentController(
     }
 
     /**
+     * Controller that handles the exportation of an assignment and (optionally) its submissions.
+     * @param assignmentId is a String, identifying the relevant Assignment
+     * @return A ResponseEntity<String>
+     */
+    @RequestMapping(value = ["/export/{assignmentId}"], method = [(RequestMethod.GET)])
+    fun startAssignmentExport(@PathVariable assignmentId: String,
+                         @RequestParam(name="includeSubmissions", required = false) includeSubmissions: Boolean = false,
+                         principal: Principal): String {
+
+        val assignment = assignmentRepository.findById(assignmentId).orElse(null) ?:
+            throw IllegalArgumentException("assignment ${assignmentId} is not registered")
+
+        val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
+
+        if (principal.realName() != assignment.ownerUserId && acl.find { it.userId == principal.realName() } == null) {
+            throw IllegalAccessError("Exporting assignments is restricted to their owner or authorized teachers")
+        }
+
+        val taskId = "${System.currentTimeMillis()}"
+
+        // this will run asynchronously (except for tests)
+        LOG.info("Started async export for assignment ${assignmentId} (taskId: $taskId)")
+        assignmentService.exportAssignment(assignmentId, includeSubmissions, taskId)
+
+        if (pendingTasks.get(taskId) != null) {
+            return "redirect:/assignment/export-result/${taskId}"
+        }
+
+        return "redirect:/assignment/export-status/${taskId}"
+    }
+
+    /**
+     * Checks the status of a given export. This is called from a page in "polling mode" - refreshing periodically
+     */
+    @RequestMapping(value = ["/export-status/{taskId}"], method = [(RequestMethod.GET)])
+    fun getAssignmentExportStatus(@PathVariable taskId: String, model: ModelMap) : String {
+
+        if (pendingTasks.get(taskId) == null) {
+            // task hasn't finished
+            model["autoRefresh"] = true
+            model["message"] = "Export in progress... Please wait"
+            return "export-status"
+        } else {
+            // task has finished - redirect to the page that will download the file
+            model["autoRefresh"] = false
+            model["message"] = "Export successful"
+            model["redirect"] = "assignment/export-result/${taskId}"
+            return "export-status"
+        }
+    }
+
+    @RequestMapping(value = ["/export-result/{taskId}"], method = [(RequestMethod.GET)],
+        produces = [org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE])
+    @ResponseBody
+    fun getAssignmentExportFile(@PathVariable taskId: String,
+                              response: HttpServletResponse): FileSystemResource {
+
+        val (filename, zipFile) = pendingTasks.get(taskId) as Pair<String,File>
+        response.setHeader("Content-Disposition", "attachment; filename=${filename}.dp")
+        return FileSystemResource(zipFile)
+
+        // TODO: delete the zipFile
+    }
+
+    /**
+     * Controller that responds with the page to import assignments via upload
+     *
+     * @return the view name
+     */
+    @RequestMapping(value = ["/import"], method = [(RequestMethod.GET)])
+    fun showImportAssignmentPage(): String {
+        return "teacher-import-assignment"
+    }
+
+    /**
+     * Controller that handles the import of an Assignment and (possibly) its submissions through a previously exported
+     * .dp file
+     *
+     * @param file is a [MultipartFile]
+     * @param principal is a [Principal] representing the user making the request
+     * @param request is an HttpServletRequest
+     *
+     * @return the view name
+     */
+    @RequestMapping(value = ["/import"], method = [(RequestMethod.POST)])
+    fun importAssignment(@RequestParam("file") file: MultipartFile,
+                         principal: Principal,
+                         redirectAttributes: RedirectAttributes,
+                         request: HttpServletRequest): String {
+
+        if (!file.originalFilename.endsWith(".dp", ignoreCase = true)) {
+            redirectAttributes.addFlashAttribute("error", "Error: File must be .dp")
+            return "redirect:/assignment/import"
+        }
+
+        LOG.info("[${principal.realName()}] uploaded ${file.originalFilename}")
+
+        val tempFolder = Files.createTempDirectory("import").toFile()
+        val destinationFile = File(tempFolder, "${System.currentTimeMillis()}-${file.originalFilename}.zip")
+        Files.copy(file.inputStream, destinationFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
+
+        val destinationFolder = zipService.unzip(destinationFile.toPath(), "extracted")
+        val assignmentJSONFile = File(destinationFolder, EXPORTED_ASSIGNMENT_JSON_FILENAME)
+        val submissionsJSONFile = File(destinationFolder, EXPORTED_SUBMISSIONS_JSON_FILENAME)
+        val gitSubmissionsJSONFile = File(destinationFolder, EXPORTED_GIT_SUBMISSIONS_JSON_FILENAME)
+        val originalSubmissionsFolder = File(destinationFolder, EXPORTED_ORIGINAL_SUBMISSIONS_FOLDER)
+
+        if (!assignmentJSONFile.exists()) {
+            redirectAttributes.addFlashAttribute("error", "Error: File is not valid (missing assignment.json)")
+            return "redirect:/assignment/import"
+        }
+
+        val mapper = ObjectMapper().registerModule(KotlinModule())
+
+        val (assignmentId, errorMessage) = assignmentService.createAssignmentFromImportedFile(mapper, assignmentJSONFile, principal)
+        if (errorMessage != null) {
+            redirectAttributes.addFlashAttribute("error", errorMessage)
+            return "redirect:/assignment/import"
+        } else {
+            LOG.info("Imported $assignmentId")
+        }
+
+        if (submissionsJSONFile.exists()) {
+            val errorMessage2 = assignmentService.importSubmissionsFromImportedFile(mapper, submissionsJSONFile)
+            if (errorMessage2 != null) {
+                redirectAttributes.addFlashAttribute("error", errorMessage2)
+                return "redirect:/assignment/import"
+            }
+
+            if (gitSubmissionsJSONFile.exists()) {
+                val errorMessage3 = assignmentService.importGitSubmissionsFromImportedFile(mapper, gitSubmissionsJSONFile)
+                if (errorMessage3 != null) {
+                    redirectAttributes.addFlashAttribute("error", errorMessage3)
+                    return "redirect:/assignment/import"
+                }
+            }
+
+            // import all the original submission files
+            if (originalSubmissionsFolder.exists()) {
+                val assignment = assignmentRepository.getOne(assignmentId)
+                when (assignment.submissionMethod) {
+                    SubmissionMethod.UPLOAD -> FileUtils.copyDirectory(originalSubmissionsFolder, File(uploadSubmissionsRootLocation))
+                    SubmissionMethod.GIT -> FileUtils.copyDirectory(originalSubmissionsFolder, File(gitSubmissionsRootLocation))
+                }
+            }
+
+            redirectAttributes.addFlashAttribute("message", "Imported successfully ${assignmentId} and all its submissions")
+            return "redirect:/report/${assignmentId}"
+        } else {
+            redirectAttributes.addFlashAttribute("message", "Imported successfully ${assignmentId}. Submissions were not imported")
+            return "redirect:/assignment/info/${assignmentId}"
+        }
+    }
+
+
+
+
+    /**
      * Collects [Assignment]s that have certain [tags] into the [model].
      * @param model is a [ModelMap] that will be populated with information to use in a View.
      * @param tags is a String containing the names of multiple tags. Each tag name is separated by a comma. Only the
@@ -754,5 +949,7 @@ class AssignmentController(
                 .map { it.selected = tags?.split(",")?.contains(it.name) ?: false; it }
                 .sortedBy { it.name }
     }
+
+
 
 }

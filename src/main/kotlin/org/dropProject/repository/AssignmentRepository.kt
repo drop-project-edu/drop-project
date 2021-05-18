@@ -24,12 +24,17 @@ import org.dropProject.dao.Assignment
 import org.dropProject.dao.Author
 import org.dropProject.dao.ProjectGroup
 import org.dropProject.dao.Submission
+import org.springframework.data.jpa.repository.EntityGraph
 
 /**
  * Provides functions to query [Assignment]s that have been persisted in the database.
  */
 interface AssignmentRepository : JpaRepository<Assignment, String> {
 
+    @EntityGraph(attributePaths = ["tags"])
     fun findByOwnerUserId(ownerUserId: String): List<Assignment>
+    fun findByGitRepositoryFolder(gitRepositoryFolder: String): Assignment?
 
+//    @EntityGraph(attributePaths = ["tags"])
+//    override fun getOne(id: String?): Assignment
 }

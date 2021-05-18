@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="layout/layout :: head (pageTitle='Drop Project - Import assignment')">
+</head>
+
+<body>
+
+<div th:replace="layout/layout :: header"></div>
+
+<div class="container" style="max-width: 760px; margin-bottom: 65px">
+
+    <h1 class="page-header">Import assignment</h1>
+
+    <div class="alert alert-info">Here you can upload a previously exported .dp file, containing
+        all the information for a given assignment and possibly all its submissions.<br/>
+        The imported assignment can't have an identifier that is already being used.</div>
+
+    <div th:if="${error}">
+        <div class="alert alert-danger" th:text="${error}"/>
+    </div>
+
+    <form method="post" th:action="@{/assignment/import}" class="form-horizontal" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="file" class="col-sm-3 control-label">File to import (.dp)</label>
+            <div class="col-sm-9">
+                <input type="file" class="form-control" id="file" name="file" accept=".dp"  />
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Upload</button>
+    </form>
+
+</div>
+
+<div th:replace="layout/layout :: footer"></div>
+
+</body>
+</html>

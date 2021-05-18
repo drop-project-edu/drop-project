@@ -19,17 +19,35 @@
  */
 package org.dropProject.services
 
-import org.dropProject.controllers.ReportController
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.KotlinModule
+import org.apache.commons.io.FileUtils
+import org.dropProject.PendingTasks
 import org.dropProject.dao.*
+import org.dropProject.dao.BuildReport
 import org.dropProject.data.*
+import org.dropProject.extensions.formatJustDate
 import org.dropProject.extensions.realName
 import org.dropProject.forms.AssignmentForm
+import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.*
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.annotation.Cacheable
+import org.springframework.data.repository.findByIdOrNull
+import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.ui.ModelMap
+import java.io.File
+import java.nio.file.Files
 import java.security.Principal
+import java.util.*
 import javax.servlet.http.HttpServletRequest
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
+import kotlin.collections.LinkedHashMap
 
 /**
  * AssignmentService provides [Assignment] related functionality (e.g. list of assignments).
@@ -37,14 +55,38 @@ import javax.servlet.http.HttpServletRequest
 @Service
 class AssignmentService(
         val assignmentRepository: AssignmentRepository,
+        val assignmentReportRepository: AssignmentReportRepository,
         val assignmentACLRepository: AssignmentACLRepository,
         val submissionRepository: SubmissionRepository,
+        val gitSubmissionRepository: GitSubmissionRepository,
         val assigneeRepository: AssigneeRepository,
         val submissionService: SubmissionService,
         val assignmentTestMethodRepository: AssignmentTestMethodRepository,
         val submissionReportRepository: SubmissionReportRepository,
-        val assignmentTagRepository: AssignmentTagRepository
+        val assignmentTagRepository: AssignmentTagRepository,
+        val buildReportRepository: BuildReportRepository,
+        val jUnitReportRepository: JUnitReportRepository,
+        val jacocoReportRepository: JacocoReportRepository,
+        val zipService: ZipService,
+        val pendingTasks: PendingTasks,
+        val projectGroupService: ProjectGroupService,
+        val gitClient: GitClient,
+        val assignmentTeacherFiles: AssignmentTeacherFiles
 ) {
+
+    val LOG = LoggerFactory.getLogger(this.javaClass.name)
+
+    @Value("\${assignments.rootLocation}")
+    val assignmentsRootLocation: String = ""
+
+    @Value("\${mavenizedProjects.rootLocation}")
+    val mavenizedProjectsRootLocation: String = ""
+
+    @Value("\${storage.rootLocation}/upload")
+    val uploadSubmissionsRootLocation: String = "submissions/upload"
+
+    @Value("\${storage.rootLocation}/git")
+    val gitSubmissionsRootLocation: String = "submissions/git"
 
     /**
      * Returns the [Assignment]s that a certain user can access. The returned assignments will be the ones
@@ -58,13 +100,16 @@ class AssignmentService(
             value = ["archivedAssignmentsCache"],
             key = "#principal.name",
             condition = "#archived==true")
+    @Transactional(readOnly = true)  // because of assignment.tags forced loading
     fun getMyAssignments(principal: Principal, archived: Boolean): List<Assignment> {
         val assignmentsOwns = assignmentRepository.findByOwnerUserId(principal.realName())
 
         val assignmentsACL = assignmentACLRepository.findByUserId(principal.realName())
         val assignmentsAuthorized = ArrayList<Assignment>()
         for (assignmentACL in assignmentsACL) {
-            assignmentsAuthorized.add(assignmentRepository.findById(assignmentACL.assignmentId).get())
+            val optionalAssignment = assignmentRepository.findById(assignmentACL.assignmentId)
+            optionalAssignment.ifPresent { it.tags.size }  // force tags loading
+            assignmentsAuthorized.add(optionalAssignment.get())
         }
 
         val assignments = ArrayList<Assignment>()
@@ -149,7 +194,8 @@ class AssignmentService(
                         if (!failed.isEmpty()) {
                             hashMap.put(group, failed)
                         }
-                        submissionStatistics.add(GroupSubmissionStatistics(group.id, passedTests, it.allSubmissions.size))
+                        val groupStats = GroupSubmissionStatistics(group.id, passedTests, it.allSubmissions.size, group)
+                        submissionStatistics.add(groupStats)
                     }
                 }
 
@@ -162,20 +208,26 @@ class AssignmentService(
                             model["message"] = "No groups identified as similar"
                         }
                     }
-                    model["signalledGroups"] = signalledGroups
+                    else {
+                        model["signalledGroups"] = signalledGroups
+                    }
 
                     var nrTests = assignmentTests.size
                     var assignmentStatistics = computeStatistics(submissionStatistics, nrTests)
                     var groupsOutsideNorm = assignmentStatistics.identifyGroupsOutsideStatisticalNorms()
-                    
-                    // FIXME: maybe do the rounding to two decimal places in the Thymeleaf / View file
-                    model["offTheAverage"] = groupsOutsideNorm
-                    val df = java.text.DecimalFormat("#.##")
-                    model["assignmentAverageSubmissions"] = df.format(assignmentStatistics.average)
-                    model["assignmentStandardDeviation"] = df.format(assignmentStatistics.standardDeviation)
-                    val threshold = (assignmentStatistics.average - assignmentStatistics.standardDeviation)
-                    model["submissionsThreshold"] = df.format(threshold)
-                    model["assignmentNrOfTests"] = nrTests
+                    if(groupsOutsideNorm.size > 0) {
+                        // FIXME: maybe do the rounding to two decimal places in the Thymeleaf / View file
+                        model["offTheAverage"] = groupsOutsideNorm
+                        val df = java.text.DecimalFormat("#.##")
+                        model["assignmentAverageSubmissions"] = df.format(assignmentStatistics.average)
+                        model["assignmentStandardDeviation"] = df.format(assignmentStatistics.standardDeviation)
+                        val threshold = (assignmentStatistics.average - assignmentStatistics.standardDeviation)
+                        model["submissionsThreshold"] = df.format(threshold)
+                        model["assignmentNrOfTests"] = nrTests
+                    }
+                    else {
+                        model["otherMessage"] = "No groups outside norms"
+                    }
                 }
             }
         }
@@ -257,7 +309,7 @@ class AssignmentService(
         existingAssignment.name = assignmentForm.assignmentName!!
         existingAssignment.packageName = assignmentForm.assignmentPackage
         existingAssignment.language = assignmentForm.language!!
-        existingAssignment.dueDate = assignmentForm.dueDate
+        existingAssignment.dueDate = if (assignmentForm.dueDate != null) java.sql.Timestamp.valueOf(assignmentForm.dueDate) else null
         existingAssignment.submissionMethod = assignmentForm.submissionMethod!!
         existingAssignment.acceptsStudentTests = assignmentForm.acceptsStudentTests
         existingAssignment.minStudentTests = assignmentForm.minStudentTests
@@ -277,4 +329,318 @@ class AssignmentService(
         }
     }
 
+    /**
+     * Handles the exportation of an assignment and (optionally) its submissions
+     * @return a pair with (filename, file)
+     */
+    @Async
+    @Transactional
+    fun exportAssignment(assignmentId: String, includeSubmissions: Boolean, taskId: String) {
+
+        val assignment = assignmentRepository.findById(assignmentId).orElse(null)
+            ?: throw IllegalArgumentException("assignment ${assignmentId} is not registered")
+        assignment.authorizedStudentIds = assigneeRepository.findByAssignmentId(assignmentId).map { it.authorUserId }
+
+        val submissionsExport = mutableListOf<SubmissionExport>()
+        val gitSubmissionsExport = mutableListOf<GitSubmissionExport>()
+        if (includeSubmissions) {
+            val submissions = submissionRepository.findByAssignmentId(assignment.id)
+
+            // for each submission, create the corresponding "full" SubmissionExport object
+            submissions.forEach {
+                with(it) {
+                    val buildReport =
+                        if (buildReportId != null) buildReportRepository.findByIdOrNull(buildReportId)?.buildReport else null
+                    val submissionReport = submissionReportRepository.findBySubmissionId(id).map { eachReport ->
+                        SubmissionExport.SubmissionReport(
+                            eachReport.reportKey, eachReport.reportValue,
+                            eachReport.reportProgress, eachReport.reportGoal
+                        )
+                    }
+                    val junitReports = jUnitReportRepository.findBySubmissionId(id)?.map { jUnitReport ->
+                        SubmissionExport.JUnitReport(jUnitReport.fileName, jUnitReport.xmlReport)
+                    }
+                    val jacocoReports = jacocoReportRepository.findBySubmissionId(id)?.map { jacocoReport ->
+                        SubmissionExport.JacocoReport(jacocoReport.fileName, jacocoReport.csvReport)
+                    }
+                    val submissionExport = SubmissionExport(
+                        id = id, submissionId = submissionId,
+                        gitSubmissionId = gitSubmissionId, submissionFolder = submissionFolder,
+                        submissionDate = submissionDate, submitterUserId = submitterUserId, status = getStatus().code,
+                        statusDate = statusDate, assignmentId = assignmentId, buildReport = buildReport,
+                        structureErrors = structureErrors, markedAsFinal = markedAsFinal,
+                        authors = group.authors.map { author -> SubmissionExport.Author(author.userId, author.name) },
+                        submissionReport = submissionReport,
+                        junitReports = junitReports, jacocoReports = jacocoReports
+                    )
+                    submissionsExport.add(submissionExport)
+                }
+            }
+
+            if (assignment.submissionMethod == SubmissionMethod.GIT) {
+                val gitSubmissions = gitSubmissionRepository.findByAssignmentId(assignmentId)
+                gitSubmissions.forEach {
+                    with(it) {
+                        val gitSubmissionExport = GitSubmissionExport(
+                            assignmentId = assignmentId, submitterUserId = submitterUserId,
+                            createDate = createDate, connected = connected, lastCommitDate = lastCommitDate,
+                            gitRepositoryUrl = gitRepositoryUrl, gitRepositoryPubKey = gitRepositoryPubKey,
+                            gitRepositoryPrivKey = gitRepositoryPrivKey,
+                            authors = group.authors.map { author ->
+                                GitSubmissionExport.Author(
+                                    author.userId,
+                                    author.name
+                                )
+                            }
+                        )
+
+                        gitSubmissionsExport.add(gitSubmissionExport)
+                    }
+                }
+            }
+        }
+
+        val fileName = "${assignment.id}_${Date().formatJustDate()}"
+        val tempFolder = Files.createTempDirectory(fileName).toFile()
+        val submissionsJsonFile = File(tempFolder, EXPORTED_SUBMISSIONS_JSON_FILENAME)
+        val gitSubmissionsJsonFile = File(tempFolder, EXPORTED_GIT_SUBMISSIONS_JSON_FILENAME)
+        val assignmentJsonFile = File(tempFolder, EXPORTED_ASSIGNMENT_JSON_FILENAME)
+        val originalSubmissionsFolder = File(tempFolder, EXPORTED_ORIGINAL_SUBMISSIONS_FOLDER)
+        originalSubmissionsFolder.mkdirs()
+
+        val mapper = ObjectMapper().registerModule(KotlinModule())
+
+        try {
+            mapper.writeValue(assignmentJsonFile, assignment)
+            if (includeSubmissions) {
+                mapper.writeValue(submissionsJsonFile, submissionsExport)
+                if (!gitSubmissionsExport.isEmpty()) {
+                    mapper.writeValue(gitSubmissionsJsonFile, gitSubmissionsExport)
+                }
+            }
+
+            exportOriginalSubmissionFilesTo(assignment, originalSubmissionsFolder)
+
+            val zipFile = zipService.createZipFromFolder(tempFolder.name, tempFolder)
+            LOG.info("Created ${zipFile.file.absolutePath} with submissions from ${assignment.id}")
+
+            // put the result in the pending tasks so that the others can check it later
+            pendingTasks.put(taskId, Pair(fileName, zipFile.file))
+        } finally {
+            tempFolder.delete()
+        }
+    }
+
+    fun exportOriginalSubmissionFilesTo(assignment: Assignment, destinationFolder: File) {
+
+        if (assignment.submissionMethod == SubmissionMethod.UPLOAD) {
+
+            val submissions = submissionRepository.findByAssignmentId(assignment.id)
+            submissions.forEachIndexed { index, it ->
+                with(it) {
+                    if (submissionId != null && submissionFolder != null) {
+                        val projectFolderFrom = File(uploadSubmissionsRootLocation, submissionFolder)
+                        val projectFolderTo = File(destinationFolder, submissionFolder.removeSuffix(submissionId))
+                        projectFolderTo.mkdirs()
+
+                        // for every folder, there is a corresponding zip file with the same name
+                        val projectFileFrom = File("${projectFolderFrom.absolutePath}.zip")
+
+                        if (!projectFileFrom.exists()) {
+                            LOG.warn("Did not found original file for submission $id - ${projectFileFrom.absolutePath}")
+                        }
+
+                        FileUtils.copyFileToDirectory(projectFileFrom, projectFolderTo)
+                        LOG.info("Copied ${projectFileFrom.absolutePath} to ${projectFolderTo.absolutePath} (${index + 1}/${submissions.size})")
+                    }
+                }
+            }
+
+        } else if (assignment.submissionMethod == SubmissionMethod.GIT) {
+
+            val gitSubmissions = gitSubmissionRepository.findByAssignmentId(assignment.id)
+            gitSubmissions.forEachIndexed { index, it ->
+                val repositoryFolderFrom = File(gitSubmissionsRootLocation, it.getFolderRelativeToStorageRoot())
+                val repositoryFolderTo = File(destinationFolder, it.getParentFolderRelativeToStorageRoot())
+                repositoryFolderTo.mkdirs()
+
+                if (!repositoryFolderFrom.exists()) {
+                    LOG.warn("Did not found original file for submission $assignment.id - ${repositoryFolderFrom.absolutePath}")
+                }
+
+                FileUtils.copyDirectoryToDirectory(repositoryFolderFrom, repositoryFolderTo)
+                LOG.info("Copied ${repositoryFolderFrom.absolutePath} to ${repositoryFolderTo.absolutePath} (${index + 1}/${gitSubmissions.size})")
+            }
+
+        } else {
+            throw Exception("Invalid submission method for assignment ${assignment.id}")
+        }
+    }
+
+    fun importSubmissionsFromImportedFile(mapper: ObjectMapper,
+                                                  submissionsJSONFile: File): String? {
+
+        val submissions = mapper.readValue(submissionsJSONFile, object : TypeReference<List<SubmissionExport>?>() {})
+
+        if (submissions.isNullOrEmpty()) {
+            return "Error: File doesn't contain submissions"
+        }
+
+        // find the assignmentId and make sure it exists
+        val assignmentId = submissions[0].assignmentId
+        if (assignmentRepository.findById(assignmentId).isEmpty) {
+            return "Error: You are importing submissions to an assignment ($assignmentId) that doesn't exist. " +
+                    "First, please create that assignment."
+
+        }
+
+        // make sure there are no submissions for this assignment
+        val count = submissionRepository.countByAssignmentId(assignmentId)
+        if (count > 0) {
+            return "Error: You are importing submissions to an assignment ($assignmentId) that already has $count submissions. " +
+                    "First, please make sure the assignment is empty."
+        }
+
+        submissions.forEachIndexed { index, it ->
+            val authorDetailsList = it.authors.map { a -> AuthorDetails(a.name, a.userId) }
+            val group = projectGroupService.getOrCreateProjectGroup(authorDetailsList)
+
+            val buildReportId: Long? =
+                if (it.buildReport != null) {
+                    val buildReport = BuildReport(buildReport = it.buildReport!!)
+                    buildReportRepository.save(buildReport)
+                    buildReport.id
+                } else {
+                    null
+                }
+
+            val submission = Submission(
+                submissionId = it.submissionId, submissionDate = it.submissionDate,
+                status = it.status, statusDate = it.statusDate, assignmentId = it.assignmentId,
+                submitterUserId = it.submitterUserId,
+                submissionFolder = it.submissionFolder,
+                gitSubmissionId = it.gitSubmissionId,
+                buildReportId = buildReportId,
+                structureErrors = it.structureErrors,
+                markedAsFinal = it.markedAsFinal
+            )
+
+            submission.group = group
+            submissionRepository.save(submission)
+
+            val reportElements: List<SubmissionReport> = it.submissionReport.map { r ->
+                val reportDB = SubmissionReport(
+                    submissionId = submission.id, reportKey = r.key,
+                    reportValue = r.value, reportProgress = r.progress, reportGoal = r.goal
+                )
+                submissionReportRepository.save(reportDB)
+                reportDB
+            }
+
+            submission.reportElements = reportElements
+            submissionRepository.save(submission)
+
+            it.junitReports?.forEach { r ->
+                jUnitReportRepository.save(JUnitReport(submissionId = submission.id, fileName = r.filename,
+                    xmlReport = r.xmlReport))
+            }
+
+            it.jacocoReports?.forEach { r ->
+                jacocoReportRepository.save(JacocoReport(submissionId = submission.id, fileName = r.filename,
+                    csvReport = r.csvReport))
+            }
+
+            LOG.info("Imported submission $submission.id ($index/${submissions.size})")
+        }
+
+        return null
+    }
+
+    /**
+     * @return a Pair where the first item is the assignmentId and the second is null
+     * if the import succeeded or an error message it it failed
+     */
+    fun createAssignmentFromImportedFile(mapper: ObjectMapper,
+                                                 assignmentJSONFile: File,
+                                                 principal: Principal): Pair<String,String?> {
+
+        val newAssignment = mapper.readValue(assignmentJSONFile, Assignment::class.java)
+
+        // check if already exists an assignment with this id
+        if (assignmentRepository.findById(newAssignment.id).orElse(null) != null) {
+            return Pair(newAssignment.id, "Error: There is already an assignment with this id (${newAssignment.id})")
+        }
+
+        if (assignmentRepository.findByGitRepositoryFolder(newAssignment.gitRepositoryFolder) != null) {
+            return Pair(newAssignment.id, "Error: There is already an assignment with this git repository folder")
+        }
+
+        newAssignment.ownerUserId = principal.realName()  // new assignment is now owned by who uploads
+
+        val gitRepository = newAssignment.gitRepositoryUrl
+        try {
+            val directory = File(assignmentsRootLocation, newAssignment.gitRepositoryFolder)
+            gitClient.clone(gitRepository, directory, newAssignment.gitRepositoryPrivKey!!.toByteArray())
+            LOG.info("[${newAssignment.id}] Successfuly cloned ${gitRepository} to ${directory}")
+        } catch (e: Exception) {
+            LOG.info("Error cloning ${gitRepository} - ${e}")
+            return Pair(newAssignment.id, "Error cloning ${gitRepository} - ${e.message}")
+        }
+
+        assignmentRepository.save(newAssignment)
+
+        // revalidate the assignment
+        val report = assignmentTeacherFiles.checkAssignmentFiles(newAssignment, principal)
+
+        // store the report in the DB (first, clear the previous report)
+        assignmentReportRepository.deleteByAssignmentId(newAssignment.id)
+        report.forEach {
+            assignmentReportRepository.save(
+                AssignmentReport(
+                    assignmentId = newAssignment.id, type = it.type,
+                    message = it.message, description = it.description
+                )
+            )
+        }
+
+        return Pair(newAssignment.id, null)
+    }
+
+    fun importGitSubmissionsFromImportedFile(mapper: ObjectMapper,
+                                          submissionsJSONFile: File): String? {
+
+        val gitSubmissions = mapper.readValue(submissionsJSONFile, object : TypeReference<List<GitSubmissionExport>?>() {})
+
+        if (gitSubmissions.isNullOrEmpty()) {
+            return "Error: File doesn't contain git submissions"
+        }
+
+        gitSubmissions.forEachIndexed { index, it ->
+            val authorDetailsList = it.authors.map { a -> AuthorDetails(a.name, a.userId) }
+            val group = projectGroupService.getOrCreateProjectGroup(authorDetailsList)
+            val submissions = submissionRepository.findByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(group, it.assignmentId)
+
+            val gitSubmission = GitSubmission(
+                assignmentId = it.assignmentId, submitterUserId = it.submitterUserId,
+                createDate = it.createDate, connected = it.connected, lastCommitDate = it.lastCommitDate,
+                gitRepositoryUrl = it.gitRepositoryUrl, gitRepositoryPubKey = it.gitRepositoryPubKey,
+                gitRepositoryPrivKey = it.gitRepositoryPrivKey)
+
+            gitSubmission.group = group
+            if (!submissions.isEmpty()) {
+                gitSubmission.lastSubmissionId = submissions[0].id
+            }
+            gitSubmissionRepository.save(gitSubmission)
+
+            // update FK on all submissions by this group
+            submissions.forEach {
+                it.gitSubmissionId = gitSubmission.id
+                submissionRepository.save(it)
+            }
+
+            LOG.info("Imported git submission $gitSubmission.id ($index/${submissions.size})")
+        }
+
+        return null
+    }
 }
