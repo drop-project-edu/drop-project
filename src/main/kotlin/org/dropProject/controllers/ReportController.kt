@@ -798,13 +798,10 @@ class ReportController(
 
         // FIXME: for better performance, this can be replaced with an HashSet
         var assignments = mutableListOf<Assignment>()
-
-        // FIXME: optimize
-        val allSubmissions = submissionRepository.findAll();
-
+        
         // FIXME: for better performance, replace this logic
         // with a function that gets the data straight from the DB
-        for(submission in allSubmissions) {
+        for(submission in submissionRepository.findAll()) {
             if(projectGroups.contains(submission.group)) {
                 submissions.add(submission);
                 val assignment = assignmentRepository.findById(submission.assignmentId).get()
