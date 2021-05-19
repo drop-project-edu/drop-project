@@ -9,6 +9,11 @@
     <div class="alert alert-info" th:text="${message}"/>
 </div>
 
+<div th:if="${studentHistory}">
+    <div th:text="${studentHistory.author.userId}"></div>
+    <div th:text="${studentHistory.author.name}"></div>
+</div>
+
 <table class="table" th:if="${studentHistory}">
     <thead>
     <tr>
