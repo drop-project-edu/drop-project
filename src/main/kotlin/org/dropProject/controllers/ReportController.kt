@@ -779,7 +779,9 @@ class ReportController(
     fun getStudentTracker(@PathVariable studentId: String, model: ModelMap,
                        principal: Principal, request: HttpServletRequest): String {
 
-        val projectGroups = projectGroupRepository.getGroupsForAuthor(studentId)
+        if (!request.isUserInRole("TEACHER")) {
+            throw org.springframework.security.access.AccessDeniedException("${principal.realName()} is not allowed to view this report")
+        }
 
         /*
         val assignments = assignmentService.getAssignmentsByAuthor(studentId)
@@ -787,6 +789,7 @@ class ReportController(
         println(">> " + assignments)
         println(">> " + projectGroups)
         */
+        val projectGroups = projectGroupRepository.getGroupsForAuthor(studentId)
 
         val allSubmissions = submissionRepository.findAll();
 
