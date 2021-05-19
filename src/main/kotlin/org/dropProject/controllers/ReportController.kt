@@ -29,6 +29,7 @@ import org.commonmark.renderer.html.HtmlRenderer
 import org.dropProject.MAVEN_MAX_EXECUTION_TIME
 import org.dropProject.dao.*
 import org.dropProject.data.AuthorDetails
+import org.dropProject.data.StudentHistory
 import org.dropProject.data.TestType
 import org.dropProject.extensions.formatDefault
 import org.dropProject.extensions.realName
@@ -783,21 +784,23 @@ class ReportController(
             throw org.springframework.security.access.AccessDeniedException("${principal.realName()} is not allowed to view this report")
         }
 
-        /*
-        val assignments = assignmentService.getAssignmentsByAuthor(studentId)
+        var author = authorRepository.findByUserId(studentId);
 
-        println(">> " + assignments)
-        println(">> " + projectGroups)
-        */
+        if(author == null) {
+            model["message"] = "Student with id " + studentId + " does not exist"
+            return "student-tracker";
+        }
+
         val projectGroups = projectGroupRepository.getGroupsForAuthor(studentId)
 
-        val allSubmissions = submissionRepository.findAll();
-
-        println(">> " + allSubmissions)
-        println(">> Subs totais: " + allSubmissions.size)
-
+        var studentHistory = StudentHistory(author!!)
         var submissions = mutableListOf<Submission>()
+
+        // FIXME: for better performance, this can be replaced with an HashSet
         var assignments = mutableListOf<Assignment>()
+
+        // FIXME: optimize
+        val allSubmissions = submissionRepository.findAll();
 
         // FIXME: for better performance, replace this logic
         // with a function that gets the data straight from the DB
@@ -807,18 +810,18 @@ class ReportController(
                 val assignment = assignmentRepository.findById(submission.assignmentId).get()
                 if(!assignments.contains(assignment)) {
                     assignments.add(assignment);
+                    studentHistory.addGroupAndAssignment(submission.group, assignment)
                 }
             }
         }
-
-        println(">> Subs filtradas: " + submissions.size)
 
         // 1- gather all assignments
         // 2- where was the student signalleed?
         // 3- students he works it
 
-        model["submissions"] = submissions
-        model["assignments"] = assignments
+        //model["submissions"] = submissions
+        //model["assignments"] = assignments
+        model["studentHistory"] = studentHistory
 
         return "student-tracker";
     }

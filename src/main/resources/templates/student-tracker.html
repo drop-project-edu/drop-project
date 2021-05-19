@@ -1,33 +1,33 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <html lang="en">
-<head th:replace="layout/layout :: head (pageTitle='Drop Project - Signalled Students')">
+<head th:replace="layout/layout :: head (pageTitle='Drop Project - Student Tracker 3000')">
 </head>
 <body>
 
-<div th:if="${submissions}">
-    <div class="alert alert-info" th:text="${submissions}"/>
+<div th:if="${message}">
+    <div class="alert alert-info" th:text="${message}"/>
 </div>
 
-<hr>
-
-<div th:if="${assignments}">
-    <div class="alert alert-info" th:text="${assignments}"/>
-</div>
-
-<table class="table" th:if="${assignments}">
+<table class="table" th:if="${studentHistory}">
     <thead>
     <tr>
         <th>Assignment ID</th>
+        <th>Group ID</th>
+        <th>Group Members</th>
+        <th>Submissions</th>
         <th>Failing Tests</th>
-        <th>IDE</th>
+        <th>Latest report</th>
     </tr>
     </thead>
     <!--/*@thymesVar id="signalledGroups" type="java.util.ArrayList<org.dropProject.data.GroupedProjectGroups>"*/-->
-    <tr th:each="assignment: ${assignments}">
-        <td th:text="${assignment.name}"/></td>
+    <tr th:each="history: ${studentHistory.history}">
+        <td th:text="${history.assignment.id}"/></td>
+        <td th:text="${history.group}"/></td>
+        <td th:text="${history.group.authorsNameStr()}"/></td>
+        <td><a th:each="groupID: ${studentHistory.author.userId}" th:href="'/submissions/?assignmentId=' + ${history.assignment.id} + '&groupId=' + ${history.group.id}">View submissions</a></td>
         <td>...</td>
-        <td>.....</td>
+        <td></td>
     </tr>
 </table>
 
