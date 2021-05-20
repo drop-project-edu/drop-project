@@ -778,7 +778,7 @@ class ReportController(
 
     // For now, this will list assignments even if the teacher making the request
     // does not have access to those assignments
-    @RequestMapping(value = ["/studentTracker/{studentId}"], method = [(RequestMethod.GET)])
+    @RequestMapping(value = ["/studentHistory/{studentId}"], method = [(RequestMethod.GET)])
     fun getStudentTracker(@PathVariable studentId: String, model: ModelMap,
                        principal: Principal, request: HttpServletRequest): String {
 
@@ -790,7 +790,7 @@ class ReportController(
 
         if(author == null) {
             model["message"] = "Student with id " + studentId + " does not exist"
-            return "student-tracker";
+            return "student-history";
         }
 
         val projectGroups = projectGroupRepository.getGroupsForAuthor(studentId)
@@ -822,7 +822,7 @@ class ReportController(
         //model["assignments"] = assignments
         model["studentHistory"] = studentHistory
 
-        return "student-tracker";
+        return "student-history";
     }
 
     @RequestMapping(value = ["/migrate/{idx1}/{idx2}"], method = [(RequestMethod.GET)])

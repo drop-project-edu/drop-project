@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <html lang="en">
-<head th:replace="layout/layout :: head (pageTitle='Drop Project - Student Tracker 3000')">
+<head th:replace="layout/layout :: head (pageTitle='Drop Project - Student History / Tracker 3000')">
 </head>
 <body>
 
@@ -29,7 +29,7 @@
     <!--/*@thymesVar id="signalledGroups" type="java.util.ArrayList<org.dropProject.data.GroupedProjectGroups>"*/-->
     <tr th:each="history: ${studentHistory.history}">
         <td th:text="${history.assignment.id}"/></td>
-        <td><a th:each="author: ${history.getGroup().authors}" th:href="'/studentTracker/' + ${author.userId}"><span th:text="${author.name}"></span></a></td>
+        <td><a th:each="author: ${history.getGroup().authors}" th:href="'/studentHistory/' + ${author.userId}"><span th:text="${author.name}"></span></a></td>
         <td th:text="${history.group.authorsNameStr()}"/></td>
         <td><a th:each="groupID: ${studentHistory.author.userId}" th:href="'/submissions/?assignmentId=' + ${history.assignment.id} + '&groupId=' + ${history.group.id}">View submissions</a></td>
         <td>...</td>
