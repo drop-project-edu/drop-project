@@ -13,8 +13,8 @@
     </div>
 
     <div th:if="${studentHistory}">
-        Student ID: <div th:text="${studentHistory.author.userId}"></div>
-        Student Name: <div th:text="${studentHistory.author.name}"></div>
+        <strong>Student ID:</strong> <div th:text="${studentHistory.author.userId}"></div>
+        <strong>Student Name:</strong> <div th:text="${studentHistory.author.name}"></div>
     </div>
 
     <table class="table" th:if="${studentHistory}">
