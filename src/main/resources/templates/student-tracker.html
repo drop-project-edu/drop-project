@@ -5,6 +5,8 @@
 </head>
 <body>
 
+<div th:replace="layout/layout :: header"></div>
+
 <div th:if="${message}">
     <div class="alert alert-info" th:text="${message}"/>
 </div>
