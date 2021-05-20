@@ -20,7 +20,6 @@
     <thead>
     <tr>
         <th>Assignment ID</th>
-        <th>Group ID</th>
         <th>Group Members</th>
         <th>Submissions</th>
         <th>Failing Tests</th>
@@ -30,11 +29,10 @@
     <!--/*@thymesVar id="signalledGroups" type="java.util.ArrayList<org.dropProject.data.GroupedProjectGroups>"*/-->
     <tr th:each="history: ${studentHistory.history}">
         <td th:text="${history.assignment.id}"/></td>
-        <td th:text="${history.group}"/></td>
+        <td><a th:each="author: ${history.getGroup().authors}" th:href="'/studentTracker/' + ${author.userId}"><span th:text="${author.name}"></span></a></td>
         <td th:text="${history.group.authorsNameStr()}"/></td>
         <td><a th:each="groupID: ${studentHistory.author.userId}" th:href="'/submissions/?assignmentId=' + ${history.assignment.id} + '&groupId=' + ${history.group.id}">View submissions</a></td>
         <td>...</td>
-        <td></td>
     </tr>
 </table>
 
