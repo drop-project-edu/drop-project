@@ -7,34 +7,37 @@
 
 <div th:replace="layout/layout :: header"></div>
 
-<div th:if="${message}">
-    <div class="alert alert-info" th:text="${message}"/>
-</div>
+<div class="container" style="max-width: 900px; margin-bottom: 65px">
+    <div th:if="${message}">
+        <div class="alert alert-info" th:text="${message}"/>
+    </div>
 
-<div th:if="${studentHistory}">
-    <div th:text="${studentHistory.author.userId}"></div>
-    <div th:text="${studentHistory.author.name}"></div>
-</div>
+    <div th:if="${studentHistory}">
+        Student ID: <div th:text="${studentHistory.author.userId}"></div>
+        Student Name: <div th:text="${studentHistory.author.name}"></div>
+    </div>
 
-<table class="table" th:if="${studentHistory}">
-    <thead>
-    <tr>
-        <th>Assignment ID</th>
-        <th>Group Members</th>
-        <th>Submissions</th>
-        <th>Failing Tests</th>
-        <th>Latest report</th>
-    </tr>
-    </thead>
-    <!--/*@thymesVar id="signalledGroups" type="java.util.ArrayList<org.dropProject.data.GroupedProjectGroups>"*/-->
-    <tr th:each="history: ${studentHistory.history}">
-        <td th:text="${history.assignment.id}"/></td>
-        <td><a th:each="author: ${history.getGroup().authors}" th:href="'/studentHistory/' + ${author.userId}"><span th:text="${author.name}"></span></a></td>
-        <td th:text="${history.group.authorsNameStr()}"/></td>
-        <td><a th:each="groupID: ${studentHistory.author.userId}" th:href="'/submissions/?assignmentId=' + ${history.assignment.id} + '&groupId=' + ${history.group.id}">View submissions</a></td>
-        <td>...</td>
-    </tr>
-</table>
+    <table class="table" th:if="${studentHistory}">
+        <thead>
+        <tr>
+            <th>Assignment ID</th>
+            <th>Group Members</th>
+            <th>Submissions</th>
+            <th>Failing Tests</th>
+            <th>Latest report</th>
+        </tr>
+        </thead>
+        <!--/*@thymesVar id="signalledGroups" type="java.util.ArrayList<org.dropProject.data.GroupedProjectGroups>"*/-->
+        <tr th:each="history: ${studentHistory.history}">
+            <td th:text="${history.assignment.id}"/></td>
+            <td><a th:each="author: ${history.getGroup().authors}" th:href="'/studentHistory/' + ${author.userId}"><span th:text="${author.name}"></span></a></td>
+            <td><a th:each="groupID: ${studentHistory.author.userId}" th:href="'/submissions/?assignmentId=' + ${history.assignment.id} + '&groupId=' + ${history.group.id}">View submissions</a></td>
+            <td>...</td>
+            <td>..</td>
+        </tr>
+    </table>
+
+</div>
 
 </body>
 </html>
