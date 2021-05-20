@@ -776,6 +776,8 @@ class ReportController(
         return "leaderboard"
     }
 
+    // For now, this will list assignments even if the teacher making the request
+    // does not have access to those assignments
     @RequestMapping(value = ["/studentTracker/{studentId}"], method = [(RequestMethod.GET)])
     fun getStudentTracker(@PathVariable studentId: String, model: ModelMap,
                        principal: Principal, request: HttpServletRequest): String {
