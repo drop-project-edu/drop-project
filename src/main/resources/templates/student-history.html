@@ -22,7 +22,9 @@
         <tr>
             <th>Assignment ID</th>
             <th>Group Members</th>
+            <th>Nr. of Submissions</th>
             <th>Submissions</th>
+            <th>Last Submission Date</th>
             <th>Failing Tests</th>
             <th>Latest report</th>
         </tr>
@@ -31,7 +33,9 @@
         <tr th:each="history: ${studentHistory.history}">
             <td th:text="${history.assignment.id}"/></td>
             <td><a th:each="author: ${history.getGroup().authors}" th:href="'/studentHistory/' + ${author.userId}"><span th:text="${author.name}"></span></a></td>
+            <td th:text="${history.getNrOfSubmissions()}"></td>
             <td><a th:each="groupID: ${studentHistory.author.userId}" th:href="'/submissions/?assignmentId=' + ${history.assignment.id} + '&groupId=' + ${history.group.id}">View submissions</a></td>
+            <td th:text="${history.getLastSubmission().submissionDate}"></td>
             <td>...</td>
             <td>..</td>
         </tr>

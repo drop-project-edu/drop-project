@@ -810,6 +810,11 @@ class ReportController(
                 if(!assignments.contains(assignment)) {
                     assignments.add(assignment);
                     studentHistory.addGroupAndAssignment(submission.group, assignment)
+                    // FIXME Very Ugly Hack
+                    studentHistory.addSubmission(submission)
+                }
+                else {
+                    studentHistory.addSubmission(submission)
                 }
             }
         }

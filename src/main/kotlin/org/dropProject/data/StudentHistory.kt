@@ -3,10 +3,35 @@ package org.dropProject.data
 import org.dropProject.dao.Assignment
 import org.dropProject.dao.Author
 import org.dropProject.dao.ProjectGroup
+import org.dropProject.dao.Submission
 
 class StudentHistoryEntry(val group: ProjectGroup,
                           val assignment: Assignment) {
 
+    var sorted = false
+    val submissions: ArrayList<Submission> = ArrayList<Submission>()
+    var sortedSubmissions: List<Submission> = ArrayList<Submission>()
+
+    fun addSubmission(s: Submission) {
+        submissions.add(s);
+        sorted = false;
+    }
+
+    fun getNrOfSubmissions(): Int {
+        return submissions.size
+    }
+
+    fun ensureSubmissionsAreSorted() {
+        if(!sorted) {
+            sortedSubmissions = submissions.sortedBy { it.submissionDate }.reversed()
+            sorted = true;
+        }
+    }
+
+    fun getLastSubmission(): Submission {
+        ensureSubmissionsAreSorted()
+        return sortedSubmissions.get(0)
+    }
 }
 
 class StudentHistory(val author : Author) {
@@ -27,4 +52,12 @@ class StudentHistory(val author : Author) {
         history.add(StudentHistoryEntry(group, assignment))
     }
 
+    fun addSubmission(s: Submission) {
+        for(entry in history) {
+            if(entry.group == s.group && entry.assignment.id == s.assignmentId) {
+                entry.addSubmission(s);
+                break;
+            }
+        }
+    }
 }
