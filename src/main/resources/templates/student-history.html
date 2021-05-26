@@ -25,8 +25,7 @@
             <th>Nr. of Submissions</th>
             <th>Submissions</th>
             <th>Last Submission Date</th>
-            <th>Failing Tests</th>
-            <th>Latest report</th>
+            <th>Last Submission Report</th>
         </tr>
         </thead>
         <!--/*@thymesVar id="signalledGroups" type="java.util.ArrayList<org.dropProject.data.GroupedProjectGroups>"*/-->
@@ -36,8 +35,7 @@
             <td th:text="${history.getNrOfSubmissions()}"></td>
             <td><a th:each="groupID: ${studentHistory.author.userId}" th:href="'/submissions/?assignmentId=' + ${history.assignment.id} + '&groupId=' + ${history.group.id}">View submissions</a></td>
             <td th:text="${history.getLastSubmission().submissionDate}"></td>
-            <td>...</td>
-            <td>..</td>
+            <td><a th:href="'/buildReport/' + ${history.getLastSubmission().id}">View</a></td>
         </tr>
     </table>
 
