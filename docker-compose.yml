@@ -1,0 +1,23 @@
+version: '3.5'
+
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: s3cret
+      MYSQL_DATABASE: dp
+      MYSQL_USER: dp
+      MYSQL_PASSWORD: dp
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d
+
+  drop-project:
+    image: pedroalv3s/drop-project-mysql
+    environment:
+      DB_URL: jdbc:mysql://db:3306/dp?connectTimeout=0&socketTimeout=0&autoReconnect=true&useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      DB_USERNAME: dp
+      DB_PASSWORD: dp
+    ports:
+      - "8080:8080"
+    links:
+      - db

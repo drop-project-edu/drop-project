@@ -71,6 +71,20 @@ And run the embedded tomcat runner:
 
 The application should now be accessible on [http://localhost:8080](http://localhost:8080)
 
+## Running with docker
+
+### Demo mode (in memory database)
+
+    docker run -p 8080:8080 pedroalv3s/drop-project-demo
+
+### Production mode (using mysql)
+
+Clone the project and in the root folder execute:
+
+    docker compose up
+
+The application should now be accessible on [http://localhost:8080](http://localhost:8080)
+
 ## Documentation
 
 [https://github.com/drop-project-edu/drop-project/wiki/Documentation](https://github.com/drop-project-edu/drop-project/wiki/Documentation)
