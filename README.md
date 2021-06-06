@@ -87,7 +87,7 @@ The application should now be accessible on [http://localhost:8080](http://local
 
 ## Documentation
 
-[https://github.com/drop-project-edu/drop-project/wiki/Documentation](https://github.com/drop-project-edu/drop-project/wiki/Documentation)
+[https://drop-project-edu.github.io/drop-project/](https://drop-project-edu.github.io/drop-project/)
 
 To generate source code documentation, run:
 
