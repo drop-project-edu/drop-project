@@ -951,7 +951,7 @@ class UploadControllerTests {
         try {
             testsHelper.createAndSetupAssignment(mvc, assignmentRepository, "sampleJavaAssignment", "Sample Java Assignment",
                     "org.dropProject.samples.sampleJavaAssignment",
-                    "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git",
+                    "UPLOAD", sampleJavaAssignmentRepo,
                     activateRightAfterCloning = true)
 
             val submissionId = testsHelper.uploadProject(this.mvc, "projectSampleJavaAssignmentNOK", "sampleJavaAssignment", STUDENT_1)

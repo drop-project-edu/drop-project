@@ -69,6 +69,7 @@ import org.springframework.validation.BindingResult
 import java.io.File
 import java.util.*
 
+const val sampleJavaAssignmentRepo = "git@github.com:drop-project-edu/sampleJavaAssignment.git"
 
 @RunWith(SpringRunner::class)
 @AutoConfigureMockMvc
@@ -183,6 +184,7 @@ class AssignmentControllerTests {
             .andExpect(view().name("assignment-form"))
             .andExpect(model().attributeHasFieldErrors("assignmentForm", "acl"))
 
+
         mvc.perform(
             post("/assignment/new")
                 .param("assignmentId", "assignmentId")
@@ -190,7 +192,7 @@ class AssignmentControllerTests {
                 .param("assignmentPackage", "assignmentPackage")
                 .param("language", "JAVA")
                 .param("submissionMethod", "UPLOAD")
-                .param("gitRepositoryUrl", "git@github.com:palves-ulht/sampleJavaAssignment.git")
+                .param("gitRepositoryUrl", sampleJavaAssignmentRepo)
                 .param("acceptsStudentTests", "true")    // <<<<
                 .param("calculateStudentTestsCoverage", "true")  // <<<<
                 .param("minStudentTests", "1")   // <<<<
@@ -210,7 +212,7 @@ class AssignmentControllerTests {
             testsHelper.createAndSetupAssignment(
                 mvc, assignmentRepository, "dummyAssignment1", "Dummy Assignment",
                 "org.dummy",
-                "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git"
+                "UPLOAD", sampleJavaAssignmentRepo
             )
 
         } finally {
@@ -362,7 +364,7 @@ class AssignmentControllerTests {
             testsHelper.createAndSetupAssignment(
                 mvc, assignmentRepository, "dummyAssignment4", "Dummy Assignment",
                 "org.dummy",
-                "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git",
+                "UPLOAD", sampleJavaAssignmentRepo,
                 teacherId = "p1", activateRightAfterCloning = false
             )
 
@@ -384,7 +386,7 @@ class AssignmentControllerTests {
             assertEquals("Dummy Assignment", assignment.name)
             assertEquals("org.dummy", assignment.packageName)
             assertEquals(SubmissionMethod.UPLOAD, assignment.submissionMethod)
-            assertEquals("git@github.com:palves-ulht/sampleJavaAssignment.git", assignment.gitRepositoryUrl)
+            assertEquals(sampleJavaAssignmentRepo, assignment.gitRepositoryUrl)
             assertEquals("p1", assignment.ownerUserId)
             assertEquals(false, assignment.active)
 
@@ -409,7 +411,7 @@ class AssignmentControllerTests {
                 .param("assignmentPackage", "org.dummy")
                 .param("submissionMethod", "UPLOAD")
                 .param("language", "JAVA")
-                .param("gitRepositoryUrl", "git@github.com:palves-ulht/sampleJavaAssignment.git")
+                .param("gitRepositoryUrl", sampleJavaAssignmentRepo)
         )
             .andExpect(status().isFound())
             .andExpect(header().string("Location", "/assignment/setup-git/dummyAssignment5"))
@@ -433,7 +435,7 @@ class AssignmentControllerTests {
             testsHelper.createAndSetupAssignment(
                 mvc, assignmentRepository, "dummyAssignment6", "Dummy Assignment",
                 "org.dummy",
-                "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git",
+                "UPLOAD", sampleJavaAssignmentRepo,
                 assignees = "21800000"
             )
 
@@ -479,7 +481,7 @@ class AssignmentControllerTests {
             testsHelper.createAndSetupAssignment(
                 mvc, assignmentRepository, "dummyAssignment7", "Dummy Assignment",
                 "org.dummy",
-                "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git",
+                "UPLOAD", sampleJavaAssignmentRepo,
                 acl = "p1000, p1001"
             )
 
@@ -522,7 +524,7 @@ class AssignmentControllerTests {
             testsHelper.createAndSetupAssignment(
                 mvc, assignmentRepository, "dummyAssignment8", "Dummy Assignment",
                 "org.dummy",
-                "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git"
+                "UPLOAD", sampleJavaAssignmentRepo
             )
 
             // get edit form
@@ -538,7 +540,7 @@ class AssignmentControllerTests {
                             assignmentPackage = "org.dummy",
                             submissionMethod = SubmissionMethod.UPLOAD,
                             language = Language.JAVA,
-                            gitRepositoryUrl = "git@github.com:palves-ulht/sampleJavaAssignment.git",
+                            gitRepositoryUrl = sampleJavaAssignmentRepo,
                             hiddenTestsVisibility = TestVisibility.SHOW_PROGRESS,
                             editMode = true
                         )
@@ -553,7 +555,7 @@ class AssignmentControllerTests {
                     .param("editMode", "true")
                     .param("submissionMethod", "UPLOAD")
                     .param("language", "JAVA")
-                    .param("gitRepositoryUrl", "git@github.com:palves-ulht/sampleJavaAssignment.git")
+                    .param("gitRepositoryUrl", sampleJavaAssignmentRepo)
                     .param("leaderboardType", "ELLAPSED")
             )
                 .andExpect(status().isFound())
@@ -571,7 +573,7 @@ class AssignmentControllerTests {
                             assignmentName = "New Name",
                             submissionMethod = SubmissionMethod.UPLOAD,
                             language = Language.JAVA,
-                            gitRepositoryUrl = "git@github.com:palves-ulht/sampleJavaAssignment.git",
+                            gitRepositoryUrl = sampleJavaAssignmentRepo,
                             editMode = true,
                             leaderboardType = LeaderboardType.ELLAPSED
                         )
@@ -702,7 +704,7 @@ class AssignmentControllerTests {
             testsHelper.createAndSetupAssignment(
                 mvc, assignmentRepository, "dummyAssignment4", "Dummy Assignment",
                 "org.dummy",
-                "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git",
+                "UPLOAD", sampleJavaAssignmentRepo,
                 teacherId = "p1", activateRightAfterCloning = false
             )
 
@@ -764,7 +766,7 @@ class AssignmentControllerTests {
             testsHelper.createAndSetupAssignment(
                 mvc, assignmentRepository, "dummyAssignment1", "Dummy Assignment",
                 "org.dummy",
-                "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git"
+                "UPLOAD", sampleJavaAssignmentRepo
             )
 
             val contentString = this.mvc.perform(post("/assignment/refresh-git/dummyAssignment1"))
@@ -850,7 +852,7 @@ class AssignmentControllerTests {
                 .param("assignmentPackage", "org.dummy")
                 .param("submissionMethod", "UPLOAD")
                 .param("language", "JAVA")
-                .param("gitRepositoryUrl", "git@github.com:palves-ulht/sampleJavaAssignment.git")
+                .param("gitRepositoryUrl", sampleJavaAssignmentRepo)
                 .param("assignmentTags", "sample,test,simple")
         )
             .andExpect(status().isFound())
@@ -882,7 +884,7 @@ class AssignmentControllerTests {
             testsHelper.createAndSetupAssignment(
                 mvc, assignmentRepository, "dummyAssignmentTags", "Dummy Assignment",
                 "org.dummy",
-                "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git",
+                "UPLOAD", sampleJavaAssignmentRepo,
                 tags = "sample,test,simple"
             )  // <<<<
 
@@ -894,7 +896,7 @@ class AssignmentControllerTests {
                     .param("assignmentPackage", "org.dummy")
                     .param("submissionMethod", "UPLOAD")
                     .param("language", "JAVA")
-                    .param("gitRepositoryUrl", "git@github.com:palves-ulht/sampleJavaAssignment.git")
+                    .param("gitRepositoryUrl", sampleJavaAssignmentRepo)
                     .param("editMode", "true")
                     .param("assignmentTags", "sample,complex") // <<<<
             )
@@ -936,7 +938,7 @@ class AssignmentControllerTests {
             testsHelper.createAndSetupAssignment(
                 mvc, assignmentRepository, "dummyAssignmentTests", "Dummy Assignment",
                 "org.dummy",
-                "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git"
+                "UPLOAD", sampleJavaAssignmentRepo
             )
 
             val mvcResult = this.mvc.perform(get("/assignment/info/dummyAssignmentTests"))
@@ -945,8 +947,9 @@ class AssignmentControllerTests {
 
             @Suppress("UNCHECKED_CAST")
             val testMethods = mvcResult.modelAndView.modelMap["tests"] as List<AssignmentTestMethod>
-            assertEquals(2, testMethods.size)
-            assertThat(testMethods.map { it.testMethod }, Matchers.contains("testFindMax", "testFindMaxWithNull"))
+            assertEquals(4, testMethods.size)
+            assertThat(testMethods.map { it.testMethod },
+                contains("testFindMax", "testFindMaxWithNull", "testFindMaxAllNegative", "testFindMaxNegativeAndPositive"))
 
         } finally {
 
@@ -976,14 +979,14 @@ class AssignmentControllerTests {
             testsHelper.createAndSetupAssignment(
                 mvc, assignmentRepository, "dummyAssignment4", "Dummy Assignment",
                 "org.dummy",
-                "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git",
+                "UPLOAD", sampleJavaAssignmentRepo,
                 teacherId = "p1", activateRightAfterCloning = false, tags = "sample,test"
             )
 
             testsHelper.createAndSetupAssignment(
                 mvc, assignmentRepository, "dummyAssignment5", "Dummy Assignment",
                 "org.dummy",
-                "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git",
+                "UPLOAD", sampleJavaAssignmentRepo,
                 teacherId = "p1", activateRightAfterCloning = false, tags = "other,test"
             )
 
@@ -1043,7 +1046,7 @@ class AssignmentControllerTests {
             testsHelper.createAndSetupAssignment(
                 mvc, assignmentRepository, "dummyAssignment1", "Dummy Assignment",
                 "org.dummy",
-                "UPLOAD", "git@github.com:palves-ulht/sampleJavaAssignment.git",
+                "UPLOAD", sampleJavaAssignmentRepo,
                 dueDate = "2022-10-31T01:30:00.000-00:00"
             )
 
@@ -1085,7 +1088,7 @@ class AssignmentControllerTests {
             assertEquals("JAVA", node.at("/language").asText())
             assertEquals("SHOW_PROGRESS", node.at("/hiddenTestsVisibility").asText())
             assertFalse(node.at("/acceptsStudentTests").asBoolean())
-            assertEquals("git@github.com:palves-ulht/sampleJavaAssignment.git", node.at("/gitRepositoryUrl").asText())
+            assertEquals(sampleJavaAssignmentRepo, node.at("/gitRepositoryUrl").asText())
             assertEquals(TestsHelper.sampleJavaAssignmentPublicKey, node.at("/gitRepositoryPubKey").asText())
             assertEquals(TestsHelper.sampleJavaAssignmentPrivateKey, node.at("/gitRepositoryPrivKey").asText())
             assertEquals("dummyAssignment1", node.at("/gitRepositoryFolder").asText())
