@@ -92,7 +92,7 @@
                     <td th:text="${groupStats.groupID}"/></td>
                     <td th:text="${groupStats.group.authorsNameStr()}"></td>
                     <td>
-                        <a th:each="groupID: ${groupStats.groupID}" th:href="'/submissions/?assignmentId=' + ${assignmentId} + '&groupId=' + ${groupID}">View submissions</a>
+                        <a th:each="groupID: ${groupStats.groupID}" th:href="@{'/submissions/?assignmentId=' + ${assignmentId} + '&groupId=' + ${groupID}}">View submissions</a>
                     </td>
                     <td th:text="${groupStats.nrSubmissions}"/></td>
                     <td th:text="${groupStats.nrPassedTests}"/></td>
@@ -114,7 +114,6 @@
         // clicking on a tab changes the url
         $(document).ready(function() {
             $('#myTab a').click(function(e) {
-                //alert("999");
                 e.preventDefault();
                 var url = $(this).attr("href");
                 location.href = url;

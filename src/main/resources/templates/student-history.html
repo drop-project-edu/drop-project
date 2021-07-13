@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en">
+<head th:replace="layout/layout :: head (pageTitle='Drop Project - Student History / Tracker 3000')">
+</head>
+<body>
+
+<div th:replace="layout/layout :: header"></div>
+
+<div class="container" style="max-width: 900px; margin-bottom: 65px">
+    <div th:if="${message}">
+        <div class="alert alert-info" th:text="${message}"/>
+    </div>
+
+    <div th:if="${studentHistory}">
+        <strong>Student ID:</strong> <div th:text="${studentHistory.author.userId}"></div>
+        <strong>Student Name:</strong> <div th:text="${studentHistory.author.name}"></div>
+    </div>
+
+    <table class="table" th:if="${studentHistory}">
+        <thead>
+        <tr>
+            <th>Assignment ID</th>
+            <th>Group Members</th>
+            <th>Nr. of Submissions</th>
+            <th>Submissions</th>
+            <th>Last Submission Date</th>
+            <th>Last Submission Report</th>
+        </tr>
+        </thead>
+        <!--/*@thymesVar id="signalledGroups" type="java.util.ArrayList<org.dropProject.data.GroupedProjectGroups>"*/-->
+        <tr th:each="history: ${studentHistory.history}">
+            <td th:text="${history.assignment.id}"/></td>
+            <td><a th:each="author: ${history.getGroup().authors}" th:href="'/studentHistory/' + ${author.userId}"><span th:text="${author.name}"></span></a></td>
+            <td th:text="${history.getNrOfSubmissions()}"></td>
+            <td><a th:each="groupID: ${studentHistory.author.userId}" th:href="'/submissions/?assignmentId=' + ${history.assignment.id} + '&groupId=' + ${history.group.id}">View submissions</a></td>
+            <td th:text="${history.getLastSubmission().submissionDate}"></td>
+            <td><a th:href="'/buildReport/' + ${history.getLastSubmission().id}">View</a></td>
+        </tr>
+    </table>
+
+</div>
+
+<div th:replace="layout/layout :: footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-confirmation2@2.4.2/bootstrap-confirmation.min.js"></script>
+<script>
+    $(document).ready(function() {
+
+        // clicking on a tab changes the url
+        $(document).ready(function() {
+            $('#myTab a').click(function(e) {
+                e.preventDefault();
+                var url = $(this).attr("href");
+                location.href = url;
+            });
+        });
+    } );
+</script>
+
+</body>
+</html>
