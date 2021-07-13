@@ -63,7 +63,7 @@ Note:
 * Configuring the first file will allow you to run Drop Project.
 * Configuring the second file will allow you to run Drop Project's unit tests.
 * Linux users: the Maven Home is usually in `/usr/share/maven` (otherwise, try: `whereis maven`) and the Maven Repository is in `/home/<USERNAME>/.m2`
-* Windows users: the Maven Home is the installation directory and the Maven Repository is in `c:\Users\<$USERNAME>\.m2`
+* Windows users: the Maven Home is the installation directory and the Maven Repository is in `c:\Users\<USERNAME>\.m2`
 
 And run the embedded tomcat runner:
 
