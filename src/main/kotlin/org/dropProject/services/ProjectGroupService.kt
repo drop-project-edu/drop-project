@@ -48,7 +48,7 @@ class ProjectGroupService(val projectGroupRepository: ProjectGroupRepository,
      fun searchExistingProjectGroupOrCreateNew(authors: List<AuthorDetails>): ProjectGroup {
         val groups = projectGroupRepository.getGroupsForAuthor(authors.first().number)
         for (group in groups) {
-            val groupWithAuthors = projectGroupRepository.getOne(group.id) // need this to fetch all the authors of this group
+            val groupWithAuthors = projectGroupRepository.getById(group.id) // need this to fetch all the authors of this group
             if (groupWithAuthors.authors.size == authors.size &&
                 groupWithAuthors.authors.map { it.userId }.containsAll(authors.map { it.number })) {
                 // it's the same group

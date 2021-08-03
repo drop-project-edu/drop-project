@@ -31,7 +31,7 @@ import java.util.*
 @Service
 class MyAsyncUncaughtExceptionHandler(val submissionRepository: SubmissionRepository): SimpleAsyncUncaughtExceptionHandler() {
 
-    override fun handleUncaughtException(ex: Throwable?, method: Method?, vararg params: Any?) {
+    override fun handleUncaughtException(ex: Throwable, method: Method, vararg params: Any) {
         super.handleUncaughtException(ex, method, *params)
         // TODO: test this for build_report table
 //        if (params.size >= 3) {

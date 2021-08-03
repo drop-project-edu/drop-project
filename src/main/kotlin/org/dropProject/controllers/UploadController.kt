@@ -126,7 +126,7 @@ class UploadController(
 
         val assignees = assigneeRepository.findByAuthorUserId(principal.realName())
         for (assignee in assignees) {
-            val assignment = assignmentRepository.getOne(assignee.assignmentId)
+            val assignment = assignmentRepository.getById(assignee.assignmentId)
             if (assignment.active == true) {
                 assignments.add(assignment)
             }
@@ -261,8 +261,11 @@ class UploadController(
             throw IllegalArgumentException("assignmentId is null")
         }
 
-        val assignment = assignmentRepository.findById(uploadForm.assignmentId).orElse(null) ?:
-                throw IllegalArgumentException("assignment ${uploadForm.assignmentId} is not registered")
+        val assignmentId = uploadForm.assignmentId ?:
+            throw IllegalArgumentException("Upload form is missing the assignmentId")
+
+        val assignment = assignmentRepository.findById(assignmentId).orElse(null) ?:
+                throw IllegalArgumentException("assignment ${assignmentId} is not registered")
 
         if (assignment.submissionMethod != SubmissionMethod.UPLOAD) {
             throw IllegalArgumentException("this assignment doesnt accept upload submissions")
@@ -273,7 +276,7 @@ class UploadController(
         if (!request.isUserInRole("TEACHER")) {
 
             if (!assignment.active) {
-                throw org.springframework.security.access.AccessDeniedException("Submissions are not open to this assignment")
+                throw AccessDeniedException("Submissions are not open to this assignment")
             }
 
             checkAssignees(uploadForm.assignmentId!!, principal.realName())
@@ -285,21 +288,24 @@ class UploadController(
                 val nextSubmissionTime = calculateCoolOff(lastSubmission, assignment)
                 if (nextSubmissionTime != null) {
                     LOG.warn("[${principal.realName()}] can't submit because he is in cool-off period")
-                    throw org.springframework.security.access.AccessDeniedException("[${principal.realName()}] can't submit because he is in cool-off period")
+                    throw AccessDeniedException("[${principal.realName()}] can't submit because he is in cool-off period")
                 }
             }
         }
 
-        if (!file.originalFilename.endsWith(".zip", ignoreCase = true)) {
+        val originalFilename = file.originalFilename ?:
+            throw IllegalArgumentException("Missing originalFilename")
+
+        if (!originalFilename.endsWith(".zip", ignoreCase = true)) {
             return ResponseEntity("{\"error\": \"O ficheiro tem que ser um .zip\"}", HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        LOG.info("[${principal.realName()}] uploaded ${file.originalFilename}")
+        LOG.info("[${principal.realName()}] uploaded ${originalFilename}")
         val projectFolder : File? = storageService.store(file, assignment.id)
 
         if (projectFolder != null) {
             val authors = getProjectAuthors(projectFolder)
-            LOG.info("[${authors.joinToString(separator = "|")}] Received ${file.originalFilename}")
+            LOG.info("[${authors.joinToString(separator = "|")}] Received ${originalFilename}")
 
             // check if the principal is one of group elements
             if (authors.filter { it.number == principal.realName() }.isEmpty()) {
@@ -564,7 +570,7 @@ class UploadController(
 
         val submission = submissionRepository.findById(submissionId).orElse(null) ?: throw SubmissionNotFoundException(submissionId)
 
-        val assignment = assignmentRepository.getOne(submission.assignmentId)
+        val assignment = assignmentRepository.getById(submission.assignmentId)
 
         // create another submission that is a clone of this one, to preserve the original submission
         val rebuiltSubmission = Submission(submissionId = submission.submissionId,
@@ -596,7 +602,8 @@ class UploadController(
                 projectFolder
 
             } else if (submission.gitSubmissionId != null) {   // submission through git
-                val gitSubmission = gitSubmissionRepository.findById(submission.gitSubmissionId).orElse(null) ?:
+                val gitSubmissionId = submission.gitSubmissionId ?: throw RuntimeException("Not possible")
+                val gitSubmission = gitSubmissionRepository.findById(gitSubmissionId).orElse(null) ?:
                                         throw SubmissionNotFoundException(submission.gitSubmissionId!!)
 
                 File(gitSubmissionsRootLocation, gitSubmission.getFolderRelativeToStorageRoot())
@@ -708,7 +715,7 @@ class UploadController(
                                                  model: ModelMap, principal: Principal,
                                                  request: HttpServletRequest): String {
 
-        val assignment = assignmentRepository.getOne(assignmentId)
+        val assignment = assignmentRepository.getById(assignmentId)
 
         if (!request.isUserInRole("TEACHER")) {
 
@@ -778,8 +785,8 @@ class UploadController(
     fun connectAssignmentToGitRepository(@PathVariable gitSubmissionId: String, redirectAttributes: RedirectAttributes,
                                          model: ModelMap, principal: Principal): String {
 
-        val gitSubmission = gitSubmissionRepository.getOne(gitSubmissionId.toLong())
-        val assignment = assignmentRepository.getOne(gitSubmission.assignmentId)
+        val gitSubmission = gitSubmissionRepository.getById(gitSubmissionId.toLong())
+        val assignment = assignmentRepository.getById(gitSubmission.assignmentId)
 
         if (!gitSubmission.connected) {
 
@@ -861,7 +868,7 @@ class UploadController(
                                        principal: Principal): ResponseEntity<String> {
 
         // check that it exists
-        val gitSubmission = gitSubmissionRepository.getOne(submissionId.toLong())
+        val gitSubmission = gitSubmissionRepository.getById(submissionId.toLong())
 
         if (!gitSubmission.group.contains(principal.realName())) {
             throw IllegalAccessError("Submissions can only be refreshed by their owners")
@@ -969,8 +976,8 @@ class UploadController(
 
         LOG.info("[${principal.realName()}] Reset git connection")
 
-        val gitSubmission = gitSubmissionRepository.getOne(gitSubmissionId.toLong())
-        val assignment = assignmentRepository.getOne(gitSubmission.assignmentId)
+        val gitSubmission = gitSubmissionRepository.getById(gitSubmissionId.toLong())
+        val assignment = assignmentRepository.getById(gitSubmission.assignmentId)
         val repositoryUrl = gitSubmission.gitRepositoryUrl
 
         if (!principal.realName().equals(gitSubmission.submitterUserId)) {

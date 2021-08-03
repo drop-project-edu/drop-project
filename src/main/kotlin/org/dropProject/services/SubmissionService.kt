@@ -69,24 +69,24 @@ class SubmissionService(
                 }
             }
 
-            if (lastSubmission.buildReportId != null) {
+            lastSubmission.buildReportId?.let {
+                buildReportId ->
+                    val reportElements = submissionReportRepository.findBySubmissionId(lastSubmission.id)
+                    lastSubmission.reportElements = reportElements
 
-                val reportElements = submissionReportRepository.findBySubmissionId(lastSubmission.id)
-                lastSubmission.reportElements = reportElements
+                    val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(lastSubmission,
+                            lastSubmission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
+                    val buildReportDB = buildReportRepository.getById(buildReportId)
+                    val buildReport = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
+                            mavenizedProjectFolder.absolutePath, assignment, lastSubmission)
+                    lastSubmission.ellapsed = buildReport.elapsedTimeJUnit()
+                    lastSubmission.teacherTests = buildReport.junitSummaryAsObject(TestType.TEACHER)
+                    lastSubmission.hiddenTests = buildReport.junitSummaryAsObject(TestType.HIDDEN)
+                    if (buildReport.jacocoResults.isNotEmpty()) {
+                        lastSubmission.coverage = buildReport.jacocoResults[0].lineCoveragePercent
+                    }
 
-                val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(lastSubmission,
-                        lastSubmission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
-                val buildReportDB = buildReportRepository.getOne(lastSubmission.buildReportId)
-                val buildReport = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
-                        mavenizedProjectFolder.absolutePath, assignment, lastSubmission)
-                lastSubmission.ellapsed = buildReport.elapsedTimeJUnit()
-                lastSubmission.teacherTests = buildReport.junitSummaryAsObject(TestType.TEACHER)
-                lastSubmission.hiddenTests = buildReport.junitSummaryAsObject(TestType.HIDDEN)
-                if (buildReport.jacocoResults.isNotEmpty()) {
-                    lastSubmission.coverage = buildReport.jacocoResults[0].lineCoveragePercent
-                }
-
-                lastSubmission.testResults = buildReport.testResults()
+                    lastSubmission.testResults = buildReport.testResults()
             }
 
             submissionInfoList.add(SubmissionInfo(group, lastSubmission, sortedSubmissionList))

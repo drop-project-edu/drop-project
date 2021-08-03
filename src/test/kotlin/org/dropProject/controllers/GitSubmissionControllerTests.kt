@@ -178,7 +178,7 @@ class GitSubmissionControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(view().name("student-git-form"))
                 .andReturn()
-        assertNull(result.modelAndView.modelMap["gitSubmission"])
+        assertNull(result.modelAndView!!.modelMap["gitSubmission"])
 
         testsHelper.connectToGitRepositoryAndBuildReport(mvc, gitSubmissionRepository, defaultAssignmentId,
                 "git@github.com:palves-ulht/sampleJavaSubmission.git", "student1")
@@ -189,7 +189,7 @@ class GitSubmissionControllerTests {
                 .andReturn()
 
         @Suppress("UNCHECKED_CAST")
-        val summary = reportResult.modelAndView.modelMap["summary"] as List<SubmissionReport>
+        val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
         assertEquals("Summary should be 4 lines", 4, summary.size)
         assertEquals("projectStructure should be OK (key)", Indicator.PROJECT_STRUCTURE, summary.get(0).indicator)
         assertEquals("projectStructure should be OK (value)", "OK", summary.get(0).reportValue)
@@ -215,7 +215,7 @@ class GitSubmissionControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(view().name("student-git-form"))
                 .andReturn()
-        assertNotNull(result2.modelAndView.modelMap["gitSubmission"])
+        assertNotNull(result2.modelAndView!!.modelMap["gitSubmission"])
     }
 
 

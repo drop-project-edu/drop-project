@@ -321,11 +321,11 @@ class AssignmentService(
         existingAssignment.leaderboardType = assignmentForm.leaderboardType
 
         // update tags
-        val tagNames = assignmentForm.assignmentTags?.toLowerCase()?.split(",")
+        val tagNames = assignmentForm.assignmentTags?.lowercase(Locale.getDefault())?.split(",")
         existingAssignment.tags.clear()
         tagNames?.forEach {
-            existingAssignment.tags.add(assignmentTagRepository.findByName(it.trim().toLowerCase())
-                    ?: AssignmentTag(name = it.trim().toLowerCase()))
+            existingAssignment.tags.add(assignmentTagRepository.findByName(it.trim().lowercase(Locale.getDefault()))
+                    ?: AssignmentTag(name = it.trim().lowercase(Locale.getDefault())))
         }
     }
 

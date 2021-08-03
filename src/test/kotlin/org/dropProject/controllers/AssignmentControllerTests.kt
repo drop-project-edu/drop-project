@@ -331,14 +331,14 @@ class AssignmentControllerTests {
             .andReturn()
 
         val result =
-            mvcResult.modelAndView.model.get(BindingResult.MODEL_KEY_PREFIX + "assignmentForm") as BindingResult
+            mvcResult.modelAndView!!.model.get(BindingResult.MODEL_KEY_PREFIX + "assignmentForm") as BindingResult
         assertEquals(
             "Error cloning git repository. Are you sure the url is right?",
-            result.getFieldError("gitRepositoryUrl").defaultMessage
+            result.getFieldError("gitRepositoryUrl")?.defaultMessage
         )
 
         try {
-            assignmentRepository.getOne("dummyAssignment3")
+            assignmentRepository.getById("dummyAssignment3")
             fail("dummyAssignment shouldn't exist in the database")
         } catch (e: Exception) {
         }
@@ -379,7 +379,7 @@ class AssignmentControllerTests {
                 .andReturn()
 
             @Suppress("UNCHECKED_CAST")
-            val assignments = mvcResult.modelAndView.modelMap["assignments"] as List<Assignment>
+            val assignments = mvcResult.modelAndView!!.modelMap["assignments"] as List<Assignment>
             val assignment = assignments[0]
 
             assertEquals("dummyAssignment4", assignment.id)
@@ -491,7 +491,7 @@ class AssignmentControllerTests {
                 .andReturn()
 
             @Suppress("UNCHECKED_CAST")
-            val aclList = mvcResult.modelAndView.modelMap["acl"] as List<AssignmentACL>
+            val aclList = mvcResult.modelAndView!!.modelMap["acl"] as List<AssignmentACL>
             assertEquals(2, aclList.size)
             assertEquals("p1000", aclList[0].userId)
             assertEquals("p1001", aclList[1].userId)
@@ -742,7 +742,7 @@ class AssignmentControllerTests {
                 .andReturn()
 
             @Suppress("UNCHECKED_CAST")
-            val assignments = mvcResult.modelAndView.modelMap["assignments"] as List<Assignment>
+            val assignments = mvcResult.modelAndView!!.modelMap["assignments"] as List<Assignment>
             val assignment = assignments[0]
 
             assertEquals("dummyAssignment4", assignment.id)
@@ -827,7 +827,7 @@ class AssignmentControllerTests {
             .andReturn()
 
         @Suppress("UNCHECKED_CAST")
-        val report = reportResult.modelAndView.modelMap["submissions"] as List<SubmissionInfo>
+        val report = reportResult.modelAndView!!.modelMap["submissions"] as List<SubmissionInfo>
         report.forEach {
             assertTrue(it.lastSubmission.markedAsFinal)
         }
@@ -864,7 +864,7 @@ class AssignmentControllerTests {
             .andReturn()
 
         @Suppress("UNCHECKED_CAST")
-        val assignment = mvcResult.modelAndView.modelMap["assignment"] as Assignment
+        val assignment = mvcResult.modelAndView!!.modelMap["assignment"] as Assignment
         val tagNames = assignment.tags.map { it.name }
         assertThat(tagNames, Matchers.containsInAnyOrder("sample", "test", "simple"))
 
@@ -909,7 +909,7 @@ class AssignmentControllerTests {
                 .andReturn()
 
             @Suppress("UNCHECKED_CAST")
-            val assignment = mvcResult.modelAndView.modelMap["assignment"] as Assignment
+            val assignment = mvcResult.modelAndView!!.modelMap["assignment"] as Assignment
             val tagNames = assignment.tags.map { it.name }
             assertEquals(2, tagNames.size)
             assertThat(tagNames, Matchers.containsInAnyOrder("sample", "complex"))
@@ -946,7 +946,7 @@ class AssignmentControllerTests {
                 .andReturn()
 
             @Suppress("UNCHECKED_CAST")
-            val testMethods = mvcResult.modelAndView.modelMap["tests"] as List<AssignmentTestMethod>
+            val testMethods = mvcResult.modelAndView!!.modelMap["tests"] as List<AssignmentTestMethod>
             assertEquals(4, testMethods.size)
             assertThat(testMethods.map { it.testMethod },
                 contains("testFindMax", "testFindMaxWithNull", "testFindMaxAllNegative", "testFindMaxNegativeAndPositive"))
@@ -1058,7 +1058,7 @@ class AssignmentControllerTests {
                 .andReturn()
 
             val redirectLocation = result.response.getHeader("Location")
-            assertNotNull(redirectLocation)
+            kotlin.test.assertNotNull(redirectLocation)
 
             val result2 = this.mvc.perform(
                 get(redirectLocation)
@@ -1129,11 +1129,11 @@ class AssignmentControllerTests {
                 .andExpect(status().isOk)
                 .andReturn()
 
-            val assignment = mvcResult.modelAndView.model["assignment"] as Assignment
+            val assignment = mvcResult.modelAndView!!.model["assignment"] as Assignment
             assertEquals("dummyAssignment1", assignment.id)
             assertEquals("teacher1", assignment.ownerUserId)
-            mvcResult.modelAndView.model["tests"]
-            mvcResult.modelAndView.model["report"]
+            mvcResult.modelAndView!!.model["tests"]
+            mvcResult.modelAndView!!.model["report"]
 
         } finally {
             // remove the assignments files created during the test
@@ -1169,7 +1169,7 @@ class AssignmentControllerTests {
             .andReturn()
 
         val redirectLocation = result.response.getHeader("Location")
-        assertNotNull(redirectLocation)
+        kotlin.test.assertNotNull(redirectLocation)
 
         val result2 = this.mvc.perform(
             get(redirectLocation)
@@ -1222,8 +1222,8 @@ class AssignmentControllerTests {
             fail("invalid xmlReport")
         }
 
-        assertEquals("student5", node.at("/3/authors/0/userId").asText())
-        assertEquals("student4", node.at("/3/authors/1/userId").asText())
+        assertEquals("student4", node.at("/3/authors/0/userId").asText())
+        assertEquals("student5", node.at("/3/authors/1/userId").asText())
 
         val fileHeaders = downloadedFileAsZipObject.fileHeaders as List<FileHeader>
         assertEquals(9, fileHeaders.size)
@@ -1262,7 +1262,7 @@ class AssignmentControllerTests {
                 .andReturn()
 
             @Suppress("UNCHECKED_CAST")
-            val report = reportResult.modelAndView.modelMap["submissions"] as List<SubmissionInfo>
+            val report = reportResult.modelAndView!!.modelMap["submissions"] as List<SubmissionInfo>
             assertEquals(4, report.size)
 
         } finally {
@@ -1298,7 +1298,7 @@ class AssignmentControllerTests {
             .andReturn()
 
         val redirectLocation = result.response.getHeader("Location")
-        assertNotNull(redirectLocation)
+        kotlin.test.assertNotNull(redirectLocation)
 
         val result2 = this.mvc.perform(
             get(redirectLocation)
@@ -1361,7 +1361,7 @@ class AssignmentControllerTests {
                 .andReturn()
 
             @Suppress("UNCHECKED_CAST")
-            val report = reportResult.modelAndView.modelMap["submissions"] as List<SubmissionInfo>
+            val report = reportResult.modelAndView!!.modelMap["submissions"] as List<SubmissionInfo>
             assertEquals(4, report.size)
 
             // TODO check git submission

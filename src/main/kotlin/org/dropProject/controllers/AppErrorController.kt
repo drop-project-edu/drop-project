@@ -19,6 +19,7 @@
  */
 package org.dropProject.controllers
 
+import org.springframework.boot.web.error.ErrorAttributeOptions
 import org.springframework.boot.web.servlet.error.ErrorAttributes
 import org.springframework.boot.web.servlet.error.ErrorController
 import org.springframework.http.HttpStatus
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseBody
 import org.springframework.web.context.request.WebRequest
 import org.springframework.web.servlet.ModelAndView
+import java.util.*
 import javax.servlet.http.HttpServletRequest
 
 const val ERROR_PATH = "/error"
@@ -52,24 +54,20 @@ class AppErrorController(var errorAttributes: ErrorAttributes) : ErrorController
         return ResponseEntity(body, status)
     }
 
-    /**
-     * Returns the path of the error page.
-     *
-     * @return the error path
-     */
-    override fun getErrorPath(): String {
-        return ERROR_PATH
-    }
-
-
     private fun getTraceParameter(request: HttpServletRequest): Boolean {
         val parameter = request.getParameter("trace") ?: return false
-        return "false" != parameter.toLowerCase()
+        return "false" != parameter.lowercase(Locale.getDefault())
     }
 
     private fun getErrorAttributes(webRequest: WebRequest,
                                    includeStackTrace: Boolean): Map<String, Any> {
-        return this.errorAttributes.getErrorAttributes(webRequest, includeStackTrace)
+        if (includeStackTrace) {
+            return this.errorAttributes.getErrorAttributes(webRequest,
+                ErrorAttributeOptions.of(ErrorAttributeOptions.Include.STACK_TRACE))
+        } else {
+            return this.errorAttributes.getErrorAttributes(webRequest,
+                ErrorAttributeOptions.defaults())
+        }
     }
 
     private fun getStatus(request: HttpServletRequest): HttpStatus {

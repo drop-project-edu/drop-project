@@ -47,7 +47,8 @@ class FileSystemStorageService (val zipService : ZipService) : StorageService {
     }
 
     override fun store(file: MultipartFile, assignmentId: String) : File? {
-        val filename = StringUtils.cleanPath(file.originalFilename)
+        val originalFilename = file.originalFilename ?: throw IllegalArgumentException("Missing original filename")
+        val filename = StringUtils.cleanPath(originalFilename)
         try {
             if (file.isEmpty) {
                 throw StorageException("Failed to store empty file ${filename}")

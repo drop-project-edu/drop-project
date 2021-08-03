@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.dropProject</groupId>
@@ -18,7 +18,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.2.5.RELEASE</version>
+		<version>2.5.3</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
@@ -26,8 +26,8 @@
 		<kotlin.compiler.incremental>true</kotlin.compiler.incremental>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<java.version>1.8</java.version>
-		<kotlin.version>1.3.61</kotlin.version>
+		<java.version>11</java.version>
+		<kotlin.version>1.5.21</kotlin.version>
 		<start-class>org.dropProject.DropProjectApplication</start-class>
 		<license.licenseName>apache_v2</license.licenseName>
 		<orchid.version>0.21.0</orchid.version>
@@ -44,6 +44,10 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
 		<dependency>
@@ -53,12 +57,10 @@
 		<dependency>
 			<groupId>org.jetbrains.kotlin</groupId>
 			<artifactId>kotlin-stdlib-jdk8</artifactId>
-			<version>${kotlin.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jetbrains.kotlin</groupId>
 			<artifactId>kotlin-reflect</artifactId>
-			<version>${kotlin.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.opencsv</groupId>
@@ -88,10 +90,10 @@
 
 
 		<!-- to enable live reload -->
-<!--		<dependency>-->
-<!--			<groupId>org.springframework.boot</groupId>-->
-<!--			<artifactId>spring-boot-devtools</artifactId>-->
-<!--		</dependency>-->
+		<!--		<dependency>-->
+		<!--			<groupId>org.springframework.boot</groupId>-->
+		<!--			<artifactId>spring-boot-devtools</artifactId>-->
+		<!--		</dependency>-->
 
 		<!-- to detect file encodings -->
 		<dependency>
@@ -111,7 +113,7 @@
 		<dependency>
 			<groupId>org.thymeleaf.extras</groupId>
 			<artifactId>thymeleaf-extras-springsecurity5</artifactId>
-<!--			<version>2.1.3.RELEASE</version>-->
+			<!--			<version>2.1.3.RELEASE</version>-->
 		</dependency>
 
 		<!-- for parsing surefire (junit) test results -->
@@ -206,6 +208,12 @@
 			<version>1.19.0</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.jetbrains.kotlin</groupId>
+			<artifactId>kotlin-test</artifactId>
+			<version>${kotlin.version}</version>
+			<scope>test</scope>
+		</dependency>
 
 
 		<!-- this is necessary to build a war file that is both
@@ -249,30 +257,14 @@
 				<groupId>org.jetbrains.kotlin</groupId>
 				<artifactId>kotlin-maven-plugin</artifactId>
 				<configuration>
+					<args>
+						<arg>-Xjsr305=strict</arg>
+					</args>
 					<compilerPlugins>
-						<plugin>all-open</plugin>
 						<plugin>spring</plugin>
-						<plugin>no-arg</plugin>
 						<plugin>jpa</plugin>
 					</compilerPlugins>
-					<jvmTarget>1.8</jvmTarget>
 				</configuration>
-				<executions>
-					<execution>
-						<id>compile</id>
-						<phase>compile</phase>
-						<goals>
-							<goal>compile</goal>
-						</goals>
-					</execution>
-					<execution>
-						<id>test-compile</id>
-						<phase>test-compile</phase>
-						<goals>
-							<goal>test-compile</goal>
-						</goals>
-					</execution>
-				</executions>
 				<dependencies>
 					<dependency>
 						<groupId>org.jetbrains.kotlin</groupId>

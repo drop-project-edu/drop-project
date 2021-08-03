@@ -239,9 +239,10 @@ class BuildWorker(
             }
         }
 
-        if (submission.gitSubmissionId != null) {
-            val gitSubmission = gitSubmissionRepository.getOne(submission.gitSubmissionId)
-            gitSubmission.lastSubmissionId = submission.id
+        submission.gitSubmissionId?.let {
+            gitSubmissionId ->
+                val gitSubmission = gitSubmissionRepository.getById(gitSubmissionId)
+                gitSubmission.lastSubmissionId = submission.id
         }
 
         submissionRepository.save(submission)

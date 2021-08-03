@@ -165,7 +165,7 @@ class ReportControllerTests {
                 .andReturn()
 
         @Suppress("UNCHECKED_CAST")
-        val report = reportResult.modelAndView.modelMap["submissions"] as List<SubmissionInfo>
+        val report = reportResult.modelAndView!!.modelMap["submissions"] as List<SubmissionInfo>
 
         assertEquals("report should have 4 lines", 4, report.size)
         assertEquals("student1", report[0].projectGroup.authorsStr())
@@ -191,7 +191,7 @@ class ReportControllerTests {
                 .andReturn()
 
         @Suppress("UNCHECKED_CAST")
-        val submissions = mySubmissionsResult.modelAndView.modelMap["submissions"] as List<Submission>
+        val submissions = mySubmissionsResult.modelAndView!!.modelMap["submissions"] as List<Submission>
 
         assertEquals("there should exist only one submission", 1, submissions.size)
     }
@@ -401,7 +401,7 @@ class ReportControllerTests {
                 .andReturn()
 
         @Suppress("UNCHECKED_CAST")
-        val report = reportResult.modelAndView.modelMap["submissions"] as List<Submission>
+        val report = reportResult.modelAndView!!.modelMap["submissions"] as List<Submission>
 
         assertEquals("report should have 4 lines", 4, report.size)
         assertEquals("student3", report[3].group.authorsStr())  // this should be the last one because it has junit errors
@@ -445,8 +445,8 @@ class ReportControllerTests {
                         "1;student1;Student 1;NOK;;;;;${nowStr};1\n" +
                         "2;student2;Student 2;NOK;;;;;${nowStr};1\n" +
                         "3;student3;Student 3;OK;OK;OK;2;1;${nowStr};1\n" +
-                        "4;student5;Student 5;NOK;;;;;${nowStr};0\n" +
-                        "4;student4;Student 4;NOK;;;;;${nowStr};1\n"))
+                        "4;student4;Student 4;NOK;;;;;${nowStr};1\n" +
+                        "4;student5;Student 5;NOK;;;;;${nowStr};0\n"))
 
     }
 
@@ -485,8 +485,8 @@ class ReportControllerTests {
                             |1;student1;Student 1;OK;OK;OK;1;2;1;${nowStr};1
                             |2;student2;Student 2;OK;OK;OK;1;2;1;${nowStr};1
                             |3;student3;Student 3;OK;OK;OK;1;2;1;${nowStr};1
-                            |4;student5;Student 5;OK;OK;OK;1;2;1;${nowStr};0
                             |4;student4;Student 4;OK;OK;OK;1;2;1;${nowStr};1
+                            |4;student5;Student 5;OK;OK;OK;1;2;1;${nowStr};0
                             |
                         """.trimMargin()))
 
@@ -503,7 +503,7 @@ class ReportControllerTests {
                 .andReturn()
 
         @Suppress("UNCHECKED_CAST")
-        val tests = reportResult.modelAndView.modelMap["tests"] as LinkedHashMap<String,Int>
+        val tests = reportResult.modelAndView!!.modelMap["tests"] as LinkedHashMap<String,Int>
         assertEquals(3, tests.size)
         assertThat(tests.keys.map { "${it}->${tests[it]}" }, contains("testFuncaoParaTestar:TestTeacherProject->0",
                 "testFuncaoLentaParaTestar:TestTeacherProject->1",
@@ -538,7 +538,7 @@ class ReportControllerTests {
                 .andReturn()
 
         @Suppress("UNCHECKED_CAST")
-        val signalledGroups = reportResult.modelAndView.modelMap["signalledGroups"] as List<GroupedProjectGroups>
+        val signalledGroups = reportResult.modelAndView!!.modelMap["signalledGroups"] as List<GroupedProjectGroups>
 
         assert(signalledGroups != null)
         assert(signalledGroups.size == 1)
@@ -575,8 +575,8 @@ class ReportControllerTests {
                 .andReturn()
 
         @Suppress("UNCHECKED_CAST")
-        val message = reportResult.modelAndView.modelMap["message"] as String
-        val list = reportResult.modelAndView.modelMap["signalledGroups"]
+        val message = reportResult.modelAndView!!.modelMap["message"] as String
+        val list = reportResult.modelAndView!!.modelMap["signalledGroups"]
         assertNull(list)
         assertNotNull(message)
         assertEquals("No groups identified as similar", message)

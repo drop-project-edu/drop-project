@@ -28,6 +28,7 @@ import org.apache.maven.plugins.surefire.report.ReportTestSuite
 import org.dropProject.Constants
 import org.dropProject.dao.Assignment
 import java.io.ByteArrayInputStream
+import java.util.*
 
 enum class JUnitMethodResultType(val value: String) {
     SUCCESS("Success"),
@@ -71,7 +72,7 @@ data class JUnitMethodResult(val methodName: String,
     }
 
     override fun toString(): String {
-        return "${type.value.toUpperCase()}: ${fullMethodName}\n${failureDetailLines?.joinToString("\n")}\n\n"
+        return "${type.value.uppercase(Locale.getDefault())}: ${fullMethodName}\n${failureDetailLines?.joinToString("\n")}\n\n"
     }
 }
 

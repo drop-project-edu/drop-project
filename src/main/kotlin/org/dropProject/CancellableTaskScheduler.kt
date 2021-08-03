@@ -27,8 +27,7 @@ import kotlin.concurrent.schedule
 
 class CancellableTaskScheduler(val timeout: Long) : ThreadPoolTaskScheduler() {
 
-    override fun <T : Any?> submit(task: Callable<T>?): Future<T> {
-
+    override fun submit(task: Runnable): Future<*> {
         val future = super.submit(task)
 
         Timer("Timeout", false).schedule(timeout) { future.cancel(true) }

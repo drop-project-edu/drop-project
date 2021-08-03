@@ -211,18 +211,20 @@ class AssignmentController(
 
         } else {   // update
 
-            val existingAssignment = assignmentRepository.getOne(assignmentForm.assignmentId)
-                    ?: throw IllegalArgumentException("Trying to update an inexistent assignment")
+            val assignmentId = assignmentForm.assignmentId ?:
+                throw IllegalArgumentException("Trying to update an assignment without id")
+
+            val existingAssignment = assignmentRepository.getById(assignmentId)
 
             if (existingAssignment.gitRepositoryUrl != assignmentForm.gitRepositoryUrl) {
-                LOG.warn("[${assignmentForm.assignmentId}] Git repository cannot be changed")
+                LOG.warn("[${assignmentId}] Git repository cannot be changed")
                 bindingResult.rejectValue("gitRepositoryUrl", "repository.not-updateable", "Error: Git repository cannot be changed.")
                 return "assignment-form"
             }
 
             val acl = assignmentACLRepository.findByAssignmentId(existingAssignment.id)
             if (principal.realName() != existingAssignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
-                LOG.warn("[${assignmentForm.assignmentId}][${principal.realName()}] Assignments can only be changed " +
+                LOG.warn("[${assignmentId}][${principal.realName()}] Assignments can only be changed " +
                         "by their ownerUserId (${existingAssignment.ownerUserId}) or authorized teachers")
                 throw IllegalAccessError("Assignments can only be changed by their owner or authorized teachers")
             }
@@ -258,9 +260,7 @@ class AssignmentController(
         }
 
         // first delete all assignees to prevent duplicates
-        if (assignmentForm.assignmentId != null) {
-            assigneeRepository.deleteByAssignmentId(assignmentForm.assignmentId!!)
-        }
+        assignmentForm.assignmentId?.let { assignmentId -> assigneeRepository.deleteByAssignmentId(assignmentId) }
         val assigneesStr = assignmentForm.assignees?.split(",").orEmpty().map { it -> it.trim() }
         for (assigneeStr in assigneesStr) {
             if (!assigneeStr.isBlank()) {
@@ -297,10 +297,10 @@ class AssignmentController(
                 leaderboardType = assignmentForm.leaderboardType)
 
         // associate tags
-        val tagNames = assignmentForm.assignmentTags?.toLowerCase()?.split(",")
+        val tagNames = assignmentForm.assignmentTags?.lowercase(Locale.getDefault())?.split(",")
         tagNames?.forEach {
-            newAssignment.tags.add(assignmentTagRepository.findByName(it.trim().toLowerCase())
-                    ?: AssignmentTag(name = it.trim().toLowerCase()))
+            newAssignment.tags.add(assignmentTagRepository.findByName(it.trim().lowercase(Locale.getDefault()))
+                    ?: AssignmentTag(name = it.trim().lowercase(Locale.getDefault())))
         }
         return newAssignment
     }
@@ -318,7 +318,7 @@ class AssignmentController(
     @Transactional(readOnly = true)  // because of assignment.tags forced loading
     fun getAssignmentDetail(@PathVariable assignmentId: String, model: ModelMap, principal: Principal): String {
 
-        val assignment = assignmentRepository.getOne(assignmentId)
+        val assignment = assignmentRepository.getById(assignmentId)
         Hibernate.initialize(assignment.tags)
         val assignees = assigneeRepository.findByAssignmentIdOrderByAuthorUserId(assignmentId)
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
@@ -365,7 +365,7 @@ class AssignmentController(
     @Transactional(readOnly = true)  // because of assignment.tags
     fun getEditAssignmentForm(@PathVariable assignmentId: String, model: ModelMap, principal: Principal): String {
 
-        val assignment = assignmentRepository.getOne(assignmentId)
+        val assignment = assignmentRepository.getById(assignmentId)
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
         if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
@@ -434,7 +434,7 @@ class AssignmentController(
                                        principal: Principal): ResponseEntity<String> {
 
         // check that it exists
-        val assignment = assignmentRepository.getOne(assignmentId)
+        val assignment = assignmentRepository.getById(assignmentId)
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
         if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
@@ -491,7 +491,7 @@ class AssignmentController(
     @RequestMapping(value = ["/setup-git/{assignmentId}"], method = [(RequestMethod.GET)])
     fun setupAssignmentToGitRepository(@PathVariable assignmentId: String, model: ModelMap, principal: Principal): String {
 
-        val assignment = assignmentRepository.getOne(assignmentId)
+        val assignment = assignmentRepository.getById(assignmentId)
 
         if (principal.realName() != assignment.ownerUserId) {
             throw IllegalAccessError("Assignments can only be changed by their owner")
@@ -530,7 +530,7 @@ class AssignmentController(
     fun connectAssignmentToGitRepository(@PathVariable assignmentId: String, redirectAttributes: RedirectAttributes,
                                          model: ModelMap, principal: Principal): String {
 
-        val assignment = assignmentRepository.getOne(assignmentId)
+        val assignment = assignmentRepository.getById(assignmentId)
 
         if (principal.realName() != assignment.ownerUserId) {
             throw IllegalAccessError("Assignments can only be changed by their owner")
@@ -628,7 +628,7 @@ class AssignmentController(
     fun deleteAssignment(@PathVariable assignmentId: String, redirectAttributes: RedirectAttributes,
                          principal: Principal): String {
 
-        val assignment = assignmentRepository.getOne(assignmentId)
+        val assignment = assignmentRepository.getById(assignmentId)
 
         if (principal.realName() != assignment.ownerUserId) {
             throw IllegalAccessError("Assignments can only be changed by their owner")
@@ -664,7 +664,7 @@ class AssignmentController(
     fun toggleAssignmentStatus(@PathVariable assignmentId: String, redirectAttributes: RedirectAttributes,
                                principal: Principal): String {
 
-        val assignment = assignmentRepository.getOne(assignmentId)
+        val assignment = assignmentRepository.getById(assignmentId)
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
         if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
@@ -717,7 +717,7 @@ class AssignmentController(
                           principal: Principal): String {
 
         // check that it exists
-        val assignment = assignmentRepository.getOne(assignmentId)
+        val assignment = assignmentRepository.getById(assignmentId)
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
         if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
@@ -728,7 +728,7 @@ class AssignmentController(
         assignmentRepository.save(assignment)
 
         // evict the "archiveAssignmentsCache" cache
-        cacheManager.getCache("archivedAssignmentsCache").clear()
+        cacheManager.getCache("archivedAssignmentsCache")?.clear()
 
         redirectAttributes.addFlashAttribute("message", "Assignment was archived. You can now find it in the Archived assignments page")
         return "redirect:/assignment/my"
@@ -748,7 +748,7 @@ class AssignmentController(
                                   redirectAttributes: RedirectAttributes,
                                   principal: Principal): String {
 
-        val assignment = assignmentRepository.getOne(assignmentId)
+        val assignment = assignmentRepository.getById(assignmentId)
         val acl = assignmentACLRepository.findByAssignmentId(assignment.id)
 
         if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
@@ -862,15 +862,18 @@ class AssignmentController(
                          redirectAttributes: RedirectAttributes,
                          request: HttpServletRequest): String {
 
-        if (!file.originalFilename.endsWith(".dp", ignoreCase = true)) {
+        val originalFilename = file.originalFilename ?:
+            throw IllegalArgumentException("Original filename is null")
+
+        if (!(originalFilename.endsWith(".dp", ignoreCase = true))) {
             redirectAttributes.addFlashAttribute("error", "Error: File must be .dp")
             return "redirect:/assignment/import"
         }
 
-        LOG.info("[${principal.realName()}] uploaded ${file.originalFilename}")
+        LOG.info("[${principal.realName()}] uploaded ${originalFilename}")
 
         val tempFolder = Files.createTempDirectory("import").toFile()
-        val destinationFile = File(tempFolder, "${System.currentTimeMillis()}-${file.originalFilename}.zip")
+        val destinationFile = File(tempFolder, "${System.currentTimeMillis()}-${originalFilename}.zip")
         Files.copy(file.inputStream, destinationFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
 
         val destinationFolder = zipService.unzip(destinationFile.toPath(), "extracted")
@@ -911,7 +914,7 @@ class AssignmentController(
 
             // import all the original submission files
             if (originalSubmissionsFolder.exists()) {
-                val assignment = assignmentRepository.getOne(assignmentId)
+                val assignment = assignmentRepository.getById(assignmentId)
                 when (assignment.submissionMethod) {
                     SubmissionMethod.UPLOAD -> FileUtils.copyDirectory(originalSubmissionsFolder, File(uploadSubmissionsRootLocation))
                     SubmissionMethod.GIT -> FileUtils.copyDirectory(originalSubmissionsFolder, File(gitSubmissionsRootLocation))

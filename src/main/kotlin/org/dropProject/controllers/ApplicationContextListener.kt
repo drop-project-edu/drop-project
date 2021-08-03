@@ -120,7 +120,7 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
 
         // It it's a fresh instance, create two initial assignments (one in Java and the other in Kotlin) just to play
         val assignments = assignmentRepository.findAll()
-        if (assignments == null || assignments.size == 0) {
+        if (assignments.size == 0) {
             createAndPopulateSampleJavaAssignment()
             createAndPopulateSampleKotlinAssignment()
         }

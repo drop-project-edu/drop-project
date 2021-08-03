@@ -196,10 +196,11 @@ class ReportController(
             model["assignment"] = assignment
 
             model["submission"] = submission
-            if (submission.gitSubmissionId != null) {
-                val gitSubmission = gitSubmissionRepository.getOne(submission.gitSubmissionId)
-                model["gitSubmission"] = gitSubmission
-                model["gitRepository"] = gitClient.convertSSHGithubURLtoHttpURL(gitSubmission.gitRepositoryUrl)
+            submission.gitSubmissionId?.let {
+                gitSubmissionId ->
+                    val gitSubmission = gitSubmissionRepository.getById(gitSubmissionId)
+                    model["gitSubmission"] = gitSubmission
+                    model["gitRepository"] = gitClient.convertSSHGithubURLtoHttpURL(gitSubmission.gitRepositoryUrl)
             }
 
             // check README
@@ -221,6 +222,7 @@ class ReportController(
                 SubmissionStatus.FAILED -> model["error"] = "Ocorreu um erro interno a validar o seu projecto. Tente novamente. Caso o problema persista, contacte o administrador."
                 SubmissionStatus.ABORTED_BY_TIMEOUT -> model["error"] = "O processo de validação foi abortado pois estava a demorar demasiado. Tempo máximo permitido: ${MAVEN_MAX_EXECUTION_TIME} seg"
                 SubmissionStatus.TOO_MUCH_OUTPUT -> model["error"] = "O processo de validação foi abortado pois estava a produzir demasiado output para o écran."
+                SubmissionStatus.DELETED -> model["error"] = "Submissão inexistente"
                 SubmissionStatus.SUBMITTED, SubmissionStatus.SUBMITTED_FOR_REBUILD, SubmissionStatus.REBUILDING -> {
                     model["error"] = "A submissão ainda não foi validada. Aguarde..."
                     model["autoRefresh"] = true
@@ -241,12 +243,11 @@ class ReportController(
                     }
                     model["authors"] = authors
 
-                    if (submission.buildReportId != null) {
-                        val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
-                                submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
-                        val buildReportDB = buildReportRepository.getOne(submission.buildReportId)
-                        model["buildReport"] = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
-                                mavenizedProjectFolder.absolutePath, assignment, submission)
+                    submission.buildReportId?.let {
+                        buildReportId ->
+                            val buildReportDB = buildReportRepository.getById(buildReportId)
+                            model["buildReport"] = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
+                                    mavenizedProjectFolder.absolutePath, assignment, submission)
                     }
                 }
             }
@@ -333,7 +334,9 @@ class ReportController(
 
                 return FileSystemResource(projectFile)
             } else {  // submission by git
-                val gitSubmission = gitSubmissionRepository.findById(submission.gitSubmissionId).orElse(null)
+                val gitSubmissionId = submission.gitSubmissionId ?:
+                    throw IllegalArgumentException("Git submission without gitSubmissionId")
+                val gitSubmission = gitSubmissionRepository.findById(gitSubmissionId).orElse(null)
                         ?: throw IllegalArgumentException("git submission ${submissionId} is not registered")
                 val repositoryFolder = File(gitSubmissionsRootLocation, gitSubmission.getFolderRelativeToStorageRoot())
 
@@ -554,14 +557,15 @@ class ReportController(
         for (submission in submissions) {
             val reportElements = submissionReportRepository.findBySubmissionId(submission.id)
             submission.reportElements = reportElements
-            if (submission.buildReportId != null) {
-                val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
-                        submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
-                val buildReportDB = buildReportRepository.getOne(submission.buildReportId)
-                val buildReport = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
-                        mavenizedProjectFolder.absolutePath, assignment, submission)
-                submission.ellapsed = buildReport.elapsedTimeJUnit()
-                submission.teacherTests = buildReport.junitSummaryAsObject()
+            submission.buildReportId?.let {
+                buildReportId ->
+                    val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
+                            submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
+                    val buildReportDB = buildReportRepository.getById(buildReportId)
+                    val buildReport = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
+                            mavenizedProjectFolder.absolutePath, assignment, submission)
+                    submission.ellapsed = buildReport.elapsedTimeJUnit()
+                    submission.teacherTests = buildReport.junitSummaryAsObject()
             }
         }
 
@@ -598,15 +602,16 @@ class ReportController(
         for (submission in submissions) {
             val reportElements = submissionReportRepository.findBySubmissionId(submission.id)
             submission.reportElements = reportElements
-            if (submission.buildReportId != null) {
-                val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
-                        submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
-                val buildReportDB = buildReportRepository.getOne(submission.buildReportId)
-                val buildReport = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
-                        mavenizedProjectFolder.absolutePath, assignment, submission)
-                submission.ellapsed = buildReport.elapsedTimeJUnit()
-                submission.teacherTests = buildReport.junitSummaryAsObject(TestType.TEACHER)
-                submission.hiddenTests = buildReport.junitSummaryAsObject(TestType.HIDDEN)
+            submission.buildReportId?.let {
+                    buildReportId ->
+                        val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
+                                submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
+                        val buildReportDB = buildReportRepository.getById(buildReportId)
+                        val buildReport = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
+                                mavenizedProjectFolder.absolutePath, assignment, submission)
+                        submission.ellapsed = buildReport.elapsedTimeJUnit()
+                        submission.teacherTests = buildReport.junitSummaryAsObject(TestType.TEACHER)
+                        submission.hiddenTests = buildReport.junitSummaryAsObject(TestType.HIDDEN)
             }
         }
 
@@ -614,12 +619,14 @@ class ReportController(
         model["submissions"] = submissions
 
         if (assignment.submissionMethod == SubmissionMethod.GIT && !submissions.isEmpty()) {
-            val gitSubmission = gitSubmissionRepository.getOne(submissions[0].gitSubmissionId)
+            submissions[0].gitSubmissionId?.let { gitSubmissionId ->
+                val gitSubmission = gitSubmissionRepository.getById(gitSubmissionId)
 
-            val repositoryFolder = File(gitSubmissionsRootLocation, gitSubmission.getFolderRelativeToStorageRoot())
-            val history = gitClient.getHistory(repositoryFolder)
-            model["gitHistory"] = history
-            model["gitRepository"] = gitClient.convertSSHGithubURLtoHttpURL(gitSubmission.gitRepositoryUrl)
+                val repositoryFolder = File(gitSubmissionsRootLocation, gitSubmission.getFolderRelativeToStorageRoot())
+                val history = gitClient.getHistory(repositoryFolder)
+                model["gitHistory"] = history
+                model["gitRepository"] = gitClient.convertSSHGithubURLtoHttpURL(gitSubmission.gitRepositoryUrl)
+            }
         }
 
         return "submissions"
@@ -649,21 +656,22 @@ class ReportController(
         for (submission in submissions) {
             val reportElements = submissionReportRepository.findBySubmissionId(submission.id)
             submission.reportElements = reportElements
-            if (submission.buildReportId != null) {
-                val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
-                        submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
-                val buildReportDB = buildReportRepository.getOne(submission.buildReportId)
-                val buildReport = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
-                        mavenizedProjectFolder.absolutePath, assignment, submission)
-                submission.ellapsed = buildReport.elapsedTimeJUnit()
-                if (assignment.acceptsStudentTests) {
-                    submission.studentTests = buildReport.junitSummaryAsObject(TestType.STUDENT)
-                }
-                submission.teacherTests = buildReport.junitSummaryAsObject(TestType.TEACHER)
-                submission.hiddenTests = buildReport.junitSummaryAsObject(TestType.HIDDEN)
-                if (assignment.calculateStudentTestsCoverage && buildReport.jacocoResults.isNotEmpty()) {
-                    submission.coverage = buildReport.jacocoResults[0].lineCoveragePercent
-                }
+            submission.buildReportId?.let {
+                buildReportId ->
+                    val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
+                            submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
+                    val buildReportDB = buildReportRepository.getById(buildReportId)
+                    val buildReport = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
+                            mavenizedProjectFolder.absolutePath, assignment, submission)
+                    submission.ellapsed = buildReport.elapsedTimeJUnit()
+                    if (assignment.acceptsStudentTests) {
+                        submission.studentTests = buildReport.junitSummaryAsObject(TestType.STUDENT)
+                    }
+                    submission.teacherTests = buildReport.junitSummaryAsObject(TestType.TEACHER)
+                    submission.hiddenTests = buildReport.junitSummaryAsObject(TestType.HIDDEN)
+                    if (assignment.calculateStudentTestsCoverage && buildReport.jacocoResults.isNotEmpty()) {
+                        submission.coverage = buildReport.jacocoResults[0].lineCoveragePercent
+                    }
             }
         }
 

@@ -92,7 +92,7 @@ class AdminControllerTests {
                 .andReturn()
 
         @Suppress("UNCHECKED_CAST")
-        val submissions = result.modelAndView.modelMap["pendingSubmissions"] as List<Submission>
+        val submissions = result.modelAndView!!.modelMap["pendingSubmissions"] as List<Submission>
         assertEquals(0, submissions.size)
 
         // make a submission
@@ -115,7 +115,7 @@ class AdminControllerTests {
                 .andReturn()
 
         @Suppress("UNCHECKED_CAST")
-        val submissions2 = result2.modelAndView.modelMap["pendingSubmissions"] as List<Submission>
+        val submissions2 = result2.modelAndView!!.modelMap["pendingSubmissions"] as List<Submission>
         assertEquals(1, submissions2.size)
 
         // abort
