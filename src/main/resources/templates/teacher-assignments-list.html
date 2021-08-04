@@ -52,7 +52,7 @@
                      th:data-order="${assignment.lastSubmissionDate.time}" class="text-center"></td>
 
             <td th:if="${assignment.lastSubmissionDate == null}">-</td>
-            <td th:if="${!archived}" class="text-center">
+            <td th:if="${!archived}" class="text-center" th:data-order="${assignment.active}">
                 <form th:action="@{'/assignment/toggle-status/' + ${assignment.id}}" method="post" style="display: inline;">
                     <input type="checkbox" th:checked="${assignment.active}" onChange="this.form.submit()"/>
                 </form>
@@ -121,12 +121,12 @@
         var table = $('.myDataTable').DataTable({
             "paging": false,
             "ordering": true,
-            "order": [[2, 'desc']],
+            "order": [[3, 'desc'], [2, 'desc']],
             "info": false,
             "searching": false,
             "columnDefs": [
                 {
-                    "targets": [0, 1, 3, 4, 5, 6],
+                    "targets": [0, 1, 4, 5, 6],
                     "orderable": false
                 }
             ]

@@ -10,13 +10,16 @@
 
 <div class="container" style="max-width: 760px">
 
-    <h1 class="page-header">Setup Git Authorization</h1>
+    <h1 class="page-header" th:if="${!reconnect}">Setup Git Authorization</h1>
+    <h1 class="page-header" th:if="${reconnect}">Reconnect with Git</h1>
 
     <div th:if="${error}">
         <div class="alert alert-danger" th:text="${error}"/>
     </div>
 
-    <p>You have to authorize Drop Project to access <span th:text="${assignment.gitRepositoryUrl}"></span></p>
+    <p th:if="${!reconnect}">You have to authorize Drop Project to access <span th:text="${assignment.gitRepositoryUrl}"></span></p>
+    <p th:if="${reconnect}">You have to reauthorize Drop Project to access <span th:text="${assignment.gitRepositoryUrl}"></span>.
+        You may want to remove previous keys associated with this repository.</p>
 
     <p>Go to the <a th:href="${repositorySettingsUrl}" target="_blank">settings of your repository</a> and add this public key to the list of access/deploy keys:</p>
     <div class="alert alert-info">

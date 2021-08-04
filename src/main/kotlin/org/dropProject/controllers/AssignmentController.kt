@@ -441,6 +441,11 @@ class AssignmentController(
             throw IllegalAccessError("Assignments can only be refreshed by their owner or authorized teachers")
         }
 
+        if (assignment.gitRepositoryPrivKey == null) {
+            LOG.warn("Unable to pull git repository for ${assignmentId} because private key is null")
+            return ResponseEntity("{ \"error\": \"Error pulling from ${assignment.gitRepositoryUrl}\"}", HttpStatus.INTERNAL_SERVER_ERROR)
+        }
+
         try {
             LOG.info("Pulling git repository for ${assignmentId}")
             gitClient.pull(File(assignmentsRootLocation, assignment.gitRepositoryFolder), assignment.gitRepositoryPrivKey!!.toByteArray())
@@ -489,16 +494,24 @@ class AssignmentController(
      * @return a String with the name of the relevant View
      */
     @RequestMapping(value = ["/setup-git/{assignmentId}"], method = [(RequestMethod.GET)])
-    fun setupAssignmentToGitRepository(@PathVariable assignmentId: String, model: ModelMap, principal: Principal): String {
+    fun setupAssignmentToGitRepository(@PathVariable assignmentId: String,
+                                       @RequestParam(name = "reconnect", required = false) reconnect: Boolean = false,
+                                       model: ModelMap, principal: Principal): String {
 
         val assignment = assignmentRepository.getById(assignmentId)
+        val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
-        if (principal.realName() != assignment.ownerUserId) {
-            throw IllegalAccessError("Assignments can only be changed by their owner")
+        if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
+            throw IllegalAccessError("Assignments can only be changed by their owner or authorized teachers")
+        }
+
+        if (reconnect) {
+            // clear git keys
+            assignment.gitRepositoryPubKey = null
+            assignment.gitRepositoryPrivKey = null
         }
 
         if (assignment.gitRepositoryPubKey == null) {
-
             // generate key pair
             val (privKey, pubKey) = gitClient.generateKeyPair()
 
@@ -513,6 +526,7 @@ class AssignmentController(
         }
 
         model["assignment"] = assignment
+        model["reconnect"] = reconnect
 
         return "setup-git"
     }
@@ -527,19 +541,22 @@ class AssignmentController(
      * @return A String with the name of the relevant View
      */
     @RequestMapping(value = ["/setup-git/{assignmentId}"], method = [(RequestMethod.POST)])
-    fun connectAssignmentToGitRepository(@PathVariable assignmentId: String, redirectAttributes: RedirectAttributes,
+    fun connectAssignmentToGitRepository(@PathVariable assignmentId: String,
+                                         @RequestParam(name = "reconnect", required = false) reconnect: Boolean = false,
+                                         redirectAttributes: RedirectAttributes,
                                          model: ModelMap, principal: Principal): String {
 
         val assignment = assignmentRepository.getById(assignmentId)
+        val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
-        if (principal.realName() != assignment.ownerUserId) {
-            throw IllegalAccessError("Assignments can only be changed by their owner")
+        if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
+            throw IllegalAccessError("Assignments can only be changed by their owner or authorized teachers")
         }
 
         if (assignment.gitRepositoryPrivKey == null) {
             LOG.warn("gitRepositoryUrl is null???")
             redirectAttributes.addFlashAttribute("error", "Something went wrong with the credentials generation. Please try again")
-            return "redirect:/assignment/setup-git/${assignment.id}"
+            return "redirect:/assignment/setup-git/${assignment.id}?reconnect=${reconnect}"
         }
 
         run {
@@ -579,7 +596,10 @@ class AssignmentController(
             return "redirect:/assignment/info/${assignment.id}"
         }
 
-        redirectAttributes.addFlashAttribute("message", "Assignment was successfully created and connected to git repository")
+        redirectAttributes.addFlashAttribute("message",
+            if (reconnect) "Assignment was successfully reconnected with git repository"
+            else "Assignment was successfully created and connected to git repository")
+
         return "redirect:/assignment/info/${assignment.id}"
     }
 
@@ -946,8 +966,8 @@ class AssignmentController(
             assignments = assignments.filter { it.tags.intersect(tagsDB).size == tagsDB.size }
         }
 
-        model["assignments"] = assignments
-        model["archived"] = false
+        model["assignments"] = assignments // ordered client-side
+        model["archived"] = archived
         model["allTags"] = assignmentTagRepository.findAll()
                 .map { it.selected = tags?.split(",")?.contains(it.name) ?: false; it }
                 .sortedBy { it.name }

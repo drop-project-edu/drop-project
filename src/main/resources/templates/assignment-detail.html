@@ -37,7 +37,12 @@
     <div class="tab-content">
         <div class="tab-pane active" id="1">
             <p>&nbsp;</p>
+
             <div class="btn-group pull-right" role="group">
+                <a th:href="@{'/assignment/setup-git/' + ${assignmentId} + '?reconnect=true'}" class="btn btn-default"
+                   data-toggle="confirmation" data-title="Reconnect"
+                   data-content="Are you sure you want to reconnect this assignment? This will generate a new key that you'll have to introduce in github"
+                   data-btn-ok-label="Yes, reconnect!" data-btn-cancel-label="Cancel">Reconnect with Git</a>
                 <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <span class="glyphicon glyphicon-export"></span> Export <span class="caret"></span>
                 </button>

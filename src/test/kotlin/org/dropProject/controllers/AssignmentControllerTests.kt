@@ -25,6 +25,8 @@ import net.lingala.zip4j.core.ZipFile
 import net.lingala.zip4j.model.FileHeader
 import org.apache.commons.io.FileUtils
 import org.dropProject.TestsHelper
+import org.dropProject.TestsHelper.Companion.sampleJavaAssignmentPrivateKey
+import org.dropProject.TestsHelper.Companion.sampleJavaAssignmentPublicKey
 import org.dropProject.dao.*
 import org.dropProject.data.SubmissionInfo
 import org.dropProject.extensions.formatJustDate
@@ -1374,6 +1376,59 @@ class AssignmentControllerTests {
             }
         }
 
+
+    }
+
+    @Test
+    @DirtiesContext
+    fun test_26_reconnectAssignment() {
+
+        try {
+            // create assignment, properly connected to git (sampleJavaAssignmentRepo)
+            testsHelper.createAndSetupAssignment(
+                mvc, assignmentRepository, "dummyAssignment", "Dummy Assignment",
+                "org.dummy", "UPLOAD", sampleJavaAssignmentRepo,
+                teacherId = "p1", activateRightAfterCloning = false)
+
+            // remove the private and public keys to mess up the connection with github
+            val assignment = assignmentRepository.getById("dummyAssignment")
+            assignment.gitRepositoryPrivKey = null
+            assignment.gitRepositoryPubKey = null
+            assignmentRepository.save(assignment)
+
+            // test git refresh - it should fail
+            val contentString = this.mvc.perform(post("/assignment/refresh-git/dummyAssignment"))
+                .andExpect(status().isInternalServerError)
+                .andReturn().response.contentAsString
+            val contentJSON = JSONObject(contentString)
+            assertEquals("Error pulling from git@github.com:drop-project-edu/sampleJavaAssignment.git", contentJSON.getString("error"))
+
+            // reconnect assignment (step 1) - open page with the newly generated key
+            this.mvc.perform(get("/assignment/setup-git/dummyAssignment?reconnect=true"))
+                .andExpect(status().isOk)
+
+            // now force the keys to be equal to the ones previously created in github
+            assignment.gitRepositoryPrivKey = sampleJavaAssignmentPrivateKey
+            assignment.gitRepositoryPubKey = sampleJavaAssignmentPublicKey
+            assignmentRepository.save(assignment)
+
+            // reconnect assignment (step 2) - open page with the newly generated key
+            this.mvc.perform(post("/assignment/setup-git/dummyAssignment?reconnect=true"))
+                .andExpect(status().isFound)
+                .andExpect(header().string("Location", "/assignment/info/dummyAssignment"))
+                .andExpect(
+                    flash().attribute(
+                        "message",
+                        "Assignment was successfully reconnected with git repository"
+                    )
+                )
+
+    } finally {
+        // cleanup assignment files
+        if (File(assignmentsRootLocation, "dummyAssignment").exists()) {
+            File(assignmentsRootLocation, "dummyAssignment").deleteRecursively()
+        }
+    }
 
     }
 
