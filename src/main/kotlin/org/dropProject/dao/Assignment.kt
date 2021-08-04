@@ -112,6 +112,7 @@ data class Assignment(
         var minStudentTests: Int? = null,
         var calculateStudentTestsCoverage: Boolean = false,
         var hiddenTestsVisibility: TestVisibility? = null,
+        var mandatoryTestsSuffix: String? = null,
         var cooloffPeriod: Int? = null, // minutes
         var maxMemoryMb: Int? = null,
         var showLeaderBoard: Boolean = false,

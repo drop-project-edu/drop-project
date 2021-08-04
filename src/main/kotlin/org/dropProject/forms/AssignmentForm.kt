@@ -59,6 +59,7 @@ data class AssignmentForm(
         var minStudentTests: Int? = null,
         var calculateStudentTestsCoverage: Boolean = false,
         var hiddenTestsVisibility: TestVisibility? = null,
+        var mandatoryTestsSuffix: String? = null,
         var cooloffPeriod: Int? = null,
 
         @field:Min(value=32, message="Error: Max memory must be >= 32")

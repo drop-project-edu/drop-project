@@ -138,6 +138,10 @@
                     <label class="col-sm-3 control-label">Show leaderboard:</label>
                     <div class="col-sm-9 read-row" th:text="${assignment.leaderboardType}"></div>
                 </div>
+                <div class="form-group" th:if="${assignment.mandatoryTestsSuffix}">
+                    <label class="col-sm-3 control-label">Mandatory tests suffix:</label>
+                    <div class="col-sm-9 read-row" th:text="${assignment.mandatoryTestsSuffix}"></div>
+                </div>
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Open to:</label>
                     <div class="col-sm-9 read-row" th:if="${assignees.isEmpty()}">Everyone through this <a th:href="@{'/upload/' + ${assignment.id}}">link</a></div>

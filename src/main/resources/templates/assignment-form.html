@@ -150,10 +150,17 @@
 
         <div class="form-group">
             <label for="maxMemoryMb" class="col-sm-3 control-label">Max memory (Mb)</label>
-            <div class="col-sm-4" th:classappend="${#fields.hasErrors('maxMemoryMb')} ? 'has-error' : ''">
+            <div class="col-sm-3" th:classappend="${#fields.hasErrors('maxMemoryMb')} ? 'has-error' : ''">
                 <input th:field="*{maxMemoryMb}" type="number" class="form-control" id="maxMemoryMb" />
                 <p class="help-block" th:if="${#fields.hasErrors('maxMemoryMb')}" th:errors="*{maxMemoryMb}">Error</p>
                 <p class="help-block" th:if="${!#fields.hasErrors('maxMemoryMb')}" >(Optional) Constrain max heap memory available for each submission tests (-Xmx flag)</p>
+            </div>
+            <label for="mandatoryTestsSuffix" class="col-sm-3 control-label">Mandatory tests suffix</label>
+            <div class="col-sm-3" th:classappend="${#fields.hasErrors('mandatoryTestsSuffix')} ? 'has-error' : ''">
+                <input th:field="*{mandatoryTestsSuffix}" type="number" class="form-control" id="mandatoryTestsSuffix"
+                       placeholder="_MANDATORY" />
+                <p class="help-block" th:if="${#fields.hasErrors('mandatoryTestsSuffix')}" th:errors="*{mandatoryTestsSuffix}">Error</p>
+                <p class="help-block" th:if="${!#fields.hasErrors('mandatoryTestsSuffix')}" >(Optional) Test methods that end with this suffix will be marked as mandatory</p>
             </div>
         </div>
 

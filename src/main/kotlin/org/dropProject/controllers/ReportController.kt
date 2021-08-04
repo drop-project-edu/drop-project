@@ -726,6 +726,11 @@ class ReportController(
                 headersCSV.add("# submissions")
                 resultCSV += submissionRepository.countByAssignmentIdAndSubmitterUserId(submission.assignmentId, author.userId)
 
+                if (assignment.mandatoryTestsSuffix != null) {
+                    headersCSV.add("# mandatory")
+                    resultCSV += ";" + (submission.teacherTests?.numMandatoryOK ?: 0)
+                }
+
                 resultCSV += "\n"
             }
         }

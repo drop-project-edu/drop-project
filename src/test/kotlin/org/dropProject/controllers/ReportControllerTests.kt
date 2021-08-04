@@ -56,6 +56,7 @@ import org.dropProject.repository.SubmissionRepository
 import org.dropProject.services.AssignmentService
 import org.dropProject.services.ZipService
 import org.hamcrest.Matchers.contains
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import java.util.*
 import kotlin.collections.LinkedHashMap
 
@@ -494,12 +495,64 @@ class ReportControllerTests {
 
     @Test
     @DirtiesContext
+    fun exportCSVWithMandatoryTests() {
+
+        val assigment = assignmentRepository.getById(defaultAssignmentId)
+
+        // first, edit the assignment to add a mandatory test suffix
+        mvc.perform(
+            MockMvcRequestBuilders.post("/assignment/new")
+                .param("assignmentId", defaultAssignmentId)
+                .param("editMode", "true")
+                .param("assignmentName", assigment.name)
+                .param("assignmentPackage", assigment.packageName)
+                .param("submissionMethod", assigment.submissionMethod.toString())
+                .param("language", assigment.language.toString())
+                .param("gitRepositoryUrl", assigment.gitRepositoryUrl)
+                .param("mandatoryTestsSuffix", "_OBG")  // <<<<<<<<<
+                .with(user(TEACHER_1)))
+            .andExpect(status().isFound())
+            .andExpect(header().string("Location", "/assignment/info/${defaultAssignmentId}"))
+
+        val now = Date()
+        val nowStr = now.formatDefault()
+
+        testsHelper.makeSeveralSubmissions(
+            listOf("projectInvalidStructure1",
+                "projectInvalidStructure1",
+                "projectOK",
+                "projectInvalidStructure1"), mvc, now)
+
+        // mark all as final, otherwise the export will be empty
+        val submissions = submissionRepository.findAll()
+        for (submission in submissions) {
+            submission.markedAsFinal = true
+            submissionRepository.save(submission)
+        }
+
+        this.mvc.perform(get("/exportCSV/testJavaProj?ellapsed=false")
+            .with(user(TEACHER_1)))
+            .andExpect(status().isOk)
+            .andExpect(content().contentType("application/csv"))
+            .andExpect(content().string(
+                "submission id;student id;student name;project structure;compilation;code quality;teacher tests;" +
+                        "hidden tests;submission date;# submissions;# mandatory\n" +
+                        "1;student1;Student 1;NOK;;;;;${nowStr};1;0\n" +
+                        "2;student2;Student 2;NOK;;;;;${nowStr};1;0\n" +
+                        "3;student3;Student 3;OK;OK;OK;2;1;${nowStr};1;0\n" +
+                        "4;student4;Student 4;NOK;;;;;${nowStr};1;0\n" +
+                        "4;student5;Student 5;NOK;;;;;${nowStr};0;0\n"))
+
+    }
+
+    @Test
+    @DirtiesContext
     fun testTestMatrix() {
         testsHelper.uploadProject(this.mvc, "projectJUnitErrors", defaultAssignmentId, STUDENT_1)
 
         val reportResult = this.mvc.perform(get("/testMatrix/${defaultAssignmentId}")
                 .with(user(TEACHER_1)))
-                .andExpect(status().isOk())
+                .andExpect(status().isOk)
                 .andReturn()
 
         @Suppress("UNCHECKED_CAST")

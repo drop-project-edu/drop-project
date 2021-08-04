@@ -286,6 +286,7 @@ data class BuildReport(val mavenOutputLines: List<String>,
         var totalFailures = 0
         var totalSkipped = 0
         var totalElapsed = 0.0f
+        var totalMandatoryOK = 0  // mandatory tests that passed
 
         for (junitResult in junitResults) {
 
@@ -297,10 +298,20 @@ data class BuildReport(val mavenOutputLines: List<String>,
                 totalFailures += junitResult.numFailures
                 totalSkipped += junitResult.numSkipped
                 totalElapsed += junitResult.timeEllapsed
+
+                assignment.mandatoryTestsSuffix?.let {
+                    mandatoryTestsSuffix ->
+                        totalMandatoryOK += junitResult.junitMethodResults
+                            .filter {
+                                it.fullMethodName.endsWith(mandatoryTestsSuffix) &&
+                                        it.type == JUnitMethodResultType.SUCCESS
+                            }
+                            .count()
+                }
             }
         }
 
-        return JUnitSummary(totalTests, totalFailures, totalErrors, totalSkipped, totalElapsed)
+        return JUnitSummary(totalTests, totalFailures, totalErrors, totalSkipped, totalElapsed, totalMandatoryOK)
 
     }
 
