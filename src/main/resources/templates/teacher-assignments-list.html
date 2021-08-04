@@ -46,6 +46,7 @@
             </td>
 
             <td th:if="${!archived and assignment.lastSubmissionDate != null}" th:text="${#dates.format(assignment.lastSubmissionDate, 'dd/MMM HH:mm')}"
+                th:title="${#dates.format(assignment.lastSubmissionDate, 'dd/MM/yy HH:mm')}"
                 th:data-order="${assignment.lastSubmissionDate.time}" class="text-center"></td>
 
             </td><td th:if="${archived and assignment.lastSubmissionDate != null}" th:text="${#dates.format(assignment.lastSubmissionDate, 'dd/MM/yy')}"

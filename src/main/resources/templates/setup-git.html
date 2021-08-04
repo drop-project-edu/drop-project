@@ -26,7 +26,7 @@
         <pre th:text="${assignment.gitRepositoryPubKey}"></pre>
     </div>
 
-    <form th:action="@{'/assignment/setup-git/' + ${assignment.id}}" method="post">
+    <form th:action="@{'/assignment/setup-git/' + ${assignment.id} + '?reconnect=' + ${reconnect}}" method="post">
         <div class="checkbox">
             <label>
                 <input type="checkbox" id="confirmCB" />Already added this key to the list of access/deploy keys

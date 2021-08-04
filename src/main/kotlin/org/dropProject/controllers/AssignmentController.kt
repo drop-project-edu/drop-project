@@ -244,6 +244,11 @@ class AssignmentController(
 
             assignment = existingAssignment
 
+            if (assignment.archived) {
+                // evict the "archiveAssignmentsCache" cache
+                cacheManager.getCache("archivedAssignmentsCache")?.clear()
+            }
+
             // TODO: Need to rebuild?
         }
 
