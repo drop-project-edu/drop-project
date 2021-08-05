@@ -47,7 +47,7 @@ w
                     <p class="help-block" th:if="${gitRepoErrorMsg}" th:text="${gitRepoErrorMsg}"></p>
                 </div>
                 <input type="hidden" name="assignmentId" th:value="${assignment.id}"/>
-                <input type="submit" name="btn" value="Configurar ligação" class="btn btn-success"/>
+                <input type="submit" name="btn" th:value="#{student.git.form.configure-btn.value}" class="btn btn-success"/>
             </form>
         </div>
 
