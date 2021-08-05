@@ -12,7 +12,7 @@
 <!--/*@thymesVar id="gitSubmission" type="org.dropProject.dao.GitSubmission"*/-->
 <!--/*@thymesVar id="lastCommitInfo" type="org.dropProject.services.GitClient.CommitInfo"*/-->
 <div class="container" style="max-width: 760px; margin-bottom: 65px">
-
+w
     <div class="row">
         <h1 class="page-header col-sm-11" th:if="${assignment != null}" th:text="${assignment.name}">Assignment</h1>
         <span class="label label-warning col-sm-1" th:if="${!assignment.active}">Inactive</span>
@@ -30,8 +30,9 @@
     <div>
         <div th:if="${gitSubmission?.connected != true}" class="dropzone" >
             <div class="alert alert-warning">
-                Ainda não ligaste o Drop Project ao repositório Git com o teu projecto.<br/>
-                Verifica primeiro que o repositório tem a estrutura de pastas e ficheiros indicada abaixo.
+                <span th:text="#{student.git.form.instruction1}">Ainda não ligaste o Drop Project ao repositório Git com o teu projecto.</span>
+                <br/>
+                <span th:text="#{student.git.form.instruction2}">Verifica primeiro que o repositório tem a estrutura de pastas e ficheiros indicada abaixo.</span>
             </div>
             <form th:action="@{/student/setup-git}" method="post">
                 <div class="form-group" th:classappend="${gitRepoErrorMsg} ? 'has-error' : ''">
@@ -54,8 +55,8 @@
             <div class="panel" th:if="${coolOffEnd != null}">
                 <img th:src="@{/img/iconfinder_cat_sleep_185528.png}" />
                 &nbsp;
-                <span class="lead">Relaxa. Estás em período cool-off...</span>
-                <span th:text="${'Poderás voltar a submeter a partir das ' + coolOffEnd}"></span>
+                <span class="lead" th:text="#{student.git.form.cool-off1}">Relaxa. Estás em período cool-off...</span>
+                <span th:text="#{student.git.form.cool-off2(${coolOffEnd})}"></span>
             </div>
             <div class="alert alert-info col-md-12">
                 <div class="col-md-9" th:classappend="${coolOffEnd != null} ? 'text-disabled' : ''">
@@ -64,17 +65,18 @@
 
                 <div class="col-md-3">
                     <form th:action="@{'/student/reset-git/' + ${gitSubmission.id}}" method="post">
-                        <input type="submit" class="btn btn-info btn-sm" value="Remover ligação"
-                               data-toggle="confirmation" data-title="Remover ligação"
-                               data-content="Isto irá remover todas as submissões e relatórios registados até agora relativos a este repositório. Tens a certeza?"
-                               data-btn-ok-label="Sim, remover" data-btn-cancel-label="Cancelar"
+                        <input type="submit" class="btn btn-info btn-sm" th:value="#{student.git.form.remove-btn.value}"
+                               data-toggle="confirmation" th:data-title="#{student.git.form.remove-btn.value}"
+                               th:data-content="#{student.git.form.remove-btn.confirmation}"
+                               th:data-btn-ok-label="#{student.git.form.remove-btn.ok}"
+                               th:data-btn-cancel-label="#{student.git.form.remove-btn.cancel}"
                                th:disabled="${coolOffEnd != null}" />
                     </form>
                 </div>
             </div>
             <table class="table table-striped">
                 <tr>
-                    <th>Última atualização</th>
+                    <th th:text="#{student.git.form.last-submission}">Última atualização</th>
                     <td th:text="${lastCommitInfo.getDateAsStr()}"/>
                     <td th:text="${lastCommitInfo.getAuthorName()}"/>
                     <td th:text="${lastCommitInfo.getMessage()}"/>
@@ -82,12 +84,15 @@
             </table>
 
             <button type="button" id="refreshBtn" class="btn btn-primary has-spinner" th:disabled="${coolOffEnd != null}">
-                <span class="spinner"><i class="fa fa-refresh fa-spin"></i></span> Atualizar
+                <span class="spinner"><i class="fa fa-refresh fa-spin"></i></span>
+                <span th:text="#{student.git.form.update-btn}">Atualizar</span>
             </button>
             <button th:if="${gitSubmission.lastSubmissionId == null}" type="button" id="generateReportBtn"
-                    class="btn btn-primary" th:disabled="${coolOffEnd != null}">Gerar relatório</button>
+                    class="btn btn-primary" th:disabled="${coolOffEnd != null}"
+                    th:text="#{student.git.form.generate-report-btn}">Gerar relatório</button>
             <a th:if="${gitSubmission.lastSubmissionId != null}" class="btn btn-primary"
-               th:href="@{'/buildReport/' + ${gitSubmission.lastSubmissionId}}">Visualizar relatório</a>
+               th:href="@{'/buildReport/' + ${gitSubmission.lastSubmissionId}}"
+               th:text="#{student.git.form.visualize-report-btn}">Visualizar relatório</a>
         </div>
 
         <br/>
@@ -96,11 +101,11 @@
         <div th:utext="${instructionsFragment}"></div>
 
         <div class="alert alert-info">
-            O repositório tem que ter a seguinte estrutura:
+            <span th:text="#{student.git.form.structure1}">O repositório tem que ter a seguinte estrutura:</span>
             <pre th:utext="${packageTree}">
             </pre>
-            Nota: Todos os outros ficheiros devem ser omitidos do repositório, nomeadamente os
-            ficheiros que resultam da compilação (dica: usa o .gitignore)
+            <span th:text="#{student.git.form.structure2}">Nota: Todos os outros ficheiros devem ser omitidos do repositório, nomeadamente os
+                ficheiros que resultam da compilação (dica: usa o .gitignore)</span>
         </div>
     </div>
 
