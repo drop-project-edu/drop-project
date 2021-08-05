@@ -344,8 +344,6 @@ class AssignmentService(
             ?: throw IllegalArgumentException("assignment ${assignmentId} is not registered")
         assignment.authorizedStudentIds = assigneeRepository.findByAssignmentId(assignmentId).map { it.authorUserId }
 
-        throw IllegalArgumentException("assignment ${assignmentId} is not registered")
-
         val submissionsExport = mutableListOf<SubmissionExport>()
         val gitSubmissionsExport = mutableListOf<GitSubmissionExport>()
         if (includeSubmissions) {
