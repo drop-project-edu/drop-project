@@ -381,7 +381,7 @@ class AssignmentService(
             }
 
             if (assignment.submissionMethod == SubmissionMethod.GIT) {
-                val gitSubmissions = gitSubmissionRepository.findByAssignmentId(assignmentId)
+                val gitSubmissions = gitSubmissionRepository.findByAssignmentIdAndConnected(assignmentId, connected = true)
                 gitSubmissions.forEach {
                     with(it) {
                         val gitSubmissionExport = GitSubmissionExport(

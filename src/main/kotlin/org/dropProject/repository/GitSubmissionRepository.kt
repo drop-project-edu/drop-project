@@ -29,6 +29,7 @@ import org.dropProject.dao.ProjectGroup
 interface GitSubmissionRepository : JpaRepository<GitSubmission, Long> {
 
     fun findByAssignmentId(assignmentId: String) : List<GitSubmission>
+    fun findByAssignmentIdAndConnected(assignmentId: String, connected: Boolean) : List<GitSubmission>
     fun findBySubmitterUserIdAndAssignmentId(submitterUserId: String, assignmentId: String) : GitSubmission?
 
     fun countByGroup(group: ProjectGroup) : Long
