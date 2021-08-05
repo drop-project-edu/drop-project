@@ -333,6 +333,8 @@ class AssignmentService(
     /**
      * Handles the exportation of an assignment and (optionally) its submissions
      * @return a pair with (filename, file)
+     *
+     * NOTE: If you change the name of this method, update MyAsyncUncaughtExceptionHandler
      */
     @Async
     @Transactional
@@ -341,6 +343,8 @@ class AssignmentService(
         val assignment = assignmentRepository.findById(assignmentId).orElse(null)
             ?: throw IllegalArgumentException("assignment ${assignmentId} is not registered")
         assignment.authorizedStudentIds = assigneeRepository.findByAssignmentId(assignmentId).map { it.authorUserId }
+
+        throw IllegalArgumentException("assignment ${assignmentId} is not registered")
 
         val submissionsExport = mutableListOf<SubmissionExport>()
         val gitSubmissionsExport = mutableListOf<GitSubmissionExport>()

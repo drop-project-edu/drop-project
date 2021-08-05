@@ -22,13 +22,19 @@ package org.dropProject
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Scope
+import java.lang.Exception
+
+/**
+ * Used to signal errors on pending tasks
+ */
+data class PendingTaskError(val exception: Throwable)
 
 /**
  * Manages tasks that are executed asynchronously such as assignments export
  */
 class PendingTasks {
 
-    // key is the id of the task
+    // key is the id of the task, value can be anything but if it is an error, will be PendingTaskError
     val pendingTasks = HashMap<String,Any>()
 
     fun get(taskId: String) : Any? {

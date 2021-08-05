@@ -22,6 +22,7 @@ package org.dropProject.controllers
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import org.apache.commons.io.FileUtils
+import org.dropProject.PendingTaskError
 import org.dropProject.PendingTasks
 import org.dropProject.dao.*
 import org.dropProject.data.*
@@ -856,7 +857,13 @@ class AssignmentController(
     fun getAssignmentExportFile(@PathVariable taskId: String,
                               response: HttpServletResponse): FileSystemResource {
 
-        val (filename, zipFile) = pendingTasks.get(taskId) as Pair<String,File>
+        val result = pendingTasks.get(taskId)
+
+        if (result is PendingTaskError) {
+            throw result.exception
+        }
+
+        val (filename, zipFile) = result as Pair<String,File>
         response.setHeader("Content-Disposition", "attachment; filename=${filename}.dp")
         return FileSystemResource(zipFile)
 

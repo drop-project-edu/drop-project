@@ -19,6 +19,8 @@
  */
 package org.dropProject.services
 
+import org.dropProject.PendingTaskError
+import org.dropProject.PendingTasks
 import org.springframework.aop.interceptor.SimpleAsyncUncaughtExceptionHandler
 import org.springframework.stereotype.Service
 import org.dropProject.dao.Submission
@@ -29,10 +31,21 @@ import java.util.*
 
 
 @Service
-class MyAsyncUncaughtExceptionHandler(val submissionRepository: SubmissionRepository): SimpleAsyncUncaughtExceptionHandler() {
+class MyAsyncUncaughtExceptionHandler(val submissionRepository: SubmissionRepository,
+                                      val pendingTasks: PendingTasks): SimpleAsyncUncaughtExceptionHandler() {
 
     override fun handleUncaughtException(ex: Throwable, method: Method, vararg params: Any) {
-        super.handleUncaughtException(ex, method, *params)
+
+        val methodThatThrewTheException = method.name
+
+        if (methodThatThrewTheException == "exportAssignment") {
+            val assignmentId = params[0] as String
+            val taskId = params[2] as String
+            pendingTasks.put(taskId, PendingTaskError(ex))
+        } else {
+            super.handleUncaughtException(ex, method, *params)
+        }
+
         // TODO: test this for build_report table
 //        if (params.size >= 3) {
 //            val submission = params[2] as Submission
