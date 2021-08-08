@@ -523,7 +523,6 @@ class AssignmentService(
 
     }
 
-    @Transactional
     fun importSubmissionsFromImportedFile(mapper: ObjectMapper,
                                                   submissionsJSONFile: File): String? {
 
@@ -607,7 +606,6 @@ class AssignmentService(
      * @return a Pair where the first item is the assignmentId and the second is null
      * if the import succeeded or an error message it it failed
      */
-    @Transactional
     fun createAssignmentFromImportedFile(mapper: ObjectMapper,
                                          assignmentJSONFile: File,
                                          principal: Principal): Pair<String,String?> {
