@@ -479,7 +479,6 @@ class AssignmentService(
         }
     }
 
-    @Transactional(rollbackFor=[Exception::class])
     fun importAssignment(mapper: ObjectMapper, assignmentJSONFile: File, submissionsJSONFile: File,
                          gitSubmissionsJSONFile: File,
                          originalSubmissionsFolder: File,
@@ -661,7 +660,6 @@ class AssignmentService(
         return Pair(newAssignment.id, null)
     }
 
-    @Transactional
     fun importGitSubmissionsFromImportedFile(mapper: ObjectMapper,
                                           submissionsJSONFile: File): String? {
 
