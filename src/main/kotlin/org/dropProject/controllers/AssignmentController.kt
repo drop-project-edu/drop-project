@@ -923,44 +923,10 @@ class AssignmentController(
 
         val mapper = ObjectMapper().registerModule(KotlinModule())
 
-        val (assignmentId, errorMessage) = assignmentService.createAssignmentFromImportedFile(mapper, assignmentJSONFile, principal)
-        if (errorMessage != null) {
-            redirectAttributes.addFlashAttribute("error", errorMessage)
-            return "redirect:/assignment/import"
-        } else {
-            LOG.info("Imported $assignmentId")
-        }
-
-        if (submissionsJSONFile.exists()) {
-            val errorMessage2 = assignmentService.importSubmissionsFromImportedFile(mapper, submissionsJSONFile)
-            if (errorMessage2 != null) {
-                redirectAttributes.addFlashAttribute("error", errorMessage2)
-                return "redirect:/assignment/import"
-            }
-
-            if (gitSubmissionsJSONFile.exists()) {
-                val errorMessage3 = assignmentService.importGitSubmissionsFromImportedFile(mapper, gitSubmissionsJSONFile)
-                if (errorMessage3 != null) {
-                    redirectAttributes.addFlashAttribute("error", errorMessage3)
-                    return "redirect:/assignment/import"
-                }
-            }
-
-            // import all the original submission files
-            if (originalSubmissionsFolder.exists()) {
-                val assignment = assignmentRepository.getById(assignmentId)
-                when (assignment.submissionMethod) {
-                    SubmissionMethod.UPLOAD -> FileUtils.copyDirectory(originalSubmissionsFolder, File(uploadSubmissionsRootLocation))
-                    SubmissionMethod.GIT -> FileUtils.copyDirectory(originalSubmissionsFolder, File(gitSubmissionsRootLocation))
-                }
-            }
-
-            redirectAttributes.addFlashAttribute("message", "Imported successfully ${assignmentId} and all its submissions")
-            return "redirect:/report/${assignmentId}"
-        } else {
-            redirectAttributes.addFlashAttribute("message", "Imported successfully ${assignmentId}. Submissions were not imported")
-            return "redirect:/assignment/info/${assignmentId}"
-        }
+        val result = assignmentService.importAssignment(mapper, assignmentJSONFile, submissionsJSONFile,
+            gitSubmissionsJSONFile, originalSubmissionsFolder, principal)
+        redirectAttributes.addFlashAttribute(result.type, result.message)
+        return result.redirectUrl
     }
 
 

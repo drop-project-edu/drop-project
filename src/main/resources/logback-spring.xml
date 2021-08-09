@@ -38,4 +38,8 @@
 <!--        <appender-ref ref="Console" />-->
 <!--    </logger>-->
 
+<!--        <logger name="org.springframework" level="debug">-->
+<!--            <appender-ref ref="Console" />-->
+<!--        </logger>-->
+
 </configuration>

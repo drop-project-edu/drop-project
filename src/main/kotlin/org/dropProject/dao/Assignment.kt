@@ -20,6 +20,7 @@
 package org.dropProject.dao
 
 import com.fasterxml.jackson.annotation.JsonFormat
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import org.dropProject.Constants
 import org.dropProject.extensions.format
 import org.dropProject.forms.SubmissionMethod
@@ -90,6 +91,7 @@ enum class LeaderboardType {
  * @property tags is a Set of [AssignmentTag].
  */
 @Entity
+@JsonIgnoreProperties(ignoreUnknown = true)  // this is useful to improve backward-compatible imports
 data class Assignment(
         @Id
         val id: String,

@@ -49,6 +49,8 @@ import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 import kotlin.collections.LinkedHashMap
 
+data class AssignmentImportResult(val type: String, val message: String, val redirectUrl: String)
+
 /**
  * AssignmentService provides [Assignment] related functionality (e.g. list of assignments).
  */
@@ -480,6 +482,49 @@ class AssignmentService(
         }
     }
 
+    fun importAssignment(mapper: ObjectMapper, assignmentJSONFile: File, submissionsJSONFile: File,
+                         gitSubmissionsJSONFile: File,
+                         originalSubmissionsFolder: File,
+                         principal: Principal): AssignmentImportResult {
+
+            val (assignmentId, errorMessage) = createAssignmentFromImportedFile(mapper, assignmentJSONFile, principal)
+
+            if (errorMessage != null) {
+                return AssignmentImportResult("error", errorMessage, "redirect:/assignment/import")
+            } else {
+                LOG.info("Imported $assignmentId")
+            }
+
+            if (submissionsJSONFile.exists()) {
+                val errorMessage2 = importSubmissionsFromImportedFile(mapper, submissionsJSONFile)
+                if (errorMessage2 != null) {
+                    return AssignmentImportResult("error", errorMessage2, "redirect:/assignment/import")
+                }
+
+                if (gitSubmissionsJSONFile.exists()) {
+                    val errorMessage3 = importGitSubmissionsFromImportedFile(mapper, gitSubmissionsJSONFile)
+                    if (errorMessage3 != null) {
+                        return AssignmentImportResult("error", errorMessage3, "redirect:/assignment/import")
+                    }
+                }
+
+                // import all the original submission files
+                if (originalSubmissionsFolder.exists()) {
+                    val assignment = assignmentRepository.getOne(assignmentId)
+                    when (assignment.submissionMethod) {
+                        SubmissionMethod.UPLOAD -> FileUtils.copyDirectory(originalSubmissionsFolder, File(uploadSubmissionsRootLocation))
+                        SubmissionMethod.GIT -> FileUtils.copyDirectory(originalSubmissionsFolder, File(gitSubmissionsRootLocation))
+                    }
+                }
+                return AssignmentImportResult("message", "Imported successfully ${assignmentId} and all its submissions",
+                                                "redirect:/report/${assignmentId}")
+            } else {
+                return AssignmentImportResult("message", "Imported successfully ${assignmentId}. Submissions were not imported",
+                    "redirect:/assignment/info/${assignmentId}")
+            }
+
+    }
+
     fun importSubmissionsFromImportedFile(mapper: ObjectMapper,
                                                   submissionsJSONFile: File): String? {
 
@@ -564,8 +609,8 @@ class AssignmentService(
      * if the import succeeded or an error message it it failed
      */
     fun createAssignmentFromImportedFile(mapper: ObjectMapper,
-                                                 assignmentJSONFile: File,
-                                                 principal: Principal): Pair<String,String?> {
+                                         assignmentJSONFile: File,
+                                         principal: Principal): Pair<String,String?> {
 
         val newAssignment = mapper.readValue(assignmentJSONFile, Assignment::class.java)
 
@@ -588,6 +633,15 @@ class AssignmentService(
         } catch (e: Exception) {
             LOG.info("Error cloning ${gitRepository} - ${e}")
             return Pair(newAssignment.id, "Error cloning ${gitRepository} - ${e.message}")
+        }
+
+        // since the import brings the id of the assignment tags, we'll store only their names, clear the structure and then
+        // add them one by one
+        val tags = newAssignment.tags.map { it.name }
+        newAssignment.tags.clear()
+        tags.forEach {
+            val tag = assignmentTagRepository.findByName(it) ?: AssignmentTag(name = it)
+            newAssignment.tags.add(tag)
         }
 
         assignmentRepository.save(newAssignment)
