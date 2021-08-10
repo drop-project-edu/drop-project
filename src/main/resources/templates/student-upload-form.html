@@ -34,7 +34,8 @@
         </div>
         <br/>
         <a th:if="${uploadSubmission != null}" class="btn btn-default btn-md"
-           th:href="@{'/buildReport/' + ${uploadSubmission.id}}">Visualizar último relatório</a>
+           th:href="@{'/buildReport/' + ${uploadSubmission.id}}"
+        th:text="#{student.upload.form.visualize-report-btn}">Visualizar último relatório</a>
         <div class="panel panel-default" th:if="${isTeacher and assignment?.cooloffPeriod != null}">
             <div class="panel-body">
                 <img width="16" th:src="@{/img/info.png}"/> Cool-off turned on for students. Teachers are not affected by this.
@@ -65,6 +66,9 @@
 <script th:inline="javascript">
     /*<![CDATA[*/
     var context = [[@{/}]];
+    var dropzonePlaceholder = [[#{student.upload.dropzone.placeholder}]];
+    var invalidFileType = [[#{student.upload.dropzone.invalidFileType}]];
+    var fileTooBig = [[#{student.upload.dropzone.fileTooBig}]];
     /*]]>*/
 </script>
 <script th:src="@{/js/dropproject.js}"></script>

@@ -8,9 +8,9 @@ $( document ).ready(function() {
             maxFilesize: 1, // MB
             acceptedFiles: ".zip",
             parallelUploads: 1,
-            dictDefaultMessage: "Seleccione ou arraste para aqui o ficheiro .zip com o projecto",
-            dictInvalidFileType: "Tipo de ficheiro inválido: tem que ser um zip",
-            dictFileTooBig: "Ficheiro demasiado grande",
+            dictDefaultMessage: dropzonePlaceholder,
+            dictInvalidFileType: invalidFileType,
+            dictFileTooBig: fileTooBig,
             init: function () {
                 this.on("success", function (file) {
                     gResponse = $.trim(file.xhr.response);
