@@ -47,6 +47,10 @@ back later to check the report.
 
 ![How DP works](docs/how_dp_works.png)
 
+This video explains how to create a simple Java assignment in Drop Project. It shows both teacher and student perspectives:
+
+https://www.youtube.com/watch?v=65IwIBuMDlE
+
 ## Quick start
 
 After cloning the repository, change the following properties:
