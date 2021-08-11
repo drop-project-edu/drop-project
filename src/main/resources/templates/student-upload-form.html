@@ -29,12 +29,13 @@
         <div class="panel" th:if="${coolOffEnd != null}">
             <img th:src="@{/img/iconfinder_cat_sleep_185528.png}" />
             &nbsp;
-            <span class="lead">Relaxa. Estás em período cool-off...</span>
-            <span th:text="${'Poderás voltar a submeter a partir das ' + coolOffEnd}"></span>
+            <span class="lead" th:text="#{student.upload.form.cool-off1}">Relaxa. Estás em período cool-off...</span>
+            <span th:text="#{student.upload.form.cool-off2(${coolOffEnd})}"></span>
         </div>
         <br/>
         <a th:if="${uploadSubmission != null}" class="btn btn-default btn-md"
-           th:href="@{'/buildReport/' + ${uploadSubmission.id}}">Visualizar último relatório</a>
+           th:href="@{'/buildReport/' + ${uploadSubmission.id}}"
+        th:text="#{student.upload.form.visualize-report-btn}">Visualizar último relatório</a>
         <div class="panel panel-default" th:if="${isTeacher and assignment?.cooloffPeriod != null}">
             <div class="panel-body">
                 <img width="16" th:src="@{/img/info.png}"/> Cool-off turned on for students. Teachers are not affected by this.
@@ -47,11 +48,13 @@
         <div th:utext="${instructionsFragment}"></div>
 
         <div class="alert alert-info">
-            O ficheiro tem que ser um zip com a seguinte estrutura:
+            <span th:text="#{student.upload.form.structure1}">O ficheiro tem que ser um zip com a seguinte estrutura:</span>
             <pre th:utext="${packageTree}">
             </pre>
+            <span th:text="#{student.upload.form.structure2}">
             Nota: Todos os outros ficheiros devem ser omitidos do ficheiro zip, nomeadamente os
             ficheiros que resultam da compilação
+            </span>
         </div>
     </div>
 
@@ -63,6 +66,9 @@
 <script th:inline="javascript">
     /*<![CDATA[*/
     var context = [[@{/}]];
+    var dropzonePlaceholder = [[#{student.upload.dropzone.placeholder}]];
+    var invalidFileType = [[#{student.upload.dropzone.invalidFileType}]];
+    var fileTooBig = [[#{student.upload.dropzone.fileTooBig}]];
     /*]]>*/
 </script>
 <script th:src="@{/js/dropproject.js}"></script>

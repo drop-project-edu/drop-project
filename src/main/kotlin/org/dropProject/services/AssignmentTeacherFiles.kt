@@ -27,7 +27,10 @@ import org.dropProject.dao.*
 import org.dropProject.repository.AssignmentTestMethodRepository
 import org.dropProject.repository.BuildReportRepository
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.ApplicationContext
+import org.springframework.context.MessageSource
+import org.springframework.context.support.ResourceBundleMessageSource
 import java.io.File
 import java.io.FileNotFoundException
 import java.security.Principal
@@ -41,13 +44,18 @@ import java.util.*
 class AssignmentTeacherFiles(val buildWorker: BuildWorker,
                              val buildReportRepository: BuildReportRepository,
                              val assignmentTestMethodRepository: AssignmentTestMethodRepository,
-                             val applicationContext: ApplicationContext) {
+                             val applicationContext: ApplicationContext,
+                             val i18n: MessageSource
+) {
 
     @Value("\${assignments.rootLocation}")
     val assignmentsRootLocation : String = ""
 
     @Value("\${mavenizedProjects.rootLocation}")
     val mavenizedProjectsRootLocation : String = ""
+
+    @Value("\${spring.web.locale}")
+    val currentLocale : Locale = Locale.getDefault()
 
     fun getHtmlInstructionsFragment(assignment: Assignment) : String {
         try {
@@ -85,7 +93,7 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
         val packages = packageName.orEmpty().split(".")
         val mainFile = if (language == Language.JAVA) "Main.java" else "Main.kt"
 
-        var packagesTree = "AUTHORS.txt  (contém linhas NUMERO_ALUNO;NOME_ALUNO, uma por aluno do grupo)" + System.lineSeparator()
+        var packagesTree = i18n.getMessage("student.upload.form.tree1", null, currentLocale) + System.lineSeparator()
         packagesTree += "+ src" + System.lineSeparator()
         var indent = 3
         for (packagePart in packages) {
@@ -94,11 +102,11 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
         }
 
         packagesTree += "|" + "-".repeat(indent) + " ${mainFile}" + System.lineSeparator()
-        packagesTree += "|" + "-".repeat(indent) + " ...   (outros ficheiros com código do projecto)" + System.lineSeparator()
+        packagesTree += "|" + "-".repeat(indent) + " ...   (${i18n.getMessage("student.upload.form.tree2", null, currentLocale)})" + System.lineSeparator()
         if (hasStudentTests) {
             packagesTree += "+ test-files" + System.lineSeparator()
             packagesTree += "|--- somefile1.txt" + System.lineSeparator()
-            packagesTree += "|--- ...   (outros ficheiros de input para os testes unitários)" + System.lineSeparator()
+            packagesTree += "|--- ...   (${i18n.getMessage("student.upload.form.tree3", null, currentLocale)})" + System.lineSeparator()
         }
 
         return packagesTree

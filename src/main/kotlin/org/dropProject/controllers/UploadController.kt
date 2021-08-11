@@ -53,6 +53,7 @@ import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.*
 import org.dropProject.services.*
 import org.slf4j.LoggerFactory
+import org.springframework.context.MessageSource
 import java.io.IOException
 import java.io.InputStream
 import java.lang.IllegalStateException
@@ -89,7 +90,8 @@ class UploadController(
         val gitSubmissionService: GitSubmissionService,
         val submissionService: SubmissionService,
         val zipService: ZipService,
-        val projectGroupService: ProjectGroupService
+        val projectGroupService: ProjectGroupService,
+        val i18n: MessageSource
         ) {
 
     @Value("\${storage.rootLocation}/git")
@@ -100,6 +102,9 @@ class UploadController(
 
     @Value("\${delete.original.projectFolder:true}")
     val deleteOriginalProjectFolder : Boolean = true
+
+    @Value("\${spring.web.locale}")
+    val currentLocale : Locale = Locale.getDefault()
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
@@ -254,7 +259,7 @@ class UploadController(
                request: HttpServletRequest): ResponseEntity<String> {
 
         if (bindingResult.hasErrors()) {
-            return ResponseEntity("{\"error\": \"Erro interno\"}", HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity("{\"error\": \"Internal error\"}", HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
         if (uploadForm.assignmentId == null) {
@@ -309,7 +314,7 @@ class UploadController(
 
             // check if the principal is one of group elements
             if (authors.filter { it.number == principal.realName() }.isEmpty()) {
-                throw InvalidProjectStructureException("O utilizador que está a submeter tem que ser um dos elementos do grupo.")
+                throw InvalidProjectStructureException(i18n.getMessage("student.submit.notAGroupElement", null, currentLocale))
             }
 
             val group = projectGroupService.getOrCreateProjectGroup(authors)
@@ -321,7 +326,7 @@ class UploadController(
             for (submission in existingSubmissions) {
                 if (submission.getStatus() == SubmissionStatus.SUBMITTED) {
                     LOG.info("[${authors.joinToString(separator = "|")}] tried to submit before the previous one has been validated")
-                    return ResponseEntity("{\"error\": \"A submissão anterior ainda não foi validada. Aguarde pela geração do relatório para voltar a submeter.\"}", HttpStatus.INTERNAL_SERVER_ERROR);
+                    return ResponseEntity("{\"error\": \"${i18n.getMessage("student.submit.pending", null, currentLocale)}\"}", HttpStatus.INTERNAL_SERVER_ERROR);
                 }
             }
 
@@ -337,7 +342,7 @@ class UploadController(
             return ResponseEntity("{ \"submissionId\": \"${submission.id}\"}", HttpStatus.OK);
         }
 
-        return ResponseEntity("{\"error\": \"Não foi possível processar o ficheiro\"}", HttpStatus.INTERNAL_SERVER_ERROR);
+        return ResponseEntity("{\"error\": \"${i18n.getMessage("student.submit.fileError", null, currentLocale)}\"}", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     /**

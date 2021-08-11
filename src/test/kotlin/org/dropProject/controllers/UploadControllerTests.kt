@@ -1348,7 +1348,7 @@ class UploadControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val error = reportResult.modelAndView!!.modelMap["error"] as String
-        assertEquals("O processo de validação foi abortado pois estava a produzir demasiado output para o écran.", error)
+        assertEquals("The validation process was aborted because it was producing too much output to the console", error)
     }
 
     @Test
