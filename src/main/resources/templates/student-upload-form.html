@@ -29,8 +29,8 @@
         <div class="panel" th:if="${coolOffEnd != null}">
             <img th:src="@{/img/iconfinder_cat_sleep_185528.png}" />
             &nbsp;
-            <span class="lead">Relaxa. Estás em período cool-off...</span>
-            <span th:text="${'Poderás voltar a submeter a partir das ' + coolOffEnd}"></span>
+            <span class="lead" th:text="#{student.upload.form.cool-off1}">Relaxa. Estás em período cool-off...</span>
+            <span th:text="#{student.upload.form.cool-off2(${coolOffEnd})}"></span>
         </div>
         <br/>
         <a th:if="${uploadSubmission != null}" class="btn btn-default btn-md"

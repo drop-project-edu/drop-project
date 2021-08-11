@@ -39,6 +39,7 @@ import org.dropProject.services.*
 import org.dropProject.storage.StorageService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.MessageSource
 import org.springframework.core.io.FileSystemResource
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -84,7 +85,8 @@ class ReportController(
         val storageService: StorageService,
         val zipService: ZipService,
         val templateEngine: TemplateEngine,
-        val assignmentService: AssignmentService
+        val assignmentService: AssignmentService,
+        val i18n: MessageSource
 ) {
 
     @Value("\${mavenizedProjects.rootLocation}")
@@ -95,6 +97,9 @@ class ReportController(
 
     @Value("\${storage.rootLocation}/git")
     val gitSubmissionsRootLocation: String = "submissions/git"
+
+    @Value("\${spring.web.locale}")
+    val currentLocale : Locale = Locale.getDefault()
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
@@ -218,13 +223,13 @@ class ReportController(
 
             // check the submission status
             when (submission.getStatus()) {
-                SubmissionStatus.ILLEGAL_ACCESS -> model["error"] = "O projecto não pode aceder a ficheiros fora da pasta no qual é executado"
-                SubmissionStatus.FAILED -> model["error"] = "Ocorreu um erro interno a validar o seu projecto. Tente novamente. Caso o problema persista, contacte o administrador."
-                SubmissionStatus.ABORTED_BY_TIMEOUT -> model["error"] = "O processo de validação foi abortado pois estava a demorar demasiado. Tempo máximo permitido: ${MAVEN_MAX_EXECUTION_TIME} seg"
-                SubmissionStatus.TOO_MUCH_OUTPUT -> model["error"] = "O processo de validação foi abortado pois estava a produzir demasiado output para o écran."
-                SubmissionStatus.DELETED -> model["error"] = "Submissão inexistente"
+                SubmissionStatus.ILLEGAL_ACCESS -> model["error"] = i18n.getMessage("student.build-report.illegalAccess", null, currentLocale)
+                SubmissionStatus.FAILED -> model["error"] = i18n.getMessage("student.build-report.failed", null, currentLocale)
+                SubmissionStatus.ABORTED_BY_TIMEOUT -> model["error"] = i18n.getMessage("student.build-report.abortedByTimeout", arrayOf(MAVEN_MAX_EXECUTION_TIME), currentLocale)
+                SubmissionStatus.TOO_MUCH_OUTPUT -> model["error"] = i18n.getMessage("student.build-report.tooMuchOutput", null, currentLocale)
+                SubmissionStatus.DELETED -> model["error"] = i18n.getMessage("student.build-report.deleted", null, currentLocale)
                 SubmissionStatus.SUBMITTED, SubmissionStatus.SUBMITTED_FOR_REBUILD, SubmissionStatus.REBUILDING -> {
-                    model["error"] = "A submissão ainda não foi validada. Aguarde..."
+                    model["error"] = i18n.getMessage("student.build-report.submitted", null, currentLocale)
                     model["autoRefresh"] = true
                 }
                 SubmissionStatus.VALIDATED, SubmissionStatus.VALIDATED_REBUILT -> {

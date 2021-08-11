@@ -266,7 +266,10 @@ class AssignmentController(
         }
 
         // first delete all assignees to prevent duplicates
-        assignmentForm.assignmentId?.let { assignmentId -> assigneeRepository.deleteByAssignmentId(assignmentId) }
+        assignmentForm.assignmentId?.let { assignmentId ->
+            assigneeRepository.deleteByAssignmentId(assignmentId)
+            assigneeRepository.flush()  // due to some weird issue, I have to flush (see: https://github.com/spring-projects/spring-data-jpa/issues/1100)
+        }
         val assigneesStr = assignmentForm.assignees?.split(",").orEmpty().map { it -> it.trim() }
         for (assigneeStr in assigneesStr) {
             if (!assigneeStr.isBlank()) {
