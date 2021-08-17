@@ -43,6 +43,7 @@ import org.dropProject.TestsHelper
 import org.dropProject.dao.*
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.*
+import org.hamcrest.Matchers.hasProperty
 import java.io.File
 
 @RunWith(SpringRunner::class)
@@ -139,10 +140,34 @@ class GitSubmissionControllerTests {
 
 
         try {
-            gitSubmissionRepository.getOne(1)
+            gitSubmissionRepository.getById(1)
             fail("git submission shouldn't exist in the database")
         } catch (e: Exception) {
         }
+
+    }
+
+    @Test
+    @DirtiesContext
+    fun test_connectSubmissionWithInexistentGitRepositoryAndThenTryWithACorrectOne() {
+
+        // setup a connection to an inexistent git repo
+        this.mvc.perform(post("/student/setup-git")
+            .param("assignmentId", defaultAssignmentId)
+            .param("gitRepositoryUrl", "git@github.com:someuser/inexistent.git")
+            .with(user(STUDENT_1)))
+            .andExpect(status().isOk)
+            .andExpect(view().name("student-setup-git"))
+            .andExpect(model().attribute("repositorySettingsUrl", "https://github.com/someuser/inexistent/settings/keys"))
+
+        // now, setup a connection to an existent git repo
+        this.mvc.perform(post("/student/setup-git")
+            .param("assignmentId", defaultAssignmentId)
+            .param("gitRepositoryUrl", "git@github.com:palves-ulht/sampleJavaSubmission.git")
+            .with(user(STUDENT_1)))
+            .andExpect(status().isOk)
+            .andExpect(view().name("student-setup-git"))
+            .andExpect(model().attribute("repositorySettingsUrl", "https://github.com/palves-ulht/sampleJavaSubmission/settings/keys"))
 
     }
 
