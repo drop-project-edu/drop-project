@@ -23,17 +23,21 @@ import org.springframework.http.HttpMethod
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.builders.WebSecurity
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter
+import org.springframework.security.web.authentication.logout.LogoutFilter
 
 /**
  * Definitions and configurations related with Security and Role Based Access Control.
  *
  */
-open class DropProjectSecurityConfig : WebSecurityConfigurerAdapter() {
+open class DropProjectSecurityConfig(val apiAuthenticationManager: PersonalTokenAuthenticationManager? = null) :
+    WebSecurityConfigurerAdapter() {
 
     override fun configure(http: HttpSecurity) {
-        http
+
+            http
                 .authorizeRequests()
-                    .antMatchers("/public", "/login", "/loginFromDEISI", "/access-denied", "/error", "/h2-console/**").permitAll()
+                    .antMatchers("/public", "/login", "/loginFromDEISI", "/access-denied", "/error",
+                        "/h2-console/**", "/swagger-ui.html", "/swagger-ui/**", "/swagger-resources/**", "/v2/api-docs").permitAll()
                     .antMatchers(HttpMethod.GET, "/assignment/**").hasRole("TEACHER")
                     .antMatchers(HttpMethod.POST, "/assignment/**").hasRole("TEACHER")
                     .antMatchers(
@@ -57,12 +61,17 @@ open class DropProjectSecurityConfig : WebSecurityConfigurerAdapter() {
                     .exceptionHandling()
                     .accessDeniedPage("/access-denied.html")
 
+        if (apiAuthenticationManager != null) {
+            http.addFilterBefore(PersonalTokenAuthenticationFilter("/api/**", apiAuthenticationManager),
+                    LogoutFilter::class.java)
+        }
+
         http.headers().frameOptions().sameOrigin()  // this is needed for h2-console
 
     }
 
     override fun configure(web: WebSecurity) {
         web.ignoring()
-                .antMatchers("/resources/**", "/static/**", "/css/**", "/js/**", "/img/**")
+                .antMatchers("/resources/**", "/static/**", "/css/**", "/js/**", "/img/**", "/webjars/**")
     }
 }

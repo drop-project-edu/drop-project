@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="layout/layout :: head (pageTitle='Drop Project - Personal token')">
+</head>
+
+<body>
+
+<div th:replace="layout/layout :: header"></div>
+
+<div class="container" style="max-width: 760px; margin-bottom: 65px">
+
+    <h1 class="page-header">Personal access tokens</h1>
+
+    <div th:if="${message}">
+        <div class="alert alert-info" th:text="${message}"/>
+    </div>
+
+    <div th:if="${error}">
+        <div class="alert alert-danger" th:text="${error}"/>
+    </div>
+
+    <p th:if="${token == null}">You haven't yet generated any token to access the Drop Project API</p>
+    <p th:if="${token != null}">Tokens you have generated that can be used to access the Drop Project API</p>
+
+    <table class="table table-bordered" th:if="${token != null}">
+        <tbody>
+        <tr>
+            <td>
+                <h4><i class="glyphicon glyphicon-lock"></i> Token: <span th:text="${token.personalToken}">abcdef</span></h4>
+                <small th:text="${'Expires on ' + token.expirationDate }">Expires on xxxx</small>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <form th:action="@{/personalToken}" method="post">
+        <input type="submit" value="Generate a new token" class="btn btn-primary" />
+    </form>
+
+</div>
+
+<div th:replace="layout/layout :: footer"></div>
+
+</body>
+</html>

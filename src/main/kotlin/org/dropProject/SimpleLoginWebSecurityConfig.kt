@@ -20,11 +20,14 @@
 package org.dropProject
 
 import org.dropProject.security.DropProjectSecurityConfig
+import org.dropProject.security.PersonalTokenAuthenticationManager
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 import org.springframework.context.annotation.Profile
+import org.springframework.core.annotation.Order
 import org.springframework.core.io.ResourceLoader
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
@@ -36,10 +39,11 @@ import java.util.*
 import java.util.logging.Logger
 
 
-@Profile("!deisi & !oauth2")
-@Configuration
-@EnableWebSecurity
-class SimpleLoginWebSecurityConfig : DropProjectSecurityConfig() {
+ @Profile("!deisi & !oauth2")
+ @Configuration
+ @EnableWebSecurity
+ @Order(1)
+class SimpleLoginWebSecurityConfig(val manager: PersonalTokenAuthenticationManager) : DropProjectSecurityConfig(manager) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
