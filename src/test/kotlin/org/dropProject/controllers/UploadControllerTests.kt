@@ -154,8 +154,8 @@ class UploadControllerTests {
     // @Test - rever isto
     fun shouldNotAcceptNoZipFile() {
         val multipartFile = MockMultipartFile("file", "test.txt", "text/plain", "Spring Framework".toByteArray())
-        this.mvc.perform(fileUpload("/upload").file(multipartFile))
-                .andExpect(status().isFound())
+        this.mvc.perform(multipart("/upload").file(multipartFile))
+                .andExpect(status().isFound)
                 .andExpect(header().string("Location", "/upload"))
                 .andExpect(flash().attribute("error", "O ficheiro tem que ser um .zip"))
 
@@ -168,8 +168,8 @@ class UploadControllerTests {
         val bigFileData = ByteArray(100_000_000) { 1 }
 
         val multipartFile = MockMultipartFile("file", "test.txt", "text/plain", bigFileData)
-        this.mvc.perform(fileUpload("/upload").file(multipartFile))
-                .andExpect(status().isFound())
+        this.mvc.perform(multipart("/upload").file(multipartFile))
+                .andExpect(status().isFound)
                 .andExpect(header().string("Location", "/upload"))
                 .andExpect(flash().attribute("error", "Ficheiro excede o tamanho máximo permitido"))
 
@@ -185,7 +185,7 @@ class UploadControllerTests {
 
         this.mvc.perform(get("/upload/testJavaProj")
                 .with(user(STUDENT_1)))
-                .andExpect(status().isOk())
+                .andExpect(status().isOk)
                 .andExpect(view().name("student-upload-form"))
                 // .andExpect(model().attribute("uploadSubmission", null))  ?????
 
@@ -196,13 +196,13 @@ class UploadControllerTests {
     @DirtiesContext
     fun getUploadPageWithCooloff() {
 
-        val assignment = assignmentRepository.getOne("testJavaProj")
+        val assignment = assignmentRepository.getById("testJavaProj")
         assignment.cooloffPeriod = 10
         assignmentRepository.save(assignment)
 
         this.mvc.perform(get("/upload/testJavaProj")
                 .with(user(STUDENT_1)))
-                .andExpect(status().isOk())
+                .andExpect(status().isOk)
                 .andExpect(view().name("student-upload-form"))
 
 
@@ -214,7 +214,7 @@ class UploadControllerTests {
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", "testJavaProj", STUDENT_1)
 
-        val submissionDB = submissionRepository.getOne(submissionId.toLong())
+        val submissionDB = submissionRepository.getById(submissionId.toLong())
         val submissionFolder = File("$submissionsRootLocation/upload", submissionDB.submissionFolder)
 
         assertTrue("submission folder doesn't exist", submissionFolder.exists())
@@ -228,7 +228,7 @@ class UploadControllerTests {
         val submissionId = testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", "testJavaProj", STUDENT_1)
 
         val reportResult = this.mvc.perform(get("/buildReport/$submissionId"))
-                .andExpect(status().isOk())
+                .andExpect(status().isOk)
                 .andReturn()
 
         @Suppress("UNCHECKED_CAST")
@@ -252,7 +252,7 @@ class UploadControllerTests {
         val submissionId = testsHelper.uploadProject(this.mvc, "projectInvalidStructure2", "testJavaProj", STUDENT_1)
 
         val reportResult = this.mvc.perform(get("/buildReport/$submissionId"))
-                .andExpect(status().isOk())
+                .andExpect(status().isOk)
                 .andReturn()
 
         @Suppress("UNCHECKED_CAST")
@@ -275,7 +275,7 @@ class UploadControllerTests {
         val submissionId = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
 
         val reportResult = this.mvc.perform(get("/buildReport/$submissionId"))
-                .andExpect(status().isOk())
+                .andExpect(status().isOk)
                 .andReturn()
 
         @Suppress("UNCHECKED_CAST")
@@ -763,7 +763,7 @@ class UploadControllerTests {
 
             val multipartFile = MockMultipartFile("file", zipFile.file.name, "application/zip", zipFile.file.readBytes())
 
-            this.mvc.perform(fileUpload("/upload")
+            this.mvc.perform(multipart("/upload")
                     .file(multipartFile)
                     .param("assignmentId", "testJavaProj")
                     .param("async", "false"))

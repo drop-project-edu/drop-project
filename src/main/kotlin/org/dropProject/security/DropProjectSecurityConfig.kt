@@ -37,7 +37,8 @@ open class DropProjectSecurityConfig(val apiAuthenticationManager: PersonalToken
             http
                 .authorizeRequests()
                     .antMatchers("/public", "/login", "/loginFromDEISI", "/access-denied", "/error",
-                        "/h2-console/**", "/swagger-ui.html", "/swagger-ui/**", "/swagger-resources/**", "/v2/api-docs").permitAll()
+                        "/h2-console/**",
+                        "/api-docs", "/swagger-ui.html", "/swagger-ui/**", "/swagger-resources/**", "/v2/api-docs").permitAll()
                     .antMatchers(HttpMethod.GET, "/assignment/**").hasRole("TEACHER")
                     .antMatchers(HttpMethod.POST, "/assignment/**").hasRole("TEACHER")
                     .antMatchers(

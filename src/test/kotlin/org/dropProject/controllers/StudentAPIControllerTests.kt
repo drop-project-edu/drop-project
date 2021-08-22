@@ -1,11 +1,13 @@
 package org.dropProject.controllers
 
+import org.dropProject.TestsHelper
 import org.dropProject.dao.Assignee
 import org.dropProject.dao.Assignment
 import org.dropProject.dao.PersonalToken
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.AssigneeRepository
 import org.dropProject.repository.AssignmentRepository
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -24,15 +26,12 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.util.*
 
-private fun header(username: String, personalToken: String) =
-    "basic ${Base64.getEncoder().encodeToString("$username:$personalToken".toByteArray())}"
-
 @RunWith(SpringRunner::class)
 @AutoConfigureMockMvc
 @SpringBootTest
 @TestPropertySource(locations = ["classpath:drop-project-test.properties"])
 @ActiveProfiles("test")
-class APIControllerTests {
+class StudentAPIControllerTests {
 
     @Autowired
     lateinit var mvc: MockMvc
@@ -42,6 +41,9 @@ class APIControllerTests {
 
     @Autowired
     lateinit var assigneeRepository: AssigneeRepository
+
+    @Autowired
+    private lateinit var testsHelper: TestsHelper
 
     @Before
     fun setup() {
@@ -67,31 +69,19 @@ class APIControllerTests {
         this.mvc.perform(
             get("/api/student/assignments/current")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", header("student1", "invalid")))
+                .header("authorization", testsHelper.header("student1", "invalid")))
             .andExpect(status().isForbidden)
     }
 
     @Test
     fun `try to get current assignments with student1`() {
 
-        // first generate a token
-        this.mvc.perform(
-            post("/personalToken")
-                .with(user("student1")))
-            .andExpect(status().isFound)  // redirect
-
-        val mvcResult = this.mvc.perform(
-            get("/personalToken")
-                .with(user("student1")))
-            .andExpect(status().isOk)
-            .andReturn()
-
-        val token = (mvcResult.modelAndView!!.modelMap["token"] as PersonalToken).personalToken
+        val token = generateToken()
 
         this.mvc.perform(
             get("/api/student/assignments/current")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", header("student1", token)))
+                .header("authorization", testsHelper.header("student1", token)))
             .andExpect(status().isOk)
             .andExpect(content().json("""
                 [
@@ -106,5 +96,36 @@ class APIControllerTests {
             """.trimIndent()))
 
         // println(result.getResponse().getContentAsString());
+    }
+
+    @Test
+    fun `upload a submission file`() {
+
+        val token = generateToken()
+
+        val submissionId = testsHelper.uploadProjectByAPI(this.mvc, "projectInvalidStructure1", "testJavaProj",
+            Pair("student1", token))
+
+        assertEquals(1, submissionId)
+
+    }
+
+    private fun generateToken(): String {
+        // first generate a token
+        this.mvc.perform(
+            post("/personalToken")
+                .with(user("student1"))
+        )
+            .andExpect(status().isFound)  // redirect
+
+        val mvcResult = this.mvc.perform(
+            get("/personalToken")
+                .with(user("student1"))
+        )
+            .andExpect(status().isOk)
+            .andReturn()
+
+        val token = (mvcResult.modelAndView!!.modelMap["token"] as PersonalToken).personalToken
+        return token
     }
 }

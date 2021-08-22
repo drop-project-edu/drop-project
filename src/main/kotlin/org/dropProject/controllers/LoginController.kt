@@ -47,6 +47,12 @@ class LoginController(val personalTokenRepository: PersonalTokenRepository) {
         return "login"
     }
 
+    // lacking a better place for this redirection...
+    @RequestMapping(value = ["/api-docs"], method = [RequestMethod.GET])
+    fun api(): String {
+        return "redirect:/swagger-ui/"
+    }
+
     @RequestMapping(value = ["/personalToken"], method = [RequestMethod.GET])
     fun getPersonalToken(principal: Principal, model: ModelMap): String {
         val token = personalTokenRepository.getFirstByUserIdOrderByStatusDateDesc(principal.realName())
@@ -69,10 +75,14 @@ class LoginController(val personalTokenRepository: PersonalTokenRepository) {
         val expirationLocalDate = if (currentDate.month.value > 8) LocalDate.of(currentDate.year+1,8,31) else LocalDate.of(currentDate.year,8,31)
         val expirationDate = Date.from(expirationLocalDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
 
-        val randomToken = (1..TOKEN_LENGTH)
-            .map { i -> kotlin.random.Random.nextInt(0, charPool.size) }
-            .map(charPool::get)
-            .joinToString("");
+        // make sure we generate a unique token
+        var randomToken: String
+        do {
+            randomToken = (1..TOKEN_LENGTH)
+                .map { i -> kotlin.random.Random.nextInt(0, charPool.size) }
+                .map(charPool::get)
+                .joinToString("");
+        } while (personalTokenRepository.getByPersonalToken(randomToken) != null)
 
         val newToken = PersonalToken(userId = principal.realName(), personalToken = randomToken,
                                      expirationDate = expirationDate,

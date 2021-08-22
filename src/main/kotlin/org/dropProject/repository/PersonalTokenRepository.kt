@@ -30,5 +30,6 @@ import org.dropProject.dao.PersonalToken
 interface PersonalTokenRepository : JpaRepository<PersonalToken, String> {
 
     fun getFirstByUserIdOrderByStatusDateDesc(userId: String) : PersonalToken?
+    fun getByPersonalToken(personalToken: String) : PersonalToken?
 
 }

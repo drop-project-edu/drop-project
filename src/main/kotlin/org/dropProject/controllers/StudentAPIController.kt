@@ -23,19 +23,23 @@ import com.fasterxml.jackson.annotation.JsonView
 import io.swagger.annotations.*
 import org.dropProject.dao.Assignment
 import org.dropProject.data.JSONViews
+import org.dropProject.data.SubmissionResult
 import org.dropProject.extensions.realName
+import org.dropProject.forms.UploadForm
 import org.dropProject.repository.AssigneeRepository
 import org.dropProject.repository.AssignmentRepository
 import org.dropProject.services.AssignmentService
+import org.dropProject.services.SubmissionService
 import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.validation.BindingResult
+import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
 import springfox.documentation.annotations.ApiIgnore
 import java.security.Principal
+import javax.servlet.http.HttpServletRequest
+import javax.validation.Valid
 
 
 @RestController
@@ -46,6 +50,8 @@ import java.security.Principal
 class StudentAPIController(
     val assignmentRepository: AssignmentRepository,
     val assigneeRepository: AssigneeRepository,
+    val submissionService: SubmissionService,
+    val assignmentService: AssignmentService
 ) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
@@ -60,5 +66,19 @@ class StudentAPIController(
             assignmentRepository.getById(it.assignmentId)
         }
         return ResponseEntity.ok(result)
+    }
+
+    @RequestMapping(value = ["/submissions/new"], method = [(RequestMethod.POST)], produces = [MediaType.APPLICATION_JSON_VALUE])
+    @ApiOperation(value = "Upload a submission (zip) file. This is an asynchronous operation: " +
+            "you get a submissionId for a pending submission. You then have to check (polling) when the build results are available")
+    fun upload(@Valid @ModelAttribute("uploadForm") uploadForm: UploadForm,
+               bindingResult: BindingResult,
+               @RequestParam("file") file: MultipartFile,
+               principal: Principal,
+               request: HttpServletRequest
+    ): ResponseEntity<SubmissionResult> {
+
+        return submissionService.uploadSubmission(bindingResult, uploadForm, request, principal, file,
+            assignmentRepository, assignmentService)
     }
 }

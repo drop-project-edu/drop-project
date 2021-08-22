@@ -37,6 +37,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.scheduling.annotation.Async
+import org.springframework.security.access.AccessDeniedException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.ui.ModelMap
@@ -699,5 +700,23 @@ class AssignmentService(
         }
 
         return null
+    }
+
+    /**
+     * Checks if a certain user can access a certain [Assignment]. Only relevant for Assignments that have access
+     * control lists.
+     *
+     * @param assignmentId is a String identifying the relevant Assignment
+     * @param principalName is a String identifyng the user trying to access the Assignment
+     * @throws If the user is not allowed to access the Assignment, an [AccessDeniedException] will be thrown.
+     */
+     fun checkAssignees(assignmentId: String, principalName: String) {
+        if (assigneeRepository.existsByAssignmentId(assignmentId)) {
+            // if it enters here, it means this assignment has a white list
+            // let's check if the current user belongs to the white list
+            if (!assigneeRepository.existsByAssignmentIdAndAuthorUserId(assignmentId, principalName)) {
+                throw AccessDeniedException("${principalName} is not allowed to view this assignment")
+            }
+        }
     }
 }
