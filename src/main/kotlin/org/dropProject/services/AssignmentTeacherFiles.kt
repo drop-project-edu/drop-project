@@ -147,13 +147,13 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
                                                                      testClass = parts[0], testMethod = parts[1]))
         }
 
-        if (!buildReport.compilationErrors().isEmpty()) {
+        if (!buildReport.compilationErrors.isEmpty()) {
             report.add(AssignmentValidator.Info(AssignmentValidator.InfoType.ERROR,
                                         "Assignment has compilation errors."))
             return report
         }
 
-        if (!buildReport.checkstyleErrors().isEmpty()) {
+        if (!buildReport.checkstyleErrors.isEmpty()) {
             report.add(AssignmentValidator.Info(AssignmentValidator.InfoType.ERROR,
              "Assignment has checkstyle errors."))
             return report
@@ -162,7 +162,7 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
         if (buildReport.hasJUnitErrors() == true) {
             report.add(AssignmentValidator.Info(AssignmentValidator.InfoType.ERROR,
              "Assignment is failing some JUnit tests. Please fix this!",
-                    "<pre>${buildReport.jUnitErrors()}</pre>"))
+                    "<pre>${buildReport.junitErrorsTeacher}</pre>"))
             return report
         }
 

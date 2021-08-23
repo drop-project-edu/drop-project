@@ -19,6 +19,8 @@
  */
 package org.dropProject.data
 
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonView
 import org.dropProject.dao.Assignment
 import org.dropProject.dao.AssignmentTestMethod
 import org.dropProject.dao.Language
@@ -51,6 +53,7 @@ enum class TestType {
  * @property jacocoResults is a List of [JacocoResults] with the result of evaluating the Submission's code coverage
  * @property assignmentTestMethods is a List of [AssignmentTestMethod]. Each object describes on of the executed Unit Tests
  */
+@JsonInclude(JsonInclude.Include.NON_EMPTY)  // exclude nulls and empty fields from serialization
 data class BuildReport(val mavenOutputLines: List<String>,
                        val mavenizedProjectFolder: String,
                        val assignment: Assignment,
@@ -59,6 +62,36 @@ data class BuildReport(val mavenOutputLines: List<String>,
                        val assignmentTestMethods: List<AssignmentTestMethod>) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
+
+    @JsonView(JSONViews.StudentAPI::class)
+    val compilationErrors: List<String>
+
+    @JsonView(JSONViews.StudentAPI::class)
+    val checkstyleErrors: List<String>
+
+    @JsonView(JSONViews.StudentAPI::class)
+    val junitSummaryStudent: String?
+    @JsonView(JSONViews.StudentAPI::class)
+    val junitErrorsStudent: String?
+
+    @JsonView(JSONViews.StudentAPI::class)
+    val junitSummaryTeacher: String?
+    @JsonView(JSONViews.StudentAPI::class)
+    val junitErrorsTeacher: String?
+
+    val junitSummaryHidden: String?
+    val junitErrorsHidden: String?
+
+    init {
+        compilationErrors = processCompilationErrors()
+        checkstyleErrors = processCheckstyleErrors()
+        junitSummaryStudent = junitSummary(TestType.STUDENT)
+        junitErrorsStudent = jUnitErrors(TestType.STUDENT)
+        junitSummaryTeacher = junitSummary(TestType.TEACHER)
+        junitErrorsTeacher = jUnitErrors(TestType.TEACHER)
+        junitSummaryHidden = junitSummary(TestType.HIDDEN)
+        junitErrorsHidden = jUnitErrors(TestType.HIDDEN)
+    }
 
     fun mavenOutput() : String {
         return mavenOutputLines.joinToString(separator = "\n")
@@ -82,7 +115,7 @@ data class BuildReport(val mavenOutputLines: List<String>,
      *
      * @return a List of String where each String is a Compilation problem / warning.
      */
-    fun compilationErrors() : List<String> {
+    private fun processCompilationErrors() : List<String> {
 
         var errors = ArrayList<String>()
 
@@ -166,7 +199,7 @@ data class BuildReport(val mavenOutputLines: List<String>,
      *
      * @return a List of String where each String is a CheckStyle problem / warning.
      */
-    fun checkstyleErrors() : List<String> {
+    private fun processCheckstyleErrors() : List<String> {
 
         val folder = if (assignment.language == Language.JAVA) "java" else "kotlin"
 
@@ -253,7 +286,7 @@ data class BuildReport(val mavenOutputLines: List<String>,
                 .map { it -> it.substring(19) }  // to remove "[INFO] PMD Failure: "
     }
 
-    fun junitSummary(testType: TestType = TestType.TEACHER) : String? {
+    private fun junitSummary(testType: TestType = TestType.TEACHER) : String? {
 
         val junitSummary = junitSummaryAsObject(testType)
         if (junitSummary != null) {
@@ -351,7 +384,7 @@ data class BuildReport(val mavenOutputLines: List<String>,
     /**
      * Determines if the evaluation resulted in any JUnit errors or failures.
      */
-    fun jUnitErrors(testType: TestType = TestType.TEACHER) : String? {
+    private fun jUnitErrors(testType: TestType = TestType.TEACHER) : String? {
         var result = ""
         for (junitResult in junitResults) {
             if (testType == TestType.TEACHER && junitResult.isTeacherPublic(assignment) ||
@@ -451,6 +484,7 @@ data class BuildReport(val mavenOutputLines: List<String>,
      */
     private fun translateDetektError(originalError: String) : String {
 
+        // TODO language
         return originalError
                 .replace("VariableNaming -", "Nome da variável deve começar por letra minúscula. " +
                         "Caso o nome tenha mais do que uma palavra, as palavras seguintes devem ser capitalizadas (iniciadas por uma maiúscula) -")

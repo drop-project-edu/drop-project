@@ -95,26 +95,26 @@ enum class LeaderboardType {
 @JsonIgnoreProperties(ignoreUnknown = true)  // this is useful to improve backward-compatible imports
 data class Assignment(
         @Id
-        @JsonView(JSONViews.API::class)  // include this field on API calls
+        @JsonView(JSONViews.StudentAPI::class)  // include this field on API calls
         val id: String,
 
         @Column(nullable = false)
-        @JsonView(JSONViews.API::class)
+        @JsonView(JSONViews.StudentAPI::class)
         var name: String,
 
-        @JsonView(JSONViews.API::class)
+        @JsonView(JSONViews.StudentAPI::class)
         var packageName: String? = null,
 
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
-        @JsonView(JSONViews.API::class)
+        @JsonView(JSONViews.StudentAPI::class)
         var dueDate: Date? = null,
 
         @Column(nullable = false)
-        @JsonView(JSONViews.API::class)
+        @JsonView(JSONViews.StudentAPI::class)
         var submissionMethod: SubmissionMethod,
 
         @Column(nullable = false)
-        @JsonView(JSONViews.API::class)
+        @JsonView(JSONViews.StudentAPI::class)
         var language: Language = Language.JAVA,
 
         var acceptsStudentTests: Boolean = false,
@@ -138,7 +138,7 @@ data class Assignment(
         @Column(nullable = false)
         var ownerUserId: String = "",
 
-        @JsonView(JSONViews.API::class)
+        @JsonView(JSONViews.StudentAPI::class)
         var active: Boolean = false,
         var archived: Boolean = false,
 

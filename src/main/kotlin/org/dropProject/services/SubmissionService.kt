@@ -323,7 +323,7 @@ class SubmissionService(
         // check for AUTHORS.txt file
         val authorsFile = File(projectFolder, "AUTHORS.txt")
         if (!authorsFile.existsCaseSensitive()) {
-            throw InvalidProjectStructureException("O projecto não contém o ficheiro AUTHORS.txt na raiz")
+            throw InvalidProjectStructureException("O projecto não contém o ficheiro AUTHORS.txt na raiz")  // TODO language
         }
 
         // check the encoding of AUTHORS.txt
@@ -341,7 +341,7 @@ class SubmissionService(
                 .forEach { parts -> run {
                     if (parts[1][0].isDigit() || parts[1].split(" ").size <= 1) {
                         throw InvalidProjectStructureException("Cada linha tem que ter o formato NUMERO_ALUNO;NOME_ALUNO. " +
-                                "O nome do aluno deve incluir o primeiro e último nome.")
+                                "O nome do aluno deve incluir o primeiro e último nome.")  // TODO language
                     }
 
                     authors.add(AuthorDetails(parts[1], parts[0].sanitize()))
@@ -351,7 +351,7 @@ class SubmissionService(
             // check for duplicate authors
             if (authorIDs.size < authors.size) {
                 throw InvalidProjectStructureException("O ficheiro AUTHORS.txt não está correcto. " +
-                        "Contém autores duplicados.")
+                        "Contém autores duplicados.")  // TODO language
             }
 
         } catch (e: Exception) {
@@ -366,7 +366,7 @@ class SubmissionService(
 
         if (authors.isEmpty()) {
             throw InvalidProjectStructureException("O ficheiro AUTHORS.txt não está correcto. " +
-                    "Tem que conter uma linha por aluno, tendo cada linha o número e o nome separados por ';'")
+                    "Tem que conter uma linha por aluno, tendo cada linha o número e o nome separados por ';'")  // TODO language
         } else {
             return authors
         }
@@ -432,29 +432,29 @@ class SubmissionService(
     private fun checkProjectStructure(projectFolder: File, assignment: Assignment): List<String> {
         val erros = ArrayList<String>()
         if (!File(projectFolder, "src").existsCaseSensitive()) {
-            erros.add("O projecto não contém uma pasta 'src' na raiz")
+            erros.add("O projecto não contém uma pasta 'src' na raiz") // TODO language
         }
 
         val packageName = assignment.packageName.orEmpty().replace(".","/")
 
         if (!File(projectFolder, "src/${packageName}").existsCaseSensitive()) {
-            erros.add("O projecto não contém uma pasta 'src/${packageName}'")
+            erros.add("O projecto não contém uma pasta 'src/${packageName}'") // TODO language
         }
 
         val mainFile = if (assignment.language == Language.JAVA) "Main.java" else "Main.kt"
         if (!File(projectFolder, "src/${packageName}/${mainFile}").existsCaseSensitive()) {
-            erros.add("O projecto não contém o ficheiro ${mainFile} na pasta 'src/${packageName}'")
+            erros.add("O projecto não contém o ficheiro ${mainFile} na pasta 'src/${packageName}'") // TODO language
         }
 
         if (File(projectFolder, "src")
                 .walkTopDown()
                 .find { it.name.startsWith("TestTeacher") } != null) {
-            erros.add("O projecto contém ficheiros cujo nome começa por 'TestTeacher'")
+            erros.add("O projecto contém ficheiros cujo nome começa por 'TestTeacher'") // TODO language
         }
 
         val readme = File(projectFolder, "README.md")
         if (readme.exists() && !readme.isFile) {
-            erros.add("O projecto contém uma pasta README.md mas devia ser um ficheiro")
+            erros.add("O projecto contém uma pasta README.md mas devia ser um ficheiro") // TODO language
         }
 
         return erros
