@@ -30,6 +30,7 @@ import springfox.documentation.spi.DocumentationType
 import springfox.documentation.spring.web.plugins.Docket
 import springfox.documentation.swagger2.annotations.EnableSwagger2
 import java.security.Principal
+import javax.servlet.ServletContext
 
 /**
  * Configuration of Swagger, responsible for generating the API documentation
@@ -40,11 +41,11 @@ import java.security.Principal
 class SwaggerConfig {
 
     @Bean
-    fun api(): Docket {
+    fun api(servletContext: ServletContext): Docket {
         return Docket(DocumentationType.SWAGGER_2)
             .select()
             .apis(RequestHandlerSelectors.any())
-            .paths(PathSelectors.ant("/api/**"))
+            .paths(PathSelectors.ant("${servletContext.contextPath}/api/**"))
             .build()
             .apiInfo(metadata())
             .securitySchemes(listOf(BasicAuth("basicAuth")))
