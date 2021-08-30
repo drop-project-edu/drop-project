@@ -53,7 +53,10 @@ class PersonalTokenAuthenticationManager(val personalTokenRepository: PersonalTo
             }
 
             val grantedAuths = mutableListOf<GrantedAuthority>()
-            grantedAuths.add(SimpleGrantedAuthority("ROLE_USER"))
+            personalTokenDB.profiles.split(",").forEach {
+                grantedAuths.add(SimpleGrantedAuthority(it))
+            }
+
             return UsernamePasswordAuthenticationToken(username, personalToken, grantedAuths)
         }
 

@@ -57,5 +57,9 @@ data class PersonalToken(
     var status: TokenStatus,
 
     @Column(nullable = false)
-    var statusDate: Date
+    var statusDate: Date,
+
+    // comma-separated list of roles associated with this token
+    @Column(nullable = false)
+    var profiles: String
 )

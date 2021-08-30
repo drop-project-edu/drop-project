@@ -24,5 +24,6 @@ package org.dropProject.data
  * For example, we don't want to expose the private repository key of an assignment
  */
 class JSONViews {
-    class StudentAPI
+    open class StudentAPI
+    class TeacherAPI: StudentAPI()
 }

@@ -25,8 +25,6 @@ import org.dropProject.dao.Assignment
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.AssigneeRepository
 import org.dropProject.repository.AssignmentRepository
-import org.hamcrest.Matchers.*
-import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -41,14 +39,15 @@ import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 @RunWith(SpringRunner::class)
 @AutoConfigureMockMvc
 @SpringBootTest
 @TestPropertySource(locations = ["classpath:drop-project-test.properties"])
 @ActiveProfiles("test")
-class StudentAPIControllerTests: APIControllerTests {
+class TeacherAPIControllerTests: APIControllerTests {
 
     @Autowired
     lateinit var mvc: MockMvc
@@ -77,7 +76,7 @@ class StudentAPIControllerTests: APIControllerTests {
     @DirtiesContext
     fun `try to get current assignments without authentication`() {
         this.mvc.perform(
-            get("/api/student/assignments/current")
+            get("/api/teacher/assignments/current")
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isUnauthorized)
     }
@@ -86,7 +85,7 @@ class StudentAPIControllerTests: APIControllerTests {
     @DirtiesContext
     fun `try to get current assignments with invalid token`() {
         this.mvc.perform(
-            get("/api/student/assignments/current")
+            get("/api/teacher/assignments/current")
                 .contentType(MediaType.APPLICATION_JSON)
                 .header("authorization", testsHelper.header("student1", "invalid")))
             .andExpect(status().isUnauthorized)
@@ -94,14 +93,27 @@ class StudentAPIControllerTests: APIControllerTests {
 
     @Test
     @DirtiesContext
-    fun `try to get current assignments with student1`() {
+    fun `try to get current assignments with a student profile`() {
 
         val token = generateToken("student1", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")), mvc)
 
         this.mvc.perform(
-            get("/api/student/assignments/current")
+            get("/api/teacher/assignments/current")
                 .contentType(MediaType.APPLICATION_JSON)
                 .header("authorization", testsHelper.header("student1", token)))
+            .andExpect(status().isForbidden)
+    }
+
+    @Test
+    @DirtiesContext
+    fun `try to get current assignments with a teacher profile`() {
+
+        val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
+
+        this.mvc.perform(
+            get("/api/teacher/assignments/current")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("authorization", testsHelper.header("teacher1", token)))
             .andExpect(status().isOk)
             .andExpect(content().json("""
                 [
@@ -111,63 +123,10 @@ class StudentAPIControllerTests: APIControllerTests {
                     "dueDate":null,
                     "submissionMethod":"UPLOAD",
                     "language":"JAVA",
+                    "ownerUserId": "teacher1",
+                    "gitRepositoryUrl":"git://dummy",
                     "active":true }
                 ]
             """.trimIndent()))
-
-        // println(result.getResponse().getContentAsString());
-    }
-
-    @Test
-    @DirtiesContext
-    fun `upload a submission file with invalid structure`() {
-
-        val token = generateToken("student1", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")), mvc)
-
-        val submissionId = testsHelper.uploadProjectByAPI(this.mvc, "projectInvalidStructure1", "testJavaProj",
-            Pair("student1", token))
-
-        assertEquals(1, submissionId)
-
-        this.mvc.perform(
-            get("/api/student/submissions/$submissionId")
-                .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("student1", token)))
-            .andExpect(status().isOk)
-            .andExpect(jsonPath("$.assignment.id", `is`("testJavaProj")))
-            .andExpect(jsonPath("$.submission.status", `is`("VALIDATED")))
-            .andExpect(jsonPath("$.structureErrors").isArray)
-            .andExpect(jsonPath("$.structureErrors", hasSize<Array<String>>(2)))
-//            .andReturn()
-
-//        println(result.getResponse().getContentAsString());
-    }
-
-    @Test
-    @DirtiesContext
-    fun `upload a submission file with failing tests`() {
-
-        val token = generateToken("student1", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")), mvc)
-
-        val submissionId = testsHelper.uploadProjectByAPI(this.mvc, "projectJUnitErrors", "testJavaProj",
-            Pair("student1", token))
-
-        assertEquals(1, submissionId)
-
-        this.mvc.perform(
-            get("/api/student/submissions/$submissionId")
-                .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("student1", token)))
-            .andExpect(status().isOk)
-            .andExpect(jsonPath("$.assignment.id", `is`("testJavaProj")))
-            .andExpect(jsonPath("$.submission.status", `is`("VALIDATED")))
-            .andExpect(jsonPath("$.summary[0].reportKey", `is`("PS")))
-            .andExpect(jsonPath("$.summary[0].reportValue", `is`("OK")))
-            .andExpect(jsonPath("$.summary[3].reportKey", `is`("TT")))
-            .andExpect(jsonPath("$.summary[3].reportValue", `is`("NOK")))
-            .andExpect(jsonPath("$.buildReport.junitSummaryTeacher", startsWith("Tests run: 2, Failures: 1, Errors: 0")))
-            .andExpect(jsonPath("$.buildReport.junitErrorsTeacher",
-                startsWith("FAILURE: org.dropProject.sampleAssignments.testProj.TestTeacherProject.testFuncaoParaTestar")))
-
     }
 }

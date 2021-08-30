@@ -127,6 +127,7 @@ data class Assignment(
         var showLeaderBoard: Boolean = false,
         var leaderboardType: LeaderboardType? = null,
 
+        @JsonView(JSONViews.TeacherAPI::class)
         val gitRepositoryUrl: String,
         @Column(columnDefinition = "TEXT")
         var gitRepositoryPubKey: String? = null,
@@ -136,6 +137,7 @@ data class Assignment(
         var gitRepositoryFolder: String,  // relative to assignment.root.location
 
         @Column(nullable = false)
+        @JsonView(JSONViews.TeacherAPI::class)
         var ownerUserId: String = "",
 
         @JsonView(JSONViews.StudentAPI::class)

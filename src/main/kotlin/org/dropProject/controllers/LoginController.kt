@@ -23,6 +23,8 @@ import org.dropProject.dao.PersonalToken
 import org.dropProject.dao.TokenStatus
 import org.dropProject.extensions.realName
 import org.dropProject.repository.PersonalTokenRepository
+import org.springframework.security.core.GrantedAuthority
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Controller
 import org.springframework.ui.ModelMap
 import org.springframework.web.bind.annotation.RequestMapping
@@ -31,6 +33,7 @@ import java.security.Principal
 import java.time.LocalDate
 import java.time.ZoneId
 import java.util.*
+
 
 const val TOKEN_LENGTH = 20
 
@@ -84,9 +87,12 @@ class LoginController(val personalTokenRepository: PersonalTokenRepository) {
                 .joinToString("");
         } while (personalTokenRepository.getByPersonalToken(randomToken) != null)
 
+        val authorities = SecurityContextHolder.getContext().authentication.authorities as Collection<GrantedAuthority>
+        val rolesStr = authorities.map { it.authority }.joinToString(",")
+
         val newToken = PersonalToken(userId = principal.realName(), personalToken = randomToken,
                                      expirationDate = expirationDate,
-                                     status = TokenStatus.ACTIVE, statusDate = Date())
+                                     status = TokenStatus.ACTIVE, statusDate = Date(), profiles = rolesStr)
         personalTokenRepository.save(newToken)
 
         return "redirect:/personalToken"

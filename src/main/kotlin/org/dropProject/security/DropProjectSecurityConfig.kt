@@ -20,10 +20,39 @@
 package org.dropProject.security
 
 import org.springframework.http.HttpMethod
+import org.springframework.http.HttpStatus
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.builders.WebSecurity
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter
+import org.springframework.security.web.access.AccessDeniedHandlerImpl
 import org.springframework.security.web.authentication.logout.LogoutFilter
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
+
+/**
+ * Implementation of the AccessDeniedHandler that either calls the default access denied impl
+ * (which forwards the request to an error page) or simply returns a 403 error code (in case of
+ * an API request)
+ */
+class APIAccessDeniedHandler(private val errorPage: String) : AccessDeniedHandlerImpl() {
+
+    init {
+        setErrorPage(errorPage)
+    }
+
+    override fun handle(
+        request: HttpServletRequest,
+        response: HttpServletResponse,
+        accessDeniedException: org.springframework.security.access.AccessDeniedException) {
+
+        if (request.contentType == "application/json") {
+            response.status = HttpStatus.FORBIDDEN.value()
+            response.flushBuffer()  // to commit immediately the response
+        } else {
+            super.handle(request, response, accessDeniedException)
+        }
+    }
+}
 
 /**
  * Definitions and configurations related with Security and Role Based Access Control.
@@ -42,8 +71,7 @@ open class DropProjectSecurityConfig(val apiAuthenticationManager: PersonalToken
                     .antMatchers(HttpMethod.GET, "/assignment/**").hasRole("TEACHER")
                     .antMatchers(HttpMethod.POST, "/assignment/**").hasRole("TEACHER")
                     .antMatchers(
-                            "/report",
-                            "/submission-report",
+                            "/report/*",
                             "/submissions",
                             "/rebuild/*",
                             "/rebuildFull/*",
@@ -51,7 +79,7 @@ open class DropProjectSecurityConfig(val apiAuthenticationManager: PersonalToken
                             "/downloadMavenProject/*",
                             "/downloadOriginalAll/*",
                             "/downloadMavenizedAll/*",
-                            "/cleanup/*"
+                            "/api/teacher/**"
                     ).hasRole("TEACHER")  // TODO: review
                 .antMatchers(
                         "/cleanup/*",
@@ -60,7 +88,7 @@ open class DropProjectSecurityConfig(val apiAuthenticationManager: PersonalToken
                     .anyRequest().authenticated()
                 .and()
                     .exceptionHandling()
-                    .accessDeniedPage("/access-denied.html")
+                    .accessDeniedHandler(APIAccessDeniedHandler("/access-denied.html"))
 
         if (apiAuthenticationManager != null) {
             http.addFilterBefore(PersonalTokenAuthenticationFilter("/api/**", apiAuthenticationManager),
