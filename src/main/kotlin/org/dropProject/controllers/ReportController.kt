@@ -29,7 +29,7 @@ import org.commonmark.renderer.html.HtmlRenderer
 import org.dropProject.MAVEN_MAX_EXECUTION_TIME
 import org.dropProject.dao.*
 import org.dropProject.data.AuthorDetails
-import org.dropProject.data.GroupedProjectGroups
+import org.dropProject.data.StudentHistory
 import org.dropProject.data.TestType
 import org.dropProject.extensions.formatDefault
 import org.dropProject.extensions.realName
@@ -60,8 +60,6 @@ import java.security.Principal
 import java.util.*
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
-import kotlin.collections.HashMap
-import kotlin.collections.LinkedHashMap
 
 /**
  * ReportController contains MVC controller functions to handle requests related with submission reports
@@ -794,6 +792,60 @@ class ReportController(
         model["submissions"] = sortedList
 
         return "leaderboard"
+    }
+
+    // For now, this will list assignments even if the teacher making the request
+    // does not have access to those assignments
+    @RequestMapping(value = ["/studentHistory/{studentId}"], method = [(RequestMethod.GET)])
+    fun getStudentTracker(@PathVariable studentId: String, model: ModelMap,
+                       principal: Principal, request: HttpServletRequest): String {
+
+        if (!request.isUserInRole("TEACHER")) {
+            throw org.springframework.security.access.AccessDeniedException("${principal.realName()} is not allowed to view this report")
+        }
+
+        var author = authorRepository.findByUserId(studentId);
+
+        if(author == null) {
+            model["message"] = "Student with id " + studentId + " does not exist"
+            return "student-history";
+        }
+
+        val projectGroups = projectGroupRepository.getGroupsForAuthor(studentId)
+
+        var studentHistory = StudentHistory(author!!)
+        var submissions = mutableListOf<Submission>()
+
+        // FIXME: for better performance, this can be replaced with an HashSet
+        var assignments = mutableListOf<Assignment>()
+        
+        // FIXME: for better performance, replace this logic
+        // with a function that gets the data straight from the DB
+        for(submission in submissionRepository.findAll()) {
+            if(projectGroups.contains(submission.group)) {
+                submissions.add(submission);
+                val assignment = assignmentRepository.findById(submission.assignmentId).get()
+                if(!assignments.contains(assignment)) {
+                    assignments.add(assignment);
+                    studentHistory.addGroupAndAssignment(submission.group, assignment)
+                    // FIXME Very Ugly Hack
+                    studentHistory.addSubmission(submission)
+                }
+                else {
+                    studentHistory.addSubmission(submission)
+                }
+            }
+        }
+
+        // 1- gather all assignments
+        // 2- where was the student signalleed?
+        // 3- students he works it
+
+        //model["submissions"] = submissions
+        //model["assignments"] = assignments
+        model["studentHistory"] = studentHistory
+
+        return "student-history";
     }
 
     @RequestMapping(value = ["/migrate/{idx1}/{idx2}"], method = [(RequestMethod.GET)])

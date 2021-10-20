@@ -166,6 +166,7 @@ class AssignmentService(
 
             if (assignmentTests.isEmpty()) {
                 model["message"] = "No information about tests for this assignment"
+                model["otherMessage"] = model["message"]
             } else {
                 // calculate how many submissions pass each test
                 val testCounts = assignmentTests.map { "${it.testMethod}:${it.testClass}" to 0 }.toMap(LinkedHashMap())
