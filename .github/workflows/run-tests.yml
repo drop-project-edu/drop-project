@@ -13,4 +13,4 @@ jobs:
         with:
           java-version: 11
       - name: test
-        run: whereis mvn
+        run: find / -name mvn
