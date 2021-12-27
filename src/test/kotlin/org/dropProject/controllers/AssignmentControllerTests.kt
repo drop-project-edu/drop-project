@@ -545,7 +545,8 @@ class AssignmentControllerTests {
                             language = Language.JAVA,
                             gitRepositoryUrl = sampleJavaAssignmentRepo,
                             hiddenTestsVisibility = TestVisibility.SHOW_PROGRESS,
-                            editMode = true
+                            editMode = true,
+                            assignmentTags = ""
                         )
                     )
                 )
@@ -578,7 +579,8 @@ class AssignmentControllerTests {
                             language = Language.JAVA,
                             gitRepositoryUrl = sampleJavaAssignmentRepo,
                             editMode = true,
-                            leaderboardType = LeaderboardType.ELLAPSED
+                            leaderboardType = LeaderboardType.ELLAPSED,
+                            assignmentTags = ""
                         )
                     )
                 )
@@ -629,7 +631,7 @@ class AssignmentControllerTests {
             id = "testJavaProj", name = "Test Project (for automatic tests)",
             packageName = "org.testProj", ownerUserId = "teacher1",
             submissionMethod = SubmissionMethod.UPLOAD, active = false, gitRepositoryUrl = "git://dummyRepo",
-            gitRepositoryFolder = "testJavaProj", public = false
+            gitRepositoryFolder = "testJavaProj", public = false, tagsStr = emptyList()
         )
         assignmentRepository.save(assignment)
         assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student1"))
