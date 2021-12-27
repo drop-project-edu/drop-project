@@ -23,6 +23,7 @@ package org.dropProject.controllers
 import org.dropProject.dao.*
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.*
+import org.dropProject.services.AssignmentService
 import org.dropProject.services.GitClient
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -51,7 +52,8 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
                                  val authorRepository: AuthorRepository,
                                  val projectGroupRepository: ProjectGroupRepository,
                                  val gitClient: GitClient,
-                                 val resourceLoader: ResourceLoader) : ApplicationListener<ContextRefreshedEvent> {
+                                 val resourceLoader: ResourceLoader,
+                                 val assignmentService: AssignmentService) : ApplicationListener<ContextRefreshedEvent> {
 
     companion object {
         const val sampleJavaAssignmentPrivateKey = "-----BEGIN RSA PRIVATE KEY-----\n" +
@@ -136,7 +138,7 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
                 gitRepositoryFolder = "sampleJavaProject",
                 active = true)
 
-        assignment.tags.add(AssignmentTag(name = "sample"))
+        assignmentService.addTagToAssignment(assignment, "sample")
 
         assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "sampleJavaProject",
                 testClass = "TestTeacherProject", testMethod = "testFindMax"))
@@ -214,8 +216,8 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
                 gitRepositoryFolder = "sampleKotlinProject",
                 active = true)
 
-        assignment.tags.add(assignmentTagRepository.findByName("sample") ?: AssignmentTag(name = "sample"))
-        assignment.tags.add(assignmentTagRepository.findByName("kotlin") ?: AssignmentTag(name = "kotlin"))
+        assignmentService.addTagToAssignment(assignment, "sample")
+        assignmentService.addTagToAssignment(assignment, "kotlin")
 
         assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "sampleKotlinProject",
                 testClass = "TestTeacherProject", testMethod = "testFindMax"))
