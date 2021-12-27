@@ -19,17 +19,14 @@
  */
 package org.dropProject.repository
 
+import org.dropProject.dao.*
 import org.springframework.data.jpa.repository.JpaRepository
-import org.dropProject.dao.Assignment
-import org.dropProject.dao.Author
-import org.dropProject.dao.ProjectGroup
-import org.dropProject.dao.Submission
-import org.springframework.data.jpa.repository.EntityGraph
+import org.springframework.transaction.annotation.Transactional
 
 /**
- * Provides functions to query [Assignment]s that have been persisted in the database.
+ * Provides functions to query [AssignmentTags]s that have been persisted in the database.
  */
-interface AssignmentRepository : JpaRepository<Assignment, String> {
-    fun findByOwnerUserId(ownerUserId: String): List<Assignment>
-    fun findByGitRepositoryFolder(gitRepositoryFolder: String): Assignment?
+interface AssignmentTagsRepository : JpaRepository<AssignmentTags, AssignmentTagsCompositeKey> {
+    fun findByAssignmentId(assignmentId: String) : List<AssignmentTags>
+    fun countAssignmentTagsByTagId(tagId: Long): Long
 }

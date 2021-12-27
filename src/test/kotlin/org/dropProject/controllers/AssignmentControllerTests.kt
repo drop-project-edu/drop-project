@@ -33,11 +33,11 @@ import org.dropProject.extensions.formatJustDate
 import org.dropProject.forms.AssignmentForm
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.*
+import org.dropProject.services.AssignmentService
 import org.hamcrest.CoreMatchers.containsString
 import org.hamcrest.Matchers
 import org.hamcrest.Matchers.*
 import org.hamcrest.collection.IsCollectionWithSize.hasSize
-import org.hamcrest.core.IsNull
 import org.json.JSONObject
 import org.junit.Assert.*
 import org.junit.FixMethodOrder
@@ -64,8 +64,6 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
-import org.springframework.test.web.servlet.result.MockMvcResultHandlers
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import org.springframework.validation.BindingResult
 import java.io.File
@@ -98,6 +96,9 @@ class AssignmentControllerTests {
 
     @Autowired
     lateinit var assignmentTagRepository: AssignmentTagRepository
+
+    @Autowired
+    lateinit var assignmentService: AssignmentService
 
     @Autowired
     lateinit var testsHelper: TestsHelper
@@ -544,7 +545,8 @@ class AssignmentControllerTests {
                             language = Language.JAVA,
                             gitRepositoryUrl = sampleJavaAssignmentRepo,
                             hiddenTestsVisibility = TestVisibility.SHOW_PROGRESS,
-                            editMode = true
+                            editMode = true,
+                            assignmentTags = ""
                         )
                     )
                 )
@@ -577,7 +579,8 @@ class AssignmentControllerTests {
                             language = Language.JAVA,
                             gitRepositoryUrl = sampleJavaAssignmentRepo,
                             editMode = true,
-                            leaderboardType = LeaderboardType.ELLAPSED
+                            leaderboardType = LeaderboardType.ELLAPSED,
+                            assignmentTags = ""
                         )
                     )
                 )
@@ -628,7 +631,7 @@ class AssignmentControllerTests {
             id = "testJavaProj", name = "Test Project (for automatic tests)",
             packageName = "org.testProj", ownerUserId = "teacher1",
             submissionMethod = SubmissionMethod.UPLOAD, active = false, gitRepositoryUrl = "git://dummyRepo",
-            gitRepositoryFolder = "testJavaProj", public = false
+            gitRepositoryFolder = "testJavaProj", public = false, tagsStr = emptyList()
         )
         assignmentRepository.save(assignment)
         assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student1"))
@@ -684,6 +687,55 @@ class AssignmentControllerTests {
             .andExpect(status().isFound)
             .andExpect(header().string("Location", "/assignment/my"))
             .andExpect(flash().attribute("message", "Assignment was successfully deleted"))
+
+    }
+
+    @Test
+    @DirtiesContext
+    fun test_12_1_deleteAssignmentWithOtherAssignments() {
+
+        val TEACHER_1 = User("teacher1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
+
+        // create two initial assignments
+        val assignment1 = Assignment(
+            id = "testJavaProj", name = "Test Project (for automatic tests)",
+            packageName = "org.testProj", ownerUserId = "teacher1",
+            submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
+            gitRepositoryFolder = "testJavaProj", public = false
+        )
+        assignmentService.addTagToAssignment(assignment1, "teste")
+        assignmentRepository.save(assignment1)
+        assigneeRepository.save(Assignee(assignmentId = assignment1.id, authorUserId = "student1"))
+
+        // create two initial assignments
+        val assignment2 = Assignment(
+            id = "testJavaProj2", name = "Test Project (for automatic tests)",
+            packageName = "org.testProj", ownerUserId = "teacher1",
+            submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
+            gitRepositoryFolder = "testJavaProj", public = false
+        )
+        assignmentService.addTagToAssignment(assignment2, "teste")
+        assignmentRepository.save(assignment2)
+        assigneeRepository.save(Assignee(assignmentId = assignment2.id, authorUserId = "student1"))
+
+
+        // delete the assignment 1
+        this.mvc.perform(
+            post("/assignment/delete/testJavaProj")
+                .with(user(TEACHER_1))
+        )
+            .andExpect(status().isFound)
+            .andExpect(header().string("Location", "/assignment/my"))
+            .andExpect(flash().attribute("message", "Assignment was successfully deleted"))
+
+        // check my assignments
+        this.mvc.perform(
+            get("/assignment/my")
+                .with(user(TEACHER_1))
+        )
+            .andExpect(status().isOk)
+            .andExpect(model().hasNoErrors())
+            .andExpect(model().attribute("assignments", hasSize<Assignment>(1)))
 
     }
 
@@ -867,14 +919,14 @@ class AssignmentControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val assignment = mvcResult.modelAndView!!.modelMap["assignment"] as Assignment
-        val tagNames = assignment.tags.map { it.name }
-        assertThat(tagNames, Matchers.containsInAnyOrder("sample", "test", "simple"))
+         val tagNames = assignment.tagsStr
+         org.hamcrest.MatcherAssert.assertThat(tagNames, containsInAnyOrder("sample", "test", "simple"))
 
         // check available tags
         // it should now return 'sample','test','simple'
         globalTags = assignmentTagRepository.findAll()
         assertEquals(3, globalTags.size)
-        assertThat(tagNames, Matchers.containsInAnyOrder("sample", "test", "simple"))
+        org.hamcrest.MatcherAssert.assertThat(tagNames, containsInAnyOrder("sample", "test", "simple"))
     }
 
     @Test
@@ -887,8 +939,8 @@ class AssignmentControllerTests {
                 mvc, assignmentRepository, "dummyAssignmentTags", "Dummy Assignment",
                 "org.dummy",
                 "UPLOAD", sampleJavaAssignmentRepo,
-                tags = "sample,test,simple"
-            )  // <<<<
+                tags = "sample,test,simple"  // <<<<
+            )
 
             // add one tag and remove 2 tags
             mvc.perform(
@@ -912,9 +964,9 @@ class AssignmentControllerTests {
 
             @Suppress("UNCHECKED_CAST")
             val assignment = mvcResult.modelAndView!!.modelMap["assignment"] as Assignment
-            val tagNames = assignment.tags.map { it.name }
-            assertEquals(2, tagNames.size)
-            assertThat(tagNames, Matchers.containsInAnyOrder("sample", "complex"))
+            val tagNames = assignment.tagsStr
+            assertEquals(2, tagNames?.size)
+            org.hamcrest.MatcherAssert.assertThat(tagNames, containsInAnyOrder("sample", "complex"))
 
             // check available tags
             // it should now return 'sample','complex'

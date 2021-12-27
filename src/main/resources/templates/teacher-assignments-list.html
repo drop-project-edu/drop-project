@@ -42,7 +42,7 @@
         <tr th:each="assignment : ${assignments}">
             <td th:text="${assignment.id}" th:title="${assignment.name}"></td>
             <td class="space-between">
-                <span th:each="tag: ${assignment.tags}" th:text="${tag.name}" class="label label-info" />
+                <span th:each="tag: ${assignment.tagsStr}" th:text="${tag}" class="label label-info" />
             </td>
 
             <td th:if="${!archived and assignment.lastSubmissionDate != null}" th:text="${#dates.format(assignment.lastSubmissionDate, 'dd/MMM HH:mm')}"

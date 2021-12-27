@@ -17,19 +17,26 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.repository
+package org.dropProject.dao
 
-import org.springframework.data.jpa.repository.JpaRepository
-import org.dropProject.dao.Assignment
-import org.dropProject.dao.Author
-import org.dropProject.dao.ProjectGroup
-import org.dropProject.dao.Submission
-import org.springframework.data.jpa.repository.EntityGraph
+import java.io.Serializable
+import javax.persistence.*
+
+@Embeddable
+data class AssignmentTagsCompositeKey(
+    val assignmentId: String,
+    val tagId: Long): Serializable
 
 /**
- * Provides functions to query [Assignment]s that have been persisted in the database.
+ * Represents an associate table between assignments and assignmentTags. Due to problems with spring "magic", i've decided to implement
+ * this relation by hand
+ *
+ * @property assignmentId .
+ * @property tagId .
  */
-interface AssignmentRepository : JpaRepository<Assignment, String> {
-    fun findByOwnerUserId(ownerUserId: String): List<Assignment>
-    fun findByGitRepositoryFolder(gitRepositoryFolder: String): Assignment?
-}
+@Entity
+@IdClass(AssignmentTagsCompositeKey::class)
+data class AssignmentTags(
+    @Id val assignmentId: String,
+    @Id val tagId: Long
+)
