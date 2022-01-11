@@ -43,6 +43,7 @@ import org.dropProject.TestsHelper
 import org.dropProject.dao.*
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.*
+import org.hamcrest.Matchers.hasProperty
 import java.io.File
 
 @RunWith(SpringRunner::class)
@@ -134,15 +135,39 @@ class GitSubmissionControllerTests {
                 .with(user(STUDENT_1))
         )
                 .andExpect(status().isOk())
-                .andExpect(model().attribute("gitRepoErrorMsg", "O endereço do repositório não está no formato correcto"))
+                .andExpect(model().attribute("gitRepoErrorMsg", "The repository's url is not in the correct format"))
 
 
 
         try {
-            gitSubmissionRepository.getOne(1)
+            gitSubmissionRepository.getById(1)
             fail("git submission shouldn't exist in the database")
         } catch (e: Exception) {
         }
+
+    }
+
+    @Test
+    @DirtiesContext
+    fun test_connectSubmissionWithInexistentGitRepositoryAndThenTryWithACorrectOne() {
+
+        // setup a connection to an inexistent git repo
+        this.mvc.perform(post("/student/setup-git")
+            .param("assignmentId", defaultAssignmentId)
+            .param("gitRepositoryUrl", "git@github.com:someuser/inexistent.git")
+            .with(user(STUDENT_1)))
+            .andExpect(status().isOk)
+            .andExpect(view().name("student-setup-git"))
+            .andExpect(model().attribute("repositorySettingsUrl", "https://github.com/someuser/inexistent/settings/keys"))
+
+        // now, setup a connection to an existent git repo
+        this.mvc.perform(post("/student/setup-git")
+            .param("assignmentId", defaultAssignmentId)
+            .param("gitRepositoryUrl", "git@github.com:palves-ulht/sampleJavaSubmission.git")
+            .with(user(STUDENT_1)))
+            .andExpect(status().isOk)
+            .andExpect(view().name("student-setup-git"))
+            .andExpect(model().attribute("repositorySettingsUrl", "https://github.com/palves-ulht/sampleJavaSubmission/settings/keys"))
 
     }
 
@@ -250,7 +275,7 @@ class GitSubmissionControllerTests {
                         "git@github.com:palves-ulht/sampleJavaAssignment.git tem uma " +
                         "estrutura inválida: O projecto não contém o ficheiro AUTHORS.txt na raiz"))
 
-        val updatedGitSubmission = gitSubmissionRepository.getOne(1)
+        val updatedGitSubmission = gitSubmissionRepository.getById(1)
         assertFalse(updatedGitSubmission.connected)
 
         assertEquals(1, gitSubmissionRepository.count())
@@ -263,14 +288,16 @@ class GitSubmissionControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(view().name("student-setup-git"))
 
-        assertEquals(1, gitSubmissionRepository.count())  // make sure we didn't create a new git submission
+        assertEquals(1, gitSubmissionRepository.count())  // make sure we don't have now two git submissions
+
+        val newGitSubmission = gitSubmissionRepository.getById(2)
 
         /*** GET /upload/ ***/
         this.mvc.perform(get("/upload/${defaultAssignmentId}")
                 .with(user(STUDENT_2)))
                 .andExpect(status().isOk())
                 .andExpect(view().name("student-git-form"))
-                .andExpect(model().attribute("gitSubmission", updatedGitSubmission))
+                .andExpect(model().attribute("gitSubmission", newGitSubmission))
 
         // now let's put another student who shares a group with this one connecting to github
         val gitSubmissionId = testsHelper.connectToGitRepositoryAndBuildReport(mvc, gitSubmissionRepository, defaultAssignmentId,
