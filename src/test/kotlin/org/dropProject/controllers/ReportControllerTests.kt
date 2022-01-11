@@ -292,7 +292,7 @@ class ReportControllerTests {
         assignmentRepository.save(assignment)
 
         testsHelper.connectToGitRepositoryAndBuildReport(mvc, gitSubmissionRepository, "sampleJavaProject",
-                "git@github.com:palves-ulht/sampleJavaSubmission.git", "student1")
+                "git@github.com:drop-project-edu/sampleJavaSubmission.git", "student1")
 
         val result = this.mvc.perform(get("/downloadOriginalProject/1").contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE))
                 .andExpect(header().string("Content-Disposition", "attachment; filename=student1_student2.zip"))
@@ -311,7 +311,7 @@ class ReportControllerTests {
         assignmentRepository.save(assignment)
 
         testsHelper.connectToGitRepositoryAndBuildReport(mvc, gitSubmissionRepository, "sampleJavaProject",
-                "git@github.com:palves-ulht/sampleJavaSubmission.git", "student1")
+                "git@github.com:drop-project-edu/sampleJavaSubmission.git", "student1")
 
         val result = this.mvc.perform(get("/downloadMavenProject/1").contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE)
                 .with(user(TEACHER_1)))
@@ -332,7 +332,7 @@ class ReportControllerTests {
 
         // TODO should have more than one group submitting to properly test this
         testsHelper.connectToGitRepositoryAndBuildReport(mvc, gitSubmissionRepository, "sampleJavaProject",
-                "git@github.com:palves-ulht/sampleJavaSubmission.git", "student1")
+                "git@github.com:drop-project-edu/sampleJavaSubmission.git", "student1")
 
         val result = this.mvc.perform(get("/downloadMavenizedAll/sampleJavaProject").contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE)
                 .with(user(TEACHER_1)))

@@ -181,7 +181,7 @@ class GitSubmissionControllerTests {
         assertNull(result.modelAndView!!.modelMap["gitSubmission"])
 
         testsHelper.connectToGitRepositoryAndBuildReport(mvc, gitSubmissionRepository, defaultAssignmentId,
-                "git@github.com:palves-ulht/sampleJavaSubmission.git", "student1")
+                "git@github.com:drop-project-edu/sampleJavaSubmission.git", "student1")
 
         /*** GET /buildReport ***/
         val reportResult = this.mvc.perform(get("/buildReport/1"))
@@ -274,7 +274,7 @@ class GitSubmissionControllerTests {
 
         // now let's put another student who shares a group with this one connecting to github
         val gitSubmissionId = testsHelper.connectToGitRepositoryAndBuildReport(mvc, gitSubmissionRepository, defaultAssignmentId,
-                "git@github.com:palves-ulht/sampleJavaSubmission.git", "student1")
+                "git@github.com:drop-project-edu/sampleJavaSubmission.git", "student1")
         val anotherStudentGitSubmission = gitSubmissionRepository.getOne(gitSubmissionId)
 
         /*** GET /upload/testJavaPro ***/
@@ -291,7 +291,7 @@ class GitSubmissionControllerTests {
     fun test_connectAndBuildReportAndDisconnect() {
 
         testsHelper.connectToGitRepositoryAndBuildReport(mvc, gitSubmissionRepository, defaultAssignmentId,
-                "git@github.com:palves-ulht/sampleJavaSubmission.git", "student1")
+                "git@github.com:drop-project-edu/sampleJavaSubmission.git", "student1")
 
         assertEquals(1, gitSubmissionRepository.count())
         assertEquals(1, submissionRepository.count())
@@ -302,7 +302,7 @@ class GitSubmissionControllerTests {
                 .andExpect(status().isFound())
                 .andExpect(header().string("Location", "/upload/${defaultAssignmentId}"))
                 .andExpect(flash().attribute("message",
-                        "Desligado com sucesso do repositório git@github.com:palves-ulht/sampleJavaSubmission.git"))
+                        "Desligado com sucesso do repositório git@github.com:drop-project-edu/sampleJavaSubmission.git"))
 
         assertEquals(0, gitSubmissionRepository.count())
         assertEquals(0, submissionRepository.count())

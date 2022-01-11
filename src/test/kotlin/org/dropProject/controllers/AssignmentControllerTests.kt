@@ -1343,7 +1343,7 @@ class AssignmentControllerTests {
         assignmentRepository.save(assignment01)
 
         testsHelper.connectToGitRepositoryAndBuildReport(mvc, gitSubmissionRepository, "testJavaProj",
-            "git@github.com:palves-ulht/sampleJavaSubmission.git", "student1")
+            "git@github.com:drop-project-edu/sampleJavaSubmission.git", "student1")
 
         val result = this.mvc.perform(
             get("/assignment/export/testJavaProj?includeSubmissions=true")
@@ -1377,7 +1377,7 @@ class AssignmentControllerTests {
         assertEquals("testJavaProj", node.at("/0/assignmentId").asText())
         assertEquals("student1", node.at("/0/submitterUserId").asText())
         assertEquals("2019-02-26 17:26:53", node.at("/0/lastCommitDate").asText())
-        assertEquals("git@github.com:palves-ulht/sampleJavaSubmission.git", node.at("/0/gitRepositoryUrl").asText())
+        assertEquals("git@github.com:drop-project-edu/sampleJavaSubmission.git", node.at("/0/gitRepositoryUrl").asText())
         assertEquals("student1", node.at("/0/authors/0/userId").asText())
         assertEquals("student2", node.at("/0/authors/1/userId").asText())
 
