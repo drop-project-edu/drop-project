@@ -848,7 +848,7 @@ class UploadController(
                 model["gitSubmission"] = gitSubmission
                 return "student-setup-git"
             } catch (e: Exception) {
-                LOG.info("Error cloning ${gitRepository} - ${e}")
+                LOG.info("Error cloning ${gitRepository} - ${e} - ${e.cause}")
                 model["error"] = "Error cloning ${gitRepository} - ${e.message}"
                 model["gitSubmission"] = gitSubmission
                 return "student-setup-git"
