@@ -169,7 +169,7 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
             connected = true
 
         } catch (e: Exception) {
-            LOG.error("Error cloning ${gitRepository} - ${e}")
+            LOG.error("Error cloning ${gitRepository} - ${e}", e)
         }
 
         if (connected) {
