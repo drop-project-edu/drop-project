@@ -19,8 +19,7 @@
  */
 package org.dropProject.dao
 
-import junit.framework.Assert.assertEquals
-import junit.framework.Assert.assertTrue
+import junit.framework.TestCase.*
 import org.junit.Test
 import java.util.*
 

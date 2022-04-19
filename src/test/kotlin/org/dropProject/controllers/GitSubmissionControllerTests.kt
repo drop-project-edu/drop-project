@@ -184,7 +184,7 @@ class GitSubmissionControllerTests {
                 .andExpect(view().name("student-setup-git"))
 
         try {
-            val gitSubmission = gitSubmissionRepository.getOne(1)
+            val gitSubmission = gitSubmissionRepository.getById(1)
             assertTrue("git submission should exist in the database", true)
             assertEquals("git@github.com:someuser/cs1Assignment1.git", gitSubmission.gitRepositoryUrl)
         } catch (e: Exception) {
@@ -258,7 +258,7 @@ class GitSubmissionControllerTests {
                 .andExpect(view().name("student-setup-git"))
 
 
-        val gitSubmission = gitSubmissionRepository.getOne(1)
+        val gitSubmission = gitSubmissionRepository.getById(1)
         assertFalse(gitSubmission.connected)
 
         // inject public and private key
@@ -302,7 +302,7 @@ class GitSubmissionControllerTests {
         // now let's put another student who shares a group with this one connecting to github
         val gitSubmissionId = testsHelper.connectToGitRepositoryAndBuildReport(mvc, gitSubmissionRepository, defaultAssignmentId,
                 "git@github.com:drop-project-edu/sampleJavaSubmission.git", "student1")
-        val anotherStudentGitSubmission = gitSubmissionRepository.getOne(gitSubmissionId)
+        val anotherStudentGitSubmission = gitSubmissionRepository.getById(gitSubmissionId)
 
         /*** GET /upload/testJavaPro ***/
         this.mvc.perform(get("/upload/${defaultAssignmentId}")

@@ -19,7 +19,7 @@
  */
 package org.dropProject.dao
 
-import junit.framework.Assert.assertEquals
+import junit.framework.TestCase.assertEquals
 import org.junit.Test
 
 class TestAuthor {

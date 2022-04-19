@@ -287,7 +287,7 @@ class ReportControllerTests {
     @DirtiesContext
     fun downloadOriginalProjectFromGitSubmission() {
 
-        val assignment = assignmentRepository.getOne("sampleJavaProject")
+        val assignment = assignmentRepository.getById("sampleJavaProject")
         assignment.submissionMethod = SubmissionMethod.GIT
         assignmentRepository.save(assignment)
 
@@ -306,7 +306,7 @@ class ReportControllerTests {
     @DirtiesContext
     fun downloadMavenProjectFromGitSubmission() {
 
-        val assignment = assignmentRepository.getOne("sampleJavaProject")
+        val assignment = assignmentRepository.getById("sampleJavaProject")
         assignment.submissionMethod = SubmissionMethod.GIT
         assignmentRepository.save(assignment)
 
@@ -326,7 +326,7 @@ class ReportControllerTests {
     @DirtiesContext
     fun downloadMavenizedAllFromGitSubmissions() {
 
-        val assignment = assignmentRepository.getOne("sampleJavaProject")
+        val assignment = assignmentRepository.getById("sampleJavaProject")
         assignment.submissionMethod = SubmissionMethod.GIT
         assignmentRepository.save(assignment)
 
@@ -361,7 +361,7 @@ class ReportControllerTests {
     @DirtiesContext
     fun leaderboardOK() {
 
-        val assignment = assignmentRepository.getOne(defaultAssignmentId)
+        val assignment = assignmentRepository.getById(defaultAssignmentId)
         assignment.showLeaderBoard = true
         assignment.leaderboardType = LeaderboardType.ELLAPSED
         assignmentRepository.save(assignment)
@@ -455,7 +455,7 @@ class ReportControllerTests {
     @DirtiesContext
     fun exportCSVWithStudentTests() {
 
-        val assignment = assignmentRepository.getOne(defaultAssignmentId)
+        val assignment = assignmentRepository.getById(defaultAssignmentId)
         assignment.acceptsStudentTests = true
         assignment.minStudentTests = 2
         assignmentRepository.save(assignment)

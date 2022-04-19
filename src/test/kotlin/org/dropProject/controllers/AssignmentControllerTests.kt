@@ -254,7 +254,7 @@ class AssignmentControllerTests {
                 .andExpect(status().isOk)
 
             // inject private and public key to continue
-            val assignment = assignmentRepository.getOne("dummyAssignment2")
+            val assignment = assignmentRepository.getById("dummyAssignment2")
             assignment.gitRepositoryPrivKey = "-----BEGIN RSA PRIVATE KEY-----\n" +
                     "MIIEowIBAAKCAQEAgbzH8iu5BsdX8fZhsiqQRgG/ICbJ2gy4guNltnBeRchInAmP\n" +
                     "UdjAbLUBOwCAaixz4F5rtOvmuNy2kjpqmvdT8Ltoaox+GnSdsTRDVALmrST5MS4w\n" +
@@ -303,7 +303,7 @@ class AssignmentControllerTests {
                     )
                 )
 
-            val updatedAssignment = assignmentRepository.getOne("dummyAssignment2")
+            val updatedAssignment = assignmentRepository.getById("dummyAssignment2")
             assert(updatedAssignment.active == false)
 
         } finally {
@@ -424,7 +424,7 @@ class AssignmentControllerTests {
         this.mvc.perform(get("/assignment/setup-git/dummyAssignment5"))
             .andExpect(status().isOk)
 
-        val assignment = assignmentRepository.getOne("dummyAssignment5")
+        val assignment = assignmentRepository.getById("dummyAssignment5")
         assert(assignment.active == false)
     }
 
@@ -616,7 +616,7 @@ class AssignmentControllerTests {
             .andExpect(flash().attribute("message", "Assignment was marked active"))
 
         // confirm it is now active
-        val assignment = assignmentRepository.getOne("testJavaProj")
+        val assignment = assignmentRepository.getById("testJavaProj")
         assertTrue("assignment is not active", assignment.active)
     }
 

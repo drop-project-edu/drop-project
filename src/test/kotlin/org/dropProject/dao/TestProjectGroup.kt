@@ -19,7 +19,7 @@
  */
 package org.dropProject.dao
 
-import junit.framework.Assert.assertFalse
+import junit.framework.TestCase.*
 import org.junit.Test
 
 class TestProjectGroup {
@@ -28,7 +28,7 @@ class TestProjectGroup {
     fun projectGroup() {
         var projectGroup = ProjectGroup(1)
         projectGroup.authors.add(Author(1, "BC", "1983"))
-        assert(projectGroup.contains("1983"))
+        assertTrue(projectGroup.contains("1983"))
         assertFalse(projectGroup.contains("1143"))
     }
 

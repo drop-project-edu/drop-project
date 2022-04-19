@@ -877,7 +877,7 @@ class AssignmentController(
             throw result.exception
         }
 
-        val (filename, zipFile) = result as Pair<String,File>
+        val (filename, zipFile) = @Suppress("UNCHECKED_CAST") (result as Pair<String,File>)
         response.setHeader("Content-Disposition", "attachment; filename=${filename}.dp")
         return FileSystemResource(zipFile)
 

@@ -511,7 +511,7 @@ class AssignmentService(
 
                 // import all the original submission files
                 if (originalSubmissionsFolder.exists()) {
-                    val assignment = assignmentRepository.getOne(assignmentId)
+                    val assignment = assignmentRepository.getById(assignmentId)
                     when (assignment.submissionMethod) {
                         SubmissionMethod.UPLOAD -> FileUtils.copyDirectory(originalSubmissionsFolder, File(uploadSubmissionsRootLocation))
                         SubmissionMethod.GIT -> FileUtils.copyDirectory(originalSubmissionsFolder, File(gitSubmissionsRootLocation))

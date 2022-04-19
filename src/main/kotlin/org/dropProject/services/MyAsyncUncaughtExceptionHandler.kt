@@ -50,7 +50,7 @@ class MyAsyncUncaughtExceptionHandler(val submissionRepository: SubmissionReposi
 
         when (methodThatThrewTheException) {
             "exportAssignment" -> {
-                val assignmentId = params[0] as String
+                // val assignmentId = params[0] as String
                 val taskId = params[2] as String
                 pendingTasks.put(taskId, PendingTaskError(ex))
             }
