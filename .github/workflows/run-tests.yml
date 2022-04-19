@@ -13,24 +13,24 @@ jobs:
         with:
           java-version: 11
       # uncomment this when github actions don't find maven
-      - name: Check maven version
-        run: mvn --version
+#      - name: Check maven version
+#        run: mvn --version
       - name: Cache Maven packages
         uses: actions/cache@v2
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
-#      - name: Build with Maven
-#        env:
-#          DP_M2_HOME: /usr/share/apache-maven-3.8.4
-#          DP_MVN_REPO: ~/.m2
-#        run: mvn --batch-mode --update-snapshots verify
-#      - name: Upload coverage to codecov
-#        uses: codecov/codecov-action@v1.2.1
-#        with:
-#          file: ./target/site/jacoco/jacoco.xml
-#          flags: unittests
+      - name: Build with Maven
+        env:
+          DP_M2_HOME: /usr/share/apache-maven-3.8.5
+          DP_MVN_REPO: ~/.m2
+        run: mvn --batch-mode --update-snapshots verify
+      - name: Upload coverage to codecov
+        uses: codecov/codecov-action@v1.2.1
+        with:
+          file: ./target/site/jacoco/jacoco.xml
+          flags: unittests
 
 #      - name: Upload war file to github releases
 #        uses: AButler/upload-release-assets@v2.0
