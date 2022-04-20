@@ -60,4 +60,15 @@ class StudentHistory(val author : Author) {
             }
         }
     }
+
+    /**
+     * Returns the history sorted by date, starting with the assignment associated with the last submission
+     */
+    fun getHistorySortedByDateDesc() : List<StudentHistoryEntry> {
+        return history.sortedWith(compareByDescending { it.getLastSubmission().submissionDate })
+    }
+
+    fun ensureSubmissionsAreSorted() {
+        history.forEach { it.ensureSubmissionsAreSorted() }
+    }
 }

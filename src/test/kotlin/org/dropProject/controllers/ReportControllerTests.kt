@@ -116,23 +116,39 @@ class ReportControllerTests {
         folder.mkdirs()
 
         // create initial assignments
-        val assignment01 = Assignment(id = "testJavaProj", name = "Test Project (for automatic tests)",
-                packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
-                submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
-                gitRepositoryFolder = "testJavaProj")
+        val assignment01 = Assignment(
+            id = "testJavaProj", name = "Test Project (for automatic tests)",
+            packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
+            submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
+            gitRepositoryFolder = "testJavaProj"
+        )
         assignmentRepository.save(assignment01)
 
-        assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "testJavaProj",
-                testClass = "TestTeacherProject", testMethod = "testFuncaoParaTestar"))
-        assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "testJavaProj",
-                testClass = "TestTeacherProject", testMethod = "testFuncaoLentaParaTestar"))
-        assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "testJavaProj",
-                testClass = "TestTeacherHiddenProject", testMethod = "testFuncaoParaTestarQueNaoApareceAosAlunos"))
+        assignmentTestMethodRepository.save(
+            AssignmentTestMethod(
+                assignmentId = "testJavaProj",
+                testClass = "TestTeacherProject", testMethod = "testFuncaoParaTestar"
+            )
+        )
+        assignmentTestMethodRepository.save(
+            AssignmentTestMethod(
+                assignmentId = "testJavaProj",
+                testClass = "TestTeacherProject", testMethod = "testFuncaoLentaParaTestar"
+            )
+        )
+        assignmentTestMethodRepository.save(
+            AssignmentTestMethod(
+                assignmentId = "testJavaProj",
+                testClass = "TestTeacherHiddenProject", testMethod = "testFuncaoParaTestarQueNaoApareceAosAlunos"
+            )
+        )
 
-        val assignment02 = Assignment(id = "sampleJavaProject", name = "Test Project (for automatic tests)",
-                packageName = "org.dropProject.samples.sampleJavaAssignment", ownerUserId = "teacher1",
-                submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummy",
-                gitRepositoryFolder = "sampleJavaProject")
+        val assignment02 = Assignment(
+            id = "sampleJavaProject", name = "Test Project (for automatic tests)",
+            packageName = "org.dropProject.samples.sampleJavaAssignment", ownerUserId = "teacher1",
+            submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummy",
+            gitRepositoryFolder = "sampleJavaProject"
+        )
         assignmentRepository.save(assignment02)
     }
 
@@ -154,16 +170,21 @@ class ReportControllerTests {
     fun reportForMultipleSubmissions() {
 
         testsHelper.makeSeveralSubmissions(
-                listOf("projectInvalidStructure1",
-                        "projectInvalidStructure1",
-                        "projectInvalidStructure1",
-                        "projectInvalidStructure1",
-                        "projectInvalidStructure1"), mvc)
+            listOf(
+                "projectInvalidStructure1",
+                "projectInvalidStructure1",
+                "projectInvalidStructure1",
+                "projectInvalidStructure1",
+                "projectInvalidStructure1"
+            ), mvc
+        )
 
-        val reportResult = this.mvc.perform(get("/report/testJavaProj")
-                .with(user(TEACHER_1)))
-                .andExpect(status().isOk())
-                .andReturn()
+        val reportResult = this.mvc.perform(
+            get("/report/testJavaProj")
+                .with(user(TEACHER_1))
+        )
+            .andExpect(status().isOk())
+            .andReturn()
 
         @Suppress("UNCHECKED_CAST")
         val report = reportResult.modelAndView!!.modelMap["submissions"] as List<SubmissionInfo>
@@ -183,13 +204,15 @@ class ReportControllerTests {
     @DirtiesContext
     fun testMySubmissions() {
 
-        testsHelper.uploadProject(this.mvc,"projectInvalidStructure1", defaultAssignmentId, STUDENT_1)
+        testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", defaultAssignmentId, STUDENT_1)
 
-        val mySubmissionsResult = this.mvc.perform(get("/mySubmissions")
+        val mySubmissionsResult = this.mvc.perform(
+            get("/mySubmissions")
                 .param("assignmentId", defaultAssignmentId)
-                .with(user(STUDENT_1)))
-                .andExpect(status().isOk())
-                .andReturn()
+                .with(user(STUDENT_1))
+        )
+            .andExpect(status().isOk())
+            .andReturn()
 
         @Suppress("UNCHECKED_CAST")
         val submissions = mySubmissionsResult.modelAndView!!.modelMap["submissions"] as List<Submission>
@@ -201,15 +224,17 @@ class ReportControllerTests {
     @DirtiesContext
     fun downloadMavenProject() {
 
-        val submissionId = testsHelper.uploadProject(this.mvc,"projectCompilationErrors", defaultAssignmentId, STUDENT_1)
+        val submissionId = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", defaultAssignmentId, STUDENT_1)
 
         this.mvc.perform(get("/buildReport/$submissionId"))
-                .andExpect(status().isOk())
+            .andExpect(status().isOk())
 
-        this.mvc.perform(get("/downloadMavenProject/$submissionId").contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE)
-                .with(user(TEACHER_1)))
-                .andExpect(header().string("Content-Disposition", "attachment; filename=student1_student2_mavenized.zip"))
-                .andExpect(status().isOk)
+        this.mvc.perform(
+            get("/downloadMavenProject/$submissionId").contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE)
+                .with(user(TEACHER_1))
+        )
+            .andExpect(header().string("Content-Disposition", "attachment; filename=student1_student2_mavenized.zip"))
+            .andExpect(status().isOk)
 
     }
 
@@ -217,19 +242,22 @@ class ReportControllerTests {
     @DirtiesContext
     fun downloadOriginalProject() {
 
-        val originalZipFile = zipService.createZipFromFolder("original", resourceLoader.getResource("file:src/test/sampleProjects/projectCompilationErrors").file)
+        val originalZipFile =
+            zipService.createZipFromFolder("original", resourceLoader.getResource("file:src/test/sampleProjects/projectCompilationErrors").file)
         originalZipFile.file.deleteOnExit()
 
-        val submissionId = testsHelper.uploadProject(this.mvc,"projectCompilationErrors", defaultAssignmentId, STUDENT_1)
+        val submissionId = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", defaultAssignmentId, STUDENT_1)
 
-        this.mvc.perform(get("/buildReport/$submissionId")
-                .with(user(STUDENT_1)))
-                .andExpect(status().isOk())
+        this.mvc.perform(
+            get("/buildReport/$submissionId")
+                .with(user(STUDENT_1))
+        )
+            .andExpect(status().isOk())
 
         val result = this.mvc.perform(get("/downloadOriginalProject/$submissionId").contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE))
-                .andExpect(header().string("Content-Disposition", "attachment; filename=student1_student2.zip"))
-                .andExpect(status().isOk)
-                .andReturn()
+            .andExpect(header().string("Content-Disposition", "attachment; filename=student1_student2.zip"))
+            .andExpect(status().isOk)
+            .andReturn()
 
         val downloadedFileContent = result.response.contentAsByteArray
         assertArrayEquals(Files.readAllBytes(originalZipFile.file.toPath()), downloadedFileContent)
@@ -240,15 +268,19 @@ class ReportControllerTests {
     @DirtiesContext
     fun downloadOriginalAll() {
 
-        testsHelper.uploadProject(this.mvc,"projectCompilationErrors", defaultAssignmentId, STUDENT_1)
-        testsHelper.uploadProject(this.mvc,"projectJUnitErrors", defaultAssignmentId, STUDENT_2,
-                listOf(STUDENT_2.username to "Student 2"))
+        testsHelper.uploadProject(this.mvc, "projectCompilationErrors", defaultAssignmentId, STUDENT_1)
+        testsHelper.uploadProject(
+            this.mvc, "projectJUnitErrors", defaultAssignmentId, STUDENT_2,
+            listOf(STUDENT_2.username to "Student 2")
+        )
 
-        val result = this.mvc.perform(get("/downloadOriginalAll/testJavaProj").contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE)
-                .with(user(TEACHER_1)))
-                .andExpect(header().string("Content-Disposition", "attachment; filename=testJavaProj_last_submissions.zip"))
-                .andExpect(status().isOk)
-                .andReturn()
+        val result = this.mvc.perform(
+            get("/downloadOriginalAll/testJavaProj").contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE)
+                .with(user(TEACHER_1))
+        )
+            .andExpect(header().string("Content-Disposition", "attachment; filename=testJavaProj_last_submissions.zip"))
+            .andExpect(status().isOk)
+            .andReturn()
 
         val downloadedFileContent = result.response.contentAsByteArray
         val downloadedFile = File("result.zip")
@@ -264,15 +296,19 @@ class ReportControllerTests {
     @DirtiesContext
     fun downloadMavenizedAll() {
 
-        testsHelper.uploadProject(this.mvc,"projectCompilationErrors", defaultAssignmentId, STUDENT_1)
-        testsHelper.uploadProject(this.mvc,"projectJUnitErrors", defaultAssignmentId, STUDENT_2,
-                listOf(STUDENT_2.username to "Student 2"))
+        testsHelper.uploadProject(this.mvc, "projectCompilationErrors", defaultAssignmentId, STUDENT_1)
+        testsHelper.uploadProject(
+            this.mvc, "projectJUnitErrors", defaultAssignmentId, STUDENT_2,
+            listOf(STUDENT_2.username to "Student 2")
+        )
 
-        val result = this.mvc.perform(get("/downloadMavenizedAll/testJavaProj").contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE)
-                .with(user(TEACHER_1)))
-                .andExpect(header().string("Content-Disposition", "attachment; filename=testJavaProj_last_mavenized_submissions.zip"))
-                .andExpect(status().isOk)
-                .andReturn()
+        val result = this.mvc.perform(
+            get("/downloadMavenizedAll/testJavaProj").contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE)
+                .with(user(TEACHER_1))
+        )
+            .andExpect(header().string("Content-Disposition", "attachment; filename=testJavaProj_last_mavenized_submissions.zip"))
+            .andExpect(status().isOk)
+            .andReturn()
 
         val downloadedFileContent = result.response.contentAsByteArray
         val downloadedFile = File("result.zip")
@@ -291,13 +327,15 @@ class ReportControllerTests {
         assignment.submissionMethod = SubmissionMethod.GIT
         assignmentRepository.save(assignment)
 
-        testsHelper.connectToGitRepositoryAndBuildReport(mvc, gitSubmissionRepository, "sampleJavaProject",
-                "git@github.com:drop-project-edu/sampleJavaSubmission.git", "student1")
+        testsHelper.connectToGitRepositoryAndBuildReport(
+            mvc, gitSubmissionRepository, "sampleJavaProject",
+            "git@github.com:drop-project-edu/sampleJavaSubmission.git", "student1"
+        )
 
         val result = this.mvc.perform(get("/downloadOriginalProject/1").contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE))
-                .andExpect(header().string("Content-Disposition", "attachment; filename=student1_student2.zip"))
-                .andExpect(status().isOk)
-                .andReturn()
+            .andExpect(header().string("Content-Disposition", "attachment; filename=student1_student2.zip"))
+            .andExpect(status().isOk)
+            .andReturn()
 
         assertTrue(result.response.contentLength > 5000)  // just to make sure we don't get an empty file
     }
@@ -310,14 +348,18 @@ class ReportControllerTests {
         assignment.submissionMethod = SubmissionMethod.GIT
         assignmentRepository.save(assignment)
 
-        testsHelper.connectToGitRepositoryAndBuildReport(mvc, gitSubmissionRepository, "sampleJavaProject",
-                "git@github.com:drop-project-edu/sampleJavaSubmission.git", "student1")
+        testsHelper.connectToGitRepositoryAndBuildReport(
+            mvc, gitSubmissionRepository, "sampleJavaProject",
+            "git@github.com:drop-project-edu/sampleJavaSubmission.git", "student1"
+        )
 
-        val result = this.mvc.perform(get("/downloadMavenProject/1").contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE)
-                .with(user(TEACHER_1)))
-                .andExpect(header().string("Content-Disposition", "attachment; filename=student1_student2_mavenized.zip"))
-                .andExpect(status().isOk)
-                .andReturn()
+        val result = this.mvc.perform(
+            get("/downloadMavenProject/1").contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE)
+                .with(user(TEACHER_1))
+        )
+            .andExpect(header().string("Content-Disposition", "attachment; filename=student1_student2_mavenized.zip"))
+            .andExpect(status().isOk)
+            .andReturn()
 
         assertTrue(result.response.contentLength > 5000)   // just to make sure we don't get an empty file
     }
@@ -331,14 +373,18 @@ class ReportControllerTests {
         assignmentRepository.save(assignment)
 
         // TODO should have more than one group submitting to properly test this
-        testsHelper.connectToGitRepositoryAndBuildReport(mvc, gitSubmissionRepository, "sampleJavaProject",
-                "git@github.com:drop-project-edu/sampleJavaSubmission.git", "student1")
+        testsHelper.connectToGitRepositoryAndBuildReport(
+            mvc, gitSubmissionRepository, "sampleJavaProject",
+            "git@github.com:drop-project-edu/sampleJavaSubmission.git", "student1"
+        )
 
-        val result = this.mvc.perform(get("/downloadMavenizedAll/sampleJavaProject").contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE)
-                .with(user(TEACHER_1)))
-                .andExpect(header().string("Content-Disposition", "attachment; filename=sampleJavaProject_last_mavenized_submissions.zip"))
-                .andExpect(status().isOk)
-                .andReturn()
+        val result = this.mvc.perform(
+            get("/downloadMavenizedAll/sampleJavaProject").contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE)
+                .with(user(TEACHER_1))
+        )
+            .andExpect(header().string("Content-Disposition", "attachment; filename=sampleJavaProject_last_mavenized_submissions.zip"))
+            .andExpect(status().isOk)
+            .andReturn()
 
         val downloadedFileContent = result.response.contentAsByteArray
         val downloadedFile = File("result.zip")
@@ -352,9 +398,11 @@ class ReportControllerTests {
     @Test
     @DirtiesContext
     fun leaderboardNotAccessible() {
-        this.mvc.perform(get("/leaderboard/testJavaProj")
-                .with(user(TEACHER_1)))
-                .andExpect(status().isForbidden())
+        this.mvc.perform(
+            get("/leaderboard/testJavaProj")
+                .with(user(TEACHER_1))
+        )
+            .andExpect(status().isForbidden())
     }
 
     @Test
@@ -377,15 +425,23 @@ class ReportControllerTests {
 
         try {
             // upload five times, each time with a different author
-            testsHelper.uploadProject(this.mvc,"projectOK", defaultAssignmentId, STUDENT_1)
-            testsHelper.uploadProject(this.mvc,"projectOK", defaultAssignmentId, STUDENT_2,
-                    authors = listOf(STUDENT_2.username to "Student 2"))
-            testsHelper.uploadProject(this.mvc,"projectJUnitErrors", defaultAssignmentId, student3,
-                    authors = listOf(student3.username to "Student 3"))
-            testsHelper.uploadProject(this.mvc,"projectOK", defaultAssignmentId, STUDENT_2,
-                    authors = listOf(STUDENT_2.username to "Student 2"))
-            testsHelper.uploadProject(this.mvc,"projectOK", defaultAssignmentId, STUDENT_1,
-                    authors = listOf(STUDENT_1.username to "Student 3"))
+            testsHelper.uploadProject(this.mvc, "projectOK", defaultAssignmentId, STUDENT_1)
+            testsHelper.uploadProject(
+                this.mvc, "projectOK", defaultAssignmentId, STUDENT_2,
+                authors = listOf(STUDENT_2.username to "Student 2")
+            )
+            testsHelper.uploadProject(
+                this.mvc, "projectJUnitErrors", defaultAssignmentId, student3,
+                authors = listOf(student3.username to "Student 3")
+            )
+            testsHelper.uploadProject(
+                this.mvc, "projectOK", defaultAssignmentId, STUDENT_2,
+                authors = listOf(STUDENT_2.username to "Student 2")
+            )
+            testsHelper.uploadProject(
+                this.mvc, "projectOK", defaultAssignmentId, STUDENT_1,
+                authors = listOf(STUDENT_1.username to "Student 3")
+            )
 
         } finally {
             // restore original AUTHORS.txt
@@ -396,10 +452,12 @@ class ReportControllerTests {
             writer.close()
         }
 
-        val reportResult = this.mvc.perform(get("/leaderboard/testJavaProj")
-                .with(user(TEACHER_1)))
-                .andExpect(status().isOk())
-                .andReturn()
+        val reportResult = this.mvc.perform(
+            get("/leaderboard/testJavaProj")
+                .with(user(TEACHER_1))
+        )
+            .andExpect(status().isOk())
+            .andReturn()
 
         @Suppress("UNCHECKED_CAST")
         val report = reportResult.modelAndView!!.modelMap["submissions"] as List<Submission>
@@ -425,10 +483,13 @@ class ReportControllerTests {
         val nowStr = now.formatDefault()
 
         testsHelper.makeSeveralSubmissions(
-                listOf("projectInvalidStructure1",
-                        "projectInvalidStructure1",
-                        "projectOK",
-                        "projectInvalidStructure1"), mvc, now)
+            listOf(
+                "projectInvalidStructure1",
+                "projectInvalidStructure1",
+                "projectOK",
+                "projectInvalidStructure1"
+            ), mvc, now
+        )
 
         // mark all as final, otherwise the export will be empty
         val submissions = submissionRepository.findAll()
@@ -437,17 +498,22 @@ class ReportControllerTests {
             submissionRepository.save(submission)
         }
 
-        this.mvc.perform(get("/exportCSV/testJavaProj?ellapsed=false")
-                .with(user(TEACHER_1)))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType("application/csv"))
-                .andExpect(content().string(
-                        "submission id;student id;student name;project structure;compilation;code quality;teacher tests;hidden tests;submission date;# submissions\n" +
-                        "1;student1;Student 1;NOK;;;;;${nowStr};1\n" +
-                        "2;student2;Student 2;NOK;;;;;${nowStr};1\n" +
-                        "3;student3;Student 3;OK;OK;OK;2;1;${nowStr};1\n" +
-                        "4;student4;Student 4;NOK;;;;;${nowStr};1\n" +
-                        "4;student5;Student 5;NOK;;;;;${nowStr};0\n"))
+        this.mvc.perform(
+            get("/exportCSV/testJavaProj?ellapsed=false")
+                .with(user(TEACHER_1))
+        )
+            .andExpect(status().isOk())
+            .andExpect(content().contentType("application/csv"))
+            .andExpect(
+                content().string(
+                    "submission id;student id;student name;project structure;compilation;code quality;teacher tests;hidden tests;submission date;# submissions\n" +
+                            "1;student1;Student 1;NOK;;;;;${nowStr};1\n" +
+                            "2;student2;Student 2;NOK;;;;;${nowStr};1\n" +
+                            "3;student3;Student 3;OK;OK;OK;2;1;${nowStr};1\n" +
+                            "4;student4;Student 4;NOK;;;;;${nowStr};1\n" +
+                            "4;student5;Student 5;NOK;;;;;${nowStr};0\n"
+                )
+            )
 
     }
 
@@ -464,10 +530,13 @@ class ReportControllerTests {
         val nowStr = now.formatDefault()
 
         testsHelper.makeSeveralSubmissions(
-                listOf("projectWith1StudentTest",
-                        "projectWith1StudentTest",
-                        "projectWith1StudentTest",
-                        "projectWith1StudentTest"), mvc, now)
+            listOf(
+                "projectWith1StudentTest",
+                "projectWith1StudentTest",
+                "projectWith1StudentTest",
+                "projectWith1StudentTest"
+            ), mvc, now
+        )
 
         // mark all as final, otherwise the export will be empty
         val submissions = submissionRepository.findAll()
@@ -476,12 +545,15 @@ class ReportControllerTests {
             submissionRepository.save(submission)
         }
 
-        this.mvc.perform(get("/exportCSV/testJavaProj?ellapsed=false")
-                .with(user(TEACHER_1)))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType("application/csv"))
-                .andExpect(content().string(
-                        """
+        this.mvc.perform(
+            get("/exportCSV/testJavaProj?ellapsed=false")
+                .with(user(TEACHER_1))
+        )
+            .andExpect(status().isOk())
+            .andExpect(content().contentType("application/csv"))
+            .andExpect(
+                content().string(
+                    """
                             |submission id;student id;student name;project structure;compilation;code quality;student tests;teacher tests;hidden tests;submission date;# submissions
                             |1;student1;Student 1;OK;OK;OK;1;2;1;${nowStr};1
                             |2;student2;Student 2;OK;OK;OK;1;2;1;${nowStr};1
@@ -489,7 +561,9 @@ class ReportControllerTests {
                             |4;student4;Student 4;OK;OK;OK;1;2;1;${nowStr};1
                             |4;student5;Student 5;OK;OK;OK;1;2;1;${nowStr};0
                             |
-                        """.trimMargin()))
+                        """.trimMargin()
+                )
+            )
 
     }
 
@@ -510,7 +584,8 @@ class ReportControllerTests {
                 .param("language", assigment.language.toString())
                 .param("gitRepositoryUrl", assigment.gitRepositoryUrl)
                 .param("mandatoryTestsSuffix", "_OBG")  // <<<<<<<<<
-                .with(user(TEACHER_1)))
+                .with(user(TEACHER_1))
+        )
             .andExpect(status().isFound())
             .andExpect(header().string("Location", "/assignment/info/${defaultAssignmentId}"))
 
@@ -518,10 +593,13 @@ class ReportControllerTests {
         val nowStr = now.formatDefault()
 
         testsHelper.makeSeveralSubmissions(
-            listOf("projectInvalidStructure1",
+            listOf(
+                "projectInvalidStructure1",
                 "projectInvalidStructure1",
                 "projectOK",
-                "projectInvalidStructure1"), mvc, now)
+                "projectInvalidStructure1"
+            ), mvc, now
+        )
 
         // mark all as final, otherwise the export will be empty
         val submissions = submissionRepository.findAll()
@@ -530,18 +608,23 @@ class ReportControllerTests {
             submissionRepository.save(submission)
         }
 
-        this.mvc.perform(get("/exportCSV/testJavaProj?ellapsed=false")
-            .with(user(TEACHER_1)))
+        this.mvc.perform(
+            get("/exportCSV/testJavaProj?ellapsed=false")
+                .with(user(TEACHER_1))
+        )
             .andExpect(status().isOk)
             .andExpect(content().contentType("application/csv"))
-            .andExpect(content().string(
-                "submission id;student id;student name;project structure;compilation;code quality;teacher tests;" +
-                        "hidden tests;submission date;# submissions;# mandatory\n" +
-                        "1;student1;Student 1;NOK;;;;;${nowStr};1;0\n" +
-                        "2;student2;Student 2;NOK;;;;;${nowStr};1;0\n" +
-                        "3;student3;Student 3;OK;OK;OK;2;1;${nowStr};1;0\n" +
-                        "4;student4;Student 4;NOK;;;;;${nowStr};1;0\n" +
-                        "4;student5;Student 5;NOK;;;;;${nowStr};0;0\n"))
+            .andExpect(
+                content().string(
+                    "submission id;student id;student name;project structure;compilation;code quality;teacher tests;" +
+                            "hidden tests;submission date;# submissions;# mandatory\n" +
+                            "1;student1;Student 1;NOK;;;;;${nowStr};1;0\n" +
+                            "2;student2;Student 2;NOK;;;;;${nowStr};1;0\n" +
+                            "3;student3;Student 3;OK;OK;OK;2;1;${nowStr};1;0\n" +
+                            "4;student4;Student 4;NOK;;;;;${nowStr};1;0\n" +
+                            "4;student5;Student 5;NOK;;;;;${nowStr};0;0\n"
+                )
+            )
 
     }
 
@@ -550,17 +633,23 @@ class ReportControllerTests {
     fun testTestMatrix() {
         testsHelper.uploadProject(this.mvc, "projectJUnitErrors", defaultAssignmentId, STUDENT_1)
 
-        val reportResult = this.mvc.perform(get("/testMatrix/${defaultAssignmentId}")
-                .with(user(TEACHER_1)))
-                .andExpect(status().isOk)
-                .andReturn()
+        val reportResult = this.mvc.perform(
+            get("/testMatrix/${defaultAssignmentId}")
+                .with(user(TEACHER_1))
+        )
+            .andExpect(status().isOk)
+            .andReturn()
 
         @Suppress("UNCHECKED_CAST")
-        val tests = reportResult.modelAndView!!.modelMap["tests"] as LinkedHashMap<String,Int>
+        val tests = reportResult.modelAndView!!.modelMap["tests"] as LinkedHashMap<String, Int>
         assertEquals(3, tests.size)
-        assertThat(tests.keys.map { "${it}->${tests[it]}" }, contains("testFuncaoParaTestar:TestTeacherProject->0",
+        assertThat(
+            tests.keys.map { "${it}->${tests[it]}" }, contains(
+                "testFuncaoParaTestar:TestTeacherProject->0",
                 "testFuncaoLentaParaTestar:TestTeacherProject->1",
-                "testFuncaoParaTestarQueNaoApareceAosAlunos:TestTeacherHiddenProject->0"))
+                "testFuncaoParaTestarQueNaoApareceAosAlunos:TestTeacherHiddenProject->0"
+            )
+        )
     }
 
     /**
@@ -580,15 +669,21 @@ class ReportControllerTests {
         val student3 = User("student3", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
 
         testsHelper.uploadProject(this.mvc, "projectJUnitErrors", defaultAssignmentId, STUDENT_1)
-        testsHelper.uploadProject(this.mvc,"projectJUnitErrors", defaultAssignmentId, STUDENT_2,
-                authors = listOf(STUDENT_2.username to "Student 2"))
-        testsHelper.uploadProject(this.mvc,"projectOK", defaultAssignmentId, student3,
-                authors = listOf(student3.username to "Student 3"))
+        testsHelper.uploadProject(
+            this.mvc, "projectJUnitErrors", defaultAssignmentId, STUDENT_2,
+            authors = listOf(STUDENT_2.username to "Student 2")
+        )
+        testsHelper.uploadProject(
+            this.mvc, "projectOK", defaultAssignmentId, student3,
+            authors = listOf(student3.username to "Student 3")
+        )
 
-        val reportResult = this.mvc.perform(get("/signalledSubmissions/${defaultAssignmentId}")
-                .with(user(TEACHER_1)))
-                .andExpect(status().isOk())
-                .andReturn()
+        val reportResult = this.mvc.perform(
+            get("/signalledSubmissions/${defaultAssignmentId}")
+                .with(user(TEACHER_1))
+        )
+            .andExpect(status().isOk())
+            .andReturn()
 
         @Suppress("UNCHECKED_CAST")
         val signalledGroups = reportResult.modelAndView!!.modelMap["signalledGroups"] as List<GroupedProjectGroups>
@@ -619,13 +714,17 @@ class ReportControllerTests {
         val student3 = User("student3", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
 
         testsHelper.uploadProject(this.mvc, "projectJUnitErrors", defaultAssignmentId, STUDENT_1)
-        testsHelper.uploadProject(this.mvc,"projectOK", defaultAssignmentId, student3,
-                authors = listOf(student3.username to "Student 3"))
+        testsHelper.uploadProject(
+            this.mvc, "projectOK", defaultAssignmentId, student3,
+            authors = listOf(student3.username to "Student 3")
+        )
 
-        val reportResult = this.mvc.perform(get("/signalledSubmissions/${defaultAssignmentId}")
-                .with(user(TEACHER_1)))
-                .andExpect(status().isOk())
-                .andReturn()
+        val reportResult = this.mvc.perform(
+            get("/signalledSubmissions/${defaultAssignmentId}")
+                .with(user(TEACHER_1))
+        )
+            .andExpect(status().isOk())
+            .andReturn()
 
         @Suppress("UNCHECKED_CAST")
         val message = reportResult.modelAndView!!.modelMap["message"] as String
@@ -667,7 +766,7 @@ class ReportControllerTests {
         var g2 = projectGroups[1];
         var g3 = projectGroups[2];
 
-        val failuresByGroup : HashMap<ProjectGroup, ArrayList<String>> = HashMap()
+        val failuresByGroup: HashMap<ProjectGroup, ArrayList<String>> = HashMap()
 
         // in this scenario, the 3 ProjectoGroups have distinct failures, so nothing will be Signalled
         failuresByGroup.put(g1, mutableListOf("Test001", "Test002") as ArrayList<String>)
@@ -697,7 +796,7 @@ class ReportControllerTests {
         var g2 = projectGroups[1];
         var g3 = projectGroups[2];
 
-        val failuresByGroup : HashMap<ProjectGroup, ArrayList<String>> = HashMap()
+        val failuresByGroup: HashMap<ProjectGroup, ArrayList<String>> = HashMap()
 
         failuresByGroup.put(g1, mutableListOf("Test001", "Test002") as ArrayList<String>)
         failuresByGroup.put(g2, mutableListOf("Test001", "Test002") as ArrayList<String>)
@@ -744,7 +843,7 @@ class ReportControllerTests {
         var g4 = projectGroups[3];
         var g5 = projectGroups[4];
 
-        val failuresByGroup : HashMap<ProjectGroup, ArrayList<String>> = HashMap()
+        val failuresByGroup: HashMap<ProjectGroup, ArrayList<String>> = HashMap()
 
         failuresByGroup.put(g1, mutableListOf("Test001", "Test002") as ArrayList<String>)
         failuresByGroup.put(g2, mutableListOf("Test001") as ArrayList<String>)
@@ -791,7 +890,7 @@ class ReportControllerTests {
         submissionStatistics.add(GroupSubmissionStatistics(groups[3].id, 15, 5, groups[3])); // suspicious
         submissionStatistics.add(GroupSubmissionStatistics(groups[4].id, 20, 20, groups[4]));
 
-        if(nrSuspiciousCases == 2) {
+        if (nrSuspiciousCases == 2) {
             submissionStatistics.add(GroupSubmissionStatistics(6, 16, 6, ProjectGroup(6))) // suspicious
             submissionStatistics.add(GroupSubmissionStatistics(7, 17, 19, ProjectGroup(7)))
             submissionStatistics.add(GroupSubmissionStatistics(8, 14, 14, ProjectGroup(8))) // ignored
@@ -933,6 +1032,45 @@ class ReportControllerTests {
         assertEquals(3, assignmentStatistics.groupsConsideredForStatistics.size)
         assert(1 == result.size)
         assert(result.contains(gss5))
+    }
+
+    @Test
+    @DirtiesContext
+    fun testStudentHistory() {
+
+        testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", "testJavaProj", STUDENT_1)
+        testsHelper.uploadProject(this.mvc, "projectOK", "testJavaProj", STUDENT_1)
+        Thread.sleep(1000)  // to make sure the last submission is registered with a submissionDate superior to the previous ones
+        testsHelper.uploadProject(this.mvc, "projectOK", "sampleJavaProject", STUDENT_1)
+
+        val reportResult =
+            this.mvc.perform(
+                get("/studentHistory/${STUDENT_1.username}")
+                    .with(user(TEACHER_1))
+            )
+                .andExpect(status().isOk)
+                .andReturn()
+
+        @Suppress("UNCHECKED_CAST")
+        val studentHistory = reportResult.modelAndView!!.modelMap["studentHistory"] as StudentHistory
+
+        assertEquals(STUDENT_1.username, studentHistory.author.userId)
+        assertEquals(2, studentHistory.history.size)
+
+        assertEquals("testJavaProj", studentHistory.history[0].assignment.id)
+        assertEquals(2, studentHistory.history[0].submissions.size)
+        assertEquals(1, studentHistory.history[0].submissions[0].id)
+        assertEquals(2, studentHistory.history[0].submissions[1].id)
+
+        assertEquals("sampleJavaProject", studentHistory.history[1].assignment.id)
+        assertEquals(1, studentHistory.history[1].submissions.size)
+        assertEquals(3, studentHistory.history[1].submissions[0].id)
+        
+        // test sorted history
+        val sortedHistory = studentHistory.getHistorySortedByDateDesc()
+        assertEquals("sampleJavaProject", sortedHistory[0].assignment.id)
+        assertEquals("testJavaProj", sortedHistory[1].assignment.id)
+
     }
 
 }

@@ -801,28 +801,30 @@ class ReportController(
                        principal: Principal, request: HttpServletRequest): String {
 
         if (!request.isUserInRole("TEACHER")) {
-            throw org.springframework.security.access.AccessDeniedException("${principal.realName()} is not allowed to view this report")
+            throw AccessDeniedException("${principal.realName()} is not allowed to view this report")
         }
 
         var author = authorRepository.findByUserId(studentId);
 
-        if(author == null) {
-            model["message"] = "Student with id " + studentId + " does not exist"
-            return "student-history";
+        if (author == null) {
+            model["message"] = "Student with id $studentId does not exist"
+            return "student-history"
         }
 
         val projectGroups = projectGroupRepository.getGroupsForAuthor(studentId)
 
-        var studentHistory = StudentHistory(author!!)
-        var submissions = mutableListOf<Submission>()
+        val studentHistory = StudentHistory(author)
+        val submissions = mutableListOf<Submission>()
 
         // FIXME: for better performance, this can be replaced with an HashSet
-        var assignments = mutableListOf<Assignment>()
+        val assignments = mutableListOf<Assignment>()
         
         // FIXME: for better performance, replace this logic
         // with a function that gets the data straight from the DB
         for(submission in submissionRepository.findAll()) {
             if(projectGroups.contains(submission.group)) {
+                // get indicators
+                submission.reportElements = submissionReportRepository.findBySubmissionId(submission.id)
                 submissions.add(submission);
                 val assignment = assignmentRepository.findById(submission.assignmentId).get()
                 if(!assignments.contains(assignment)) {
@@ -836,6 +838,8 @@ class ReportController(
                 }
             }
         }
+
+        studentHistory.ensureSubmissionsAreSorted()
 
         // 1- gather all assignments
         // 2- where was the student signalleed?
