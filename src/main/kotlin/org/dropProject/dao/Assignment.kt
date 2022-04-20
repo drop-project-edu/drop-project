@@ -96,6 +96,7 @@ enum class LeaderboardType {
 data class Assignment(
         @Id
         @JsonView(JSONViews.StudentAPI::class)  // include this field on API calls
+        @Column(length = 50)
         val id: String,
 
         @Column(nullable = false)
