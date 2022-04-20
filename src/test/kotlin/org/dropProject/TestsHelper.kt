@@ -90,40 +90,41 @@ class TestsHelper {
                 "7w/Mu9SDlvi7+VUTcmJ6r5CIoqJoVXiNqXGoPdAeklPiakBsIdFr+0KwJuUYQ55BiWgjw5" +
                 "bUulg6laTAM/NMSx64IXp8n9hWDaKIqew7s6e69+gLM3h6b82FlacupJUp"
 
-        const val sampleJavaSubmissionPrivateKey = "-----BEGIN RSA PRIVATE KEY-----\n" +
-                "MIIEogIBAAKCAQEAhTnnSFZt4B+Egwm3RNBDOyXkgJVzUmQK/s5HRIdRwEX4N/+F\n" +
-                "EfsPoPQJLCEsuRgSTIgk8oMqSTR5qhfDKTzuyvnD3RzrqUfh065vKwnbHeYySEqB\n" +
-                "nMPS7ucNq6+rWWrZK4rpXFgekb0tcf11xhZiHPbKvPCFOGrAzR3uTtR4w4YrG548\n" +
-                "31E2XoVOXb8yiTVzNTubG03/HGNsQ1V03/er/vhGXFwLIPcCnXvDGRmZCOzVPE4n\n" +
-                "bJQsk9EuLiIflz9VkdoxmoSTatpP4J9mHh2TfU/dmW1S4tsZ1ur5UBZ+JdSuf3k2\n" +
-                "36OUSPYqpaLjsjB7xDXZVT4adfvQAyC/J2eebQIDAQABAoIBABFHdUvYid+rttAY\n" +
-                "DoEKUe31+DEFMTPabeKmdm/Y7S125b69kVDHszs464ehtd871APBFKmvgWiFOdJp\n" +
-                "ypIqqP4Cbvjaq2YFQLDnyttWJ+k01giyQSVH8K+zn/5IhnzOcuRG3AVyGGTmmGJU\n" +
-                "cVYDyS3ghGME/wJWNjNkUmg+/nq9WBOlRl3LR6UZLFSxP3zQ4K1SsOVSZMUZzQRm\n" +
-                "qqB/VmnDBZc/J9uRyzeAnEfpRI+Uv7pqq13GT7gqPw1IvgQxC8Nk9xa3yR8d5T5E\n" +
-                "l0UnfmtEA8/zjFegE8mcsdy4SBAluTXBs3LAF5O0cfoYhJ3E5OtRIenVVZJztQGn\n" +
-                "Ui5ckbECgYEAxDnBTFvpwXJmOPX5vITlTa6GQkajiCZsILrBwg2wWaO0kaOvy5Cf\n" +
-                "gF9CvsY7BhgLLxzp+wygz8AJ296AXcWizQX6mzC4zDgKHnU1nK+NNC6tayQqySzB\n" +
-                "KS8YOs7eS/Q4UKZLFM7xfEpI7mBX0S8pvrmoqVX2DIaQTZ8lzvTCHK8CgYEArc9F\n" +
-                "FgH4GTubfJery5v5e7eEnCxjzlE0jQDQ7UZaY4z5wanz9IyOuIlH9jaDH2JTRgMh\n" +
-                "BHxUxz+pOjsodtujhaROli6O8f+kkmS7a2mKmkEwY6QkaVRjFVkkMrdd4TmCECkV\n" +
-                "wwAVpx64oSYEJ2eiTjOwz0pbd9XXd6CwArMbFaMCgYBn0W7V6aNJeC9hX7Lb7Sws\n" +
-                "53OdSSZoeHuo7WZqNzfglV6J16LA/ymEj+IOcW71EG+KY6/f5ZSHlkEhFR2xf0ld\n" +
-                "VBZ9WU/MrLGd38GXvsHko/WYxC/m9EjWc1ZMdvriELpi4TjEL6FQczUW+d48jMl3\n" +
-                "YV89CH//rIpYpyUn1BOHfQKBgDr1X1MK0fUFQkYuUOldfHCaHRK5ABYhd7kI+NY0\n" +
-                "Ej9IuAQYuZdQAq3Ya5+6eBoySVsrfoy9/CgmkSoenShMcxjHVp0dKAIxHMtH/kd+\n" +
-                "YrTWvipeqLdOF9pLBbtqdh8LWfJPbYFbSv0Ir8qCUdBoGCd841I9v+9Ti6aZzHrt\n" +
-                "9JcPAoGAaOJ3M/2rVI2+w/UzxesSEpQvxdIAxqAlF4ZhauGOcDgadhJJ8pxAax6P\n" +
-                "IjF9wfEoaGjas/xK1f6Di43vnj+99ZUK8QZ+QXL4tLNswu78/RzSrscAd+7hHwJU\n" +
-                "8QTigXeXSxu7XahmOTkC8vCJaaEuPnrdrAcbtqbCGMw5+SMz41k=\n" +
-                "-----END RSA PRIVATE KEY-----"
+        val sampleJavaSubmissionPrivateKey =
+            """-----BEGIN RSA PRIVATE KEY-----
+                |MIIEowIBAAKCAQEAiMhJ11TF285JSEKMTT/WfGrS2mncXqyAmV3XwjRem7eOV9Up
+                |MMZKv5mKjSW0J/6V8TB+Gi/1KMB3zzmVsQ7gRWixZ0s7E7edy2lc1fclqfYyDVBY
+                |JH9G3UcgMz4kYiHgOrAjMgU8rVGbKUYXkxmaSVCqmz4dNwTO16w54xfpk3t0MiIb
+                |HCO4XWfi4s78NPoF7op7FhOj6ZRsqs8JU9rPY+VPb0PAQRhUiUgp7pL+D8xu3w83
+                |ylxAfhfTJXbLohqoHoWRQWJlVHQKK7oITM9DgCuQfxomkYtUvc67wmwg2G1ejGec
+                |b/Slj7nYHdmeKPfgyr3tM7GNGhu/LGX0AOSBFQIDAQABAoIBAHdGD/3RUmeFzqlQ
+                |Pn/uNt5vWEZVIXD9A3a5OjeC6yzmNx2oJy78+plxDjxesGZfveh/3LaBM0rB6ret
+                |AzdOPYrI7EmidHWRG+wQiH+b8B/xK1wov3Oz+Ntj9lQ40AkyeRE0HryzjGGmU6L+
+                |F/iRztQ3n02YMGmVq7it2hyI8YlESq+FxDOsUck21KYX6FP+Wkp3D8kdGCSIPoAr
+                |2wq1akyWBOD3brDiycATahgM6RNwMQmjxNb6H9X5QFfUltBEEcxyHXMoj7Ss31Tg
+                |YfElQkWp99ZSmRXiMRsIU7n7EpfXe9icRmyW33byNasx8qgcS0jbw2BO5hKmxj0L
+                |2k8AjAECgYEAyRu4LD+1VVt5+iCGNrtMasVdBPLpGZ8JLAvT5jnAORRYunXYuFN8
+                |NUDcuVyo9PL+cxAyeTnY6VF67WMn6NxtZbdfaGGmZvF1DpSLp0ikWbCzOnFFkXS1
+                |dWsWC3RkQLYOKIAqDJLjTOYRbmiWfPJMU+tScB/v1Xu3DdNepoqa3dUCgYEArh3Z
+                |EGpunPd2VNs9+UKIAMpPw93WA3dI0Lybgp0IDhYQxvicQRq0LL6j1kuJBTkAowOl
+                |b+iM/GY3M0Tkp15voPlPSrK7dhN0Jq0rFlfwjkUsxIBs7WBfgg1ss851DLhW6pM8
+                |sDPOC20j1P8/vCBwJ05f8rYIibkIv+FgyjcKdkECgYBsML5nB6sNDZZUatTpct/M
+                |fPrq46dlgjpT+NT5gU4ZJwoI3cdGeptSpt9X1TKL/IHI8wjEUMuR0aTZOsPIsXUl
+                |CH6KUCZOMU3xFxb+WsUX/0icgz2S3/+S+JY2eVpJuedqAHEerJMd1pPAGwICm/NW
+                |Hj4OVhAXgGPdSz4bSGvCNQKBgCK2nLIjJg5xX8wnMcHiO888ho6cSbDDNWc4UyDF
+                |Qffc+ldQ9YYdVtKc53kv8g9yf+gAMBmRmZownsy/7X5Y25SSX/aaj7lIw516ZN69
+                |hZ43uGcs24qv7hq1pnhqrvdsQRffZvgSPAAXME+k3AYbyYBspcBz/lvG4jGvM2bd
+                |dl6BAoGBAIweHVdNlcE5UMOrbgXlL/93hlZPIJZs5eAh2BfrjzT2HMjm+SIs9UNx
+                |6/KST0cBzpw1QjP+UG3jTdFxdro5f7lkPVCNxazKFovZ3ON1DYX5dbTEWoPn+Nrv
+                |+3/dIoPGEwgf9snkZCbhXd+VFfXCkGtYKgQjTOghc3kAb9ZFspGW
+                |-----END RSA PRIVATE KEY-----""".trimMargin()
 
-        const val sampleJavaSubmissionPublicKey = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCFOedIVm3" +
-                "gH4SDCbdE0EM7JeSAlXNSZAr+zkdEh1HARfg3/4UR+w+g9AksISy5GBJMiCTygypJNHmqF8MpPO" +
-                "7K+cPdHOupR+HTrm8rCdsd5jJISoGcw9Lu5w2rr6tZatkriulcWB6RvS1x/XXGFmIc9sq88IU4a" +
-                "sDNHe5O1HjDhisbnjzfUTZehU5dvzKJNXM1O5sbTf8cY2xDVXTf96v++EZcXAsg9wKde8MZGZkI" +
-                "7NU8TidslCyT0S4uIh+XP1WR2jGahJNq2k/gn2YeHZN9T92ZbVLi2xnW6vlQFn4l1K5/eTbfo5R" +
-                "I9iqlouOyMHvENdlVPhp1+9ADIL8nZ55t"
+        const val sampleJavaSubmissionPublicKey = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCIy" +
+                "EnXVMXbzklIQoxNP9Z8atLaadxerICZXdfCNF6bt45X1Skwxkq/mYqNJbQn/pXxMH4aL/" +
+                "UowHfPOZWxDuBFaLFnSzsTt53LaVzV9yWp9jINUFgkf0bdRyAzPiRiIeA6sCMyBTytUZs" +
+                "pRheTGZpJUKqbPh03BM7XrDnjF+mTe3QyIhscI7hdZ+Lizvw0+gXuinsWE6PplGyqzwlT" +
+                "2s9j5U9vQ8BBGFSJSCnukv4PzG7fDzfKXEB+F9MldsuiGqgehZFBYmVUdAorughMz0OAK" +
+                "5B/GiaRi1S9zrvCbCDYbV6MZ5xv9KWPudgd2Z4o9+DKve0zsY0aG78sZfQA5IEV"
     }
 
     val STUDENT_1 = User("student1", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
@@ -171,7 +172,7 @@ class TestsHelper {
                 .andExpect(MockMvcResultMatchers.status().isOk)
 
         // inject private and public key to continue
-        var assignment = assignmentRepository.getOne(assignmentId)
+        val assignment = assignmentRepository.getById(assignmentId)
         assignment.gitRepositoryPrivKey = privateKey
         assignment.gitRepositoryPubKey = publicKey
         if (activateRightAfterCloning) {
@@ -190,8 +191,8 @@ class TestsHelper {
     fun connectToGitRepositoryAndBuildReport(mvc: MockMvc, gitSubmissionRepository: GitSubmissionRepository,
                                              assignmentId: String, gitRepository: String,
                                              studentUsername: String,
-                                             privateKey : String = TestsHelper.sampleJavaSubmissionPrivateKey,
-                                             publicKey : String = TestsHelper.sampleJavaSubmissionPublicKey) : Long {
+                                             privateKey : String = sampleJavaSubmissionPrivateKey,
+                                             publicKey : String = sampleJavaSubmissionPublicKey) : Long {
 
         val student = User(studentUsername, "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
 
@@ -207,7 +208,7 @@ class TestsHelper {
 
         val id = gitSubmissionRepository.findAll().last().id
 
-        val gitSubmission = gitSubmissionRepository.getOne(id)
+        val gitSubmission = gitSubmissionRepository.getById(id)
         Assert.assertFalse(gitSubmission.connected)
 
         // inject public and private key
@@ -222,7 +223,7 @@ class TestsHelper {
                 .andExpect(MockMvcResultMatchers.header().string("Location", "/upload/${assignmentId}"))
                 .andExpect(MockMvcResultMatchers.flash().attribute("message", "Ligado com sucesso ao repositório git"))
 
-        val updatedGitSubmission = gitSubmissionRepository.getOne(id)
+        val updatedGitSubmission = gitSubmissionRepository.getById(id)
         Assert.assertTrue(updatedGitSubmission.connected)
 
         /*** GET /upload/ ***/

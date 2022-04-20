@@ -33,7 +33,8 @@ import org.hamcrest.CoreMatchers.*
 import org.hamcrest.Matchers
 import org.hamcrest.Matchers.hasProperty
 import org.junit.After
-import org.junit.Assert.*
+import junit.framework.TestCase.*
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -180,7 +181,7 @@ class UploadControllerTests {
     @DirtiesContext
     fun getUploadPage() {
 
-        val assignment = assignmentRepository.getOne("testJavaProj")
+        val assignment = assignmentRepository.getById("testJavaProj")
         assignmentRepository.save(assignment)
 
         this.mvc.perform(get("/upload/testJavaProj")
@@ -196,7 +197,7 @@ class UploadControllerTests {
     @DirtiesContext
     fun getUploadPageWithCooloff() {
 
-        val assignment = assignmentRepository.getOne("testJavaProj")
+        val assignment = assignmentRepository.getById("testJavaProj")
         assignment.cooloffPeriod = 10
         assignmentRepository.save(assignment)
 
@@ -214,7 +215,7 @@ class UploadControllerTests {
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", "testJavaProj", STUDENT_1)
 
-        val submissionDB = submissionRepository.getOne(submissionId.toLong())
+        val submissionDB = submissionRepository.getById(submissionId.toLong())
         val submissionFolder = File("$submissionsRootLocation/upload", submissionDB.submissionFolder)
 
         assertTrue("submission folder doesn't exist", submissionFolder.exists())
@@ -299,7 +300,7 @@ class UploadControllerTests {
     @DirtiesContext
     fun uploadProjectWithCompilationErrorsThenCooloff() { // cooloff is reduced for structure or compilation errors
 
-        val assignment = assignmentRepository.getOne("testJavaProj")
+        val assignment = assignmentRepository.getById("testJavaProj")
         assignment.cooloffPeriod = 10
         assignmentRepository.save(assignment)
 
@@ -318,7 +319,7 @@ class UploadControllerTests {
     @DirtiesContext
     fun uploadProjectThenCooloff() {
 
-        val assignment = assignmentRepository.getOne("testJavaProj")
+        val assignment = assignmentRepository.getById("testJavaProj")
         assignment.cooloffPeriod = 10
         assignmentRepository.save(assignment)
 
@@ -631,7 +632,7 @@ class UploadControllerTests {
     @DirtiesContext
     fun uploadProjectJunitErrors_HiddenTestsVisibility() {
 
-        val assignment = assignmentRepository.getOne("testJavaProj")
+        val assignment = assignmentRepository.getById("testJavaProj")
         assignment.hiddenTestsVisibility = TestVisibility.HIDE_EVERYTHING  // <<< this is very important for this test
         assignmentRepository.save(assignment)
 
@@ -938,7 +939,7 @@ class UploadControllerTests {
 
         assertEquals(1, mavenizedProjectsFolder.list().size)
 
-        val submissionThatSurvivedCleanup = submissionRepository.getOne(2)
+        val submissionThatSurvivedCleanup = submissionRepository.getById(2)
 
         assertEquals("${submissionThatSurvivedCleanup.submissionId}-mavenized", mavenizedProjectsFolder.list()[0])
     }
@@ -1190,7 +1191,7 @@ class UploadControllerTests {
     @DirtiesContext
     fun uploadProjectWithoutStudentTestsForAssignmentThatRequiresStudentTests() {
 
-        val assignment = assignmentRepository.getOne("testJavaProj")
+        val assignment = assignmentRepository.getById("testJavaProj")
         assignment.acceptsStudentTests = true  // <<< this is very important for this test
         assignment.minStudentTests = 1
         assignmentRepository.save(assignment)
@@ -1235,7 +1236,7 @@ class UploadControllerTests {
     @DirtiesContext
     fun uploadProjectWithoutEnoughStudentTests() {
 
-        val assignment = assignmentRepository.getOne("testJavaProj")
+        val assignment = assignmentRepository.getById("testJavaProj")
         assignment.acceptsStudentTests = true  // <<< this is very important for this test
         assignment.minStudentTests = 2  // <<< this project requires at least 2 student tests
         assignmentRepository.save(assignment)
@@ -1304,7 +1305,7 @@ class UploadControllerTests {
     @DirtiesContext
     fun uploadProjectOutOfMemory() {
 
-        val assignment = assignmentRepository.getOne("testJavaProj")
+        val assignment = assignmentRepository.getById("testJavaProj")
         assignment.maxMemoryMb = 64  // <<< this is very important for this test
         assignmentRepository.save(assignment)
 
@@ -1337,7 +1338,7 @@ class UploadControllerTests {
     @DirtiesContext
     fun uploadProjectWithLargeOutput() {  // too many println's
 
-        val assignment = assignmentRepository.getOne("testJavaProj")
+        val assignment = assignmentRepository.getById("testJavaProj")
         assignmentRepository.save(assignment)
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectWithLargeOutput", "testJavaProj", STUDENT_1)
@@ -1359,7 +1360,7 @@ class UploadControllerTests {
         this.mvc.perform(get("/buildReport/$submissionId"))
                 .andExpect(status().isOk)
 
-        val submission = submissionRepository.getOne(submissionId.toLong())
+        val submission = submissionRepository.getById(submissionId.toLong())
         assertEquals(SubmissionStatus.VALIDATED, submission.getStatus())
 
         this.mvc.perform(post("/rebuild/$submissionId")
@@ -1367,7 +1368,7 @@ class UploadControllerTests {
                 .andExpect(status().isFound)
                 .andExpect(header().string("Location", "/buildReport/$submissionId"))
 
-        val updatedSubmission = submissionRepository.getOne(submissionId.toLong())
+        val updatedSubmission = submissionRepository.getById(submissionId.toLong())
         assertEquals(SubmissionStatus.VALIDATED, updatedSubmission.getStatus())
     }
 

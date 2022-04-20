@@ -19,7 +19,7 @@
  */
 package org.dropProject.services
 
-import junit.framework.Assert.assertEquals
+import junit.framework.TestCase.assertEquals
 import org.dropProject.dao.Assignment
 import org.dropProject.dao.Language
 import org.dropProject.forms.AssignmentForm

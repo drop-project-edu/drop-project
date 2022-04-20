@@ -73,7 +73,7 @@
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Tags:</label>
                     <div class="col-sm-9 read-row space-between">
-                        <span th:each="tag: ${assignment.tags}" th:text="${tag.name}" class="label label-info" />
+                        <span th:each="tag: ${assignment.tagsStr}" th:text="${tag}" class="label label-info" />
                     </div>
                 </div>
                 <div class="form-group" >

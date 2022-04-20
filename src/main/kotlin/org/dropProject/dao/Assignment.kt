@@ -149,11 +149,11 @@ data class Assignment(
         var lastSubmissionDate: Date? = null,
 
         @Transient
-        var authorizedStudentIds: List<String>? = null
-) {
+        var authorizedStudentIds: List<String>? = null,
 
-    @ManyToMany(cascade = [CascadeType.ALL])
-    val tags = mutableSetOf<AssignmentTag>()
+        @Transient
+        var tagsStr: List<String>? = null
+) {
 
     fun dueDateFormatted(): String? {
         return dueDate?.format(formatter)

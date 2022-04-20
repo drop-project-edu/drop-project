@@ -66,6 +66,7 @@ class AssignmentService(
         val assignmentTestMethodRepository: AssignmentTestMethodRepository,
         val submissionReportRepository: SubmissionReportRepository,
         val assignmentTagRepository: AssignmentTagRepository,
+        val assignmentTagsRepository: AssignmentTagsRepository,
         val buildReportRepository: BuildReportRepository,
         val jUnitReportRepository: JUnitReportRepository,
         val jacocoReportRepository: JacocoReportRepository,
@@ -102,16 +103,16 @@ class AssignmentService(
             value = ["archivedAssignmentsCache"],
             key = "#principal.name",
             condition = "#archived==true")
-    @Transactional(readOnly = true)  // because of assignment.tags forced loading
     fun getMyAssignments(principal: Principal, archived: Boolean): List<Assignment> {
         val assignmentsOwns = assignmentRepository.findByOwnerUserId(principal.realName())
 
         val assignmentsACL = assignmentACLRepository.findByUserId(principal.realName())
         val assignmentsAuthorized = ArrayList<Assignment>()
         for (assignmentACL in assignmentsACL) {
-            val optionalAssignment = assignmentRepository.findById(assignmentACL.assignmentId)
-            optionalAssignment.ifPresent { it.tags.size }  // force tags loading
-            assignmentsAuthorized.add(optionalAssignment.get())
+            val assignment = assignmentRepository.findByIdOrNull(assignmentACL.assignmentId)
+            if (assignment != null) {
+                assignmentsAuthorized.add(assignment)
+            }
         }
 
         val assignments = ArrayList<Assignment>()
@@ -121,6 +122,7 @@ class AssignmentService(
         val filteredAssigments = assignments.filter { it.archived == archived }
 
         for (assignment in filteredAssigments) {
+            assignment.tagsStr = getTagsStr(assignment)
             assignment.numSubmissions = submissionRepository.countByAssignmentId(assignment.id).toInt()
             if (assignment.numSubmissions > 0) {
                 assignment.lastSubmissionDate = submissionRepository.findFirstByAssignmentIdOrderBySubmissionDateDesc(assignment.id).submissionDate
@@ -326,10 +328,9 @@ class AssignmentService(
 
         // update tags
         val tagNames = assignmentForm.assignmentTags?.lowercase(Locale.getDefault())?.split(",")
-        existingAssignment.tags.clear()
+        clearAllTags(existingAssignment)
         tagNames?.forEach {
-            existingAssignment.tags.add(assignmentTagRepository.findByName(it.trim().lowercase(Locale.getDefault()))
-                    ?: AssignmentTag(name = it.trim().lowercase(Locale.getDefault())))
+            addTagToAssignment(existingAssignment, it)
         }
     }
 
@@ -511,7 +512,7 @@ class AssignmentService(
 
                 // import all the original submission files
                 if (originalSubmissionsFolder.exists()) {
-                    val assignment = assignmentRepository.getOne(assignmentId)
+                    val assignment = assignmentRepository.getById(assignmentId)
                     when (assignment.submissionMethod) {
                         SubmissionMethod.UPLOAD -> FileUtils.copyDirectory(originalSubmissionsFolder, File(uploadSubmissionsRootLocation))
                         SubmissionMethod.GIT -> FileUtils.copyDirectory(originalSubmissionsFolder, File(gitSubmissionsRootLocation))
@@ -636,15 +637,6 @@ class AssignmentService(
             return Pair(newAssignment.id, "Error cloning ${gitRepository} - ${e.message}")
         }
 
-        // since the import brings the id of the assignment tags, we'll store only their names, clear the structure and then
-        // add them one by one
-        val tags = newAssignment.tags.map { it.name }
-        newAssignment.tags.clear()
-        tags.forEach {
-            val tag = assignmentTagRepository.findByName(it) ?: AssignmentTag(name = it)
-            newAssignment.tags.add(tag)
-        }
-
         assignmentRepository.save(newAssignment)
 
         // revalidate the assignment
@@ -700,5 +692,61 @@ class AssignmentService(
         }
 
         return null
+    }
+
+    /**
+     * Associates the given tagName with the given assignment. If the tag is already associated, nothing happens
+     * (i.e., there are no duplicate tags)
+     */
+    fun addTagToAssignment(assignment: Assignment, tagName: String) {
+        var assignmentTag = assignmentTagRepository.findByName(tagName.trim().lowercase(Locale.getDefault()))
+
+        if (assignmentTag == null) {
+            assignmentTag = AssignmentTag(name = tagName.trim().lowercase(Locale.getDefault()))
+            assignmentTagRepository.save(assignmentTag)
+        } else {
+            if (assignmentTagsRepository.existsById(AssignmentTagsCompositeKey(assignment.id, assignmentTag.id))) {
+                return  // already exists, nothing to do here
+            }
+        }
+
+        assignmentTagsRepository.save(AssignmentTags(assignment.id, assignmentTag.id))
+    }
+
+    /**
+     * Returns all the tags of the given assignment in a list of string
+     */
+    fun getTagsStr(assignment: Assignment) : List<String> {
+        val tagsStr = mutableListOf<String>()
+
+        val assignmentTagsAssociationList = assignmentTagsRepository.findByAssignmentId(assignment.id)
+        assignmentTagsAssociationList.forEach {
+            val assignmentTag = assignmentTagRepository.findByIdOrNull(it.tagId)
+            if (assignmentTag != null) {
+                tagsStr.add(assignmentTag.name)
+            }
+        }
+
+        return tagsStr
+    }
+
+    /**
+     * Clears all the tags of this assignment
+     *
+     * @param clearOrphans if true, checks if there is no remaining assignments with each cleared tag
+     * and removes them from the global tags table
+     */
+    fun clearAllTags(assignment: Assignment, clearOrphans: Boolean = false) {
+        val assignmentTagsList = assignmentTagsRepository.findByAssignmentId(assignment.id)
+        val assignmentTagsIds = assignmentTagsList.map { it.tagId }
+        assignmentTagsRepository.deleteAll(assignmentTagsList)
+
+        if (clearOrphans) {
+            assignmentTagsIds.forEach {
+                if (assignmentTagsRepository.countAssignmentTagsByTagId(it) == 0L) {
+                    assignmentTagRepository.deleteById(it)
+                }
+            }
+        }
     }
 }

@@ -725,7 +725,7 @@ class UploadController(
         if (!request.isUserInRole("TEACHER")) {
 
             if (!assignment.active) {
-                throw org.springframework.security.access.AccessDeniedException("Submissions are not open to this assignment")
+                throw AccessDeniedException("Submissions are not open to this assignment")
             }
 
             checkAssignees(assignmentId, principal.realName())
@@ -738,12 +738,12 @@ class UploadController(
                 assignment.packageName, assignment.language, assignment.acceptsStudentTests)
 
         if (gitRepositoryUrl.isNullOrBlank()) {
-            model["gitRepoErrorMsg"] = "Tens que preencher o endereço do repositório"
+            model["gitRepoErrorMsg"] = i18n.getMessage("student.git.setup.must-fill-url", null, currentLocale)
             return "student-git-form"
         }
 
         if (!gitClient.checkValidSSHGithubURL(gitRepositoryUrl)) {
-            model["gitRepoErrorMsg"] = "O endereço do repositório não está no formato correcto"
+            model["gitRepoErrorMsg"] = i18n.getMessage("student.git.setup.invalid-url", null, currentLocale)
             return "student-git-form"
         }
 
@@ -752,17 +752,20 @@ class UploadController(
                 ?:
                 gitSubmissionService.findGitSubmissionBy(principal.realName(), assignmentId) // check if it belongs to a group who has already a git submission
 
-        if (gitSubmission == null || gitSubmission.gitRepositoryPubKey == null) {
-
-            // generate key pair
-            val (privKey, pubKey) = gitClient.generateKeyPair()
-
-            gitSubmission = GitSubmission(assignmentId = assignmentId,
-                    submitterUserId = principal.realName(), gitRepositoryUrl = gitRepositoryUrl)
-            gitSubmission.gitRepositoryPrivKey = String(privKey)
-            gitSubmission.gitRepositoryPubKey = String(pubKey)
-            gitSubmissionRepository.save(gitSubmission)
+        // if there is a previous unconnected git connection, remove it
+        if (gitSubmission != null && !gitSubmission.connected) {
+            gitSubmissionRepository.delete(gitSubmission)
         }
+
+        // generate key pair
+        val (privKey, pubKey) = gitClient.generateKeyPair()
+
+        gitSubmission = GitSubmission(assignmentId = assignmentId,
+                    submitterUserId = principal.realName(), gitRepositoryUrl = gitRepositoryUrl)
+
+        gitSubmission.gitRepositoryPrivKey = String(privKey)
+        gitSubmission.gitRepositoryPubKey = String(pubKey)
+        gitSubmissionRepository.save(gitSubmission)
 
         if (gitSubmission.gitRepositoryUrl.orEmpty().contains("github")) {
             val (username, reponame) = gitClient.getGitRepoInfo(gitSubmission.gitRepositoryUrl)
@@ -848,7 +851,7 @@ class UploadController(
                 model["gitSubmission"] = gitSubmission
                 return "student-setup-git"
             } catch (e: Exception) {
-                LOG.info("Error cloning ${gitRepository} - ${e}")
+                LOG.info("Error cloning ${gitRepository} - ${e} - ${e.cause}")
                 model["error"] = "Error cloning ${gitRepository} - ${e.message}"
                 model["gitSubmission"] = gitSubmission
                 return "student-setup-git"

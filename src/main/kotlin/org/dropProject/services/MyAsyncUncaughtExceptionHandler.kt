@@ -24,26 +24,44 @@ import org.dropProject.PendingTasks
 import org.springframework.aop.interceptor.SimpleAsyncUncaughtExceptionHandler
 import org.springframework.stereotype.Service
 import org.dropProject.dao.Submission
+import org.dropProject.dao.SubmissionStatus
 import org.dropProject.repository.SubmissionRepository
+import org.slf4j.LoggerFactory
 import java.lang.reflect.Method
 import java.util.*
-
+import kotlin.reflect.full.memberFunctions
 
 
 @Service
 class MyAsyncUncaughtExceptionHandler(val submissionRepository: SubmissionRepository,
                                       val pendingTasks: PendingTasks): SimpleAsyncUncaughtExceptionHandler() {
 
+    val LOG = LoggerFactory.getLogger(this.javaClass.name)
+
     override fun handleUncaughtException(ex: Throwable, method: Method, vararg params: Any) {
 
         val methodThatThrewTheException = method.name
 
-        if (methodThatThrewTheException == "exportAssignment") {
-            val assignmentId = params[0] as String
-            val taskId = params[2] as String
-            pendingTasks.put(taskId, PendingTaskError(ex))
-        } else {
-            super.handleUncaughtException(ex, method, *params)
+        LOG.error("Uncaught exception from an async method", ex)
+
+        // since the method comparison is not typesafe, I minimize the chance of error with this
+        require(AssignmentService::class.memberFunctions.any { it.name == "exportAssignment" })
+        require(BuildWorker::class.memberFunctions.any { it.name == "checkProject" })
+
+        when (methodThatThrewTheException) {
+            "exportAssignment" -> {
+                // val assignmentId = params[0] as String
+                val taskId = params[2] as String
+                pendingTasks.put(taskId, PendingTaskError(ex))
+            }
+
+            "checkProject" -> {
+                val submission = params[2] as Submission
+                submission.setStatus(SubmissionStatus.FAILED)
+                submissionRepository.save(submission)
+            }
+
+            else -> super.handleUncaughtException(ex, method, *params)
         }
 
         // TODO: test this for build_report table
