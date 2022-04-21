@@ -804,16 +804,18 @@ class ReportController(
             throw AccessDeniedException("${principal.realName()} is not allowed to view this report")
         }
 
-        var author = authorRepository.findByUserId(studentId);
+        val authorGroups = authorRepository.findByUserId(studentId);
 
-        if (author == null) {
+        if (authorGroups == null) {
             model["message"] = "Student with id $studentId does not exist"
             return "student-history"
         }
 
         val projectGroups = projectGroupRepository.getGroupsForAuthor(studentId)
 
-        val studentHistory = StudentHistory(author)
+        // since there may be several authors (same student in different groups), we'll just choose the
+        // first one, since the goals is to just get his name
+        val studentHistory = StudentHistory(authorGroups[0])
         val submissions = mutableListOf<Submission>()
 
         // FIXME: for better performance, this can be replaced with an HashSet
