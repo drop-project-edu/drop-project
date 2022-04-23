@@ -703,12 +703,17 @@ class AssignmentControllerTests {
 
         val TEACHER_1 = User("teacher1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
 
+        // make a copy of the "testJavaProj" assignment files and create an assignment based on the copy
+        // so that we can safely delete it, without affecting the original files
+        val assignmentFolder = File(assignmentsRootLocation, "testJavaProjForDelete")
+        FileUtils.copyDirectory(File(assignmentsRootLocation, "testJavaProj"), assignmentFolder)
+
         // create two initial assignments
         val assignment1 = Assignment(
             id = "testJavaProj", name = "Test Project (for automatic tests)",
             packageName = "org.testProj", ownerUserId = "teacher1",
             submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
-            gitRepositoryFolder = "testJavaProj", public = false
+            gitRepositoryFolder = "testJavaProjForDelete", public = false
         )
         assignmentService.addTagToAssignment(assignment1, "teste")
         assignmentRepository.save(assignment1)
@@ -719,7 +724,7 @@ class AssignmentControllerTests {
             id = "testJavaProj2", name = "Test Project (for automatic tests)",
             packageName = "org.testProj", ownerUserId = "teacher1",
             submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
-            gitRepositoryFolder = "testJavaProj", public = false
+            gitRepositoryFolder = "testJavaProjForDelete", public = false
         )
         assignmentService.addTagToAssignment(assignment2, "teste")
         assignmentRepository.save(assignment2)
