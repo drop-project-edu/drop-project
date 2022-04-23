@@ -1057,7 +1057,7 @@ class ReportControllerTests {
 
         val reportResult =
             this.mvc.perform(
-                get("/studentHistory/${STUDENT_1.username}")
+                get("/studentHistory?id=${STUDENT_1.username}")
                     .with(user(TEACHER_1))
             )
                 .andExpect(status().isOk)
