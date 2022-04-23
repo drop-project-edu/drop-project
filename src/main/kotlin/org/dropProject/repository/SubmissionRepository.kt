@@ -56,4 +56,6 @@ interface SubmissionRepository : JpaRepository<Submission, Long> {
 
     @Transactional
     fun deleteByGitSubmissionId(gitSubmissionId: Long)
+
+    fun findByGroupIn(groups: List<ProjectGroup>): List<Submission>
 }

@@ -1038,6 +1038,15 @@ class ReportControllerTests {
     @DirtiesContext
     fun testStudentHistory() {
 
+        /**
+         *
+         * TODO
+         *
+         * It's very slow.
+         * Should include information about the group, when the sumission is individual
+         *
+         */
+
         testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", "testJavaProj", STUDENT_1,
             listOf(Pair("student1", "Student 1")))
         testsHelper.uploadProject(this.mvc, "projectOK", "testJavaProj", STUDENT_1,

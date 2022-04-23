@@ -816,29 +816,22 @@ class ReportController(
         // since there may be several authors (same student in different groups), we'll just choose the
         // first one, since the goals is to just get his name
         val studentHistory = StudentHistory(authorGroups[0])
-        val submissions = mutableListOf<Submission>()
 
-        // FIXME: for better performance, this can be replaced with an HashSet
-        val assignments = mutableListOf<Assignment>()
-        
-        // FIXME: for better performance, replace this logic
-        // with a function that gets the data straight from the DB
-        for(submission in submissionRepository.findAll()) {
-            if(projectGroups.contains(submission.group)) {
-                // get indicators
-                submission.reportElements = submissionReportRepository.findBySubmissionId(submission.id)
-                submissions.add(submission);
+        // store assignments on hashmap for performance reasons
+        val assignmentsMap = HashMap<String,Assignment>()
+
+        val submissions = submissionRepository.findByGroupIn(projectGroups)
+        for (submission in submissions) {
+            // get indicators
+            submission.reportElements = submissionReportRepository.findBySubmissionId(submission.id)
+
+            if (!assignmentsMap.containsKey(submission.assignmentId)) {
                 val assignment = assignmentRepository.findById(submission.assignmentId).get()
-                if(!assignments.contains(assignment)) {
-                    assignments.add(assignment);
-                    studentHistory.addGroupAndAssignment(submission.group, assignment)
-                    // FIXME Very Ugly Hack
-                    studentHistory.addSubmission(submission)
-                }
-                else {
-                    studentHistory.addSubmission(submission)
-                }
+                assignmentsMap[submission.assignmentId] = assignment;
+                studentHistory.addGroupAndAssignment(submission.group, assignment)
             }
+
+            studentHistory.addSubmission(submission)
         }
 
         studentHistory.ensureSubmissionsAreSorted()
