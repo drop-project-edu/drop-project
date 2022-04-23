@@ -683,7 +683,10 @@ class AssignmentController(
         assignmentReportRepository.deleteByAssignmentId(assignmentId)
 
         val rootFolder = File(assignmentsRootLocation, assignment.gitRepositoryFolder)
-        if (!rootFolder.delete()) {
+
+        try {
+            FileUtils.deleteDirectory(rootFolder)
+        } catch (e: Exception) {
             LOG.warn("Unable to delete ${rootFolder.absolutePath}")
         }
         LOG.info("Removed assignment ${assignment.id}")

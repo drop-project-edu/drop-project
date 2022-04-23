@@ -652,12 +652,17 @@ class AssignmentControllerTests {
         val STUDENT_1 = User("student1", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
         val TEACHER_1 = User("teacher1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
 
+        // make a copy of the "testJavaProj" assignment files and create an assignment based on the copy
+        // so that we can safely delete it, without affecting the original files
+        val assignmentFolder = File(assignmentsRootLocation, "testJavaProjForDelete")
+        FileUtils.copyDirectory(File(assignmentsRootLocation, "testJavaProj"), assignmentFolder)
+
         // create initial assignment
         val assignment = Assignment(
             id = "testJavaProj", name = "Test Project (for automatic tests)",
-            packageName = "org.testProj", ownerUserId = "teacher1",
+            packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
             submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
-            gitRepositoryFolder = "testJavaProj", public = false
+            gitRepositoryFolder = "testJavaProjForDelete", public = false
         )
         assignmentRepository.save(assignment)
         assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student1"))
@@ -665,7 +670,7 @@ class AssignmentControllerTests {
 
         // make a submission
         val submissionId =
-            testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", "testJavaProj", STUDENT_1).toLong()
+            testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1).toLong()
 
         // try to delete the assignment but DP will issue an error since it has submissions
         this.mvc.perform(
@@ -688,6 +693,8 @@ class AssignmentControllerTests {
             .andExpect(header().string("Location", "/assignment/my"))
             .andExpect(flash().attribute("message", "Assignment was successfully deleted"))
 
+        // check if the assignment folder was also deleted
+        assertFalse("$assignmentFolder should have been deleted", assignmentFolder.exists())
     }
 
     @Test
