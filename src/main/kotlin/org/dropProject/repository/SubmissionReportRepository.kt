@@ -20,6 +20,8 @@
 package org.dropProject.repository
 
 import org.dropProject.dao.Indicator
+import org.dropProject.dao.ProjectGroup
+import org.dropProject.dao.Submission
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.transaction.annotation.Transactional
 import org.dropProject.dao.SubmissionReport
@@ -43,4 +45,6 @@ interface SubmissionReportRepository : JpaRepository<SubmissionReport, Long> {
 
     @Transactional
     fun deleteBySubmissionId(submissionId: Long)
+
+    fun findBySubmissionIdIn(submissionIds: List<Long>): List<SubmissionReport>
 }

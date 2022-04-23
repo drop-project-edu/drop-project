@@ -839,9 +839,11 @@ class ReportController(
         val assignmentsMap = HashMap<String,Assignment>()
 
         val submissions = submissionRepository.findByGroupIn(projectGroups)
+        val submissionIds = submissions.map { it.id }
+        val submissionReports = submissionReportRepository.findBySubmissionIdIn(submissionIds)
         for (submission in submissions) {
-            // get indicators
-            submission.reportElements = submissionReportRepository.findBySubmissionId(submission.id)
+            // fill indicators
+            submission.reportElements = submissionReports.filter { it.submissionId == submission.id }
 
             if (!assignmentsMap.containsKey(submission.assignmentId)) {
                 val assignment = assignmentRepository.findById(submission.assignmentId).get()
