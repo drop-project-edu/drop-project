@@ -20,6 +20,8 @@
     <h6>
         Assignment: <span th:text="${assignment.id}"></span> |
         Submitted: <span th:text="${#dates.format(submission.submissionDate, 'dd-MM HH:mm:ss')}"></span>
+        <a th:if="${isTeacher}"
+           th:href="@{'/submissions?assignmentId=' + ${assignment.id} + '&groupId=' + ${submission.group.id}}">(other submissions)</a>
         <span th:if="${submission.markedAsFinal}" class="label label-success">Final</span>
     </h6>
 
@@ -27,6 +29,8 @@
         Git repository: <a th:href="${gitRepository}" th:text="${gitRepository}">link</a> |
         Last commit: <span th:text="${#dates.format(gitSubmission.lastCommitDate, 'dd-MM HH:mm:ss')}"></span>
     </h6>
+
+    <h6 th:if="${isTeacher}"></h6>
 
     <div class="btn-group" role="group" th:if="${isTeacher}" th:unless="${autoRefresh}">
 
