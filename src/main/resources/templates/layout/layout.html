@@ -32,9 +32,9 @@
             <div class="collapse navbar-collapse" id="drop-project-navbar-collapse-1">
                 <ul class="nav navbar-nav" th:if="${#authorization.expression('hasRole(''ROLE_TEACHER'')')}">
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown1" role="button" data-toggle="dropdown"
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownAssignments" role="button" data-toggle="dropdown"
                            aria-haspopup="true" aria-expanded="false">
-                            <span>Manage Assignments</span><span class="caret"></span>
+                            <span>Assignments</span><span class="caret"></span>
                         </a>
                         <ul class="dropdown-menu">
                             <li>
@@ -49,6 +49,19 @@
                             </li>
                             <li>
                                 <a th:href="@{/assignment/import}">Import Assignment</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+                <ul class="nav navbar-nav" th:if="${#authorization.expression('hasRole(''ROLE_TEACHER'')')}">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownStudents" role="button" data-toggle="dropdown"
+                           aria-haspopup="true" aria-expanded="false">
+                            <span>Students</span><span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a th:href="@{/studentHistoryForm}">Student history</a>
                             </li>
                         </ul>
                     </li>

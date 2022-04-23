@@ -794,10 +794,28 @@ class ReportController(
         return "leaderboard"
     }
 
+    @RequestMapping(value = ["/studentHistoryForm"], method = [(RequestMethod.GET)])
+    fun getStudentHistoryForm(): String {
+        return "student-history-form"
+    }
+
+    // TODO: Pass this to the APIController in the future
+    data class StudentListResponse(val value: String, val text: String)
+    @RequestMapping(value = ["/studentList"], method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_JSON_VALUE])
+    fun getStudentList(@RequestParam("q") q: String): ResponseEntity<List<StudentListResponse>> {
+
+        val result = authorRepository.findAll()
+            .filter { it.name.lowercase().contains(q.lowercase()) || it.userId.lowercase().contains(q.lowercase())}
+            .distinctBy { it.userId }
+            .map { StudentListResponse(it.userId, it.name) }
+
+        return ResponseEntity(result, HttpStatus.OK)
+    }
+
     // For now, this will list assignments even if the teacher making the request
     // does not have access to those assignments
-    @RequestMapping(value = ["/studentHistory/{studentId}"], method = [(RequestMethod.GET)])
-    fun getStudentTracker(@PathVariable studentId: String, model: ModelMap,
+    @RequestMapping(value = ["/studentHistory"], method = [(RequestMethod.GET)])
+    fun getStudentHistory(@RequestParam("id") studentId: String, model: ModelMap,
                        principal: Principal, request: HttpServletRequest): String {
 
         if (!request.isUserInRole("TEACHER")) {
