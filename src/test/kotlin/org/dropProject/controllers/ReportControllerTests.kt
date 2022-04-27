@@ -49,10 +49,7 @@ import org.dropProject.dao.*
 import org.dropProject.data.*
 import org.dropProject.extensions.formatDefault
 import org.dropProject.forms.SubmissionMethod
-import org.dropProject.repository.AssignmentRepository
-import org.dropProject.repository.AssignmentTestMethodRepository
-import org.dropProject.repository.GitSubmissionRepository
-import org.dropProject.repository.SubmissionRepository
+import org.dropProject.repository.*
 import org.dropProject.services.AssignmentService
 import org.dropProject.services.ZipService
 import org.hamcrest.Matchers.contains
@@ -91,6 +88,9 @@ class ReportControllerTests {
 
     @Autowired
     lateinit var assignmentTestMethodRepository: AssignmentTestMethodRepository
+
+    @Autowired
+    lateinit var authorRepository: AuthorRepository
 
     @Autowired
     private lateinit var testsHelper: TestsHelper
@@ -1044,6 +1044,7 @@ class ReportControllerTests {
          *
          * It's very slow.
          * Should include information about the group, when the sumission is individual
+         * Must also test /studentHistoryForm and /studentList
          *
          */
 
@@ -1054,6 +1055,8 @@ class ReportControllerTests {
         Thread.sleep(1000)  // to make sure the last submission is registered with a submissionDate superior to the previous ones
         testsHelper.uploadProject(this.mvc, "projectOK", "sampleJavaProject", STUDENT_1,
             listOf(Pair("student1", "Student 1"), Pair("student2", "Student 2")))
+
+        mvc.perform(get("/studentHistoryForm").with(user(TEACHER_1))).andExpect(status().isOk)
 
         val reportResult =
             this.mvc.perform(
@@ -1082,6 +1085,43 @@ class ReportControllerTests {
         val sortedHistory = studentHistory.getHistorySortedByDateDesc()
         assertEquals("sampleJavaProject", sortedHistory[0].assignment.id)
         assertEquals("testJavaProj", sortedHistory[1].assignment.id)
+
+    }
+
+    @Test
+    @DirtiesContext
+    fun testStudentList() {
+
+        // create some authors
+        authorRepository.save(Author(name="Sarah", userId = "student1"))
+        authorRepository.save(Author(name="Cris", userId = "student2"))
+
+        this.mvc.perform(
+            get("/studentList?q=stu")
+                .with(user(TEACHER_1))
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk)
+            .andExpect(content().json("""
+                [{"value":"student1","text":"Sarah"},{"value":"student2","text":"Cris"}]
+            """.trimIndent()))
+
+        this.mvc.perform(
+            get("/studentList?q=cri")
+                .with(user(TEACHER_1))
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk)
+            .andExpect(content().json("""
+                [{"value":"student2","text":"Cris"}]
+            """.trimIndent()))
+
+        this.mvc.perform(
+            get("/studentList?q=banana")
+                .with(user(TEACHER_1))
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk)
+            .andExpect(content().json("""
+                []
+            """.trimIndent()))
 
     }
 
