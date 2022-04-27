@@ -60,6 +60,8 @@ data class ProjectGroup(
                 .contains(authorName)
     }
 
+    fun isIndividual() = authors.size <= 1
+
     override fun equals(other: Any?): Boolean {
         val otherProjectGroup = other as ProjectGroup
         return authorsStr().equals(otherProjectGroup.authorsStr())

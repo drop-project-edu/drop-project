@@ -17,8 +17,20 @@
 
     <table>
         <tr th:each="assignment: ${studentHistory.getHistorySortedByDateDesc()}">
-            <h4 th:text="${assignment.getAssignment().id}" style="margin-top: 20px"></h4>
-<!--            <small><span th:text="'(' + ${assignment.submissions.size() + ' submissions)'}"/></small>-->
+            <h4 style="margin-top: 20px">
+                <span th:text="${assignment.getAssignment().id}" />
+                <img th:if="!${assignment.getGroup().isIndividual()}"
+                     th:alt="'Group: ' + ${assignment.getGroup().authorsNameStr()}"
+                     th:title="'Group: ' + ${assignment.getGroup().authorsNameStr()}"
+                     th:src="@{/img/several-users.png}" width="16px" height="16px"/>
+                <img th:if="${assignment.getGroup().isIndividual()}"
+                     th:alt="Individual"
+                     th:title="Individual"
+                     th:src="@{/img/single-user.png}" width="16px" height="16px"/>
+            </h4>
+
+
+            <!--            <small><span th:text="'(' + ${assignment.submissions.size() + ' submissions)'}"/></small>-->
 
             <table class="table table-condensed" style="margin-left: 20px; width: 700px;">
                 <tr th:each="submission: ${assignment.sortedSubmissions}">
