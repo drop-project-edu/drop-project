@@ -212,15 +212,17 @@ class UploadController(
 
         if (assignment.submissionMethod == SubmissionMethod.UPLOAD) {
 
-            val submission = submissionRepository.findFirstBySubmitterUserIdAndAssignmentIdOrderBySubmissionDateDesc(principal.realName(), assignmentId)
+            val groups = projectGroupRepository.getGroupsForAuthor(principal.realName())
+            val submission = submissionRepository.findFirstByGroupInAndAssignmentIdOrderBySubmissionDateDesc(groups, assignmentId)
 
             model["uploadForm"] = UploadForm(assignment.id)
             model["uploadSubmission"] = submission
             return "student-upload-form"
         } else {
 
+            val groups = projectGroupRepository.getGroupsForAuthor(principal.realName())
             val gitSubmission =
-                    gitSubmissionRepository.findBySubmitterUserIdAndAssignmentId(principal.realName(), assignmentId)
+                    gitSubmissionRepository.findByGroupInAndAssignmentId(groups, assignmentId)
                     ?:
                     gitSubmissionService.findGitSubmissionBy(principal.realName(), assignmentId) // check if it belongs to a group who has already a git submission
 

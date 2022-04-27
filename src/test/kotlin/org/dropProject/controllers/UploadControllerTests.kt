@@ -114,6 +114,7 @@ class UploadControllerTests {
     private lateinit var testsHelper: TestsHelper
 
     val STUDENT_1 = User("student1", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
+    val STUDENT_2 = User("student2", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
     val TEACHER_1 = User("teacher1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
 
     @Before
@@ -1419,6 +1420,42 @@ class UploadControllerTests {
         assertEquals(1, report.size)
         assertEquals(1,report[0].allSubmissions.size)
         assertEquals(submissionId2,report[0].allSubmissions[0].id.toInt())
+    }
+
+    @Test
+    @DirtiesContext
+    fun `upload by one element of the group and get report by the other element`() {
+
+        // student1 makes a submission in name of the group (student1, student2)
+        val submissionId = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1,
+            listOf(Pair("student1", "Student 1"), Pair("student2", "Student 2")))
+
+        // student1 gets the upload form
+        val reportResult = this.mvc.perform(get("/upload/testJavaProj")
+            .with(user(STUDENT_1)))
+            .andExpect(status().isOk)
+            .andExpect(view().name("student-upload-form"))
+            .andReturn()
+
+        // student1 should see a "Get Last Report" button
+        @Suppress("UNCHECKED_CAST")
+        val lastSubmission = reportResult.modelAndView!!.modelMap["uploadSubmission"] as Submission?
+        assertNotNull(lastSubmission)
+        assertEquals(submissionId.toLong(), lastSubmission!!.id)
+
+        // student2 gets the upload form
+        val reportResult2 = this.mvc.perform(get("/upload/testJavaProj")
+            .with(user(STUDENT_2)))
+            .andExpect(status().isOk)
+            .andExpect(view().name("student-upload-form"))
+            .andReturn()
+
+        // student1 should see a "Get Last Report" button
+        @Suppress("UNCHECKED_CAST")
+        val lastSubmission2 = reportResult2.modelAndView!!.modelMap["uploadSubmission"] as Submission?
+        assertNotNull(lastSubmission2)
+        assertEquals(submissionId.toLong(), lastSubmission2!!.id)
+
     }
 
 }

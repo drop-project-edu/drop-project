@@ -1125,4 +1125,29 @@ class ReportControllerTests {
 
     }
 
+    @Test
+    @DirtiesContext
+    fun testGetReportByOtherElementOfTheGroup() {
+
+        // student1 makes a submission in name of the group (student1, student2)
+        val submissionId = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", defaultAssignmentId, STUDENT_1,
+            listOf(Pair("student1", "Student 1"), Pair("student2", "Student 2")))
+
+        // student1 gets the report
+        this.mvc.perform(get("/buildReport/$submissionId")
+            .with(user(STUDENT_1)))
+            .andExpect(status().isOk)
+
+        // student2 gets the report
+        this.mvc.perform(get("/buildReport/$submissionId")
+            .with(user(STUDENT_2)))
+            .andExpect(status().isOk)
+
+        // studentOther tries to get the report but it is forbidden
+        this.mvc.perform(get("/buildReport/$submissionId")
+            .with(user(User("studentOther", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT"))))))
+            .andExpect(status().isForbidden)
+
+    }
+
 }
