@@ -34,25 +34,11 @@ open class DropProjectSecurityConfig : WebSecurityConfigurerAdapter() {
         http
                 .authorizeRequests()
                     .antMatchers("/public", "/login", "/loginFromDEISI", "/access-denied", "/error", "/h2-console/**").permitAll()
-                    .antMatchers(HttpMethod.GET, "/assignment/**").hasRole("TEACHER")
-                    .antMatchers(HttpMethod.POST, "/assignment/**").hasRole("TEACHER")
-                    .antMatchers(
-                            "/report",
-                            "/submission-report",
-                            "/submissions",
-                            "/rebuild/*",
-                            "/rebuildFull/*",
-                            "/markAsFinal/*",
-                            "/downloadMavenProject/*",
-                            "/downloadOriginalAll/*",
-                            "/downloadMavenizedAll/*",
-                            "/cleanup/*"
-                    ).hasRole("TEACHER")  // TODO: review
-                .antMatchers(
-                        "/cleanup/*",
-                        "/admin/*"
-                    ).hasRole("DROP_PROJECT_ADMIN")
-                    .anyRequest().authenticated()
+                    .antMatchers("/", "/upload", "/upload/*", "/buildReport/*", "/student/**",
+                                 "/git-submission/generate-report/*", "/mySubmissions")
+                        .hasAnyRole("STUDENT", "TEACHER", "DROP_PROJECT_ADMIN")
+                    .antMatchers("/cleanup/*", "/admin/**").hasRole("DROP_PROJECT_ADMIN")
+                    .anyRequest().hasRole("TEACHER")
                 .and()
                     .exceptionHandling()
                     .accessDeniedPage("/access-denied.html")

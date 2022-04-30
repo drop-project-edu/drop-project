@@ -211,7 +211,7 @@ class ReportControllerTests {
                 .param("assignmentId", defaultAssignmentId)
                 .with(user(STUDENT_1))
         )
-            .andExpect(status().isOk())
+            .andExpect(status().isOk)
             .andReturn()
 
         @Suppress("UNCHECKED_CAST")
@@ -254,7 +254,8 @@ class ReportControllerTests {
         )
             .andExpect(status().isOk())
 
-        val result = this.mvc.perform(get("/downloadOriginalProject/$submissionId").contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE))
+        val result = this.mvc.perform(get("/downloadOriginalProject/$submissionId").contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE)
+            .with(user(TEACHER_1)))
             .andExpect(header().string("Content-Disposition", "attachment; filename=student1_student2.zip"))
             .andExpect(status().isOk)
             .andReturn()
@@ -332,7 +333,8 @@ class ReportControllerTests {
             "git@github.com:drop-project-edu/sampleJavaSubmission.git", "student1"
         )
 
-        val result = this.mvc.perform(get("/downloadOriginalProject/1").contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE))
+        val result = this.mvc.perform(get("/downloadOriginalProject/1").contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE)
+            .with(user(TEACHER_1)))
             .andExpect(header().string("Content-Disposition", "attachment; filename=student1_student2.zip"))
             .andExpect(status().isOk)
             .andReturn()

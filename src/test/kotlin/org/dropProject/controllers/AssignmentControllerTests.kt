@@ -443,9 +443,10 @@ class AssignmentControllerTests {
             )
 
             // login as 21800000 and get an empty list of assignments
+            val student = User("21800000", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
             this.mvc.perform(
                 get("/")
-                    .with(SecurityMockMvcRequestPostProcessors.user("21800000"))
+                    .with(user(student))
             )
                 .andExpect(status().isOk)
                 .andExpect(model().hasNoErrors())
@@ -460,7 +461,7 @@ class AssignmentControllerTests {
             // login again as 21800000 and get a redirect to the assignment
             this.mvc.perform(
                 get("/")
-                    .with(SecurityMockMvcRequestPostProcessors.user("21800000"))
+                    .with(user(student))
             )
                 .andExpect(status().isFound)
                 .andExpect(header().string("Location", "/upload/dummyAssignment6"))
