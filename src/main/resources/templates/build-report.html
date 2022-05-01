@@ -108,9 +108,9 @@
                 <span th:if="${summaryResult.reportValue != 'OK'}" class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span>
             </td>
             <td th:if="${summaryResult.showIcon(isTeacher)}">
-                <img src="../img/if_sign-check_299110.png" th:if="${summaryResult.reportValue == 'OK'}" />
-                <img src="../img/if_sign-error_299045.png" th:if="${summaryResult.reportValue == 'NOK'}" />
-                <img src="../img/if_sign-question-mark.png" th:if="${summaryResult.reportValue == 'Not Enough Tests'}" alt="Not Enough Tests" />
+                <img th:src="@{/img/if_sign-check_299110.png}" th:if="${summaryResult.reportValue == 'OK'}" />
+                <img th:src="@{/img/if_sign-error_299045.png}" th:if="${summaryResult.reportValue == 'NOK'}" />
+                <img th:src="@{/img/if_sign-question-mark.png}" th:if="${summaryResult.reportValue == 'Not Enough Tests'}" alt="Not Enough Tests" />
             </td>
             <td th:if="${summaryResult.progressSummary(isTeacher) != null}">
                 <h4 style="margin-top: 3px">

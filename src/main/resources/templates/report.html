@@ -121,9 +121,9 @@
                     <td class="text-nowrap">
                         <span th:each="report : ${submissionInfo.lastSubmission.reportElements}">
                             <span th:if="${report.showIcon(true)}">
-                                <img src="../img/if_sign-check_299110.png" th:if="${report.reportValue == 'OK'}" th:alt="${report.indicator.description}" th:title="${report.indicator.description}" width="16" height="16" />
-                                <img src="../img/if_sign-error_299045.png" th:if="${report.reportValue == 'NOK'}" th:alt="${report.indicator.description}" th:title="${report.indicator.description}" width="16" height="16" />
-                                <img src="../img/if_sign-question-mark.png" th:if="${report.reportValue == 'Not Enough Tests'}" th:alt="${report.indicator.description}" th:title="${report.indicator.description}" width="16" height="16" />
+                                <img th:src="@{/img/if_sign-check_299110.png}" th:if="${report.reportValue == 'OK'}" th:alt="${report.indicator.description}" th:title="${report.indicator.description}" width="16" height="16" />
+                                <img th:src="@{/img/if_sign-error_299045.png}" th:if="${report.reportValue == 'NOK'}" th:alt="${report.indicator.description}" th:title="${report.indicator.description}" width="16" height="16" />
+                                <img th:src="@{/img/if_sign-question-mark.png}" th:if="${report.reportValue == 'Not Enough Tests'}" th:alt="${report.indicator.description}" th:title="${report.indicator.description}" width="16" height="16" />
                             </span>
                             <span class="label" th:if="${report.progressSummary(true) != null}"
                                   th:classappend="${report.cssLabel}"
