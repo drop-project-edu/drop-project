@@ -49,6 +49,6 @@ open class DropProjectSecurityConfig : WebSecurityConfigurerAdapter() {
 
     override fun configure(web: WebSecurity) {
         web.ignoring()
-                .antMatchers("/resources/**", "/static/**", "/css/**", "/js/**", "/img/**")
+                .antMatchers("/resources/**", "/static/**", "/css/**", "/js/**", "/img/**", "/favicon.ico")
     }
 }
