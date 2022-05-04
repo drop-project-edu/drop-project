@@ -119,3 +119,7 @@ Note: to run the coverage measurement, you must first run the unit tests themsel
 The test coverage report will be available in the following folder:
 
     target/site/jacoco/index.html
+    
+## Citation
+
+* Cipriano, B.P., Fachada, N. & Alves, P. (2022). Drop Project: An automatic assessment tool for programming assignments. *SoftwareX*, 18. 101079. <https://doi.org/10.1016/j.softx.2022.101079>
