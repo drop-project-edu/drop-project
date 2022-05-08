@@ -872,19 +872,20 @@ class UploadController(
      *
      * @return a ResponseEntity<String>
      */
-    @RequestMapping(value = ["/git-submission/refresh-git/{submissionId}"], method = [(RequestMethod.POST)])
-    fun refreshAssignmentGitRepository(@PathVariable submissionId: String,
+    @RequestMapping(value = ["/git-submission/refresh-git/{gitSubmissionId}"], method = [(RequestMethod.POST)])
+    fun refreshAssignmentGitRepository(@PathVariable gitSubmissionId: String,
                                        principal: Principal): ResponseEntity<String> {
 
         // check that it exists
-        val gitSubmission = gitSubmissionRepository.getById(submissionId.toLong())
+        val gitSubmission = gitSubmissionRepository.findById(gitSubmissionId.toLong()).orElse(null) ?:
+            throw IllegalArgumentException("git submission ${gitSubmissionId} is not registered")
 
         if (!gitSubmission.group.contains(principal.realName())) {
             throw IllegalAccessError("Submissions can only be refreshed by their owners")
         }
 
         try {
-            LOG.info("Pulling git repository for ${submissionId}")
+            LOG.info("Pulling git repository for ${gitSubmissionId}")
             val git = gitClient.pull(File(gitSubmissionsRootLocation, gitSubmission.getFolderRelativeToStorageRoot()),
                     gitSubmission.gitRepositoryPrivKey!!.toByteArray())
             val lastCommitInfo = gitClient.getLastCommitInfo(git)
@@ -895,10 +896,10 @@ class UploadController(
             }
 
         } catch (re: RefNotAdvertisedException) {
-            LOG.warn("Couldn't pull git repository for ${submissionId}: head is invalid")
+            LOG.warn("Couldn't pull git repository for ${gitSubmissionId}: head is invalid")
             return ResponseEntity("{ \"error\": \"Error pulling from ${gitSubmission.gitRepositoryUrl}. Probably you don't have any commits yet.\"}", HttpStatus.INTERNAL_SERVER_ERROR)
         } catch (e: Exception) {
-            LOG.warn("Couldn't pull git repository for ${submissionId}")
+            LOG.warn("Couldn't pull git repository for ${gitSubmissionId}")
             return ResponseEntity("{ \"error\": \"Error pulling from ${gitSubmission.gitRepositoryUrl}\"}", HttpStatus.INTERNAL_SERVER_ERROR)
         }
 

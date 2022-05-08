@@ -335,6 +335,24 @@ class GitSubmissionControllerTests {
         assertEquals(0, submissionRepository.count())
     }
 
+    @Test
+    @DirtiesContext
+    fun test_connectAndRefresh() {
+
+        // try to refresh a submission that doesn't exist
+        this.mvc.perform(
+            post("/git-submission/refresh-git/1")
+            .with(user(STUDENT_1)))
+            .andExpect(status().isInternalServerError)
+
+        val gitSubmissionId = testsHelper.connectToGitRepositoryAndBuildReport(mvc, gitSubmissionRepository,
+            defaultAssignmentId, "git@github.com:drop-project-edu/sampleJavaSubmission.git", "student1")
+
+        this.mvc.perform(
+            post("/git-submission/refresh-git/${gitSubmissionId}")
+                .with(user(STUDENT_1)))
+            .andExpect(status().isOk)
+    }
 
 }
 
