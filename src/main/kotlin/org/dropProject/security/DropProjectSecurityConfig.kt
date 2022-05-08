@@ -35,7 +35,7 @@ open class DropProjectSecurityConfig : WebSecurityConfigurerAdapter() {
                 .authorizeRequests()
                     .antMatchers("/public", "/login", "/loginFromDEISI", "/access-denied", "/error", "/h2-console/**").permitAll()
                     .antMatchers("/", "/upload", "/upload/*", "/buildReport/*", "/student/**",
-                                 "/git-submission/generate-report/*", "/mySubmissions")
+                                 "/git-submission/refresh-git/*", "/git-submission/generate-report/*", "/mySubmissions")
                         .hasAnyRole("STUDENT", "TEACHER", "DROP_PROJECT_ADMIN")
                     .antMatchers("/cleanup/*", "/admin/**").hasRole("DROP_PROJECT_ADMIN")
                     .anyRequest().hasRole("TEACHER")
