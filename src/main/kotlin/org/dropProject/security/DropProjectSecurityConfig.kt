@@ -25,6 +25,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.builders.WebSecurity
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter
 import org.springframework.security.web.access.AccessDeniedHandlerImpl
+import org.springframework.security.web.authentication.logout.LogoutFilter
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
@@ -62,17 +63,22 @@ open class DropProjectSecurityConfig(val apiAuthenticationManager: PersonalToken
 
     override fun configure(http: HttpSecurity) {
         http
-                .authorizeRequests()
-                    .antMatchers("/public", "/login", "/loginFromDEISI", "/access-denied", "/error", "/h2-console/**",
-                        "/api-docs", "/swagger-ui.html", "/swagger-ui/**", "/swagger-resources/**", "/v2/api-docs").permitAll()
-            .antMatchers("/", "/upload", "/upload/*", "/buildReport/*", "/student/**",
-                "/git-submission/refresh-git/*", "/git-submission/generate-report/*", "/mySubmissions")
+            .authorizeRequests()
+            .antMatchers(
+                "/public", "/login", "/loginFromDEISI", "/access-denied", "/error", "/h2-console/**",
+                "/api-docs", "/swagger-ui.html", "/swagger-ui/**", "/swagger-resources/**", "/v2/api-docs"
+            ).permitAll()
+            .antMatchers(
+                "/", "/upload", "/upload/*", "/buildReport/*", "/student/**",
+                "/git-submission/refresh-git/*", "/git-submission/generate-report/*", "/mySubmissions",
+                "/personalToken", "/api/student/**"
+            )
             .hasAnyRole("STUDENT", "TEACHER", "DROP_PROJECT_ADMIN")
             .antMatchers("/cleanup/*", "/admin/**").hasRole("DROP_PROJECT_ADMIN")
             .anyRequest().hasRole("TEACHER")
-                .and()
-                    .exceptionHandling()
-                    .accessDeniedHandler(APIAccessDeniedHandler("/access-denied.html"))
+            .and()
+            .exceptionHandling()
+            .accessDeniedHandler(APIAccessDeniedHandler("/access-denied.html"))
 
         if (apiAuthenticationManager != null) {
             http.addFilterBefore(PersonalTokenAuthenticationFilter("/api/**", apiAuthenticationManager),

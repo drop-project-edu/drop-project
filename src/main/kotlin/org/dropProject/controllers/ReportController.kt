@@ -30,6 +30,7 @@ import org.dropProject.MAVEN_MAX_EXECUTION_TIME
 import org.dropProject.dao.*
 import org.dropProject.data.AuthorDetails
 import org.dropProject.data.GroupedProjectGroups
+import org.dropProject.data.StudentHistory
 import org.dropProject.data.TestType
 import org.dropProject.extensions.formatDefault
 import org.dropProject.extensions.realName
@@ -136,7 +137,6 @@ class ReportController(
     @RequestMapping(value = ["/report/{assignmentId}"], method = [(RequestMethod.GET)])
     fun getReport(@PathVariable assignmentId: String, model: ModelMap,
                   principal: Principal, request: HttpServletRequest): String {
-        model["assignmentId"] = assignmentId
 
         assignmentService.getAllSubmissionsForAssignment(assignmentId, principal, model, request, mode = "summary")
 

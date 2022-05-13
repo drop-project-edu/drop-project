@@ -77,6 +77,7 @@ import javax.servlet.http.HttpServletRequest
 class UploadController(
         val storageService: StorageService,
         val buildWorker: BuildWorker,
+        val projectGroupRepository: ProjectGroupRepository,
         val submissionRepository: SubmissionRepository,
         val gitSubmissionRepository: GitSubmissionRepository,
         val assignmentRepository: AssignmentRepository,
@@ -90,6 +91,7 @@ class UploadController(
         val submissionService: SubmissionService,
         val zipService: ZipService,
         val projectGroupService: ProjectGroupService,
+        val i18n: MessageSource
         ) {
 
     @Value("\${storage.rootLocation}/git")
@@ -97,6 +99,9 @@ class UploadController(
 
     @Value("\${mavenizedProjects.rootLocation}")
     val mavenizedProjectsRootLocation : String = ""
+
+    @Value("\${spring.web.locale}")
+    val currentLocale : Locale = Locale.getDefault()
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
