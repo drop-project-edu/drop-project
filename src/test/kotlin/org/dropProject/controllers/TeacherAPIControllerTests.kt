@@ -107,8 +107,13 @@ class TeacherAPIControllerTests: APIControllerTests {
 
     @Test
     @DirtiesContext
-    @Transactional  // for some reason, this has to be executed transactionally otherwise it will get assignments created by other tests
     fun `try to get current assignments with a teacher profile`() {
+
+        // for some reason, on github action, the database is not completelly cleaned up when entering this test
+        assigneeRepository.deleteAll()
+        assignmentRepository.deleteAll()
+
+        setup()
 
         val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
 
