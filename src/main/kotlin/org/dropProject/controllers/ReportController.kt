@@ -133,7 +133,6 @@ class ReportController(
     @RequestMapping(value = ["/report/{assignmentId}"], method = [(RequestMethod.GET)])
     fun getReport(@PathVariable assignmentId: String, model: ModelMap,
                   principal: Principal, request: HttpServletRequest): String {
-        model["assignmentId"] = assignmentId
 
         assignmentService.getAllSubmissionsForAssignment(assignmentId, principal, model, request, mode = "summary")
 
@@ -199,6 +198,7 @@ class ReportController(
             model["assignment"] = assignment
 
             model["submission"] = submission
+            submission.overdue = assignment.overdue(submission)
             submission.gitSubmissionId?.let {
                 gitSubmissionId ->
                     val gitSubmission = gitSubmissionRepository.getById(gitSubmissionId)
@@ -560,6 +560,7 @@ class ReportController(
         for (submission in submissions) {
             val reportElements = submissionReportRepository.findBySubmissionId(submission.id)
             submission.reportElements = reportElements
+            submission.overdue = assignment.overdue(submission)
             submission.buildReportId?.let {
                 buildReportId ->
                     val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
@@ -605,6 +606,7 @@ class ReportController(
         for (submission in submissions) {
             val reportElements = submissionReportRepository.findBySubmissionId(submission.id)
             submission.reportElements = reportElements
+            submission.overdue = assignment.overdue(submission)
             submission.buildReportId?.let {
                     buildReportId ->
                         val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
@@ -659,6 +661,7 @@ class ReportController(
         for (submission in submissions) {
             val reportElements = submissionReportRepository.findBySubmissionId(submission.id)
             submission.reportElements = reportElements
+            submission.overdue = assignment.overdue(submission)
             submission.buildReportId?.let {
                 buildReportId ->
                     val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
@@ -733,6 +736,9 @@ class ReportController(
                     headersCSV.add("# mandatory")
                     resultCSV += ";" + (submission.teacherTests?.numMandatoryOK ?: 0)
                 }
+
+                headersCSV.add("overdue")
+                resultCSV += ";" + submission.overdue
 
                 resultCSV += "\n"
             }

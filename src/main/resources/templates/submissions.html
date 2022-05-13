@@ -58,7 +58,7 @@
         <tr>
             <th>Submission Date</th>
             <th>Status</th>
-            <th>Final</th>
+            <th>Labels</th>
             <th class="text-center">Indicators</th>
             <th class="text-center"><span class="glyphicon glyphicon-time" aria-hidden="true" title="Time spent running tests"></span></th>
             <th>Actions</th>
@@ -69,6 +69,7 @@
             <td th:text="${#dates.format(submission.submissionDate, 'dd/MMM HH:mm:ss')}"></td>
             <td th:text="${submission.getStatus().description}"></td>
             <td>
+                <span th:if="${submission.overdue}" class="label label-danger">Overdue</span>
                 <span th:if="${submission.markedAsFinal}" class="label label-success">Final</span>
             </td>
             <td class="text-center">

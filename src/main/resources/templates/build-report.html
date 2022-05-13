@@ -22,6 +22,7 @@
         Submitted: <span th:text="${#dates.format(submission.submissionDate, 'dd-MM HH:mm:ss')}"></span>
         <a th:if="${isTeacher}"
            th:href="@{'/submissions?assignmentId=' + ${assignment.id} + '&groupId=' + ${submission.group.id}}">(other submissions)</a>
+        <span th:if="${submission.overdue}" class="label label-danger">Overdue</span>
         <span th:if="${submission.markedAsFinal}" class="label label-success">Final</span>
     </h6>
 

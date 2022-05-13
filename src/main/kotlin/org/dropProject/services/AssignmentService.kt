@@ -151,6 +151,8 @@ class AssignmentService(
                                                request: HttpServletRequest, includeTestDetails: Boolean = false,
                                                mode: String) {
         val assignment = assignmentRepository.findById(assignmentId).get()
+        model["assignment"] = assignment
+
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
         if (principal.realName() != assignment.ownerUserId && acl.find { it.userId == principal.realName() } == null) {

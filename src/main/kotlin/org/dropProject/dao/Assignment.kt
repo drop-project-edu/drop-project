@@ -93,69 +93,77 @@ enum class LeaderboardType {
 @Entity
 @JsonIgnoreProperties(ignoreUnknown = true)  // this is useful to improve backward-compatible imports
 data class Assignment(
-        @Id
-        val id: String,
+    @Id
+    val id: String,
 
-        @Column(nullable = false)
-        var name: String,
+    @Column(nullable = false)
+    var name: String,
 
-        var packageName: String? = null,
+    var packageName: String? = null,
 
-        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
-        var dueDate: Date? = null,
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
+    var dueDate: Date? = null,
 
-        @Column(nullable = false)
-        var submissionMethod: SubmissionMethod,
+    @Column(nullable = false)
+    var submissionMethod: SubmissionMethod,
 
-        @Column(nullable = false)
-        var language: Language = Language.JAVA,
+    @Column(nullable = false)
+    var language: Language = Language.JAVA,
 
-        var acceptsStudentTests: Boolean = false,
-        var minStudentTests: Int? = null,
-        var calculateStudentTestsCoverage: Boolean = false,
-        var hiddenTestsVisibility: TestVisibility? = null,
-        var mandatoryTestsSuffix: String? = null,
-        var cooloffPeriod: Int? = null, // minutes
-        var maxMemoryMb: Int? = null,
-        var showLeaderBoard: Boolean = false,
-        var leaderboardType: LeaderboardType? = null,
+    var acceptsStudentTests: Boolean = false,
+    var minStudentTests: Int? = null,
+    var calculateStudentTestsCoverage: Boolean = false,
+    var hiddenTestsVisibility: TestVisibility? = null,
+    var mandatoryTestsSuffix: String? = null,
+    var cooloffPeriod: Int? = null, // minutes
+    var maxMemoryMb: Int? = null,
+    var showLeaderBoard: Boolean = false,
+    var leaderboardType: LeaderboardType? = null,
 
-        val gitRepositoryUrl: String,
-        @Column(columnDefinition = "TEXT")
-        var gitRepositoryPubKey: String? = null,
-        @Column(columnDefinition = "TEXT")
-        var gitRepositoryPrivKey: String? = null,
+    val gitRepositoryUrl: String,
+    @Column(columnDefinition = "TEXT")
+    var gitRepositoryPubKey: String? = null,
+    @Column(columnDefinition = "TEXT")
+    var gitRepositoryPrivKey: String? = null,
 
-        var gitRepositoryFolder: String,  // relative to assignment.root.location
+    var gitRepositoryFolder: String,  // relative to assignment.root.location
 
-        @Column(nullable = false)
-        var ownerUserId: String = "",
+    @Column(nullable = false)
+    var ownerUserId: String = "",
 
-        var active: Boolean = false,
-        var archived: Boolean = false,
+    var active: Boolean = false,
+    var archived: Boolean = false,
 
-        var buildReportId: Long? = null,  // build_report.id
+    var buildReportId: Long? = null,  // build_report.id
 
-        @Transient
-        var numSubmissions: Int = 0,
+    @Transient
+    var numSubmissions: Int = 0,
 
-        @Transient
-        var numUniqueSubmitters: Int = 0,
+    @Transient
+    var numUniqueSubmitters: Int = 0,
 
-        @Transient
-        var public: Boolean = true,
+    @Transient
+    var public: Boolean = true,
 
-        @Transient
-        var lastSubmissionDate: Date? = null,
+    @Transient
+    var lastSubmissionDate: Date? = null,
 
-        @Transient
-        var authorizedStudentIds: List<String>? = null,
+    @Transient
+    var authorizedStudentIds: List<String>? = null,
 
-        @Transient
-        var tagsStr: List<String>? = null
+    @Transient
+    var tagsStr: List<String>? = null
 ) {
 
     fun dueDateFormatted(): String? {
         return dueDate?.format(formatter)
+    }
+
+    fun overdue(submission: Submission): Boolean {
+        if (dueDate != null) {
+            return submission.submissionDate.after(dueDate)
+        }
+
+        return false
     }
 }

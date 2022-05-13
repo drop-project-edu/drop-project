@@ -16,25 +16,26 @@
 </style>
 
 <!--/*@thymesVar id="submissions" type="java.util.ArrayList<org.dropProject.data.SubmissionInfo>"*/-->
+<!--/*@thymesVar id="assignment" type="org.dropProject.dao.Assignment"*/-->
 <div class="container" style="max-width: 900px; margin-bottom: 65px">
 
     <div class="alert alert-info" th:text="${message}" th:if="${message}" />
     <div class="alert alert-danger" th:text="${error}" th:if="${error}" />
 
-    <h1 class="page-header" th:text="${assignmentId} + ' submissions'"></h1>
+    <h1 class="page-header" th:text="${assignment.id} + ' submissions'"></h1>
 
     <ul class="nav nav-tabs" id="myTab">
         <li role="presentation" th:classappend="${mode == 'summary'} ? 'active' : ''">
-            <a th:href="@{'/report/' + ${assignmentId}}" data-toggle="tab" data-target="#myTab">Summary</a>
+            <a th:href="@{'/report/' + ${assignment.id}}" data-toggle="tab" data-target="#myTab">Summary</a>
         </li>
         <li role="presentation" th:classappend="${mode == 'testMatrix'} ? 'active' : ''">
-            <a th:href="@{'/testMatrix/' + ${assignmentId}}" data-toggle="tab" data-target="#myTab">Test Matrix</a>
+            <a th:href="@{'/testMatrix/' + ${assignment.id}}" data-toggle="tab" data-target="#myTab">Test Matrix</a>
         </li>
         <li role="presentation" th:classappend="${mode == 'signalledSubmissions'} ? 'active' : ''">
-            <a th:href="@{'/signalledSubmissions/' + ${assignmentId}}" data-toggle="tab" data-target="#myTab">Signalled Students</a>
+            <a th:href="@{'/signalledSubmissions/' + ${assignment.id}}" data-toggle="tab" data-target="#myTab">Signalled Students</a>
         </li>
         <li role="presentation">
-            <a th:href="@{'/assignment/info/' + ${assignmentId}}">Info</a>
+            <a th:href="@{'/assignment/info/' + ${assignment.id}}">Info</a>
         </li>
     </ul>
 
@@ -44,10 +45,11 @@
             <h6>
                 <span th:text="${submissions.size()}"></span> groups submitted /
                 <span th:text="${countMarkedAsFinal}"></span> marked as final
+                <span th:if="${assignment.dueDate}" th:text="' / Due date: ' + ${assignment.dueDateFormatted()}"></span>
             </h6>
 
             <div class="btn-group" role="group">
-                <a th:href="@{'/exportCSV/' + ${assignmentId}}"
+                <a th:href="@{'/exportCSV/' + ${assignment.id}}"
                    class="btn btn-default"
                    data-placement="bottom"
                    data-toggle="confirmation" data-title="Export"
@@ -61,18 +63,18 @@
                 </button>
                 <ul class="dropdown-menu">
                     <li>
-                        <a th:href="@{'/downloadOriginalAll/' + ${assignmentId}}"
+                        <a th:href="@{'/downloadOriginalAll/' + ${assignment.id}}"
                            class="btn-group" title="Download all the original submissions in this page in a single zip file">Original</a>
                     </li>
                     <li>
-                        <a th:href="@{'/downloadMavenizedAll/' + ${assignmentId}}"
+                        <a th:href="@{'/downloadMavenizedAll/' + ${assignment.id}}"
                            class="btn-group" title="Download all the mavenized submissions in this page in a single zip file">Mavenized</a>
                     </li>
                 </ul>
             </div>
 
             <div class="btn-group" role="group">
-                <form class="inline btn-group" method="post" th:action="@{'/assignment/markAllAsFinal/' + ${assignmentId}}" >
+                <form class="inline btn-group" method="post" th:action="@{'/assignment/markAllAsFinal/' + ${assignment.id}}" >
                     <input type="submit" value="Mark All as Final" class="btn btn-default" data-toggle="confirmation"
                            data-title="Mark All as Final"
                            data-placement="bottom"
@@ -82,7 +84,7 @@
             </div>
 
             <div class="btn-group" role="group" th:if="${isAdmin}">
-                <form class="inline btn-group" method="post" th:action="@{'/cleanup/' + ${assignmentId}}" >
+                <form class="inline btn-group" method="post" th:action="@{'/cleanup/' + ${assignment.id}}" >
                     <input type="submit" value="Cleanup" class="btn btn-default" title="Remove non-final files" />
                 </form>
             </div>

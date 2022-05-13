@@ -508,12 +508,12 @@ class ReportControllerTests {
             .andExpect(content().contentType("application/csv"))
             .andExpect(
                 content().string(
-                    "submission id;student id;student name;project structure;compilation;code quality;teacher tests;hidden tests;submission date;# submissions\n" +
-                            "1;student1;Student 1;NOK;;;;;${nowStr};1\n" +
-                            "2;student2;Student 2;NOK;;;;;${nowStr};1\n" +
-                            "3;student3;Student 3;OK;OK;OK;2;1;${nowStr};1\n" +
-                            "4;student4;Student 4;NOK;;;;;${nowStr};1\n" +
-                            "4;student5;Student 5;NOK;;;;;${nowStr};0\n"
+                    "submission id;student id;student name;project structure;compilation;code quality;teacher tests;hidden tests;submission date;# submissions;overdue\n" +
+                            "1;student1;Student 1;NOK;;;;;${nowStr};1;false\n" +
+                            "2;student2;Student 2;NOK;;;;;${nowStr};1;false\n" +
+                            "3;student3;Student 3;OK;OK;OK;2;1;${nowStr};1;false\n" +
+                            "4;student4;Student 4;NOK;;;;;${nowStr};1;false\n" +
+                            "4;student5;Student 5;NOK;;;;;${nowStr};0;false\n"
                 )
             )
 
@@ -556,12 +556,12 @@ class ReportControllerTests {
             .andExpect(
                 content().string(
                     """
-                            |submission id;student id;student name;project structure;compilation;code quality;student tests;teacher tests;hidden tests;submission date;# submissions
-                            |1;student1;Student 1;OK;OK;OK;1;2;1;${nowStr};1
-                            |2;student2;Student 2;OK;OK;OK;1;2;1;${nowStr};1
-                            |3;student3;Student 3;OK;OK;OK;1;2;1;${nowStr};1
-                            |4;student4;Student 4;OK;OK;OK;1;2;1;${nowStr};1
-                            |4;student5;Student 5;OK;OK;OK;1;2;1;${nowStr};0
+                            |submission id;student id;student name;project structure;compilation;code quality;student tests;teacher tests;hidden tests;submission date;# submissions;overdue
+                            |1;student1;Student 1;OK;OK;OK;1;2;1;${nowStr};1;false
+                            |2;student2;Student 2;OK;OK;OK;1;2;1;${nowStr};1;false
+                            |3;student3;Student 3;OK;OK;OK;1;2;1;${nowStr};1;false
+                            |4;student4;Student 4;OK;OK;OK;1;2;1;${nowStr};1;false
+                            |4;student5;Student 5;OK;OK;OK;1;2;1;${nowStr};0;false
                             |
                         """.trimMargin()
                 )
@@ -619,12 +619,12 @@ class ReportControllerTests {
             .andExpect(
                 content().string(
                     "submission id;student id;student name;project structure;compilation;code quality;teacher tests;" +
-                            "hidden tests;submission date;# submissions;# mandatory\n" +
-                            "1;student1;Student 1;NOK;;;;;${nowStr};1;0\n" +
-                            "2;student2;Student 2;NOK;;;;;${nowStr};1;0\n" +
-                            "3;student3;Student 3;OK;OK;OK;2;1;${nowStr};1;0\n" +
-                            "4;student4;Student 4;NOK;;;;;${nowStr};1;0\n" +
-                            "4;student5;Student 5;NOK;;;;;${nowStr};0;0\n"
+                            "hidden tests;submission date;# submissions;# mandatory;overdue\n" +
+                            "1;student1;Student 1;NOK;;;;;${nowStr};1;0;false\n" +
+                            "2;student2;Student 2;NOK;;;;;${nowStr};1;0;false\n" +
+                            "3;student3;Student 3;OK;OK;OK;2;1;${nowStr};1;0;false\n" +
+                            "4;student4;Student 4;NOK;;;;;${nowStr};1;0;false\n" +
+                            "4;student5;Student 5;NOK;;;;;${nowStr};0;0;false\n"
                 )
             )
 

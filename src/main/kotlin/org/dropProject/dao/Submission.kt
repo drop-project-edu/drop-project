@@ -21,7 +21,6 @@ package org.dropProject.dao
 
 import org.dropProject.data.JUnitSummary
 import org.dropProject.services.JUnitMethodResult
-import java.io.File
 import java.util.*
 import javax.persistence.*
 import java.math.BigDecimal
@@ -131,7 +130,10 @@ data class Submission(
         var coverage: Int? = null,
 
         @Transient
-        var testResults: List<JUnitMethodResult>? = null
+        var testResults: List<JUnitMethodResult>? = null,
+
+        @Transient
+        var overdue: Boolean? = null
 ) {
     @ManyToOne
     lateinit var group: ProjectGroup
