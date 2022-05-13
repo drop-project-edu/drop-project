@@ -836,7 +836,9 @@ class ReportController(
         val studentHistory = StudentHistory(authorGroups[0])
 
         // store assignments on hashmap for performance reasons
-        val assignmentsMap = HashMap<String,Assignment>()
+        // the key is a pair (assignmentId, groupId), since a student can participate
+        // in the same assignment with different groups
+        val assignmentsMap = HashMap<Pair<String,Long>,Assignment>()
 
         val submissions = submissionRepository.findByGroupIn(projectGroups)
         val submissionIds = submissions.map { it.id }
@@ -845,9 +847,10 @@ class ReportController(
             // fill indicators
             submission.reportElements = submissionReports.filter { it.submissionId == submission.id }
 
-            if (!assignmentsMap.containsKey(submission.assignmentId)) {
+            val assignmentAndGroup = Pair(submission.assignmentId, submission.group.id)
+            if (!assignmentsMap.containsKey(assignmentAndGroup)) {
                 val assignment = assignmentRepository.findById(submission.assignmentId).get()
-                assignmentsMap[submission.assignmentId] = assignment;
+                assignmentsMap[assignmentAndGroup] = assignment;
                 studentHistory.addGroupAndAssignment(submission.group, assignment)
             }
 
