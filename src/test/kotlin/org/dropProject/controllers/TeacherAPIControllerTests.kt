@@ -41,6 +41,7 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import org.springframework.transaction.annotation.Transactional
 
 @RunWith(SpringRunner::class)
 @AutoConfigureMockMvc
@@ -106,6 +107,7 @@ class TeacherAPIControllerTests: APIControllerTests {
 
     @Test
     @DirtiesContext
+    @Transactional  // for some reason, this has to be executed transactionally otherwise it will get assignments created by other tests
     fun `try to get current assignments with a teacher profile`() {
 
         val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
