@@ -105,13 +105,13 @@ class BuildWorker(
                 if (!buildReport.mavenExecutionFailed()) {
 
                     submissionReportRepository.save(SubmissionReport(submissionId = submission.id,
-                            reportKey = Indicator.COMPILATION.code, reportValue = if (buildReport.compilationErrors().isEmpty()) "OK" else "NOK"))
+                            reportKey = Indicator.COMPILATION.code, reportValue = if (buildReport.compilationErrors.isEmpty()) "OK" else "NOK"))
 
-                    if (buildReport.compilationErrors().isEmpty()) {
+                    if (buildReport.compilationErrors.isEmpty()) {
 
                         if (buildReport.checkstyleValidationActive()) {
                             submissionReportRepository.save(SubmissionReport(submissionId = submission.id,
-                                    reportKey = Indicator.CHECKSTYLE.code, reportValue = if (buildReport.checkstyleErrors().isEmpty()) "OK" else "NOK"))
+                                    reportKey = Indicator.CHECKSTYLE.code, reportValue = if (buildReport.checkstyleErrors.isEmpty()) "OK" else "NOK"))
                         }
 
 

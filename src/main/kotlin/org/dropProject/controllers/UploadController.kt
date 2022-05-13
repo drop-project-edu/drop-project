@@ -46,6 +46,7 @@ import org.eclipse.jgit.api.errors.RefNotAdvertisedException
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
 import org.springframework.security.access.AccessDeniedException
 import org.dropProject.dao.*
+import org.dropProject.data.SubmissionResult
 import org.dropProject.extensions.existsCaseSensitive
 import org.dropProject.extensions.sanitize
 import org.dropProject.extensions.realName
@@ -76,22 +77,19 @@ import javax.servlet.http.HttpServletRequest
 class UploadController(
         val storageService: StorageService,
         val buildWorker: BuildWorker,
-        val authorRepository: AuthorRepository,
-        val projectGroupRepository: ProjectGroupRepository,
         val submissionRepository: SubmissionRepository,
         val gitSubmissionRepository: GitSubmissionRepository,
-        val submissionReportRepository: SubmissionReportRepository,
         val assignmentRepository: AssignmentRepository,
         val assignmentACLRepository: AssignmentACLRepository,
         val assigneeRepository: AssigneeRepository,
         val asyncExecutor: Executor,
         val assignmentTeacherFiles: AssignmentTeacherFiles,
+        val assignmentService: AssignmentService,
         val gitClient: GitClient,
         val gitSubmissionService: GitSubmissionService,
         val submissionService: SubmissionService,
         val zipService: ZipService,
         val projectGroupService: ProjectGroupService,
-        val i18n: MessageSource
         ) {
 
     @Value("\${storage.rootLocation}/git")
@@ -99,12 +97,6 @@ class UploadController(
 
     @Value("\${mavenizedProjects.rootLocation}")
     val mavenizedProjectsRootLocation : String = ""
-
-    @Value("\${delete.original.projectFolder:true}")
-    val deleteOriginalProjectFolder : Boolean = true
-
-    @Value("\${spring.web.locale}")
-    val currentLocale : Locale = Locale.getDefault()
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
@@ -181,7 +173,7 @@ class UploadController(
                 throw org.springframework.security.access.AccessDeniedException("Submissions are not open to this assignment")
             }
 
-            checkAssignees(assignmentId, principal.realName())
+            assignmentService.checkAssignees(assignmentId, principal.realName())
 
         } else {
 
@@ -200,9 +192,9 @@ class UploadController(
                 assignment.packageName, assignment.language, assignment.acceptsStudentTests)
 
         if (assignment.cooloffPeriod != null && !request.isUserInRole("TEACHER")) {
-            val lastSubmission = getLastSubmission(principal, assignmentId)
+            val lastSubmission = submissionService.getLastSubmission(principal, assignmentId)
             if (lastSubmission != null) {
-                val nextSubmissionTime = calculateCoolOff(lastSubmission, assignment)
+                val nextSubmissionTime = submissionService.calculateCoolOff(lastSubmission, assignment)
                 if (nextSubmissionTime != null) {
                     model["coolOffEnd"] = nextSubmissionTime.format(DateTimeFormatter.ofPattern("HH:mm"))
                     LOG.info("[${principal.realName()}] can't submit because he is in cool-off period")
@@ -257,278 +249,10 @@ class UploadController(
                bindingResult: BindingResult,
                @RequestParam("file") file: MultipartFile,
                principal: Principal,
-               request: HttpServletRequest): ResponseEntity<String> {
+               request: HttpServletRequest): ResponseEntity<SubmissionResult> {
 
-        if (bindingResult.hasErrors()) {
-            return ResponseEntity("{\"error\": \"Internal error\"}", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-
-        if (uploadForm.assignmentId == null) {
-            throw IllegalArgumentException("assignmentId is null")
-        }
-
-        val assignmentId = uploadForm.assignmentId ?:
-            throw IllegalArgumentException("Upload form is missing the assignmentId")
-
-        val assignment = assignmentRepository.findById(assignmentId).orElse(null) ?:
-                throw IllegalArgumentException("assignment ${assignmentId} is not registered")
-
-        if (assignment.submissionMethod != SubmissionMethod.UPLOAD) {
-            throw IllegalArgumentException("this assignment doesnt accept upload submissions")
-        }
-
-        // TODO: Validate assignment due date
-
-        if (!request.isUserInRole("TEACHER")) {
-
-            if (!assignment.active) {
-                throw AccessDeniedException("Submissions are not open to this assignment")
-            }
-
-            checkAssignees(uploadForm.assignmentId!!, principal.realName())
-        }
-
-        if (assignment.cooloffPeriod != null  && !request.isUserInRole("TEACHER")) {
-            val lastSubmission = getLastSubmission(principal, assignment.id)
-            if (lastSubmission != null) {
-                val nextSubmissionTime = calculateCoolOff(lastSubmission, assignment)
-                if (nextSubmissionTime != null) {
-                    LOG.warn("[${principal.realName()}] can't submit because he is in cool-off period")
-                    throw AccessDeniedException("[${principal.realName()}] can't submit because he is in cool-off period")
-                }
-            }
-        }
-
-        val originalFilename = file.originalFilename ?:
-            throw IllegalArgumentException("Missing originalFilename")
-
-        if (!originalFilename.endsWith(".zip", ignoreCase = true)) {
-            return ResponseEntity("{\"error\": \"O ficheiro tem que ser um .zip\"}", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-
-        LOG.info("[${principal.realName()}] uploaded ${originalFilename}")
-        val projectFolder : File? = storageService.store(file, assignment.id)
-
-        if (projectFolder != null) {
-            val authors = getProjectAuthors(projectFolder)
-            LOG.info("[${authors.joinToString(separator = "|")}] Received ${originalFilename}")
-
-            // check if the principal is one of group elements
-            if (authors.filter { it.number == principal.realName() }.isEmpty()) {
-                throw InvalidProjectStructureException(i18n.getMessage("student.submit.notAGroupElement", null, currentLocale))
-            }
-
-            val group = projectGroupService.getOrCreateProjectGroup(authors)
-
-            // verify that there is not another submission with the Submitted status
-            val existingSubmissions = submissionRepository
-                    .findByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(group, assignment.id)
-                    .filter { it.getStatus() != SubmissionStatus.DELETED }
-            for (submission in existingSubmissions) {
-                if (submission.getStatus() == SubmissionStatus.SUBMITTED) {
-                    LOG.info("[${authors.joinToString(separator = "|")}] tried to submit before the previous one has been validated")
-                    return ResponseEntity("{\"error\": \"${i18n.getMessage("student.submit.pending", null, currentLocale)}\"}", HttpStatus.INTERNAL_SERVER_ERROR);
-                }
-            }
-
-            val submission = Submission(submissionId = projectFolder.name, submissionDate = Date(),
-                    status = SubmissionStatus.SUBMITTED.code, statusDate = Date(), assignmentId = assignment.id,
-                    submitterUserId = principal.realName(),
-                    submissionFolder = projectFolder.relativeTo(storageService.rootFolder()).path)
-            submission.group = group
-            submissionRepository.save(submission)
-
-            buildSubmission(projectFolder, assignment, authors.joinToString(separator = "|"), submission, asyncExecutor, principal = principal)
-
-            return ResponseEntity("{ \"submissionId\": \"${submission.id}\"}", HttpStatus.OK);
-        }
-
-        return ResponseEntity("{\"error\": \"${i18n.getMessage("student.submit.fileError", null, currentLocale)}\"}", HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-
-    /**
-     * Builds and tests a [Submission].
-     *
-     * @property projectFolder is a File
-     * @property assignment is the [Assignment] for which the submission is being made
-     * @property authorsStr is a String
-     * @property submission is a Submission
-     * @property asyncExecutor is an Executor
-     * @property teacherRebuid is a Boolean, indicating if this "build" is being requested by a teacher
-     * @property principal is a [Principal] representing the user making the request
-     */
-    private fun buildSubmission(projectFolder: File, assignment: Assignment,
-                                authorsStr: String,
-                                submission: Submission,
-                                asyncExecutor: Executor,
-                                teacherRebuild: Boolean = false,
-                                principal: Principal?) {
-        val projectStructureErrors = checkProjectStructure(projectFolder, assignment)
-        if (!projectStructureErrors.isEmpty()) {
-            LOG.info("[${authorsStr}] Project Structure NOK")
-            submissionReportRepository.save(SubmissionReport(submissionId = submission.id,
-                    reportKey = Indicator.PROJECT_STRUCTURE.code, reportValue = "NOK"))
-            submission.structureErrors = projectStructureErrors.joinToString(separator = ";")
-            submission.setStatus(SubmissionStatus.VALIDATED)
-            submissionRepository.save(submission)
-        } else {
-            LOG.info("[${authorsStr}] Project Structure OK")
-            submissionReportRepository.save(SubmissionReport(submissionId = submission.id,
-                    reportKey = Indicator.PROJECT_STRUCTURE.code, reportValue = "OK"))
-
-            val mavenizedProjectFolder = mavenize(projectFolder, submission, assignment, teacherRebuild)
-            LOG.info("[${authorsStr}] Mavenized to folder ${mavenizedProjectFolder}")
-
-            if (asyncExecutor is ThreadPoolTaskScheduler) {
-                LOG.info("asyncExecutor.activeCount = ${asyncExecutor.activeCount}")
-            }
-
-            if (teacherRebuild) {
-                submission.setStatus(SubmissionStatus.REBUILDING, dontUpdateStatusDate = true)
-                submissionRepository.save(submission)
-            }
-
-            buildWorker.checkProject(mavenizedProjectFolder, authorsStr, submission, rebuildByTeacher = teacherRebuild,
-            principalName = principal?.name)
-        }
-    }
-
-
-    private fun checkProjectStructure(projectFolder: File, assignment: Assignment): List<String> {
-        val erros = ArrayList<String>()
-        if (!File(projectFolder, "src").existsCaseSensitive()) {
-            erros.add("O projecto não contém uma pasta 'src' na raiz")
-        }
-
-        val packageName = assignment.packageName.orEmpty().replace(".","/")
-
-        if (!File(projectFolder, "src/${packageName}").existsCaseSensitive()) {
-            erros.add("O projecto não contém uma pasta 'src/${packageName}'")
-        }
-
-        val mainFile = if (assignment.language == Language.JAVA) "Main.java" else "Main.kt"
-        if (!File(projectFolder, "src/${packageName}/${mainFile}").existsCaseSensitive()) {
-            erros.add("O projecto não contém o ficheiro ${mainFile} na pasta 'src/${packageName}'")
-        }
-
-        if (File(projectFolder, "src")
-                .walkTopDown()
-                .find { it.name.startsWith("TestTeacher") } != null) {
-            erros.add("O projecto contém ficheiros cujo nome começa por 'TestTeacher'")
-        }
-
-        val readme = File(projectFolder, "README.md")
-        if (readme.exists() && !readme.isFile) {
-            erros.add("O projecto contém uma pasta README.md mas devia ser um ficheiro")
-        }
-
-        return erros
-    }
-
-    /**
-     * Transforms a student's submission/code from its original structure to a structure that respects Maven's
-     * expected format.
-     * @param projectFolder is a file
-     * @param submission is a Submission
-     * @param teacherRebuild is a Boolean
-     * @return File
-     */
-    private fun mavenize(projectFolder: File, submission: Submission, assignment: Assignment, teacherRebuild: Boolean = false): File {
-        val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission, teacherRebuild)
-
-        mavenizedProjectFolder.deleteRecursively()
-
-        val folder = if (assignment.language == Language.JAVA) "java" else "kotlin"
-
-        // first copy the project files submitted by the students
-        FileUtils.copyDirectory(File(projectFolder, "src"), File(mavenizedProjectFolder, "src/main/${folder}")) {
-            it.isDirectory || (it.isFile() && !it.name.startsWith("Test")) // exclude TestXXX classes
-        }
-        if (assignment.acceptsStudentTests) {
-            FileUtils.copyDirectory(File(projectFolder, "src"), File(mavenizedProjectFolder, "src/test/${folder}")) {
-                it.isDirectory || (it.isFile() && it.name.startsWith("Test")) // include TestXXX classes
-            }
-        }
-
-        val testFilesFolder = File(projectFolder, "test-files")
-        if (testFilesFolder.exists()) {
-            FileUtils.copyDirectory(File(projectFolder, "test-files"), File(mavenizedProjectFolder, "test-files"))
-        }
-        FileUtils.copyFile(File(projectFolder, "AUTHORS.txt"),File(mavenizedProjectFolder, "AUTHORS.txt"))
-        if (submission.gitSubmissionId == null && deleteOriginalProjectFolder) {  // don't delete git submissions
-            FileUtils.deleteDirectory(projectFolder)  // TODO: This seems duplicate with the lines below...
-        }
-
-        // next, copy the project files submitted by the teachers (will override eventually the student files)
-        assignmentTeacherFiles.copyTeacherFilesTo(assignment, mavenizedProjectFolder)
-
-        // if the students have a README file, copy it over the teacher's README
-        if (File(projectFolder, "README.md").exists()) {
-            FileUtils.copyFile(File(projectFolder, "README.md"), File(mavenizedProjectFolder, "README.md"))
-        }
-
-        // finally remove the original project folder (the zip file is still kept)
-        if (!(assignment.id.startsWith("testJavaProj") ||
-                        assignment.id.startsWith("sample") ||
-                        assignment.id.startsWith("testKotlinProj") ||  // exclude projects used for automatic tests
-                        submission.gitSubmissionId != null)) {   // exclude git submissions
-            projectFolder.deleteRecursively()
-        }
-
-        return mavenizedProjectFolder
-    }
-
-    private fun getProjectAuthors(projectFolder: File) : List<AuthorDetails> {
-        // check for AUTHORS.txt file
-        val authorsFile = File(projectFolder, "AUTHORS.txt")
-        if (!authorsFile.existsCaseSensitive()) {
-            throw InvalidProjectStructureException("O projecto não contém o ficheiro AUTHORS.txt na raiz")
-        }
-
-        // check the encoding of AUTHORS.txt
-        val charset = try { guessCharset(authorsFile.inputStream()) } catch (ie: IOException) { Charset.defaultCharset() }
-        if (!charset.equals(Charset.defaultCharset())) {
-            LOG.info("AUTHORS.txt is not in the default charset (${Charset.defaultCharset()}): ${charset}")
-        }
-
-        // TODO check that AUTHORS.txt includes the number and name of the students
-        val authors = ArrayList<AuthorDetails>()
-        val authorIDs = HashSet<String>()
-        try {
-            authorsFile.readLines(charset = charset)
-                    .map { line -> line.split(";") }
-                    .forEach { parts -> run {
-                        if (parts[1][0].isDigit() || parts[1].split(" ").size <= 1) {
-                            throw InvalidProjectStructureException("Cada linha tem que ter o formato NUMERO_ALUNO;NOME_ALUNO. " +
-                                    "O nome do aluno deve incluir o primeiro e último nome.")
-                        }
-
-                        authors.add(AuthorDetails(parts[1], parts[0].sanitize()))
-                        authorIDs.add(parts[0])
-                    } }
-
-            // check for duplicate authors
-            if (authorIDs.size < authors.size) {
-                throw InvalidProjectStructureException("O ficheiro AUTHORS.txt não está correcto. " +
-                "Contém autores duplicados.")
-            }
-
-        } catch (e: Exception) {
-            when(e) {
-                is InvalidProjectStructureException -> throw  e
-                else -> {
-                    LOG.debug("Error parsing AUTHORS.txt", e)
-                    authors.clear()
-                }
-            }
-        }
-
-        if (authors.isEmpty()) {
-            throw InvalidProjectStructureException("O ficheiro AUTHORS.txt não está correcto. " +
-                    "Tem que conter uma linha por aluno, tendo cada linha o número e o nome separados por ';'")
-        } else {
-            return authors
-        }
+        return submissionService.uploadSubmission(bindingResult, uploadForm, request, principal, file,
+            assignmentRepository, assignmentService)
     }
 
     /**
@@ -618,10 +342,10 @@ class UploadController(
                 throw IllegalStateException("submission ${submission.id} has both submissionId and gitSubmissionId equal to null")
             }
 
-        val authors = getProjectAuthors(projectFolder)
+        val authors = submissionService.getProjectAuthors(projectFolder)
 
         submissionRepository.save(rebuiltSubmission)
-        buildSubmission(projectFolder, assignment, authors.joinToString(separator = "|"), rebuiltSubmission,
+        submissionService.buildSubmission(projectFolder, assignment, authors.joinToString(separator = "|"), rebuiltSubmission,
                 asyncExecutor, teacherRebuild = true, principal = principal)
 
         return "redirect:/buildReport/${rebuiltSubmission.id}";
@@ -729,7 +453,7 @@ class UploadController(
                 throw AccessDeniedException("Submissions are not open to this assignment")
             }
 
-            checkAssignees(assignmentId, principal.realName())
+            assignmentService.checkAssignees(assignmentId, principal.realName())
         }
 
         model["assignment"] = assignment
@@ -813,7 +537,7 @@ class UploadController(
                 LOG.info("[${gitSubmission}] Successfuly cloned ${gitRepository} to ${projectFolder}")
 
                 // check that exists an AUTHORS.txt
-                val authors = getProjectAuthors(projectFolder)
+                val authors = submissionService.getProjectAuthors(projectFolder)
                 LOG.info("[${authors.joinToString(separator = "|")}] Connected DP to ${gitSubmission.gitRepositoryUrl}")
 
                 // check if the principal is one of group elements
@@ -932,13 +656,13 @@ class UploadController(
                 throw org.springframework.security.access.AccessDeniedException("Submissions are not open to this assignment")
             }
 
-            checkAssignees(assignment.id, principal.realName())
+            assignmentService.checkAssignees(assignment.id, principal.realName())
         }
 
         if (assignment.cooloffPeriod != null) {
-            val lastSubmission = getLastSubmission(principal, assignment.id)
+            val lastSubmission = submissionService.getLastSubmission(principal, assignment.id)
             if (lastSubmission != null) {
-                val nextSubmissionTime = calculateCoolOff(lastSubmission, assignment)
+                val nextSubmissionTime = submissionService.calculateCoolOff(lastSubmission, assignment)
                 if (nextSubmissionTime != null) {
                     LOG.warn("[${principal.realName()}] can't submit because he is in cool-off period")
                     throw org.springframework.security.access.AccessDeniedException("[${principal.realName()}] can't submit because he is in cool-off period")
@@ -964,9 +688,9 @@ class UploadController(
         submission.group = gitSubmission.group
         submissionRepository.save(submission)
 
-        buildSubmission(projectFolder, assignment, gitSubmission.group.authorsStr("|"), submission, asyncExecutor, principal = principal)
+        submissionService.buildSubmission(projectFolder, assignment, gitSubmission.group.authorsStr("|"), submission, asyncExecutor, principal = principal)
 
-        return ResponseEntity("{ \"submissionId\": \"${submission.id}\"}", HttpStatus.OK);
+        return ResponseEntity("{ \"submissionId\": \"${submission.id}\"}", HttpStatus.OK)
 
     }
 
@@ -1035,83 +759,6 @@ class UploadController(
         LOG.info("[${principal.realName()}] deleted submission $submissionId")
 
         return "redirect:/report/${assignment.id}"
-    }
-
-    /**
-     * Checks if a certain user can access a certain [Assignment]. Only relevant for Assignments that have access
-     * control lists.
-     *
-     * @param assignmentId is a String identifying the relevant Assignment
-     * @param principalName is a String identifyng the user trying to access the Assignment
-     * @throws If the user is not allowed to access the Assignment, an [AccessDeniedException] will be thrown.
-     */
-    private fun checkAssignees(assignmentId: String, principalName: String) {
-        if (assigneeRepository.existsByAssignmentId(assignmentId)) {
-            // if it enters here, it means this assignment has a white list
-            // let's check if the current user belongs to the white list
-            if (!assigneeRepository.existsByAssignmentIdAndAuthorUserId(assignmentId, principalName)) {
-                throw AccessDeniedException("${principalName} is not allowed to view this assignment")
-            }
-        }
-    }
-
-    /**
-     * Searches for the last [Submission] performed in an [Assignment] by a certain user or by a member of the respective
-     * [ProjectGroup].
-     *
-     * @param principal is a [Principal] representing the user whose last submission is being searched
-     * @param assignmentId is a String representing the relevant Assignment
-     *
-     * @return a Submission
-     */
-    private fun getLastSubmission(principal: Principal, assignmentId: String): Submission? {
-        val groupsToWhichThisStudentBelongs = projectGroupRepository.getGroupsForAuthor(principal.realName())
-        var lastSubmission: Submission? = null
-        // TODO: This is ugly - should rethink data model for groups
-        for (group in groupsToWhichThisStudentBelongs) {
-            val lastSubmissionForThisGroup = submissionRepository
-                    .findFirstByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(group, assignmentId)
-            if (lastSubmission == null ||
-                    (lastSubmissionForThisGroup != null &&
-                            lastSubmission.submissionDate.before(lastSubmissionForThisGroup.submissionDate))) {
-                lastSubmission = lastSubmissionForThisGroup
-            }
-        }
-        return lastSubmission
-    }
-
-    // returns the date when the next submission can be made or null if it's not in cool-off period
-    private fun calculateCoolOff(lastSubmission: Submission, assignment: Assignment) : LocalDateTime? {
-        val lastSubmissionDate = Timestamp(lastSubmission.submissionDate.time).toLocalDateTime()
-        val now = LocalDateTime.now()
-        val delta = ChronoUnit.MINUTES.between(lastSubmissionDate, now)
-
-        val reportElements = submissionReportRepository.findBySubmissionId(lastSubmission.id)
-        val cooloffPeriod =
-            if (reportElements.any {
-                        (it.reportValue == "NOK" &&
-                                (it.reportKey == Indicator.PROJECT_STRUCTURE.code ||
-                                        it.reportKey == Indicator.COMPILATION.code)) } ) {
-                Math.min(Constants.COOLOFF_FOR_STRUCTURE_OR_COMPILATION, assignment.cooloffPeriod!!)
-            } else {
-                assignment.cooloffPeriod!!
-            }
-
-        if (delta < cooloffPeriod) {
-            return lastSubmissionDate.plusMinutes(cooloffPeriod.toLong())
-        }
-
-        return null
-    }
-
-    @Throws(IOException::class)
-    private fun guessCharset(inputStream: InputStream): Charset {
-        try {
-            return Charset.forName(TikaEncodingDetector().guessEncoding(inputStream))
-        } catch (e: UnsupportedCharsetException) {
-            LOG.warn("Unsupported Charset: ${e.charsetName}. Falling back to default")
-            return Charset.defaultCharset()
-        }
     }
 
     @ExceptionHandler(StorageException::class)

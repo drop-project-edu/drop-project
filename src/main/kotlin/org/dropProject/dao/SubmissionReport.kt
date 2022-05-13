@@ -19,6 +19,8 @@
  */
 package org.dropProject.dao
 
+import com.fasterxml.jackson.annotation.JsonView
+import org.dropProject.data.JSONViews
 import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.Id
@@ -65,9 +67,17 @@ data class SubmissionReport(
         @Id @GeneratedValue
         val id: Long = 0,
         val submissionId: Long = 0,  // FK for Submission.id
+
+        @JsonView(JSONViews.StudentAPI::class)
         val reportKey: String,  // Indicator::code
+
+        @JsonView(JSONViews.StudentAPI::class)
         val reportValue: String,  // TODO: Change this to enum (right now you have "OK", "NOK" and "Not Enough Tests")
+
+        @JsonView(JSONViews.StudentAPI::class)
         val reportProgress: Int? = null,
+
+        @JsonView(JSONViews.StudentAPI::class)
         val reportGoal: Int? = null,
 
         @Transient var assignment : Assignment? = null

@@ -95,8 +95,8 @@ class TestBuildReport {
                 dummyJavaAssignment)
 
         assertTrue(!buildReport.mavenExecutionFailed())
-        assertEquals(0, buildReport.compilationErrors().size)
-        assertEquals(10, buildReport.checkstyleErrors().size)
+        assertEquals(0, buildReport.compilationErrors.size)
+        assertEquals(10, buildReport.checkstyleErrors.size)
     }
 
     @Test
@@ -109,8 +109,8 @@ class TestBuildReport {
                 dummyJavaAssignment)
 
         assertTrue(!buildReport.mavenExecutionFailed())
-        assertEquals(28, buildReport.compilationErrors().size)
-        assertEquals(0, buildReport.checkstyleErrors().size)
+        assertEquals(28, buildReport.compilationErrors.size)
+        assertEquals(0, buildReport.checkstyleErrors.size)
     }
 
     @Test
@@ -123,8 +123,8 @@ class TestBuildReport {
                 dummyJavaAssignment)
 
         assertTrue(!buildReport.mavenExecutionFailed())
-        assertEquals(2, buildReport.compilationErrors().size)
-        assertEquals(0, buildReport.checkstyleErrors().size)
+        assertEquals(2, buildReport.compilationErrors.size)
+        assertEquals(0, buildReport.checkstyleErrors.size)
     }
 
     @Test
@@ -137,8 +137,8 @@ class TestBuildReport {
                 dummyJavaAssignment)
 
         assertTrue(!buildReport.mavenExecutionFailed())
-        assertEquals(0, buildReport.compilationErrors().size)
-        assertEquals(0, buildReport.checkstyleErrors().size)
+        assertEquals(0, buildReport.compilationErrors.size)
+        assertEquals(0, buildReport.checkstyleErrors.size)
     }
 
     @Test
@@ -151,8 +151,8 @@ class TestBuildReport {
                 dummyJavaAssignment)
 
         assertTrue(!buildReport.mavenExecutionFailed())
-        assertEquals(0, buildReport.compilationErrors().size)
-        assertEquals(0, buildReport.checkstyleErrors().size)
+        assertEquals(0, buildReport.compilationErrors.size)
+        assertEquals(0, buildReport.checkstyleErrors.size)
     }
 
     @Test
@@ -165,10 +165,10 @@ class TestBuildReport {
                 dummyKotlinAssignment)
 
         assertTrue(!buildReport.mavenExecutionFailed())
-        assertEquals(2, buildReport.compilationErrors().size)
-        assertEquals(0, buildReport.checkstyleErrors().size)
-        assertEquals("Main.kt: (2, 30) Expecting '\"'", buildReport.compilationErrors()[0])
-        assertEquals("Main.kt: (2, 30) Expecting ')'", buildReport.compilationErrors()[1])
+        assertEquals(2, buildReport.compilationErrors.size)
+        assertEquals(0, buildReport.checkstyleErrors.size)
+        assertEquals("Main.kt: (2, 30) Expecting '\"'", buildReport.compilationErrors[0])
+        assertEquals("Main.kt: (2, 30) Expecting ')'", buildReport.compilationErrors[1])
     }
 
     @Test
@@ -181,8 +181,8 @@ class TestBuildReport {
                 dummyKotlinAssignment)
 
         assertTrue(!buildReport.mavenExecutionFailed())
-        assertEquals(0, buildReport.compilationErrors().size)
-        assertEquals(0, buildReport.checkstyleErrors().size)
+        assertEquals(0, buildReport.compilationErrors.size)
+        assertEquals(0, buildReport.checkstyleErrors.size)
     }
 
     @Test
@@ -195,8 +195,8 @@ class TestBuildReport {
                 dummyKotlinAssignment)
 
         assertTrue(!buildReport.mavenExecutionFailed())
-        assertEquals(0, buildReport.compilationErrors().size)
-        assertEquals(0, buildReport.checkstyleErrors().size)
+        assertEquals(0, buildReport.compilationErrors.size)
+        assertEquals(0, buildReport.checkstyleErrors.size)
     }
 
     @Test
@@ -225,8 +225,8 @@ class TestBuildReport {
                     dummyKotlinAssignment)
 
             assertTrue(!buildReport.mavenExecutionFailed())
-            assertEquals(0, buildReport.compilationErrors().size)
-            assertEquals("$it", 5, buildReport.checkstyleErrors().size)
+            assertEquals(0, buildReport.compilationErrors.size)
+            assertEquals("$it", 5, buildReport.checkstyleErrors.size)
         }
 
     }
@@ -239,8 +239,8 @@ class TestBuildReport {
                 dummyKotlinAssignment)
 
         assertTrue(!buildReport.mavenExecutionFailed())
-        assertEquals(0, buildReport.compilationErrors().size)
-        assertEquals(8, buildReport.checkstyleErrors().size)
+        assertEquals(0, buildReport.compilationErrors.size)
+        assertEquals(8, buildReport.checkstyleErrors.size)
     }
 
     @Test
@@ -253,7 +253,7 @@ class TestBuildReport {
                 dummyJavaAssignment)
 
         assertTrue(!buildReport.mavenExecutionFailed())
-        assertEquals(1, buildReport.compilationErrors().size)
-        assertEquals("Invalid call to System.exit(). Please remove this instruction", buildReport.compilationErrors()[0])
+        assertEquals(1, buildReport.compilationErrors.size)
+        assertEquals("Invalid call to System.exit(). Please remove this instruction", buildReport.compilationErrors[0])
     }
 }

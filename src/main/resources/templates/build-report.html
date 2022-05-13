@@ -136,27 +136,27 @@
         </tbody>
     </table>
 
-    <table class="table table-bordered" th:if="${buildReport != null and !buildReport.compilationErrors().empty}">
+    <table class="table table-bordered" th:if="${buildReport != null and !buildReport.compilationErrors.empty}">
         <thead>
         <tr>
             <th>Compilation Errors</th>
         </tr>
         </thead>
         <tbody>
-        <tr th:each="compilationError : ${buildReport.compilationErrors()}">
+        <tr th:each="compilationError : ${buildReport.compilationErrors}">
             <td th:text="${compilationError}"></td>
         </tr>
         </tbody>
     </table>
 
-    <table class="table table-bordered" th:if="${buildReport != null and !buildReport.checkstyleErrors().empty}">
+    <table class="table table-bordered" th:if="${buildReport != null and !buildReport.checkstyleErrors.empty}">
         <thead>
         <tr>
             <th>Code Quality (checkstyle) Errors</th>
         </tr>
         </thead>
         <tbody>
-        <tr th:each="checkstyleError : ${buildReport.checkstyleErrors()}">
+        <tr th:each="checkstyleError : ${buildReport.checkstyleErrors}">
             <td th:text="${checkstyleError}"></td>
         </tr>
         </tbody>
@@ -185,22 +185,22 @@
         </tr>
         </thead>
         <tbody>
-        <tr th:if="${buildReport.junitSummary(T(org.dropProject.data.TestType).STUDENT) != null}">
-            <td th:text="${buildReport.junitSummary(T(org.dropProject.data.TestType).STUDENT)}"></td>
+        <tr th:if="${buildReport.junitSummaryStudent != null}">
+            <td th:text="${buildReport.junitSummaryStudent}"></td>
         </tr>
-        <tr th:if="${buildReport.junitSummary(T(org.dropProject.data.TestType).STUDENT) == null}">
+        <tr th:if="${buildReport.junitSummaryStudent == null}">
             <td th:text="${buildReport.notEnoughStudentTestsMessage()}"></td>
         </tr>
-        <tr th:if="${buildReport.jUnitErrors(T(org.dropProject.data.TestType).STUDENT)}">
+        <tr th:if="${buildReport.junitErrorsStudent}">
             <td>
-                <pre th:text="${buildReport.jUnitErrors(T(org.dropProject.data.TestType).STUDENT)}"></pre>
+                <pre th:text="${buildReport.junitErrorsStudent}"></pre>
             </td>
         </tr>
         </tbody>
     </table>
 
 
-    <table class="table table-bordered" th:if="${buildReport != null and buildReport.junitSummary(T(org..dropProject.data.TestType).TEACHER) != null}">
+    <table class="table table-bordered" th:if="${buildReport != null and buildReport.junitSummaryTeacher != null}">
         <thead>
         <tr>
             <th>JUnit Summary (Teacher Tests)</th>
@@ -208,17 +208,17 @@
         </thead>
         <tbody>
         <tr>
-            <td th:text="${buildReport.junitSummary(T(org.dropProject.data.TestType).TEACHER)}"></td>
+            <td th:text="${buildReport.junitSummaryTeacher}"></td>
         </tr>
-        <tr th:if="${buildReport.jUnitErrors(T(org.dropProject.data.TestType).TEACHER)}">
+        <tr th:if="${buildReport.junitErrorsTeacher}">
             <td>
-                <pre th:text="${buildReport.jUnitErrors(T(org.dropProject.data.TestType).TEACHER)}"></pre>
+                <pre th:text="${buildReport.junitErrorsTeacher}"></pre>
             </td>
         </tr>
         </tbody>
     </table>
 
-    <table class="table table-bordered" th:if="${isTeacher and buildReport != null and buildReport.junitSummary(T(org..dropProject.data.TestType).HIDDEN) != null}">
+    <table class="table table-bordered" th:if="${isTeacher and buildReport != null and buildReport.junitSummaryHidden != null}">
         <thead>
         <tr>
             <th>JUnit Summary (Hidden Tests)<br/><small>(Students don't see this)</small></th>
@@ -226,11 +226,11 @@
         </thead>
         <tbody>
         <tr>
-            <td th:text="${buildReport.junitSummary(T(org.dropProject.data.TestType).HIDDEN)}"></td>
+            <td th:text="${buildReport.junitSummaryHidden}"></td>
         </tr>
-        <tr th:if="${buildReport.jUnitErrors(T(org.dropProject.data.TestType).HIDDEN)}">
+        <tr th:if="${buildReport.junitErrorsHidden}">
             <td>
-                <pre th:text="${buildReport.jUnitErrors(T(org.dropProject.data.TestType).HIDDEN)}"></pre>
+                <pre th:text="${buildReport.junitErrorsHidden}"></pre>
             </td>
         </tr>
         </tbody>

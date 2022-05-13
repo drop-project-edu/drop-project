@@ -167,6 +167,16 @@ class ReportControllerTests {
 
     @Test
     @DirtiesContext
+    fun reportIsNotAccessibleToStudents() {
+
+        val reportResult = this.mvc.perform(get("/report/testJavaProj")
+            .with(user(STUDENT_1)))
+            .andExpect(status().isForbidden)
+            .andReturn()
+    }
+
+    @Test
+    @DirtiesContext
     fun reportForMultipleSubmissions() {
 
         testsHelper.makeSeveralSubmissions(

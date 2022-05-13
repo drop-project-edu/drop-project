@@ -19,8 +19,12 @@
  */
 package org.dropProject.dao
 
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonView
+import org.dropProject.data.JSONViews
 import org.dropProject.data.JUnitSummary
 import org.dropProject.services.JUnitMethodResult
+import java.io.File
 import java.util.*
 import javax.persistence.*
 import java.math.BigDecimal
@@ -81,7 +85,7 @@ enum class SubmissionStatus(val code: String, val description: String) {
  * @property testResults is a List of [JUnitMethodResult] containing the result for each evaluation JUnit Test
  * @property group is the [ProjectGrop] that performed the submission.
  */
-@Entity
+@Entity @JsonInclude(JsonInclude.Include.NON_EMPTY)
 data class Submission(
         @Id @GeneratedValue
         val id: Long = 0,
@@ -91,15 +95,18 @@ data class Submission(
         val submissionFolder: String? = null,  // TODO: For now, this is null for git submissions
 
         @Column(nullable = false)
+        @JsonView(JSONViews.StudentAPI::class)
         var submissionDate: Date,
 
         @Column(nullable = false)
         val submitterUserId: String,
 
         @Column(nullable = false)
+        @JsonView(JSONViews.StudentAPI::class)
         private var status: String,  // should be accessed through getStatus() and setStatus()
 
         @Column(nullable = false)
+        @JsonView(JSONViews.StudentAPI::class)
         var statusDate: Date,
 
         val assignmentId: String,
@@ -118,9 +125,11 @@ data class Submission(
         var ellapsed: BigDecimal? = null,
 
         @Transient
+        @JsonView(JSONViews.StudentAPI::class)
         var studentTests: JUnitSummary? = null,
 
         @Transient
+        @JsonView(JSONViews.StudentAPI::class)
         var teacherTests: JUnitSummary? = null,
 
         @Transient
@@ -130,9 +139,11 @@ data class Submission(
         var coverage: Int? = null,
 
         @Transient
+        @JsonView(JSONViews.StudentAPI::class)
         var testResults: List<JUnitMethodResult>? = null,
 
         @Transient
+        @JsonView(JSONViews.StudentAPI::class)
         var overdue: Boolean? = null
 ) {
     @ManyToOne

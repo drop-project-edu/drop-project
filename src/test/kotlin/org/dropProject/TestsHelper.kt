@@ -245,6 +245,40 @@ class TestsHelper {
     fun uploadProject(mvc: MockMvc, projectName: String, assignmentId: String, uploader: User,
                       authors: List<Pair<String,String>>? = null): Int {
 
+        val multipartFile = prepareFile(projectName, authors)
+
+        val contentString = mvc.perform(MockMvcRequestBuilders.multipart("/upload")
+                .file(multipartFile)
+                .param("assignmentId", assignmentId)
+                .with(user(uploader)))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn().response.contentAsString
+
+        val contentJSON = JSONObject(contentString)
+
+        return contentJSON.getInt("submissionId")
+    }
+
+    // returns the submission id
+    fun uploadProjectByAPI(mvc: MockMvc, projectName: String, assignmentId: String, uploader: Pair<String,String>,
+                      authors: List<Pair<String,String>>? = null): Int {
+
+        val multipartFile = prepareFile(projectName, authors)
+        val (username, token) = uploader
+
+        val contentString = mvc.perform(MockMvcRequestBuilders.multipart("/api/student/submissions/new")
+            .file(multipartFile)
+            .param("assignmentId", assignmentId)
+            .header("authorization", header(username, token)))
+            .andExpect(MockMvcResultMatchers.status().isOk)
+            .andReturn().response.contentAsString
+
+        val contentJSON = JSONObject(contentString)
+
+        return contentJSON.getInt("submissionId")
+    }
+
+    private fun prepareFile(projectName: String, authors: List<Pair<String,String>>? = null): MockMultipartFile {
         val projectFolder = resourceLoader.getResource("file:src/test/sampleProjects/$projectName").file
         val authorsFile = File(projectFolder, "AUTHORS.txt")
         val authorsBackupFile = File(projectFolder, "AUTHORS.txt.bak")
@@ -273,16 +307,7 @@ class TestsHelper {
 
         val multipartFile = MockMultipartFile("file", zipFile.file.name, "application/zip", zipFile.file.readBytes())
 
-        val contentString = mvc.perform(MockMvcRequestBuilders.fileUpload("/upload")
-                .file(multipartFile)
-                .param("assignmentId", assignmentId)
-                .with(SecurityMockMvcRequestPostProcessors.user(uploader)))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andReturn().response.contentAsString
-
-        val contentJSON = JSONObject(contentString)
-
-        return contentJSON.getInt("submissionId")
+        return multipartFile
     }
 
     fun makeSeveralSubmissions(projectNames: List<String>, mvc: MockMvc, submissionDate: Date? = null) {
@@ -345,4 +370,7 @@ class TestsHelper {
         }
 
     }
+
+    fun header(username: String, personalToken: String) =
+        "basic ${Base64.getEncoder().encodeToString("$username:$personalToken".toByteArray())}"
 }

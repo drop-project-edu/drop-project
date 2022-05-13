@@ -29,7 +29,7 @@ import org.commonmark.renderer.html.HtmlRenderer
 import org.dropProject.MAVEN_MAX_EXECUTION_TIME
 import org.dropProject.dao.*
 import org.dropProject.data.AuthorDetails
-import org.dropProject.data.StudentHistory
+import org.dropProject.data.GroupedProjectGroups
 import org.dropProject.data.TestType
 import org.dropProject.extensions.formatDefault
 import org.dropProject.extensions.realName
@@ -60,6 +60,8 @@ import java.security.Principal
 import java.util.*
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
+import kotlin.collections.HashMap
+import kotlin.collections.LinkedHashMap
 
 /**
  * ReportController contains MVC controller functions to handle requests related with submission reports
@@ -84,6 +86,7 @@ class ReportController(
         val zipService: ZipService,
         val templateEngine: TemplateEngine,
         val assignmentService: AssignmentService,
+        val reportService: ReportService,
         val i18n: MessageSource
 ) {
 
@@ -133,6 +136,7 @@ class ReportController(
     @RequestMapping(value = ["/report/{assignmentId}"], method = [(RequestMethod.GET)])
     fun getReport(@PathVariable assignmentId: String, model: ModelMap,
                   principal: Principal, request: HttpServletRequest): String {
+        model["assignmentId"] = assignmentId
 
         assignmentService.getAllSubmissionsForAssignment(assignmentId, principal, model, request, mode = "summary")
 
@@ -175,86 +179,21 @@ class ReportController(
     fun getSubmissionReport(@PathVariable submissionId: Long, model: ModelMap, principal: Principal,
                             request: HttpServletRequest): String {
 
-        val submission = submissionRepository.findById(submissionId).orElse(null)
+        val buildReport = reportService.buildReport(submissionId, principal, request)
 
-        if (submission != null) {
+        model["numSubmissions"] = buildReport.numSubmissions
+        model["assignment"] = buildReport.assignment
 
-            // check that principal belongs to the group that made this submission
-            if (!request.isUserInRole("TEACHER")) {
-                val groupElements = submission.group.authors
-                if (groupElements.filter { it -> it.userId == principal.realName() }.isEmpty()) {
-                    throw org.springframework.security.access.AccessDeniedException("${principal.realName()} is not allowed to view this report")
-                }
-            }
-
-            if (submission.getStatus() == SubmissionStatus.DELETED) {
-                throw AccessDeniedException("This submission was deleted")
-            }
-
-            model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.realName(), submission.assignmentId)
-
-            val assignment = assignmentRepository.findById(submission.assignmentId).orElse(null)
-
-            model["assignment"] = assignment
-
-            model["submission"] = submission
-            submission.overdue = assignment.overdue(submission)
-            submission.gitSubmissionId?.let {
-                gitSubmissionId ->
-                    val gitSubmission = gitSubmissionRepository.getById(gitSubmissionId)
-                    model["gitSubmission"] = gitSubmission
-                    model["gitRepository"] = gitClient.convertSSHGithubURLtoHttpURL(gitSubmission.gitRepositoryUrl)
-            }
-
-            // check README
-            val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
-                    submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
-            if (File(mavenizedProjectFolder, "README.md").exists()) {
-                val readmeContent = File(mavenizedProjectFolder, "README.md").readText()
-                val parser = Parser.builder()
-                        .extensions(listOf(AutolinkExtension.create()))
-                        .build()
-                val document = parser.parse(readmeContent)
-                val renderer = HtmlRenderer.builder().build()
-                model["readmeHTML"] = "<hr/>\n" + renderer.render(document) + "<hr/>\n"
-            }
-
-            // check the submission status
-            when (submission.getStatus()) {
-                SubmissionStatus.ILLEGAL_ACCESS -> model["error"] = i18n.getMessage("student.build-report.illegalAccess", null, currentLocale)
-                SubmissionStatus.FAILED -> model["error"] = i18n.getMessage("student.build-report.failed", null, currentLocale)
-                SubmissionStatus.ABORTED_BY_TIMEOUT -> model["error"] = i18n.getMessage("student.build-report.abortedByTimeout", arrayOf(MAVEN_MAX_EXECUTION_TIME), currentLocale)
-                SubmissionStatus.TOO_MUCH_OUTPUT -> model["error"] = i18n.getMessage("student.build-report.tooMuchOutput", null, currentLocale)
-                SubmissionStatus.DELETED -> model["error"] = i18n.getMessage("student.build-report.deleted", null, currentLocale)
-                SubmissionStatus.SUBMITTED, SubmissionStatus.SUBMITTED_FOR_REBUILD, SubmissionStatus.REBUILDING -> {
-                    model["error"] = i18n.getMessage("student.build-report.submitted", null, currentLocale)
-                    model["autoRefresh"] = true
-                }
-                SubmissionStatus.VALIDATED, SubmissionStatus.VALIDATED_REBUILT -> {
-                    val submissionReport = submissionReportRepository.findBySubmissionId(submission.id)
-
-                    // fill the assignment in the reports
-                    submissionReport.forEach { it.assignment = assignment }
-
-                    model["summary"] = submissionReport
-                    model["structureErrors"] = submission.structureErrors?.split(";") ?: emptyList<String>()
-
-                    val authors = ArrayList<AuthorDetails>()
-                    for (authorDB in submission.group.authors) {
-                        authors.add(AuthorDetails(name = authorDB.name, number = authorDB.userId,
-                                submitter = submission.submitterUserId == authorDB.userId))
-                    }
-                    model["authors"] = authors
-
-                    submission.buildReportId?.let {
-                        buildReportId ->
-                            val buildReportDB = buildReportRepository.getById(buildReportId)
-                            model["buildReport"] = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
-                                    mavenizedProjectFolder.absolutePath, assignment, submission)
-                    }
-                }
-            }
-        }
+        model["submission"] = buildReport.submission
+        model["gitSubmission"] = buildReport.gitSubmission
+        model["gitRepository"] = buildReport.gitRepository
+        model["readmeHTML"] = buildReport.readmeHtml
+        model["error"] = buildReport.error
+        model["autoRefresh"] = buildReport.autoRefresh
+        model["summary"] = buildReport.summary
+        model["structureErrors"] = buildReport.structureErrors
+        model["authors"] = buildReport.authors
+        model["buildReport"] = buildReport.buildReport
 
         return "build-report"
     }

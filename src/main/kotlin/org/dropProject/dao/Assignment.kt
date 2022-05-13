@@ -21,7 +21,8 @@ package org.dropProject.dao
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import org.dropProject.Constants
+import com.fasterxml.jackson.annotation.JsonView
+import org.dropProject.data.JSONViews
 import org.dropProject.extensions.format
 import org.dropProject.forms.SubmissionMethod
 import java.util.*
@@ -93,62 +94,72 @@ enum class LeaderboardType {
 @Entity
 @JsonIgnoreProperties(ignoreUnknown = true)  // this is useful to improve backward-compatible imports
 data class Assignment(
-    @Id
-    val id: String,
+        @Id
+        @JsonView(JSONViews.StudentAPI::class)  // include this field on API calls
+        @Column(length = 50)
+        val id: String,
 
-    @Column(nullable = false)
-    var name: String,
+        @Column(nullable = false)
+        @JsonView(JSONViews.StudentAPI::class)
+        var name: String,
 
-    var packageName: String? = null,
+        @JsonView(JSONViews.StudentAPI::class)
+        var packageName: String? = null,
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
-    var dueDate: Date? = null,
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
+        @JsonView(JSONViews.StudentAPI::class)
+        var dueDate: Date? = null,
 
-    @Column(nullable = false)
-    var submissionMethod: SubmissionMethod,
+        @Column(nullable = false)
+        @JsonView(JSONViews.StudentAPI::class)
+        var submissionMethod: SubmissionMethod,
 
-    @Column(nullable = false)
-    var language: Language = Language.JAVA,
+        @Column(nullable = false)
+        @JsonView(JSONViews.StudentAPI::class)
+        var language: Language = Language.JAVA,
 
-    var acceptsStudentTests: Boolean = false,
-    var minStudentTests: Int? = null,
-    var calculateStudentTestsCoverage: Boolean = false,
-    var hiddenTestsVisibility: TestVisibility? = null,
-    var mandatoryTestsSuffix: String? = null,
-    var cooloffPeriod: Int? = null, // minutes
-    var maxMemoryMb: Int? = null,
-    var showLeaderBoard: Boolean = false,
-    var leaderboardType: LeaderboardType? = null,
+        var acceptsStudentTests: Boolean = false,
+        var minStudentTests: Int? = null,
+        var calculateStudentTestsCoverage: Boolean = false,
+        var hiddenTestsVisibility: TestVisibility? = null,
+        var mandatoryTestsSuffix: String? = null,
+        var cooloffPeriod: Int? = null, // minutes
+        var maxMemoryMb: Int? = null,
+        var showLeaderBoard: Boolean = false,
+        var leaderboardType: LeaderboardType? = null,
 
-    val gitRepositoryUrl: String,
-    @Column(columnDefinition = "TEXT")
-    var gitRepositoryPubKey: String? = null,
-    @Column(columnDefinition = "TEXT")
-    var gitRepositoryPrivKey: String? = null,
+        @JsonView(JSONViews.TeacherAPI::class)
+        val gitRepositoryUrl: String,
+        @Column(columnDefinition = "TEXT")
+        var gitRepositoryPubKey: String? = null,
+        @Column(columnDefinition = "TEXT")
+        var gitRepositoryPrivKey: String? = null,
 
-    var gitRepositoryFolder: String,  // relative to assignment.root.location
+        var gitRepositoryFolder: String,  // relative to assignment.root.location
 
-    @Column(nullable = false)
-    var ownerUserId: String = "",
+        @Column(nullable = false)
+        @JsonView(JSONViews.TeacherAPI::class)
+        var ownerUserId: String = "",
 
-    var active: Boolean = false,
-    var archived: Boolean = false,
+        @JsonView(JSONViews.StudentAPI::class)
+        var active: Boolean = false,
+        var archived: Boolean = false,
 
-    var buildReportId: Long? = null,  // build_report.id
+        var buildReportId: Long? = null,  // build_report.id
 
-    @Transient
-    var numSubmissions: Int = 0,
+        @Transient
+        var numSubmissions: Int = 0,
 
-    @Transient
-    var numUniqueSubmitters: Int = 0,
+        @Transient
+        var numUniqueSubmitters: Int = 0,
 
-    @Transient
-    var public: Boolean = true,
+        @Transient
+        var public: Boolean = true,
 
-    @Transient
-    var lastSubmissionDate: Date? = null,
+        @Transient
+        var lastSubmissionDate: Date? = null,
 
-    @Transient
+        @Transient
     var authorizedStudentIds: List<String>? = null,
 
     @Transient

@@ -19,9 +19,17 @@
  */
 package org.dropProject.controllers
 
-import org.hamcrest.CoreMatchers
+import org.dropProject.TestsHelper
+import org.dropProject.dao.Assignment
+import org.dropProject.dao.Indicator
+import org.dropProject.dao.Language
+import org.dropProject.dao.SubmissionReport
+import org.dropProject.data.BuildReport
+import org.dropProject.forms.SubmissionMethod
+import org.dropProject.repository.AssignmentRepository
 import org.junit.After
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -39,14 +47,6 @@ import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import org.dropProject.TestsHelper
-import org.dropProject.dao.Assignment
-import org.dropProject.dao.Indicator
-import org.dropProject.dao.Language
-import org.dropProject.dao.SubmissionReport
-import org.dropProject.data.BuildReport
-import org.dropProject.forms.SubmissionMethod
-import org.dropProject.repository.AssignmentRepository
 import java.io.File
 
 @RunWith(SpringRunner::class)
@@ -134,8 +134,8 @@ class UploadKotlinControllerTests {
         assert(structureErrors.isEmpty())
 
         val buildResult = reportResult.modelAndView!!.modelMap["buildReport"] as BuildReport
-        assert(buildResult.compilationErrors().isEmpty())
-        assert(buildResult.checkstyleErrors().isEmpty())
+        assert(buildResult.compilationErrors.isEmpty())
+        assert(buildResult.checkstyleErrors.isEmpty())
         assert(buildResult.PMDerrors().isEmpty())
         assert(buildResult.hasJUnitErrors() == false)
         assertNotNull(buildResult.elapsedTimeJUnit())
@@ -171,9 +171,9 @@ class UploadKotlinControllerTests {
         assert(structureErrors.isEmpty())
 
         val buildResult = reportResult.modelAndView!!.modelMap["buildReport"] as BuildReport
-        assert(buildResult.compilationErrors().isEmpty())
+        assert(buildResult.compilationErrors.isEmpty())
 
-        assertEquals("checkstyle should have 5 errors", buildResult.checkstyleErrors().size, 5)
+        assertEquals("checkstyle should have 5 errors", buildResult.checkstyleErrors.size, 5)
         // TODO: This is failing on travis CI
 //        assertThat(buildResult.checkstyleErrors(),
 //                CoreMatchers.hasItems(

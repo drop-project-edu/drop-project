@@ -156,8 +156,8 @@ class UploadControllerTests {
     // @Test - rever isto
     fun shouldNotAcceptNoZipFile() {
         val multipartFile = MockMultipartFile("file", "test.txt", "text/plain", "Spring Framework".toByteArray())
-        this.mvc.perform(fileUpload("/upload").file(multipartFile))
-                .andExpect(status().isFound())
+        this.mvc.perform(multipart("/upload").file(multipartFile))
+                .andExpect(status().isFound)
                 .andExpect(header().string("Location", "/upload"))
                 .andExpect(flash().attribute("error", "O ficheiro tem que ser um .zip"))
 
@@ -170,8 +170,8 @@ class UploadControllerTests {
         val bigFileData = ByteArray(100_000_000) { 1 }
 
         val multipartFile = MockMultipartFile("file", "test.txt", "text/plain", bigFileData)
-        this.mvc.perform(fileUpload("/upload").file(multipartFile))
-                .andExpect(status().isFound())
+        this.mvc.perform(multipart("/upload").file(multipartFile))
+                .andExpect(status().isFound)
                 .andExpect(header().string("Location", "/upload"))
                 .andExpect(flash().attribute("error", "Ficheiro excede o tamanho máximo permitido"))
 
@@ -187,7 +187,7 @@ class UploadControllerTests {
 
         this.mvc.perform(get("/upload/testJavaProj")
                 .with(user(STUDENT_1)))
-                .andExpect(status().isOk())
+                .andExpect(status().isOk)
                 .andExpect(view().name("student-upload-form"))
                 // .andExpect(model().attribute("uploadSubmission", null))  ?????
 
@@ -204,7 +204,7 @@ class UploadControllerTests {
 
         this.mvc.perform(get("/upload/testJavaProj")
                 .with(user(STUDENT_1)))
-                .andExpect(status().isOk())
+                .andExpect(status().isOk)
                 .andExpect(view().name("student-upload-form"))
 
 
@@ -230,7 +230,7 @@ class UploadControllerTests {
         val submissionId = testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", "testJavaProj", STUDENT_1)
 
         val reportResult = this.mvc.perform(get("/buildReport/$submissionId"))
-                .andExpect(status().isOk())
+                .andExpect(status().isOk)
                 .andReturn()
 
         @Suppress("UNCHECKED_CAST")
@@ -254,7 +254,7 @@ class UploadControllerTests {
         val submissionId = testsHelper.uploadProject(this.mvc, "projectInvalidStructure2", "testJavaProj", STUDENT_1)
 
         val reportResult = this.mvc.perform(get("/buildReport/$submissionId"))
-                .andExpect(status().isOk())
+                .andExpect(status().isOk)
                 .andReturn()
 
         @Suppress("UNCHECKED_CAST")
@@ -277,7 +277,7 @@ class UploadControllerTests {
         val submissionId = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
 
         val reportResult = this.mvc.perform(get("/buildReport/$submissionId"))
-                .andExpect(status().isOk())
+                .andExpect(status().isOk)
                 .andReturn()
 
         @Suppress("UNCHECKED_CAST")
@@ -293,7 +293,7 @@ class UploadControllerTests {
         assert(structureErrors.isEmpty())
 
         val buildResult = reportResult.modelAndView!!.modelMap["buildReport"] as BuildReport
-        assertThat(buildResult.compilationErrors(),
+        assertThat(buildResult.compilationErrors,
                 CoreMatchers.hasItems("org/dropProject/sampleAssignments/testProj/Main.java:[3,8] class Sample is public, should be declared in a file named Sample.java"))
     }
 
@@ -360,10 +360,10 @@ class UploadControllerTests {
         assert(structureErrors.isEmpty())
 
         val buildResult = reportResult.modelAndView!!.modelMap["buildReport"] as BuildReport
-        assert(buildResult.compilationErrors().isEmpty())
+        assert(buildResult.compilationErrors.isEmpty())
 
-        assertEquals("checkstyle should have 6 errors", buildResult.checkstyleErrors().size, 6)
-        assertThat(buildResult.checkstyleErrors(),
+        assertEquals("checkstyle should have 6 errors", buildResult.checkstyleErrors.size, 6)
+        assertThat(buildResult.checkstyleErrors,
                 CoreMatchers.hasItems(
                         "org/dropProject/sampleAssignments/testProj/Main.java:12:17: Nome da função 'FazCoisas' deve começar por letra minúscula. Caso o nome tenha mais do que uma palavra, as palavras seguintes devem ser capitalizadas (iniciadas por uma maiúscula). [MethodName]"
                         , "org/dropProject/sampleAssignments/testProj/Main.java:3:7: O nome da classe 'aluno' deve começar com letra maiúscula. Caso o nome tenha mais do que uma palavra, as palavras seguintes devem ser capitalizadas (iniciadas por uma maiúscula). [TypeName]"
@@ -401,8 +401,8 @@ class UploadControllerTests {
         assert(structureErrors.isEmpty())
 
         val buildResult = reportResult.modelAndView!!.modelMap["buildReport"] as BuildReport
-        assert(buildResult.compilationErrors().isEmpty())
-        assert(buildResult.checkstyleErrors().isEmpty())
+        assert(buildResult.compilationErrors.isEmpty())
+        assert(buildResult.checkstyleErrors.isEmpty())
         assert(buildResult.PMDerrors().isEmpty())
         assert(buildResult.hasJUnitErrors() == false)
         assertNotNull(buildResult.elapsedTimeJUnit())
@@ -456,7 +456,7 @@ class UploadControllerTests {
 
         val buildResult = reportResult.modelAndView!!.modelMap["buildReport"] as BuildReport
         assertEquals(2, buildResult.junitSummaryAsObject(TestType.TEACHER)?.numErrors)
-        assertTrue(buildResult.jUnitErrors(TestType.TEACHER)?.contains("SecurityException") == true)
+        assertTrue(buildResult.junitErrorsTeacher?.contains("SecurityException") == true)
     }
 
 
@@ -549,14 +549,14 @@ class UploadControllerTests {
 
         val buildResult = reportResult.modelAndView!!.modelMap["buildReport"] as BuildReport
         assert(buildResult.hasJUnitErrors(TestType.TEACHER) == true)
-        assert(buildResult.junitSummary(TestType.TEACHER)!!.startsWith("Tests run: 2, Failures: 1, Errors: 0"))
-        assertNotNull(buildResult.jUnitErrors(TestType.TEACHER))
-        assert(buildResult.jUnitErrors(TestType.TEACHER)!!.contains("java.lang.AssertionError: expected:<3> but was:<0>"))
+        assert(buildResult.junitSummaryTeacher!!.startsWith("Tests run: 2, Failures: 1, Errors: 0"))
+        assertNotNull(buildResult.junitErrorsTeacher)
+        assert(buildResult.junitErrorsTeacher!!.contains("java.lang.AssertionError: expected:<3> but was:<0>"))
         assertEquals(2, buildResult.junitSummaryAsObject(TestType.TEACHER)?.numTests)
         assertEquals(1, buildResult.junitSummaryAsObject(TestType.TEACHER)?.numFailures)
         assertEquals(0, buildResult.junitSummaryAsObject(TestType.TEACHER)?.numErrors)
         assertEquals("1/2", buildResult.junitSummaryAsObject(TestType.TEACHER)?.toStr())
-        val stackTraceTeacher = buildResult.jUnitErrors(TestType.TEACHER)
+        val stackTraceTeacher = buildResult.junitErrorsTeacher
         assertEquals("""
             |FAILURE: org.dropProject.sampleAssignments.testProj.TestTeacherProject.testFuncaoParaTestar
             |java.lang.AssertionError: expected:<3> but was:<0>
@@ -564,14 +564,14 @@ class UploadControllerTests {
         """.trimMargin(), stackTraceTeacher?.trimEnd())
 
         assert(buildResult.hasJUnitErrors(TestType.HIDDEN) == true)
-        assert(buildResult.junitSummary(TestType.HIDDEN)!!.startsWith("Tests run: 1, Failures: 0, Errors: 1"))
-        assertNotNull(buildResult.jUnitErrors(TestType.HIDDEN))
-        assert(buildResult.jUnitErrors(TestType.HIDDEN)!!.contains("java.lang.ArithmeticException: / by zero"))
+        assert(buildResult.junitSummaryHidden!!.startsWith("Tests run: 1, Failures: 0, Errors: 1"))
+        assertNotNull(buildResult.junitErrorsHidden)
+        assert(buildResult.junitErrorsHidden!!.contains("java.lang.ArithmeticException: / by zero"))
         assertEquals(1, buildResult.junitSummaryAsObject(TestType.HIDDEN)?.numTests)
         assertEquals(0, buildResult.junitSummaryAsObject(TestType.HIDDEN)?.numFailures)
         assertEquals(1, buildResult.junitSummaryAsObject(TestType.HIDDEN)?.numErrors)
         assertEquals("0/1", buildResult.junitSummaryAsObject(TestType.HIDDEN)?.toStr())
-        val stackTraceHidden = buildResult.jUnitErrors(TestType.HIDDEN)
+        val stackTraceHidden = buildResult.junitErrorsHidden
         assertEquals("""
             |ERROR: org.dropProject.sampleAssignments.testProj.TestTeacherHiddenProject.testFuncaoParaTestarQueNaoApareceAosAlunos
             |java.lang.ArithmeticException: / by zero
@@ -614,14 +614,14 @@ class UploadControllerTests {
 
         val buildResult = reportResult.modelAndView!!.modelMap["buildReport"] as BuildReport
         assert(buildResult.hasJUnitErrors(TestType.TEACHER) == true)
-        assert(buildResult.junitSummary(TestType.TEACHER)!!.startsWith("Tests run: 1, Failures: 1, Errors: 0"))
-        assertNotNull(buildResult.jUnitErrors(TestType.TEACHER))
-        assert(buildResult.jUnitErrors(TestType.TEACHER)!!.contains("java.lang.AssertionError: expected:<3> but was:<0>"))
+        assert(buildResult.junitSummaryTeacher!!.startsWith("Tests run: 1, Failures: 1, Errors: 0"))
+        assertNotNull(buildResult.junitErrorsTeacher)
+        assert(buildResult.junitErrorsTeacher!!.contains("java.lang.AssertionError: expected:<3> but was:<0>"))
         assertEquals(1, buildResult.junitSummaryAsObject(TestType.TEACHER)?.numTests)
         assertEquals(1, buildResult.junitSummaryAsObject(TestType.TEACHER)?.numFailures)
         assertEquals(0, buildResult.junitSummaryAsObject(TestType.TEACHER)?.numErrors)
         assertEquals(1, buildResult.junitSummaryAsObject(TestType.TEACHER)?.numSkipped)
-        val stackTraceTeacher = buildResult.jUnitErrors(TestType.TEACHER)
+        val stackTraceTeacher = buildResult.junitErrorsTeacher
         assertEquals("""
             |FAILURE: org.dropProject.sampleAssignments.testProj.TestTeacherProject.testFuncaoParaTestar
             |java.lang.AssertionError: expected:<3> but was:<0>
@@ -765,7 +765,7 @@ class UploadControllerTests {
 
             val multipartFile = MockMultipartFile("file", zipFile.file.name, "application/zip", zipFile.file.readBytes())
 
-            this.mvc.perform(fileUpload("/upload")
+            this.mvc.perform(multipart("/upload")
                     .file(multipartFile)
                     .param("assignmentId", "testJavaProj")
                     .param("async", "false"))
@@ -819,9 +819,9 @@ class UploadControllerTests {
         val buildResult = reportResult.modelAndView!!.modelMap["buildReport"] as BuildReport
         println("buildResult = ${buildResult.mavenOutput()}")
         assert(buildResult.hasJUnitErrors() == true)
-        assert(buildResult.junitSummary()!!.startsWith("Tests run: 4, Failures: 2, Errors: 0, Time elapsed"))
-        assertNotNull(buildResult.jUnitErrors())
-        assert(buildResult.jUnitErrors()!!.contains("java.lang.AssertionError: expected:<3> but was:<0>"))
+        assert(buildResult.junitSummaryTeacher!!.startsWith("Tests run: 4, Failures: 2, Errors: 0, Time elapsed"))
+        assertNotNull(buildResult.junitErrorsTeacher)
+        assert(buildResult.junitErrorsTeacher!!.contains("java.lang.AssertionError: expected:<3> but was:<0>"))
 
         val junitReportsFromDB = jUnitReportRepository.findAll()
         assertEquals(2, junitReportsFromDB.size)
@@ -1134,15 +1134,15 @@ class UploadControllerTests {
         assert(structureErrors.isEmpty())
 
         val buildResult = reportResult.modelAndView!!.modelMap["buildReport"] as BuildReport
-        assert(buildResult.compilationErrors().isEmpty())
-        assert(buildResult.checkstyleErrors().isEmpty())
+        assert(buildResult.compilationErrors.isEmpty())
+        assert(buildResult.checkstyleErrors.isEmpty())
         assert(buildResult.PMDerrors().isEmpty())
 
         assert(buildResult.hasJUnitErrors(TestType.TEACHER) == false)
-        assertTrue(buildResult.junitSummary(TestType.TEACHER)!!.startsWith("Tests run: 2, Failures: 0, Errors: 0"))
+        assertTrue(buildResult.junitSummaryTeacher!!.startsWith("Tests run: 2, Failures: 0, Errors: 0"))
 
         assert(buildResult.hasJUnitErrors(TestType.STUDENT) == false)
-        assertTrue(buildResult.junitSummary(TestType.STUDENT)!!.startsWith("Tests run: 1, Failures: 0, Errors: 0"))
+        assertTrue(buildResult.junitSummaryStudent!!.startsWith("Tests run: 1, Failures: 0, Errors: 0"))
 
         assert(buildResult.jacocoResults.isNotEmpty())
         assertEquals(25, buildResult.jacocoResults[0].lineCoveragePercent)
@@ -1185,7 +1185,7 @@ class UploadControllerTests {
         val buildResult = reportResult.modelAndView!!.modelMap["buildReport"] as BuildReport
 
         assert(buildResult.hasJUnitErrors(TestType.TEACHER) == false)
-        assertTrue(buildResult.junitSummary(TestType.TEACHER)!!.startsWith("Tests run: 2, Failures: 0, Errors: 0"))
+        assertTrue(buildResult.junitSummaryTeacher!!.startsWith("Tests run: 2, Failures: 0, Errors: 0"))
     }
 
     @Test
@@ -1222,15 +1222,15 @@ class UploadControllerTests {
         assert(structureErrors.isEmpty())
 
         val buildResult = reportResult.modelAndView!!.modelMap["buildReport"] as BuildReport
-        assert(buildResult.compilationErrors().isEmpty())
-        assert(buildResult.checkstyleErrors().isEmpty())
+        assert(buildResult.compilationErrors.isEmpty())
+        assert(buildResult.checkstyleErrors.isEmpty())
         assert(buildResult.PMDerrors().isEmpty())
 
         assert(buildResult.hasJUnitErrors(TestType.TEACHER) == false)
-        assertTrue(buildResult.junitSummary(TestType.TEACHER)!!.startsWith("Tests run: 2, Failures: 0, Errors: 0"))
+        assertTrue(buildResult.junitSummaryTeacher!!.startsWith("Tests run: 2, Failures: 0, Errors: 0"))
 
         assertNull(buildResult.hasJUnitErrors(TestType.STUDENT))
-        assertNull(buildResult.junitSummary(TestType.STUDENT))
+        assertNull(buildResult.junitSummaryStudent)
     }
 
     @Test
@@ -1267,15 +1267,15 @@ class UploadControllerTests {
         assert(structureErrors.isEmpty())
 
         val buildResult = reportResult.modelAndView!!.modelMap["buildReport"] as BuildReport
-        assert(buildResult.compilationErrors().isEmpty())
-        assert(buildResult.checkstyleErrors().isEmpty())
+        assert(buildResult.compilationErrors.isEmpty())
+        assert(buildResult.checkstyleErrors.isEmpty())
         assert(buildResult.PMDerrors().isEmpty())
 
         assert(buildResult.hasJUnitErrors(TestType.TEACHER) == false)
-        assertTrue(buildResult.junitSummary(TestType.TEACHER)!!.startsWith("Tests run: 2, Failures: 0, Errors: 0"))
+        assertTrue(buildResult.junitSummaryTeacher!!.startsWith("Tests run: 2, Failures: 0, Errors: 0"))
 
         assertTrue(buildResult.hasJUnitErrors(TestType.STUDENT) == false)
-        assertNotNull(buildResult.junitSummary(TestType.STUDENT))
+        assertNotNull(buildResult.junitSummaryStudent)
     }
 
 
