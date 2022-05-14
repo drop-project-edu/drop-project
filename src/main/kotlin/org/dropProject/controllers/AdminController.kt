@@ -19,8 +19,7 @@
  */
 package org.dropProject.controllers
 
-import org.dropProject.AsyncConfig
-import org.dropProject.dao.Assignment
+import org.dropProject.AsyncTimeoutConfigurer
 import org.dropProject.dao.SubmissionStatus
 import org.dropProject.forms.AdminDashboardForm
 import org.dropProject.repository.SubmissionRepository
@@ -44,7 +43,7 @@ import javax.validation.Valid
 @RequestMapping("/admin")
 class AdminController(val mavenInvoker: MavenInvoker,
                       val submissionRepository: SubmissionRepository,
-                      val asyncConfig: AsyncConfig) {
+                      val asyncTimeoutConfigurer: AsyncTimeoutConfigurer) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
@@ -55,7 +54,7 @@ class AdminController(val mavenInvoker: MavenInvoker,
      */
     @RequestMapping(value = ["/dashboard"], method = [(RequestMethod.GET)])
     fun showDashboard(model: ModelMap): String {
-        model["adminDashboardForm"] = AdminDashboardForm(showMavenOutput = mavenInvoker.showMavenOutput, asyncTimeout = asyncConfig.asyncTimeout)
+        model["adminDashboardForm"] = AdminDashboardForm(showMavenOutput = mavenInvoker.showMavenOutput, asyncTimeout = asyncTimeoutConfigurer.getTimeout())
         return "admin-dashboard"
     }
 
@@ -74,7 +73,7 @@ class AdminController(val mavenInvoker: MavenInvoker,
         }
 
         mavenInvoker.showMavenOutput = adminDashboardForm.showMavenOutput
-        asyncConfig.asyncTimeout = adminDashboardForm.asyncTimeout
+        asyncTimeoutConfigurer.setTimeout(adminDashboardForm.asyncTimeout)
 
         redirectAttributes.addFlashAttribute("message", "Operation was successful")
         return "redirect:/admin/dashboard"

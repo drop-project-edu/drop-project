@@ -35,7 +35,7 @@ import java.util.concurrent.Executor
 @EnableAsync
 @EnableScheduling
 @Profile("!test")
-class AsyncConfig : AsyncConfigurer {
+class AsyncConfig : AsyncConfigurer, AsyncTimeoutConfigurer {
 
     @Value("\${dropProject.async.timeout}")
     var asyncTimeout: Int = 180
@@ -57,7 +57,7 @@ class AsyncConfig : AsyncConfigurer {
     }
 
     @Bean(name=["asyncExecutor"])
-    override fun getAsyncExecutor(): Executor {
+    override fun getAsyncExecutor(): Executor? {
         LOG.info("Initializing task scheduler")
 
         scheduler = CancellableTaskScheduler(asyncTimeout * 1000L)
@@ -66,4 +66,11 @@ class AsyncConfig : AsyncConfigurer {
         return scheduler
     }
 
+    override fun getTimeout(): Int {
+        return asyncTimeout
+    }
+
+    override fun setTimeout(timeout: Int) {
+        asyncTimeout = timeout
+    }
 }

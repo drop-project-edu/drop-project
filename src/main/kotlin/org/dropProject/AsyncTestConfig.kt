@@ -33,7 +33,7 @@ import java.util.concurrent.Executor
 @Configuration
 @EnableAsync
 @Profile("test")
-class AsyncTestConfig : AsyncConfigurer {
+class AsyncTestConfig : AsyncConfigurer, AsyncTimeoutConfigurer {
 
     override fun getAsyncUncaughtExceptionHandler(): AsyncUncaughtExceptionHandler {
         return SimpleAsyncUncaughtExceptionHandler()
@@ -42,5 +42,13 @@ class AsyncTestConfig : AsyncConfigurer {
     @Bean(name=["asyncExecutor"])
     override fun getAsyncExecutor(): Executor {
         return SyncTaskExecutor()
+    }
+
+    override fun getTimeout(): Int {
+        return 0
+    }
+
+    override fun setTimeout(timeout: Int) {
+        // ignored
     }
 }

@@ -78,7 +78,8 @@ class AdminControllerTests {
     @DirtiesContext
     fun test_01_changeMavenOutput() {
         this.mvc.perform(post("/admin/dashboard")
-                .param("showMavenOutput", "true"))
+                .param("showMavenOutput", "true")
+                .param("asyncTimeout", "30"))
                 .andExpect(status().isFound)
                 .andExpect(header().string("Location", "/admin/dashboard"))
     }
