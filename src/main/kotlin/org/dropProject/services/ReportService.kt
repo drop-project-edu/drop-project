@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonView
 import org.commonmark.ext.autolink.AutolinkExtension
 import org.commonmark.parser.Parser
 import org.commonmark.renderer.html.HtmlRenderer
-import org.dropProject.MAVEN_MAX_EXECUTION_TIME
+import org.dropProject.AsyncConfig
 import org.dropProject.dao.*
 import org.dropProject.data.AuthorDetails
 import org.dropProject.data.JSONViews
@@ -76,7 +76,8 @@ class ReportService(
     val assignmentTeacherFiles: AssignmentTeacherFiles,
     val buildReportBuilder: BuildReportBuilder,
     val i18n: MessageSource,
-    val gitClient: GitClient
+    val gitClient: GitClient,
+    val asyncConfig: AsyncConfig
 ) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
@@ -136,7 +137,7 @@ class ReportService(
                 SubmissionStatus.ILLEGAL_ACCESS -> fullBuildReport.error = i18n.getMessage("student.build-report.illegalAccess", null, currentLocale)
                 SubmissionStatus.FAILED -> fullBuildReport.error = i18n.getMessage("student.build-report.failed", null, currentLocale)
                 SubmissionStatus.ABORTED_BY_TIMEOUT -> fullBuildReport.error = i18n.getMessage("student.build-report.abortedByTimeout", arrayOf(
-                    MAVEN_MAX_EXECUTION_TIME
+                    asyncConfig.asyncTimeout
                 ), currentLocale)
                 SubmissionStatus.TOO_MUCH_OUTPUT -> fullBuildReport.error = i18n.getMessage("student.build-report.tooMuchOutput", null, currentLocale)
                 SubmissionStatus.DELETED -> fullBuildReport.error = i18n.getMessage("student.build-report.deleted", null, currentLocale)

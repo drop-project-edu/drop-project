@@ -23,13 +23,7 @@ import net.lingala.zip4j.core.ZipFile
 import net.lingala.zip4j.model.ZipParameters
 import net.lingala.zip4j.util.Zip4jConstants
 import org.apache.commons.io.FileUtils
-import org.commonmark.ext.autolink.AutolinkExtension
-import org.commonmark.parser.Parser
-import org.commonmark.renderer.html.HtmlRenderer
-import org.dropProject.MAVEN_MAX_EXECUTION_TIME
 import org.dropProject.dao.*
-import org.dropProject.data.AuthorDetails
-import org.dropProject.data.GroupedProjectGroups
 import org.dropProject.data.StudentHistory
 import org.dropProject.data.TestType
 import org.dropProject.extensions.formatDefault
@@ -61,8 +55,6 @@ import java.security.Principal
 import java.util.*
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
-import kotlin.collections.HashMap
-import kotlin.collections.LinkedHashMap
 
 /**
  * ReportController contains MVC controller functions to handle requests related with submission reports

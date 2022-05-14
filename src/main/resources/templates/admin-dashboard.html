@@ -31,6 +31,14 @@
                 </select>
             </div>
         </div>
+        <div class="form-group" th:classappend="${#fields.hasErrors('asyncTimeout')} ? 'has-error' : ''">
+            <label for="asyncTimeout" class="col-sm-3 control-label">Task Execution Timeout</label>
+            <div class="col-sm-9">
+                <input type="text" th:field="*{asyncTimeout}" class="form-control" id="asyncTimeout"/>
+                <p class="help-block" th:if="${#fields.hasErrors('asyncTimeout')}" th:errors="*{asyncTimeout}">Error</p>
+                <p class="help-block" th:if="${!#fields.hasErrors('asyncTimeout')}">Timeout of async tasks (e.g., maven execution) in seconds</p>
+            </div>
+        </div>
         <button type="submit" class="btn btn-primary">Save</button>
     </form>
 

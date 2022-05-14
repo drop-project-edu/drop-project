@@ -24,5 +24,6 @@ package org.dropProject.forms
  * pending submissions).
  */
 data class AdminDashboardForm(
-        val showMavenOutput: Boolean
+    val showMavenOutput: Boolean,
+    val asyncTimeout: Int
 )

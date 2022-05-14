@@ -25,12 +25,26 @@ import java.util.concurrent.Callable
 import java.util.concurrent.Future
 import kotlin.concurrent.schedule
 
-class CancellableTaskScheduler(val timeout: Long) : ThreadPoolTaskScheduler() {
+/**
+ * Tasks created through this scheduler are cancelled after a certain time
+ */
+class CancellableTaskScheduler(var timeout: Long) : ThreadPoolTaskScheduler() {
 
     override fun submit(task: Runnable): Future<*> {
         val future = super.submit(task)
 
         Timer("Timeout", false).schedule(timeout) { future.cancel(true) }
+
+        return future
+    }
+
+    // on the latest spring version, this seems to be the method that is called
+    override fun <T : Any?> submit(task: Callable<T>): Future<T> {
+        val future = super.submit(task)
+
+        Timer("Timeout", false).schedule(timeout) {
+            future.cancel(true)
+        }
 
         return future
     }
