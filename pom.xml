@@ -366,6 +366,13 @@
 						</configuration>
 					</execution>
 				</executions>
+				<configuration>
+					<!-- exclude all the classes that have @Profile("!test") -->
+					<excludes>
+						<exclude>org/dropProject/controllers/ApplicationContextListener.class</exclude>
+						<exclude>org/dropProject/AsyncConfig.class</exclude>
+					</excludes>
+				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
