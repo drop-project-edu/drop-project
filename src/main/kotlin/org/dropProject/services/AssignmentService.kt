@@ -124,7 +124,7 @@ class AssignmentService(
 
         for (assignment in filteredAssigments) {
             assignment.tagsStr = getTagsStr(assignment)
-            assignment.numSubmissions = submissionRepository.countByAssignmentId(assignment.id).toInt()
+            assignment.numSubmissions = submissionRepository.countByAssignmentIdAndStatusNot(assignment.id, SubmissionStatus.DELETED.code).toInt()
             if (assignment.numSubmissions > 0) {
                 assignment.lastSubmissionDate = submissionRepository.findFirstByAssignmentIdOrderBySubmissionDateDesc(assignment.id).submissionDate
             }
@@ -548,7 +548,7 @@ class AssignmentService(
         }
 
         // make sure there are no submissions for this assignment
-        val count = submissionRepository.countByAssignmentId(assignmentId)
+        val count = submissionRepository.countByAssignmentIdAndStatusNot(assignmentId, SubmissionStatus.DELETED.code)
         if (count > 0) {
             return "Error: You are importing submissions to an assignment ($assignmentId) that already has $count submissions. " +
                     "First, please make sure the assignment is empty."

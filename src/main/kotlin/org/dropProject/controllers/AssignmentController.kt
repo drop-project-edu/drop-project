@@ -670,7 +670,7 @@ class AssignmentController(
             throw IllegalAccessError("Assignments can only be changed by their owner")
         }
 
-        if (submissionRepository.countByAssignmentId(assignment.id).toInt() > 0) {
+        if (submissionRepository.countByAssignmentIdAndStatusNot(assignment.id, SubmissionStatus.DELETED.code).toInt() > 0) {
             redirectAttributes.addFlashAttribute("error", "Assignment can't be deleted because it has submissions")
             return "redirect:/assignment/my"
         }
