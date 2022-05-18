@@ -77,6 +77,8 @@ data class BuildReport(val mavenOutputLines: List<String>,
     @JsonView(JSONViews.StudentAPI::class)
     val junitSummaryTeacher: String?
     @JsonView(JSONViews.StudentAPI::class)
+    val junitSummaryTeacherExtraDescription: String?
+    @JsonView(JSONViews.StudentAPI::class)
     val junitErrorsTeacher: String?
 
     val junitSummaryHidden: String?
@@ -88,6 +90,7 @@ data class BuildReport(val mavenOutputLines: List<String>,
         junitSummaryStudent = junitSummary(TestType.STUDENT)
         junitErrorsStudent = jUnitErrors(TestType.STUDENT)
         junitSummaryTeacher = junitSummary(TestType.TEACHER)
+        junitSummaryTeacherExtraDescription = junitSummaryExtraDescription(TestType.TEACHER)
         junitErrorsTeacher = jUnitErrors(TestType.TEACHER)
         junitSummaryHidden = junitSummary(TestType.HIDDEN)
         junitErrorsHidden = jUnitErrors(TestType.HIDDEN)
@@ -297,6 +300,18 @@ data class BuildReport(val mavenOutputLines: List<String>,
         }
     }
 
+    private fun junitSummaryExtraDescription(testType: TestType = TestType.TEACHER) : String? {
+
+        val junitSummary = junitSummaryAsObject(testType)
+        if (junitSummary != null) {
+            if (assignment.mandatoryTestsSuffix != null && junitSummary.numMandatoryNOK > 0) {
+                return "Important: you are still failing ${junitSummary.numMandatoryNOK} mandatory tests"
+            }
+        }
+
+        return null
+    }
+
     /**
      * Creates a summary of the testing results, considering a certain [TestType].
      *
@@ -320,6 +335,7 @@ data class BuildReport(val mavenOutputLines: List<String>,
         var totalSkipped = 0
         var totalElapsed = 0.0f
         var totalMandatoryOK = 0  // mandatory tests that passed
+        var totalMandatoryNOK = 0  // mandatory tests that failed
 
         for (junitResult in junitResults) {
 
@@ -334,17 +350,17 @@ data class BuildReport(val mavenOutputLines: List<String>,
 
                 assignment.mandatoryTestsSuffix?.let {
                     mandatoryTestsSuffix ->
-                        totalMandatoryOK += junitResult.junitMethodResults
-                            .filter {
-                                it.fullMethodName.endsWith(mandatoryTestsSuffix) &&
-                                        it.type == JUnitMethodResultType.SUCCESS
+                        totalMandatoryOK += junitResult.junitMethodResults.count {
+                            it.fullMethodName.endsWith(mandatoryTestsSuffix) && it.type == JUnitMethodResultType.SUCCESS
                             }
-                            .count()
+                        totalMandatoryNOK += junitResult.junitMethodResults.count {
+                            it.fullMethodName.endsWith(mandatoryTestsSuffix) && it.type != JUnitMethodResultType.SUCCESS
+                        }
                 }
             }
         }
 
-        return JUnitSummary(totalTests, totalFailures, totalErrors, totalSkipped, totalElapsed, totalMandatoryOK)
+        return JUnitSummary(totalTests, totalFailures, totalErrors, totalSkipped, totalElapsed, totalMandatoryOK, totalMandatoryNOK)
 
     }
 

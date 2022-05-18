@@ -276,11 +276,19 @@ class AssignmentValidator {
                 // for each test class, check if all the @Test define a timeout
                 var invalidTestMethods = 0
                 var validTestMethods = 0
+                var mandatoryTestMethods = 0
                 for (testClass in testClasses) {
                     val testClassSource = builder.addSource(testClass)
                     testClassSource.classes.forEach {
                         it.methods.forEach {
                             val methodName = it.name
+
+                            assignment.mandatoryTestsSuffix?.let { suffix ->
+                                if (methodName.endsWith(suffix)) {
+                                    mandatoryTestMethods++
+                                }
+                            }
+
                             if (!it.annotations.any { it.type.fullyQualifiedName == "org.junit.Ignore" ||
                                             it.type.fullyQualifiedName == "Ignore" }) {  // ignore @Ignore
                                 it.annotations.forEach {
@@ -310,6 +318,16 @@ class AssignmentValidator {
                                     "will degrade the server. Example: Use @Test(timeout=500) to set a timeout of 500 miliseconds."))
                 } else if (validTestMethods > 0) {
                     report.add(Info(InfoType.INFO, "You have defined ${validTestMethods} test methods with timeout."))
+                }
+
+                if (assignment.mandatoryTestsSuffix != null) {
+                    if (mandatoryTestMethods == 0) {
+                        report.add(Info(InfoType.WARNING, "You haven't defined mandatory tests",
+                                "You have defined a mandatory tests suffix (${assignment.mandatoryTestsSuffix}) but none of the " +
+                                        "test methods end with that suffix."))
+                    } else {
+                        report.add(Info(InfoType.INFO, "You have defined ${mandatoryTestMethods} mandatory test methods"))
+                    }
                 }
             }
         }

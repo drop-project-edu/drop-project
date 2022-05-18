@@ -35,7 +35,8 @@ data class JUnitSummary(
         val numErrors: Int,
         val numSkipped: Int,
         val ellapsed: Float,
-        val numMandatoryOK: Int
+        val numMandatoryOK: Int,
+        val numMandatoryNOK: Int
 ) {
 
     val progress: Int

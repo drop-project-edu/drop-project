@@ -208,7 +208,12 @@
         </thead>
         <tbody>
         <tr>
-            <td th:text="${buildReport.junitSummaryTeacher}"></td>
+            <td>
+                <span th:text="${buildReport.junitSummaryTeacher}"></span>
+                <span th:if="${buildReport.junitSummaryTeacherExtraDescription}"
+                      th:text="${buildReport.junitSummaryTeacherExtraDescription}"
+                      class="label label-danger"></span>
+            </td>
         </tr>
         <tr th:if="${buildReport.junitErrorsTeacher}">
             <td>
