@@ -24,6 +24,7 @@ import org.dropProject.dao.*
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.*
 import org.dropProject.services.AssignmentService
+import org.dropProject.services.AssignmentTeacherFiles
 import org.dropProject.services.GitClient
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -42,7 +43,7 @@ import java.time.LocalDateTime
 @Transactional
 @Profile("!test")
 class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
-                                 val assignmentTagRepository: AssignmentTagRepository,
+                                 val assignmentReportRepository: AssignmentReportRepository,
                                  val assignmentTestMethodRepository: AssignmentTestMethodRepository,
                                  val assigneeRepository: AssigneeRepository,
                                  val submissionRepository: SubmissionRepository,
@@ -53,7 +54,8 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
                                  val projectGroupRepository: ProjectGroupRepository,
                                  val gitClient: GitClient,
                                  val resourceLoader: ResourceLoader,
-                                 val assignmentService: AssignmentService) : ApplicationListener<ContextRefreshedEvent> {
+                                 val assignmentService: AssignmentService,
+                                 val assignmentTeacherFiles: AssignmentTeacherFiles) : ApplicationListener<ContextRefreshedEvent> {
 
     companion object {
         const val sampleJavaAssignmentPrivateKey = "-----BEGIN RSA PRIVATE KEY-----\n" +
@@ -165,6 +167,13 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
             assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student2"))
             assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student4"))
             assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student5"))
+
+            // check assignment, to produce report
+            val report = assignmentTeacherFiles.checkAssignmentFiles(assignment, null)
+            report.forEach {
+                assignmentReportRepository.save(AssignmentReport(assignmentId = assignment.id, type = it.type,
+                    message = it.message, description = it.description))
+            }
 
             connected = true
 
