@@ -304,7 +304,7 @@ data class BuildReport(val mavenOutputLines: List<String>,
 
         val junitSummary = junitSummaryAsObject(testType)
         if (junitSummary != null) {
-            if (assignment.mandatoryTestsSuffix != null && junitSummary.numMandatoryNOK > 0) {
+            if (!assignment.mandatoryTestsSuffix.isNullOrEmpty() && junitSummary.numMandatoryNOK > 0) {
                 return "Important: you are still failing ${junitSummary.numMandatoryNOK} mandatory tests"
             }
         }
@@ -350,12 +350,14 @@ data class BuildReport(val mavenOutputLines: List<String>,
 
                 assignment.mandatoryTestsSuffix?.let {
                     mandatoryTestsSuffix ->
+                    if (mandatoryTestsSuffix.isNotEmpty()) {
                         totalMandatoryOK += junitResult.junitMethodResults.count {
                             it.fullMethodName.endsWith(mandatoryTestsSuffix) && it.type == JUnitMethodResultType.SUCCESS
-                            }
+                        }
                         totalMandatoryNOK += junitResult.junitMethodResults.count {
                             it.fullMethodName.endsWith(mandatoryTestsSuffix) && it.type != JUnitMethodResultType.SUCCESS
                         }
+                    }
                 }
             }
         }

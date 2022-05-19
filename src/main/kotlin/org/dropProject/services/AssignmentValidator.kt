@@ -283,12 +283,6 @@ class AssignmentValidator {
                         it.methods.forEach {
                             val methodName = it.name
 
-                            assignment.mandatoryTestsSuffix?.let { suffix ->
-                                if (methodName.endsWith(suffix)) {
-                                    mandatoryTestMethods++
-                                }
-                            }
-
                             if (!it.annotations.any { it.type.fullyQualifiedName == "org.junit.Ignore" ||
                                             it.type.fullyQualifiedName == "Ignore" }) {  // ignore @Ignore
                                 it.annotations.forEach {
@@ -300,6 +294,12 @@ class AssignmentValidator {
                                             validTestMethods++
                                         }
                                         testMethods.add(testClassSource.classes.get(0).name + ":" + methodName)
+
+                                        assignment.mandatoryTestsSuffix?.let { suffix ->
+                                            if (methodName.endsWith(suffix)) {
+                                                mandatoryTestMethods++
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -320,7 +320,7 @@ class AssignmentValidator {
                     report.add(Info(InfoType.INFO, "You have defined ${validTestMethods} test methods with timeout."))
                 }
 
-                if (assignment.mandatoryTestsSuffix != null) {
+                if (!assignment.mandatoryTestsSuffix.isNullOrEmpty()) {
                     if (mandatoryTestMethods == 0) {
                         report.add(Info(InfoType.WARNING, "You haven't defined mandatory tests",
                                 "You have defined a mandatory tests suffix (${assignment.mandatoryTestsSuffix}) but none of the " +
