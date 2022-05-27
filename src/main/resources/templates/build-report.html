@@ -7,6 +7,11 @@
 <body>
 
 <div th:replace="layout/layout :: header"></div>
+<style>
+    .table > tbody > tr > td {
+        vertical-align: middle;
+    }
+</style>
 
 <!--/*@thymesVar id="gitSubmission" type="org.dropProject.dao.GitSubmission"*/-->
 <!--/*@thymesVar id="assignment" type="org.dropProject.dao.Assignment"*/-->
@@ -81,6 +86,10 @@
                    data-btn-ok-label="Yes, delete!" data-btn-cancel-label="Cancel"/>
         </form>
     </div>
+
+    <a th:href="@{'/upload/' + ${assignment.id}}" th:if="${submission.getStatus() == T(org.dropProject.dao.SubmissionStatus).VALIDATED}" class="btn btn-primary">
+        <i class="glyphicon glyphicon-upload"></i> Submit new project
+    </a>
 
     <div class="alert alert-error" th:if="${error}">
     <span th:text="${error}"/><i th:if="${autoRefresh}" class="fa fa-spinner fa-spin" style="font-size:24px"></i>
@@ -209,7 +218,7 @@
         <tbody>
         <tr>
             <td>
-                <span th:text="${buildReport.junitSummaryTeacher}"></span>
+                <span th:text="${buildReport.junitSummaryTeacher}"></span><br/>
                 <span th:if="${buildReport.junitSummaryTeacherExtraDescription}"
                       th:text="${buildReport.junitSummaryTeacherExtraDescription}"
                       class="label label-danger"></span>
@@ -242,8 +251,9 @@
     </table>
     </div>
 
-    <a th:href="@{'/upload/' + ${assignment.id}}" th:if="${submission.getStatus() == T(org.dropProject.dao.SubmissionStatus).VALIDATED}" class="btn btn-default">Submit new project</a>
-
+    <a th:href="@{'/upload/' + ${assignment.id}}" th:if="${submission.getStatus() == T(org.dropProject.dao.SubmissionStatus).VALIDATED}" class="btn btn-primary">
+        <i class="glyphicon glyphicon-upload"></i> Submit new project
+    </a>
     <div>&nbsp;</div>
 
     <!--/*@thymesVar id="buildReport" type="org.dropProject.data.BuildReport"*/-->
