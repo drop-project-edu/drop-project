@@ -33,4 +33,11 @@ class TestAuthor {
         assertEquals(projGroup, author.group)
     }
 
+    @Test
+    fun testAuthorWithSpacesInName() {
+        var author = Author(0, " Pedro   ", "1234")
+        assertEquals("Pedro", author.name)
+        assertEquals("1234", author.userId)
+    }
+
 }

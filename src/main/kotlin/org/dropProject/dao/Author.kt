@@ -25,16 +25,18 @@ import javax.persistence.*
  * Represents the author of a submission (a student or a teacher).
  *
  * @property id is a primary-key like generated value
- * @property name is a String, representing the author's name
+ * @property name is a String, representing the author's name. All names are automatically trimmed
  * @property userId is a String, representing the author's id (e.g. student number, teacher number)
  * @property group is a [ProjectGroup], representing the group that the author belongs to
  */
 @Entity
-data class Author(
+class Author(
         @Id @GeneratedValue
         val id: Long = 0,
-        val name: String,
+        name: String,
         val userId: String) {
+
+    val name: String = name.trim()
 
     @ManyToOne
     lateinit var group: ProjectGroup
