@@ -72,6 +72,29 @@ class TestJunitResultsParser {
     }
 
     @Test
+    fun testParseReportWithErrors2() {
+
+        val xmlFile = resourceLoader.getResource("file:${junitXmlReportsRoot}/testErrors2.xml").file.readText()
+
+        val junitResult = junitResultsParser.parseXml(xmlFile)
+
+        assertEquals("TestTeacherPart1WithLargeFiles", junitResult.testClassName)
+        assertEquals(1, junitResult.junitMethodResults.size)
+        val jUnitMethodResult = junitResult.junitMethodResults[0]
+        jUnitMethodResult.filterStacktrace("pt.ulusofona.deisi.aed.deisiflix")
+        assertEquals("""
+ERROR: pt.ulusofona.deisi.aed.deisiflix.TestTeacherPart1WithLargeFiles.test01ParseFiles
+java.lang.NullPointerException: Cannot invoke "java.util.ArrayList.add(Object)" because "filmeNaLista.atoresFem" is null
+            at pt.ulusofona.deisi.aed.deisiflix.Main.lerFicheiros(Main.java:98)
+            at pt.ulusofona.deisi.aed.deisiflix.TestTeacherPart1WithLargeFiles.test01ParseFiles(TestTeacherPart1WithLargeFiles.java:38)
+
+
+        """.trimIndent(),
+            jUnitMethodResult.toString())
+
+    }
+
+    @Test
     fun testParseReportWithSkippedErrors() {
 
         val xmlFile = resourceLoader.getResource("file:${junitXmlReportsRoot}/testSkipped.xml").file.readText()

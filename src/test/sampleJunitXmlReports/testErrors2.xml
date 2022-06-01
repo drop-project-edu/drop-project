@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" name="pt.ulusofona.deisi.aed.deisiflix.TestTeacherPart1WithLargeFiles" time="5.888" tests="4" errors="1" skipped="0" failures="3">
+    <testcase name="test01ParseFiles" classname="pt.ulusofona.deisi.aed.deisiflix.TestTeacherPart1WithLargeFiles" time="5.869">
+        <error message="Cannot invoke &quot;java.util.ArrayList.add(Object)&quot; because &quot;filmeNaLista.atoresFem&quot; is null" type="java.lang.NullPointerException">java.lang.NullPointerException: Cannot invoke "java.util.ArrayList.add(Object)" because "filmeNaLista.atoresFem" is null
+            at pt.ulusofona.deisi.aed.deisiflix.Main.lerFicheiros(Main.java:98)
+            at pt.ulusofona.deisi.aed.deisiflix.TestTeacherPart1WithLargeFiles.test01ParseFiles(TestTeacherPart1WithLargeFiles.java:38)
+            at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+            at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+            at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+            at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+            at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)
+            at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+            at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)
+            at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+            at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:298)
+            at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:292)
+            at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+            at java.base/java.lang.Thread.run(Thread.java:833)
+        </error>
+    </testcase>
+</testsuite>
