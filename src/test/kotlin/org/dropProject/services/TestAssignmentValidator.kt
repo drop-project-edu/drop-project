@@ -106,6 +106,8 @@ class TestAssignmentValidator {
             it.type == AssignmentValidator.InfoType.ERROR &&
                     it.message == "You have hidden tests but you didn't set their visibility to students."
         })
+        assertTrue(report.any { it.type == AssignmentValidator.InfoType.INFO &&
+                it.message == "You are using a recent version of checkstyle."})
     }
 
     @Test
@@ -150,5 +152,15 @@ class TestAssignmentValidator {
         assignmentValidator.validate(assignmentFolder, dummyAssignment)
         val tests = assignmentValidator.testMethods
         assertEquals(35, tests.size)
+    }
+
+    @Test
+    fun `Test testJavaProjWithWrongCheckstyleVersion`() {
+
+        val assignmentFolder = resourceLoader.getResource("file:${sampleAssignmentsRootFolder}/testJavaProjWithWrongCheckstyleVersion").file
+        assignmentValidator.validate(assignmentFolder, dummyAssignment)
+        val report = assignmentValidator.report
+        assertTrue(report.any { it.type == AssignmentValidator.InfoType.ERROR &&
+        it.message == "You are using an outdated version of checkstyle."})
     }
 }

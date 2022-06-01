@@ -368,7 +368,7 @@ class UploadControllerTests {
                         "org/dropProject/sampleAssignments/testProj/Main.java:12:17: Nome da função 'FazCoisas' deve começar por letra minúscula. Caso o nome tenha mais do que uma palavra, as palavras seguintes devem ser capitalizadas (iniciadas por uma maiúscula). [MethodName]"
                         , "org/dropProject/sampleAssignments/testProj/Main.java:3:7: O nome da classe 'aluno' deve começar com letra maiúscula. Caso o nome tenha mais do que uma palavra, as palavras seguintes devem ser capitalizadas (iniciadas por uma maiúscula). [TypeName]"
                         , "org/dropProject/sampleAssignments/testProj/Main.java:10:22: A constante 'constante' deve estar em maiúsculas. Caso o nome tenha mais do que uma palavra, as mesmas devem ser separadas pelo caracter underscore(_) [ConstantName]"
-                        , "org/dropProject/sampleAssignments/testProj/Main.java:30: 'if' deve usar '{}'s mesmo que seja uma única linha [NeedBraces]"
+                        , "org/dropProject/sampleAssignments/testProj/Main.java:30:9: 'if' deve usar '{}'s mesmo que seja uma única linha [NeedBraces]"
                         , "org/dropProject/sampleAssignments/testProj/Main.java:4:9: O nome da variável 'Numero' deve começar com letra minúscula. Caso o nome tenha mais do que uma palavra, as palavras seguintes devem ser capitalizadas (iniciadas por uma maiúscula). [MemberName]"
                         , "org/dropProject/sampleAssignments/testProj/Main.java:31: Não é permitida a utilização da instrução System.exit(). Deve lançar uma Exception ou tratar graciosamente o erro. [RegexpSinglelineJava]"
                 ))
@@ -408,6 +408,21 @@ class UploadControllerTests {
         assertNotNull(buildResult.elapsedTimeJUnit())
         assert(buildResult.elapsedTimeJUnit()!! > 1.toBigDecimal())
 
+    }
+
+    @Test
+    @DirtiesContext
+    fun uploadProjectJava17() {
+
+        val submissionId = testsHelper.uploadProject(this.mvc, "projectJava17", "testJavaProj", STUDENT_1)
+
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId"))
+            .andExpect(status().isOk())
+            .andReturn()
+
+        @Suppress("UNCHECKED_CAST")
+        val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
+        println()
     }
 
     @Test

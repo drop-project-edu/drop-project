@@ -83,6 +83,7 @@ class AssignmentValidator {
             validatePomPreparedForMaxMemory(model)
         }
         validatePomPreparedForCoverage(model, assignment)
+        validateCheckstyleVersion(model)
     }
 
     // tests that the assignment is ready to use the system property "dropProject.currentUserId"
@@ -369,6 +370,24 @@ class AssignmentValidator {
             }
         }
 
+    }
+
+    private fun validateCheckstyleVersion(pomModel: Model) {
+
+        val checkstylePlugin = pomModel.build.plugins.find { it.artifactId == "maven-checkstyle-plugin" }
+        if (checkstylePlugin != null) {
+            val checkstyleDependency = checkstylePlugin.dependencies.find { it.artifactId == "checkstyle" }
+            if (checkstyleDependency != null) {
+                val majorVersion = checkstyleDependency.version.split(".")[0].toInt()
+                if (majorVersion < 9) {
+                    report.add(Info(InfoType.ERROR, "You are using an outdated version of checkstyle.",
+                            "You checkstyle dependency should be at least '9.0.1' " +
+                                    "to support recent java versions' syntax."))
+                } else {
+                    report.add(Info(InfoType.INFO, "You are using a recent version of checkstyle."))
+                }
+            }
+        }
     }
 
     private fun searchAllSourceFilesWithinFolder(folder: File, text: String): Boolean {
