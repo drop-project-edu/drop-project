@@ -61,10 +61,10 @@ data class JUnitMethodResult(val methodName: String,
         }
     }
 
-    internal val failureDetailLines = failureDetail?.lines()?.toMutableList()
+    internal val failureDetailLines = failureDetail?.lines()?.filter{ it.trim().isNotEmpty() }?.toMutableList()
 
     fun filterStacktrace(packageName: String) {
-        failureDetailLines?.removeIf { it.startsWith("\tat") && !it.contains(packageName) }
+        failureDetailLines?.removeIf { it.trimStart().startsWith("at") && !it.contains(packageName) }
     }
 
     fun getClassName(): String {
