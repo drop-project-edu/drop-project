@@ -71,6 +71,7 @@ open class DropProjectSecurityConfig(val apiAuthenticationManager: PersonalToken
             .antMatchers(
                 "/", "/upload", "/upload/*", "/buildReport/*", "/student/**",
                 "/git-submission/refresh-git/*", "/git-submission/generate-report/*", "/mySubmissions",
+                "/leaderboard/*",
                 "/personalToken", "/api/student/**"
             )
             .hasAnyRole("STUDENT", "TEACHER", "DROP_PROJECT_ADMIN")
