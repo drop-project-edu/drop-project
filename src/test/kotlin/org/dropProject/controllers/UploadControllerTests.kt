@@ -914,17 +914,33 @@ class UploadControllerTests {
         this.mvc.perform(post("/markAsFinal/2")
                 .with(user(TEACHER_1)))
                 .andExpect(redirectedUrl("/buildReport/2"))
-                .andExpect(status().isFound())
+                .andExpect(status().isFound)
 
         // check if it was not marked as final
         this.mvc.perform(get("/buildReport/1"))
-                .andExpect(status().isOk())
+                .andExpect(status().isOk)
                 .andExpect(model().attribute<Submission>("submission", hasProperty("markedAsFinal", equalTo(false))))
+
+        // check if it was marked as final
+        this.mvc.perform(get("/buildReport/2"))
+                .andExpect(status().isOk)
+                .andExpect(model().attribute<Submission>("submission", hasProperty("markedAsFinal", equalTo(true))))
+
+        // now mark first submission as final (it should unmark the second submission
+        this.mvc.perform(post("/markAsFinal/1")
+            .with(user(TEACHER_1)))
+            .andExpect(redirectedUrl("/buildReport/1"))
+            .andExpect(status().isFound)
+
+        // check if it was marked as final
+        this.mvc.perform(get("/buildReport/1"))
+            .andExpect(status().isOk)
+            .andExpect(model().attribute<Submission>("submission", hasProperty("markedAsFinal", equalTo(true))))
 
         // check if it was not marked as final
         this.mvc.perform(get("/buildReport/2"))
-                .andExpect(status().isOk())
-                .andExpect(model().attribute<Submission>("submission", hasProperty("markedAsFinal", equalTo(true))))
+            .andExpect(status().isOk)
+            .andExpect(model().attribute<Submission>("submission", hasProperty("markedAsFinal", equalTo(false))))
 
     }
 

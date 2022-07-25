@@ -149,7 +149,7 @@ class SubmissionService(
         val otherSubmissions = submissionRepository.findByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(submission.group, submission.assignmentId)
         for (otherSubmission in otherSubmissions) {
             otherSubmission.markedAsFinal = false
-            submissionRepository.save(submission)
+            submissionRepository.save(otherSubmission)
         }
 
         submission.markedAsFinal = true
