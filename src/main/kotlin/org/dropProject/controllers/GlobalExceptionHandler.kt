@@ -69,4 +69,10 @@ class GlobalExceptionHandler {
         LOG.warn("Access denied: ${exception.message}")
         return ResponseEntity("Access denied: ${exception.message}", HttpHeaders(), HttpStatus.FORBIDDEN)
     }
+
+    @ExceptionHandler(IllegalAccessException::class)
+    fun illegalAccessException(exception: Exception): ResponseEntity<Any> {
+        LOG.warn("Illegal operation: ${exception.message}")
+        return ResponseEntity("Illegal access: ${exception.message}", HttpHeaders(), HttpStatus.FORBIDDEN)
+    }
 }

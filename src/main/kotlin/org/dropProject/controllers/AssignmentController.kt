@@ -76,6 +76,7 @@ class AssignmentController(
         val gitSubmissionRepository: GitSubmissionRepository,
         val buildReportRepository: BuildReportRepository,
         val jUnitReportRepository: JUnitReportRepository,
+        val jacocoReportRepository: JacocoReportRepository,
         val gitClient: GitClient,
         val assignmentTeacherFiles: AssignmentTeacherFiles,
         val submissionService: SubmissionService,
@@ -229,7 +230,7 @@ class AssignmentController(
             if (principal.realName() != existingAssignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
                 LOG.warn("[${assignmentId}][${principal.realName()}] Assignments can only be changed " +
                         "by their ownerUserId (${existingAssignment.ownerUserId}) or authorized teachers")
-                throw IllegalAccessError("Assignments can only be changed by their owner or authorized teachers")
+                throw IllegalAccessException("Assignments can only be changed by their owner or authorized teachers")
             }
 
             if (assignmentForm.acl?.split(",")?.contains(existingAssignment.ownerUserId) == true) {
@@ -327,7 +328,7 @@ class AssignmentController(
      */
     @RequestMapping(value = ["/info/{assignmentId}"], method = [(RequestMethod.GET)])
     @Transactional(readOnly = true)  // because of assignment.tags forced loading
-    fun getAssignmentDetail(@PathVariable assignmentId: String, model: ModelMap, principal: Principal): String {
+    fun getAssignmentDetail(@PathVariable assignmentId: String, model: ModelMap, principal: Principal, request: HttpServletRequest): String {
 
         val assignment = assignmentRepository.getById(assignmentId).also {
             it.tagsStr = assignmentService.getTagsStr(it)
@@ -338,7 +339,7 @@ class AssignmentController(
         val assignmentReports = assignmentReportRepository.findByAssignmentId(assignmentId)
 
         if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
-            throw IllegalAccessError("Assignments can only be accessed by their owner or authorized teachers")
+            throw IllegalAccessException("Assignments can only be accessed by their owner or authorized teachers")
         }
 
         model["assignment"] = assignment
@@ -361,6 +362,8 @@ class AssignmentController(
 
             model["lastCommitInfoStr"] = if (lastCommitInfo != null) lastCommitInfo.toString() else "No commits"
         }
+
+        model["isAdmin"] = request.isUserInRole("DROP_PROJECT_ADMIN")
 
         return "assignment-detail";
     }
@@ -385,7 +388,7 @@ class AssignmentController(
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
         if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
-            throw IllegalAccessError("Assignments can only be changed by their owner or authorized teachers")
+            throw IllegalAccessException("Assignments can only be changed by their owner or authorized teachers")
         }
 
         val assignmentForm = createAssignmentFormBasedOnAssignment(assignment, acl)
@@ -458,7 +461,7 @@ class AssignmentController(
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
         if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
-            throw IllegalAccessError("Assignments can only be refreshed by their owner or authorized teachers")
+            throw IllegalAccessException("Assignments can only be refreshed by their owner or authorized teachers")
         }
 
         if (assignment.gitRepositoryPrivKey == null) {
@@ -525,7 +528,7 @@ class AssignmentController(
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
         if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
-            throw IllegalAccessError("Assignments can only be changed by their owner or authorized teachers")
+            throw IllegalAccessException("Assignments can only be changed by their owner or authorized teachers")
         }
 
         if (reconnect) {
@@ -576,7 +579,7 @@ class AssignmentController(
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
         if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
-            throw IllegalAccessError("Assignments can only be changed by their owner or authorized teachers")
+            throw IllegalAccessException("Assignments can only be changed by their owner or authorized teachers")
         }
 
         if (assignment.gitRepositoryPrivKey == null) {
@@ -671,19 +674,25 @@ class AssignmentController(
      * @return A String with the name of the relevant View
      */
     @RequestMapping(value = ["/delete/{assignmentId}"], method = [(RequestMethod.POST)])
-    fun deleteAssignment(@PathVariable assignmentId: String, redirectAttributes: RedirectAttributes,
-                         principal: Principal): String {
+    fun deleteAssignment(@PathVariable assignmentId: String,
+                         @RequestParam(name = "force", required = false, defaultValue = "false") forceDelete: Boolean,
+                         redirectAttributes: RedirectAttributes,
+                         principal: Principal,
+                         request: HttpServletRequest): String {
 
         val assignment = assignmentRepository.getById(assignmentId).also {
             it.tagsStr = assignmentService.getTagsStr(it)
         }
 
-
-        if (principal.realName() != assignment.ownerUserId) {
-            throw IllegalAccessError("Assignments can only be deleted by their owner")
+        if (forceDelete && !request.isUserInRole("DROP_PROJECT_ADMIN")) {
+            throw IllegalAccessException("Assignment can only be force-deleted by an admin")
         }
 
-        if (submissionRepository.countByAssignmentIdAndStatusNot(assignment.id, SubmissionStatus.DELETED.code).toInt() > 0) {
+        if (!request.isUserInRole("DROP_PROJECT_ADMIN") && principal.realName() != assignment.ownerUserId) {
+            throw IllegalAccessException("Assignments can only be deleted by their owner or an admin")
+        }
+
+        if (!forceDelete && submissionRepository.countByAssignmentIdAndStatusNot(assignment.id, SubmissionStatus.DELETED.code).toInt() > 0) {
             redirectAttributes.addFlashAttribute("error", "Assignment can't be deleted because it has submissions")
             return "redirect:/assignment/my"
         }
@@ -703,6 +712,29 @@ class AssignmentController(
             LOG.warn("Unable to delete ${rootFolder.absolutePath}")
         }
         LOG.info("Removed assignment ${assignment.id}")
+
+        if (forceDelete) {
+            LOG.info("Removing all submissions (files and db) related to ${assignmentId}")
+
+            val submissions = submissionRepository.findByAssignmentId(assignmentId)
+            submissionService.deleteOriginalFolderFor(submissions)
+            submissionService.deleteMavenizedFolderFor(submissions)
+
+            for (submission in submissions) {
+                submissionReportRepository.deleteBySubmissionId(submission.id)
+                jUnitReportRepository.deleteBySubmissionId(submission.id)
+                jacocoReportRepository.deleteBySubmissionId(submission.id)
+                if (submission.submissionId == null) {  // submission by git
+                    val gitSubmissionId = submission.gitSubmissionId ?: throw IllegalArgumentException("Git submission without gitSubmissionId")
+                    gitSubmissionRepository.deleteById(gitSubmissionId)
+                }
+                submission.buildReportId?.let {
+                    buildReportRepository.deleteById(it)
+                }
+            }
+
+            submissionRepository.deleteAllInBatch(submissions)
+        }
 
         redirectAttributes.addFlashAttribute("message", "Assignment was successfully deleted")
         return "redirect:/assignment/my"
@@ -726,7 +758,7 @@ class AssignmentController(
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
         if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
-            throw IllegalAccessError("Assignments can only be changed by their owner or authorized teachers")
+            throw IllegalAccessException("Assignments can only be changed by their owner or authorized teachers")
         }
 
         if (assignment.active != true) {
@@ -782,7 +814,7 @@ class AssignmentController(
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
         if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
-            throw IllegalAccessError("Assignments can only be archived by their owner or authorized teachers")
+            throw IllegalAccessException("Assignments can only be archived by their owner or authorized teachers")
         }
 
         assignment.archived = true
@@ -816,7 +848,7 @@ class AssignmentController(
         val acl = assignmentACLRepository.findByAssignmentId(assignment.id)
 
         if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
-            throw IllegalAccessError("Submissions can only be marked as final by the assignment owner or authorized teachers")
+            throw IllegalAccessException("Submissions can only be marked as final by the assignment owner or authorized teachers")
         }
 
         val submissionInfoList = submissionService.getSubmissionsList(assignment)
@@ -851,7 +883,7 @@ class AssignmentController(
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
         if (principal.realName() != assignment.ownerUserId && acl.find { it.userId == principal.realName() } == null) {
-            throw IllegalAccessError("Exporting assignments is restricted to their owner or authorized teachers")
+            throw IllegalAccessException("Exporting assignments is restricted to their owner or authorized teachers")
         }
 
         val taskId = "${System.currentTimeMillis()}"

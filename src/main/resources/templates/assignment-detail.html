@@ -59,6 +59,11 @@
                            class="btn-group" title="Export the assignment and all its submissions">Assignment and submissions</a>
                     </li>
                 </ul>
+                <form th:if="${isAdmin}" class="inline btn-group" method="post" th:action="@{'/delete/' + ${assignment.id} + '?force=true'}" >
+                    <input type="submit" value="Delete" class="btn btn-default" data-toggle="confirmation" data-title="Delete"
+                           data-content="Are you sure you want to delete this assignment including all its submissions?"
+                           data-btn-ok-label="Yes, delete!" data-btn-cancel-label="Cancel" />
+                </form>
             </div>
             <p>&nbsp;</p>
 

@@ -76,7 +76,7 @@ open class DropProjectSecurityConfig(val apiAuthenticationManager: PersonalToken
             )
             .hasAnyRole("STUDENT", "TEACHER", "DROP_PROJECT_ADMIN")
             .antMatchers("/cleanup/*", "/admin/**").hasRole("DROP_PROJECT_ADMIN")
-            .anyRequest().hasRole("TEACHER")
+            .anyRequest().hasAnyRole("TEACHER", "DROP_PROJECT_ADMIN")
             .and()
             .exceptionHandling()
             .accessDeniedHandler(APIAccessDeniedHandler("/access-denied.html"))

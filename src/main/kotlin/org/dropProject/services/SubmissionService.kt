@@ -41,6 +41,7 @@ import org.dropProject.storage.StorageService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.MessageSource
+import org.springframework.core.io.FileSystemResource
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.scheduling.annotation.EnableAsync
@@ -68,6 +69,7 @@ import javax.servlet.http.HttpServletRequest
 @EnableAsync
 class SubmissionService(
     val submissionRepository: SubmissionRepository,
+    val gitSubmissionRepository: GitSubmissionRepository,
     val submissionReportRepository: SubmissionReportRepository,
     val buildReportRepository: BuildReportRepository,
     val assignmentTeacherFiles: AssignmentTeacherFiles,
@@ -87,6 +89,12 @@ class SubmissionService(
 
     @Value("\${spring.web.locale}")
     val currentLocale : Locale = Locale.getDefault()
+
+    @Value("\${storage.rootLocation}/upload")
+    val uploadSubmissionsRootLocation: String = "submissions/upload"
+
+    @Value("\${storage.rootLocation}/git")
+    val gitSubmissionsRootLocation: String = "submissions/git"
 
     /**
      * Returns all the SubmissionInfo objects related with [assignment].
@@ -511,5 +519,38 @@ class SubmissionService(
         }
 
         return mavenizedProjectFolder
+    }
+
+    fun deleteMavenizedFolderFor(submissions: List<Submission>) {
+        for (submission in submissions) {
+            val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
+                submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
+            if (mavenizedProjectFolder.deleteRecursively()) {
+                LOG.info("Removed mavenized project folder (${submission.submissionId}): ${mavenizedProjectFolder}")
+            } else {
+                LOG.info("Error removing mavenized project folder (${submission.submissionId}): ${mavenizedProjectFolder}")
+            }
+        }
+    }
+
+    fun deleteOriginalFolderFor(submissions: List<Submission>) {
+        for (submission in submissions) {
+            val projectFolder =
+                if (submission.submissionId != null) {  // submission by upload
+                    submission.submissionFolder?.let { File(uploadSubmissionsRootLocation, it) }
+                } else {  // submission by git
+                    val gitSubmissionId = submission.gitSubmissionId ?: throw IllegalArgumentException("Git submission without gitSubmissionId")
+                    val gitSubmission = gitSubmissionRepository.findById(gitSubmissionId).orElse(null)
+                        ?: throw IllegalArgumentException("git submission ${gitSubmissionId} is not registered")
+                    File(gitSubmissionsRootLocation, gitSubmission.getFolderRelativeToStorageRoot())
+                }
+            if (projectFolder != null) {
+                if (projectFolder.deleteRecursively()) {
+                    LOG.info("Removed original project folder (${submission.submissionId}): ${projectFolder}")
+                } else {
+                    LOG.info("Error removing original project folder (${submission.submissionId}): ${projectFolder}")
+                }
+            }
+        }
     }
 }

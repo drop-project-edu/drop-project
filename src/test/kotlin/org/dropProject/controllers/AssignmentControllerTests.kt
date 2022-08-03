@@ -106,6 +106,9 @@ class AssignmentControllerTests {
     @Value("\${assignments.rootLocation}")
     val assignmentsRootLocation: String = ""
 
+    @Value("\${storage.rootLocation}/upload")
+    val uploadSubmissionsRootLocation: String = "submissions/upload"
+
     val TEACHER_1 = User("teacher1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
 
     @Test
@@ -785,6 +788,61 @@ class AssignmentControllerTests {
             .andExpect(model().hasNoErrors())
             .andExpect(model().attribute("assignments", hasSize<Assignment>(1)))
 
+    }
+
+    @Test
+    @DirtiesContext
+    fun test_12_2_deleteAssignmentWithForce() {
+
+        val STUDENT_1 = User("student1", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
+        val TEACHER_1 = User("teacher1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
+
+        // make a copy of the "testJavaProj" assignment files and create an assignment based on the copy
+        // so that we can safely delete it, without affecting the original files
+        val assignmentFolder = File(assignmentsRootLocation, "testJavaProjForDelete")
+        FileUtils.copyDirectory(File(assignmentsRootLocation, "testJavaProj"), assignmentFolder)
+
+        // create initial assignment
+        val assignment = Assignment(
+            id = "testJavaProj", name = "Test Project (for automatic tests)",
+            packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
+            submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
+            gitRepositoryFolder = "testJavaProjForDelete", public = false
+        )
+        assignmentRepository.save(assignment)
+        assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student1"))
+
+
+        // make a submission
+        val submissionId =
+            testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1).toLong()
+        val submission = submissionRepository.getById(submissionId)
+
+        // try to delete the assignment with force = true using someone who hasn't the admin role
+        this.mvc.perform(post("/assignment/delete/testJavaProj")
+            .param("force", "true")
+            .with(user(TEACHER_1)))
+            .andExpect(status().isForbidden)
+
+        // try to delete the assignment with force = true using someone who has the admin role
+        this.mvc.perform(
+            post("/assignment/delete/testJavaProj")
+                .param("force", "true")
+                .with(user(User("admin", "", mutableListOf(SimpleGrantedAuthority("ROLE_DROP_PROJECT_ADMIN")))))
+        )
+            .andExpect(status().isFound)
+            .andExpect(header().string("Location", "/assignment/my"))
+            .andExpect(flash().attribute("message", "Assignment was successfully deleted"))
+
+        // check if the assignment folder was deleted
+        assertFalse("$assignmentFolder should have been deleted", assignmentFolder.exists())
+
+        // check if the submission folder was deleted
+        val submissionFolder = File(uploadSubmissionsRootLocation, submission.submissionFolder)
+        assertFalse("$submissionFolder should have been deleted", submissionFolder.exists())
+
+        // check if the submission was deleted from the database
+        assertTrue("$submissionId should have been deleted from the DB", submissionRepository.findById(submissionId).isEmpty)
     }
 
     @Test

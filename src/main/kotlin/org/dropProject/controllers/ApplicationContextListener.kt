@@ -45,6 +45,7 @@ import java.time.LocalDateTime
 class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
                                  val assignmentReportRepository: AssignmentReportRepository,
                                  val assignmentTestMethodRepository: AssignmentTestMethodRepository,
+                                 val assignmentACLRepository: AssignmentACLRepository,
                                  val assigneeRepository: AssigneeRepository,
                                  val submissionRepository: SubmissionRepository,
                                  val submissionReportRepository: SubmissionReportRepository,
@@ -141,6 +142,7 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
                 active = true)
 
         assignmentService.addTagToAssignment(assignment, "sample")
+        assignmentACLRepository.save(AssignmentACL(assignmentId = assignment.id, userId = "admin"))
 
         assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "sampleJavaProject",
                 testClass = "TestTeacherProject", testMethod = "testFindMax"))
