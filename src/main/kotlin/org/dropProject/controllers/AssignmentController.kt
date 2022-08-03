@@ -215,8 +215,9 @@ class AssignmentController(
             val assignmentId = assignmentForm.assignmentId ?:
                 throw IllegalArgumentException("Trying to update an assignment without id")
 
-            val existingAssignment = assignmentRepository.getById(assignmentId)
-            existingAssignment.tagsStr = assignmentService.getTagsStr(existingAssignment)
+            val existingAssignment = assignmentRepository.getById(assignmentId).also {
+                it.tagsStr = assignmentService.getTagsStr(it)
+            }
 
             if (existingAssignment.gitRepositoryUrl != assignmentForm.gitRepositoryUrl) {
                 LOG.warn("[${assignmentId}] Git repository cannot be changed")
@@ -328,8 +329,10 @@ class AssignmentController(
     @Transactional(readOnly = true)  // because of assignment.tags forced loading
     fun getAssignmentDetail(@PathVariable assignmentId: String, model: ModelMap, principal: Principal): String {
 
-        val assignment = assignmentRepository.getById(assignmentId)
-        assignment.tagsStr = assignmentService.getTagsStr(assignment)
+        val assignment = assignmentRepository.getById(assignmentId).also {
+            it.tagsStr = assignmentService.getTagsStr(it)
+        }
+
         val assignees = assigneeRepository.findByAssignmentIdOrderByAuthorUserId(assignmentId)
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
         val assignmentReports = assignmentReportRepository.findByAssignmentId(assignmentId)
@@ -375,8 +378,10 @@ class AssignmentController(
     @Transactional(readOnly = true)  // because of assignment.tags
     fun getEditAssignmentForm(@PathVariable assignmentId: String, model: ModelMap, principal: Principal): String {
 
-        val assignment = assignmentRepository.getById(assignmentId)
-        assignment.tagsStr = assignmentService.getTagsStr(assignment)
+        val assignment = assignmentRepository.getById(assignmentId).also {
+            it.tagsStr = assignmentService.getTagsStr(it)
+        }
+
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
         if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
@@ -446,8 +451,10 @@ class AssignmentController(
                                        principal: Principal): ResponseEntity<String> {
 
         // check that it exists
-        val assignment = assignmentRepository.getById(assignmentId)
-        assignment.tagsStr = assignmentService.getTagsStr(assignment)
+        val assignment = assignmentRepository.getById(assignmentId).also {
+            it.tagsStr = assignmentService.getTagsStr(it)
+        }
+
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
         if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
@@ -511,8 +518,10 @@ class AssignmentController(
                                        @RequestParam(name = "reconnect", required = false) reconnect: Boolean = false,
                                        model: ModelMap, principal: Principal): String {
 
-        val assignment = assignmentRepository.getById(assignmentId)
-        assignment.tagsStr = assignmentService.getTagsStr(assignment)
+        val assignment = assignmentRepository.getById(assignmentId).also {
+            it.tagsStr = assignmentService.getTagsStr(it)
+        }
+
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
         if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
@@ -560,8 +569,10 @@ class AssignmentController(
                                          redirectAttributes: RedirectAttributes,
                                          model: ModelMap, principal: Principal): String {
 
-        val assignment = assignmentRepository.getById(assignmentId)
-        assignment.tagsStr = assignmentService.getTagsStr(assignment)
+        val assignment = assignmentRepository.getById(assignmentId).also {
+            it.tagsStr = assignmentService.getTagsStr(it)
+        }
+
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
         if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
@@ -663,11 +674,13 @@ class AssignmentController(
     fun deleteAssignment(@PathVariable assignmentId: String, redirectAttributes: RedirectAttributes,
                          principal: Principal): String {
 
-        val assignment = assignmentRepository.getById(assignmentId)
-        assignment.tagsStr = assignmentService.getTagsStr(assignment)
+        val assignment = assignmentRepository.getById(assignmentId).also {
+            it.tagsStr = assignmentService.getTagsStr(it)
+        }
+
 
         if (principal.realName() != assignment.ownerUserId) {
-            throw IllegalAccessError("Assignments can only be changed by their owner")
+            throw IllegalAccessError("Assignments can only be deleted by their owner")
         }
 
         if (submissionRepository.countByAssignmentIdAndStatusNot(assignment.id, SubmissionStatus.DELETED.code).toInt() > 0) {
@@ -706,8 +719,10 @@ class AssignmentController(
     fun toggleAssignmentStatus(@PathVariable assignmentId: String, redirectAttributes: RedirectAttributes,
                                principal: Principal): String {
 
-        val assignment = assignmentRepository.getById(assignmentId)
-        assignment.tagsStr = assignmentService.getTagsStr(assignment)
+        val assignment = assignmentRepository.getById(assignmentId).also {
+            it.tagsStr = assignmentService.getTagsStr(it)
+        }
+
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
         if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
@@ -760,8 +775,10 @@ class AssignmentController(
                           principal: Principal): String {
 
         // check that it exists
-        val assignment = assignmentRepository.getById(assignmentId)
-        assignment.tagsStr = assignmentService.getTagsStr(assignment)
+        val assignment = assignmentRepository.getById(assignmentId).also {
+            it.tagsStr = assignmentService.getTagsStr(it)
+        }
+
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
         if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
@@ -792,8 +809,10 @@ class AssignmentController(
                                   redirectAttributes: RedirectAttributes,
                                   principal: Principal): String {
 
-        val assignment = assignmentRepository.getById(assignmentId)
-        assignment.tagsStr = assignmentService.getTagsStr(assignment)
+        val assignment = assignmentRepository.getById(assignmentId).also {
+            it.tagsStr = assignmentService.getTagsStr(it)
+        }
+
         val acl = assignmentACLRepository.findByAssignmentId(assignment.id)
 
         if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
