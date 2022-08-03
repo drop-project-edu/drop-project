@@ -271,7 +271,7 @@ class ReportController(
                 val gitSubmissionId = submission.gitSubmissionId ?:
                     throw IllegalArgumentException("Git submission without gitSubmissionId")
                 val gitSubmission = gitSubmissionRepository.findById(gitSubmissionId).orElse(null)
-                        ?: throw IllegalArgumentException("git submission ${submissionId} is not registered")
+                        ?: throw IllegalArgumentException("git submission ${gitSubmissionId} is not registered")
                 val repositoryFolder = File(gitSubmissionsRootLocation, gitSubmission.getFolderRelativeToStorageRoot())
 
                 val zipFilename = submission.group.authorsStr().replace(",", "_")

@@ -417,16 +417,7 @@ class UploadController(
         LOG.info("Removing all non-final submission files related to ${assignmentId}")
 
         val nonFinalSubmissions = submissionRepository.findByAssignmentIdAndMarkedAsFinal(assignmentId, false)
-
-        for (submission in nonFinalSubmissions) {
-            val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
-                    submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
-            if (mavenizedProjectFolder.deleteRecursively()) {
-                LOG.info("Removed mavenized project folder (${submission.submissionId}): ${mavenizedProjectFolder}")
-            } else {
-                LOG.info("Error removing mavenized project folder (${submission.submissionId}): ${mavenizedProjectFolder}")
-            }
-        }
+        submissionService.deleteMavenizedFolderFor(nonFinalSubmissions)
 
         // TODO: Should show a toast saying how many files were deleted
         return "redirect:/report/${assignmentId}";
