@@ -41,7 +41,7 @@ class DropProjectApplication : SpringBootServletInitializer() {
 
     @Bean
     fun cacheManager(): CacheManager {
-        val archivedAssignmentsCacheConfig = CacheConfiguration("archivedAssignmentsCache", 10)
+        val archivedAssignmentsCacheConfig = CacheConfiguration(Constants.CACHE_ARCHIVED_ASSIGNMENTS_KEY, 10)
         val generalConfig = net.sf.ehcache.config.Configuration()
         generalConfig.addCache(archivedAssignmentsCacheConfig)
         return EhCacheCacheManager(net.sf.ehcache.CacheManager.newInstance(generalConfig))

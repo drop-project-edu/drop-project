@@ -23,6 +23,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import org.apache.commons.io.FileUtils
+import org.dropProject.Constants
 import org.dropProject.PendingTasks
 import org.dropProject.dao.*
 import org.dropProject.dao.BuildReport
@@ -57,25 +58,25 @@ data class AssignmentImportResult(val type: String, val message: String, val red
  */
 @Service
 class AssignmentService(
-        val assignmentRepository: AssignmentRepository,
-        val assignmentReportRepository: AssignmentReportRepository,
-        val assignmentACLRepository: AssignmentACLRepository,
-        val submissionRepository: SubmissionRepository,
-        val gitSubmissionRepository: GitSubmissionRepository,
-        val assigneeRepository: AssigneeRepository,
-        val submissionService: SubmissionService,
-        val assignmentTestMethodRepository: AssignmentTestMethodRepository,
-        val submissionReportRepository: SubmissionReportRepository,
-        val assignmentTagRepository: AssignmentTagRepository,
-        val assignmentTagsRepository: AssignmentTagsRepository,
-        val buildReportRepository: BuildReportRepository,
-        val jUnitReportRepository: JUnitReportRepository,
-        val jacocoReportRepository: JacocoReportRepository,
-        val zipService: ZipService,
-        val pendingTasks: PendingTasks,
-        val projectGroupService: ProjectGroupService,
-        val gitClient: GitClient,
-        val assignmentTeacherFiles: AssignmentTeacherFiles
+    val assignmentRepository: AssignmentRepository,
+    val assignmentReportRepository: AssignmentReportRepository,
+    val assignmentACLRepository: AssignmentACLRepository,
+    val submissionRepository: SubmissionRepository,
+    val gitSubmissionRepository: GitSubmissionRepository,
+    val assigneeRepository: AssigneeRepository,
+    val submissionService: SubmissionService,
+    val assignmentTestMethodRepository: AssignmentTestMethodRepository,
+    val submissionReportRepository: SubmissionReportRepository,
+    val assignmentTagRepository: AssignmentTagRepository,
+    val assignmentTagsRepository: AssignmentTagsRepository,
+    val buildReportRepository: BuildReportRepository,
+    val jUnitReportRepository: JUnitReportRepository,
+    val jacocoReportRepository: JacocoReportRepository,
+    val zipService: ZipService,
+    val pendingTasks: PendingTasks,
+    val projectGroupService: ProjectGroupService,
+    val gitClient: GitClient,
+    val assignmentTeacherFiles: AssignmentTeacherFiles
 ) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
@@ -101,9 +102,9 @@ class AssignmentService(
      * @return An [ArrayList] of Assignment(s)
      */
     @Cacheable(
-            value = ["archivedAssignmentsCache"],
-            key = "#principal.name",
-            condition = "#archived==true")
+        value = [Constants.CACHE_ARCHIVED_ASSIGNMENTS_KEY],
+        key = "#principal.name",
+        condition = "#archived==true")
     fun getMyAssignments(principal: Principal, archived: Boolean): List<Assignment> {
         val assignmentsOwns = assignmentRepository.findByOwnerUserId(principal.realName())
 
@@ -149,8 +150,8 @@ class AssignmentService(
      * - "signalledSubmissions" - meaning that the data is being loaded for the "Signalled Groups" page.
      */
     fun getAllSubmissionsForAssignment(assignmentId: String, principal: Principal, model: ModelMap,
-                                               request: HttpServletRequest, includeTestDetails: Boolean = false,
-                                               mode: String) {
+                                       request: HttpServletRequest, includeTestDetails: Boolean = false,
+                                       mode: String) {
         val assignment = assignmentRepository.findById(assignmentId).get()
         model["assignment"] = assignment
 
@@ -171,7 +172,6 @@ class AssignmentService(
 
             if (assignmentTests.isEmpty()) {
                 model["message"] = "No information about tests for this assignment"
-                model["otherMessage"] = model["message"]
             } else {
                 // calculate how many submissions pass each test
                 val testCounts = assignmentTests.map { "${it.testMethod}:${it.testClass}" to 0 }.toMap(LinkedHashMap())
@@ -492,46 +492,46 @@ class AssignmentService(
                          originalSubmissionsFolder: File,
                          principal: Principal): AssignmentImportResult {
 
-            val (assignmentId, errorMessage) = createAssignmentFromImportedFile(mapper, assignmentJSONFile, principal)
+        val (assignmentId, errorMessage) = createAssignmentFromImportedFile(mapper, assignmentJSONFile, principal)
 
-            if (errorMessage != null) {
-                return AssignmentImportResult("error", errorMessage, "redirect:/assignment/import")
-            } else {
-                LOG.info("Imported $assignmentId")
+        if (errorMessage != null) {
+            return AssignmentImportResult("error", errorMessage, "redirect:/assignment/import")
+        } else {
+            LOG.info("Imported $assignmentId")
+        }
+
+        if (submissionsJSONFile.exists()) {
+            val errorMessage2 = importSubmissionsFromImportedFile(mapper, submissionsJSONFile)
+            if (errorMessage2 != null) {
+                return AssignmentImportResult("error", errorMessage2, "redirect:/assignment/import")
             }
 
-            if (submissionsJSONFile.exists()) {
-                val errorMessage2 = importSubmissionsFromImportedFile(mapper, submissionsJSONFile)
-                if (errorMessage2 != null) {
-                    return AssignmentImportResult("error", errorMessage2, "redirect:/assignment/import")
+            if (gitSubmissionsJSONFile.exists()) {
+                val errorMessage3 = importGitSubmissionsFromImportedFile(mapper, gitSubmissionsJSONFile)
+                if (errorMessage3 != null) {
+                    return AssignmentImportResult("error", errorMessage3, "redirect:/assignment/import")
                 }
-
-                if (gitSubmissionsJSONFile.exists()) {
-                    val errorMessage3 = importGitSubmissionsFromImportedFile(mapper, gitSubmissionsJSONFile)
-                    if (errorMessage3 != null) {
-                        return AssignmentImportResult("error", errorMessage3, "redirect:/assignment/import")
-                    }
-                }
-
-                // import all the original submission files
-                if (originalSubmissionsFolder.exists()) {
-                    val assignment = assignmentRepository.getById(assignmentId)
-                    when (assignment.submissionMethod) {
-                        SubmissionMethod.UPLOAD -> FileUtils.copyDirectory(originalSubmissionsFolder, File(uploadSubmissionsRootLocation))
-                        SubmissionMethod.GIT -> FileUtils.copyDirectory(originalSubmissionsFolder, File(gitSubmissionsRootLocation))
-                    }
-                }
-                return AssignmentImportResult("message", "Imported successfully ${assignmentId} and all its submissions",
-                                                "redirect:/report/${assignmentId}")
-            } else {
-                return AssignmentImportResult("message", "Imported successfully ${assignmentId}. Submissions were not imported",
-                    "redirect:/assignment/info/${assignmentId}")
             }
+
+            // import all the original submission files
+            if (originalSubmissionsFolder.exists()) {
+                val assignment = assignmentRepository.getById(assignmentId)
+                when (assignment.submissionMethod) {
+                    SubmissionMethod.UPLOAD -> FileUtils.copyDirectory(originalSubmissionsFolder, File(uploadSubmissionsRootLocation))
+                    SubmissionMethod.GIT -> FileUtils.copyDirectory(originalSubmissionsFolder, File(gitSubmissionsRootLocation))
+                }
+            }
+            return AssignmentImportResult("message", "Imported successfully ${assignmentId} and all its submissions",
+                "redirect:/report/${assignmentId}")
+        } else {
+            return AssignmentImportResult("message", "Imported successfully ${assignmentId}. Submissions were not imported",
+                "redirect:/assignment/info/${assignmentId}")
+        }
 
     }
 
     fun importSubmissionsFromImportedFile(mapper: ObjectMapper,
-                                                  submissionsJSONFile: File): String? {
+                                          submissionsJSONFile: File): String? {
 
         val submissions = mapper.readValue(submissionsJSONFile, object : TypeReference<List<SubmissionExport>?>() {})
 
@@ -660,7 +660,7 @@ class AssignmentService(
     }
 
     fun importGitSubmissionsFromImportedFile(mapper: ObjectMapper,
-                                          submissionsJSONFile: File): String? {
+                                             submissionsJSONFile: File): String? {
 
         val gitSubmissions = mapper.readValue(submissionsJSONFile, object : TypeReference<List<GitSubmissionExport>?>() {})
 

@@ -29,6 +29,8 @@ object Constants {
     const val COOLOFF_FOR_STRUCTURE_OR_COMPILATION = 2 // minutes
 
     const val TOO_MUCH_OUTPUT_THRESHOLD = 2500 // more than 2500 println's is too much
+
+    const val CACHE_ARCHIVED_ASSIGNMENTS_KEY = "archivedAssignmentsCache"
 }
     
     

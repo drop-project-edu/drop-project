@@ -22,6 +22,7 @@ package org.dropProject.controllers
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import org.apache.commons.io.FileUtils
+import org.dropProject.Constants.CACHE_ARCHIVED_ASSIGNMENTS_KEY
 import org.dropProject.PendingTaskError
 import org.dropProject.PendingTasks
 import org.dropProject.dao.*
@@ -64,27 +65,27 @@ import javax.validation.Valid
 @Controller
 @RequestMapping("/assignment")
 class AssignmentController(
-        val authorRepository: AuthorRepository,
-        val assignmentRepository: AssignmentRepository,
-        val assignmentReportRepository: AssignmentReportRepository,
-        val assignmentTagRepository: AssignmentTagRepository,
-        val assignmentTestMethodRepository: AssignmentTestMethodRepository,
-        val assigneeRepository: AssigneeRepository,
-        val assignmentACLRepository: AssignmentACLRepository,
-        val submissionRepository: SubmissionRepository,
-        val submissionReportRepository: SubmissionReportRepository,
-        val gitSubmissionRepository: GitSubmissionRepository,
-        val buildReportRepository: BuildReportRepository,
-        val jUnitReportRepository: JUnitReportRepository,
-        val jacocoReportRepository: JacocoReportRepository,
-        val gitClient: GitClient,
-        val assignmentTeacherFiles: AssignmentTeacherFiles,
-        val submissionService: SubmissionService,
-        val assignmentService: AssignmentService,
-        val zipService: ZipService,
-        val cacheManager: CacheManager,
-        val projectGroupService: ProjectGroupService,
-        val pendingTasks: PendingTasks) {
+    val authorRepository: AuthorRepository,
+    val assignmentRepository: AssignmentRepository,
+    val assignmentReportRepository: AssignmentReportRepository,
+    val assignmentTagRepository: AssignmentTagRepository,
+    val assignmentTestMethodRepository: AssignmentTestMethodRepository,
+    val assigneeRepository: AssigneeRepository,
+    val assignmentACLRepository: AssignmentACLRepository,
+    val submissionRepository: SubmissionRepository,
+    val submissionReportRepository: SubmissionReportRepository,
+    val gitSubmissionRepository: GitSubmissionRepository,
+    val buildReportRepository: BuildReportRepository,
+    val jUnitReportRepository: JUnitReportRepository,
+    val jacocoReportRepository: JacocoReportRepository,
+    val gitClient: GitClient,
+    val assignmentTeacherFiles: AssignmentTeacherFiles,
+    val submissionService: SubmissionService,
+    val assignmentService: AssignmentService,
+    val zipService: ZipService,
+    val cacheManager: CacheManager,
+    val projectGroupService: ProjectGroupService,
+    val pendingTasks: PendingTasks) {
 
     @Value("\${assignments.rootLocation}")
     val assignmentsRootLocation: String = ""
@@ -109,8 +110,8 @@ class AssignmentController(
     fun getNewAssignmentForm(model: ModelMap): String {
         model["assignmentForm"] = AssignmentForm()
         model["allTags"] = assignmentTagRepository.findAll()
-                .map { "'" + it.name + "'" }
-                .joinToString(separator = ",", prefix = "[", postfix = "]")
+            .map { "'" + it.name + "'" }
+            .joinToString(separator = ",", prefix = "[", postfix = "]")
         return "assignment-form"
     }
 
@@ -138,7 +139,7 @@ class AssignmentController(
         var mustSetupGitConnection = false
 
         if (assignmentForm.acceptsStudentTests &&
-                (assignmentForm.minStudentTests == null || assignmentForm.minStudentTests!! < 1)) {
+            (assignmentForm.minStudentTests == null || assignmentForm.minStudentTests!! < 1)) {
             LOG.warn("Error: You must require at least one student test")
             bindingResult.rejectValue("acceptsStudentTests", "acceptsStudentTests.atLeastOne", "Error: You must require at least one student test")
             return "assignment-form"
@@ -147,14 +148,14 @@ class AssignmentController(
         if (!assignmentForm.acceptsStudentTests && assignmentForm.minStudentTests != null) {
             LOG.warn("If you require ${assignmentForm.minStudentTests} student tests, you must check 'Accepts student tests'")
             bindingResult.rejectValue("acceptsStudentTests", "acceptsStudentTests.mustCheck",
-                    "Error: If you require ${assignmentForm.minStudentTests} student tests, you must check 'Accepts student tests'")
+                "Error: If you require ${assignmentForm.minStudentTests} student tests, you must check 'Accepts student tests'")
             return "assignment-form"
         }
 
         if (!assignmentForm.acceptsStudentTests && assignmentForm.calculateStudentTestsCoverage) {
             LOG.warn("If you want to calculate coverage of student tests, you must check 'Accepts student tests'")
             bindingResult.rejectValue("acceptsStudentTests", "acceptsStudentTests.mustCheck",
-                    "Error: If you want to calculate coverage of student tests, you must check 'Accepts student tests'")
+                "Error: If you want to calculate coverage of student tests, you must check 'Accepts student tests'")
             return "assignment-form"
         }
 
@@ -164,7 +165,7 @@ class AssignmentController(
             if (assignmentForm.acl?.split(",")?.contains(principal.realName()) == true) {
                 LOG.warn("Assignment ACL should not include the owner")
                 bindingResult.rejectValue("acl", "acl.includeOwner",
-                        "Error: You don't need to give autorization to yourself, only other teachers")
+                    "Error: You don't need to give autorization to yourself, only other teachers")
                 return "assignment-form"
             }
 
@@ -214,7 +215,7 @@ class AssignmentController(
         } else {   // update
 
             val assignmentId = assignmentForm.assignmentId ?:
-                throw IllegalArgumentException("Trying to update an assignment without id")
+            throw IllegalArgumentException("Trying to update an assignment without id")
 
             val existingAssignment = assignmentRepository.getById(assignmentId).also {
                 it.tagsStr = assignmentService.getTagsStr(it)
@@ -236,7 +237,7 @@ class AssignmentController(
             if (assignmentForm.acl?.split(",")?.contains(existingAssignment.ownerUserId) == true) {
                 LOG.warn("Assignment ACL should not include the owner")
                 bindingResult.rejectValue("acl", "acl.includeOwner",
-                        "Error: You don't need to include the assignment owner, only other teachers")
+                    "Error: You don't need to include the assignment owner, only other teachers")
                 return "assignment-form"
             }
 
@@ -250,7 +251,7 @@ class AssignmentController(
 
             if (assignment.archived) {
                 // evict the "archiveAssignmentsCache" cache
-                cacheManager.getCache("archivedAssignmentsCache")?.clear()
+                cacheManager.getCache(CACHE_ARCHIVED_ASSIGNMENTS_KEY)?.clear()
             }
 
             // TODO: Need to rebuild?
@@ -296,18 +297,18 @@ class AssignmentController(
      */
     private fun createAssignmentBasedOnForm(assignmentForm: AssignmentForm, principal: Principal): Assignment {
         val newAssignment = Assignment(id = assignmentForm.assignmentId!!, name = assignmentForm.assignmentName!!,
-                packageName = assignmentForm.assignmentPackage, language = assignmentForm.language!!,
-                dueDate = if (assignmentForm.dueDate != null) java.sql.Timestamp.valueOf(assignmentForm.dueDate) else null,
-                acceptsStudentTests = assignmentForm.acceptsStudentTests,
-                minStudentTests = assignmentForm.minStudentTests,
-                calculateStudentTestsCoverage = assignmentForm.calculateStudentTestsCoverage,
-                mandatoryTestsSuffix = assignmentForm.mandatoryTestsSuffix,
-                cooloffPeriod = assignmentForm.cooloffPeriod,
-                maxMemoryMb = assignmentForm.maxMemoryMb, submissionMethod = assignmentForm.submissionMethod!!,
-                gitRepositoryUrl = assignmentForm.gitRepositoryUrl!!, ownerUserId = principal.realName(),
-                gitRepositoryFolder = assignmentForm.assignmentId!!, showLeaderBoard = assignmentForm.leaderboardType != null,
-                hiddenTestsVisibility = assignmentForm.hiddenTestsVisibility,
-                leaderboardType = assignmentForm.leaderboardType)
+            packageName = assignmentForm.assignmentPackage, language = assignmentForm.language!!,
+            dueDate = if (assignmentForm.dueDate != null) java.sql.Timestamp.valueOf(assignmentForm.dueDate) else null,
+            acceptsStudentTests = assignmentForm.acceptsStudentTests,
+            minStudentTests = assignmentForm.minStudentTests,
+            calculateStudentTestsCoverage = assignmentForm.calculateStudentTestsCoverage,
+            mandatoryTestsSuffix = assignmentForm.mandatoryTestsSuffix,
+            cooloffPeriod = assignmentForm.cooloffPeriod,
+            maxMemoryMb = assignmentForm.maxMemoryMb, submissionMethod = assignmentForm.submissionMethod!!,
+            gitRepositoryUrl = assignmentForm.gitRepositoryUrl!!, ownerUserId = principal.realName(),
+            gitRepositoryFolder = assignmentForm.assignmentId!!, showLeaderBoard = assignmentForm.leaderboardType != null,
+            hiddenTestsVisibility = assignmentForm.hiddenTestsVisibility,
+            leaderboardType = assignmentForm.leaderboardType)
 
         // associate tags
         val tagNames = assignmentForm.assignmentTags?.lowercase(Locale.getDefault())?.split(",")
@@ -397,8 +398,8 @@ class AssignmentController(
 
         model["assignmentForm"] = assignmentForm
         model["allTags"] = assignmentTagRepository.findAll()
-                .map { "'" + it.name + "'" }
-                .joinToString(separator = ",", prefix = "[", postfix = "]")
+            .map { "'" + it.name + "'" }
+            .joinToString(separator = ",", prefix = "[", postfix = "]")
 
         return "assignment-form";
     }
@@ -411,21 +412,21 @@ class AssignmentController(
      */
     private fun createAssignmentFormBasedOnAssignment(assignment: Assignment, acl: List<AssignmentACL>): AssignmentForm {
         val assignmentForm = AssignmentForm(assignmentId = assignment.id,
-                assignmentName = assignment.name,
-                assignmentTags = assignment.tagsStr?.joinToString(),
-                assignmentPackage = assignment.packageName,
-                language = assignment.language,
-                dueDate = assignment.dueDate?.toInstant()?.atZone(ZoneId.systemDefault())?.toLocalDateTime(),
-                submissionMethod = assignment.submissionMethod,
-                gitRepositoryUrl = assignment.gitRepositoryUrl,
-                acceptsStudentTests = assignment.acceptsStudentTests,
-                minStudentTests = assignment.minStudentTests,
-                calculateStudentTestsCoverage = assignment.calculateStudentTestsCoverage,
-                mandatoryTestsSuffix = assignment.mandatoryTestsSuffix,
-                cooloffPeriod = assignment.cooloffPeriod,
-                hiddenTestsVisibility = assignment.hiddenTestsVisibility,
-                maxMemoryMb = assignment.maxMemoryMb,
-                leaderboardType = assignment.leaderboardType
+            assignmentName = assignment.name,
+            assignmentTags = assignment.tagsStr?.joinToString(),
+            assignmentPackage = assignment.packageName,
+            language = assignment.language,
+            dueDate = assignment.dueDate?.toInstant()?.atZone(ZoneId.systemDefault())?.toLocalDateTime(),
+            submissionMethod = assignment.submissionMethod,
+            gitRepositoryUrl = assignment.gitRepositoryUrl,
+            acceptsStudentTests = assignment.acceptsStudentTests,
+            minStudentTests = assignment.minStudentTests,
+            calculateStudentTestsCoverage = assignment.calculateStudentTestsCoverage,
+            mandatoryTestsSuffix = assignment.mandatoryTestsSuffix,
+            cooloffPeriod = assignment.cooloffPeriod,
+            hiddenTestsVisibility = assignment.hiddenTestsVisibility,
+            maxMemoryMb = assignment.maxMemoryMb,
+            leaderboardType = assignment.leaderboardType
         )
 
         val assignees = assigneeRepository.findByAssignmentIdOrderByAuthorUserId(assignment.id)
@@ -492,7 +493,7 @@ class AssignmentController(
             assignmentReportRepository.deleteByAssignmentId(assignmentId)
             report.forEach {
                 assignmentReportRepository.save(AssignmentReport(assignmentId = assignmentId, type = it.type,
-                        message = it.message, description = it.description))
+                    message = it.message, description = it.description))
             }
 
         } catch (re: RefNotAdvertisedException) {
@@ -614,7 +615,7 @@ class AssignmentController(
         assignmentReportRepository.deleteByAssignmentId(assignmentId)
         report.forEach {
             assignmentReportRepository.save(AssignmentReport(assignmentId = assignmentId, type = it.type,
-                    message = it.message, description = it.description))
+                message = it.message, description = it.description))
         }
 
         if (report.any { it.type == AssignmentValidator.InfoType.ERROR }) {
@@ -697,12 +698,61 @@ class AssignmentController(
             return "redirect:/assignment/my"
         }
 
+        if (forceDelete) {
+            LOG.info("Removing all submissions (files and db) related to ${assignmentId}")
+
+            val submissions = submissionRepository.findByAssignmentId(assignmentId)
+
+            // remove the base folder for all original submissions for this assignment
+            val assignmentOriginalProjectsRootFolder =
+                when (assignment.submissionMethod) {
+                    SubmissionMethod.UPLOAD -> File(uploadSubmissionsRootLocation, assignmentId)
+                    SubmissionMethod.GIT -> File(gitSubmissionsRootLocation, assignmentId)
+                }
+            if (assignmentOriginalProjectsRootFolder.deleteRecursively()) {
+                LOG.info("Removed original projects base folder: ${assignmentOriginalProjectsRootFolder}")
+            } else {
+                LOG.info("Error removing original projects base folder: ${assignmentOriginalProjectsRootFolder}")
+            }
+
+            // remove the base folder for all mavenized submissions for this assignment
+            val assignmentMavenizedProjectsRootFolder = File(mavenizedProjectsRootLocation, assignmentId)
+            if (assignmentMavenizedProjectsRootFolder.deleteRecursively()) {
+                LOG.info("Removed mavenized projects base folder: ${assignmentMavenizedProjectsRootFolder}")
+            } else {
+                LOG.info("Error removing mavenized projects base folder: ${assignmentMavenizedProjectsRootFolder}")
+            }
+
+            val count = submissions.size
+            for ((idx, submission) in submissions.withIndex()) {
+                LOG.info("Removing everything related to submission ${submission.id} from DB ($idx/$count)")
+
+                try {
+                    submissionReportRepository.deleteBySubmissionId(submission.id)
+                    jUnitReportRepository.deleteBySubmissionId(submission.id)
+                    jacocoReportRepository.deleteBySubmissionId(submission.id)
+                    submission.buildReportId?.let {
+                        buildReportRepository.deleteById(it)
+                    }
+                    if (submission.submissionId == null) {  // submission by git
+                        val gitSubmissionId = submission.gitSubmissionId ?: throw IllegalArgumentException("Git submission without gitSubmissionId")
+                        gitSubmissionRepository.deleteById(gitSubmissionId)
+                    }
+                } catch (e: Exception) {
+                    LOG.warn("Error removing stuff related to submission ${submission.id}. Moving on...", e)
+                }
+            }
+
+            LOG.info("Removing all the submissions from DB")
+            submissionRepository.deleteAllInBatch(submissions)
+        }
+
         assignmentService.clearAllTags(assignment, clearOrphans = true)
         assignmentRepository.save(assignment)
 
-        assignmentRepository.deleteById(assignmentId)
         assignmentACLRepository.deleteByAssignmentId(assignmentId)
         assignmentReportRepository.deleteByAssignmentId(assignmentId)
+        assignmentRepository.deleteById(assignmentId)
 
         val rootFolder = File(assignmentsRootLocation, assignment.gitRepositoryFolder)
 
@@ -713,27 +763,9 @@ class AssignmentController(
         }
         LOG.info("Removed assignment ${assignment.id}")
 
-        if (forceDelete) {
-            LOG.info("Removing all submissions (files and db) related to ${assignmentId}")
-
-            val submissions = submissionRepository.findByAssignmentId(assignmentId)
-            submissionService.deleteOriginalFolderFor(submissions)
-            submissionService.deleteMavenizedFolderFor(submissions)
-
-            for (submission in submissions) {
-                submissionReportRepository.deleteBySubmissionId(submission.id)
-                jUnitReportRepository.deleteBySubmissionId(submission.id)
-                jacocoReportRepository.deleteBySubmissionId(submission.id)
-                if (submission.submissionId == null) {  // submission by git
-                    val gitSubmissionId = submission.gitSubmissionId ?: throw IllegalArgumentException("Git submission without gitSubmissionId")
-                    gitSubmissionRepository.deleteById(gitSubmissionId)
-                }
-                submission.buildReportId?.let {
-                    buildReportRepository.deleteById(it)
-                }
-            }
-
-            submissionRepository.deleteAllInBatch(submissions)
+        // if the assignment was archived, we have to clear the archived cache
+        if (assignment.archived) {
+            cacheManager.getCache(CACHE_ARCHIVED_ASSIGNMENTS_KEY)?.clear()
         }
 
         redirectAttributes.addFlashAttribute("message", "Assignment was successfully deleted")
@@ -775,7 +807,7 @@ class AssignmentController(
             assignmentReportRepository.deleteByAssignmentId(assignmentId)
             report.forEach {
                 assignmentReportRepository.save(AssignmentReport(assignmentId = assignmentId, type = it.type,
-                        message = it.message, description = it.description))
+                    message = it.message, description = it.description))
             }
 
             if (report.any { it.type == AssignmentValidator.InfoType.ERROR }) {  // TODO: Should it be warnings also??
@@ -821,7 +853,7 @@ class AssignmentController(
         assignmentRepository.save(assignment)
 
         // evict the "archiveAssignmentsCache" cache
-        cacheManager.getCache("archivedAssignmentsCache")?.clear()
+        cacheManager.getCache(CACHE_ARCHIVED_ASSIGNMENTS_KEY)?.clear()
 
         redirectAttributes.addFlashAttribute("message", "Assignment was archived. You can now find it in the Archived assignments page")
         return "redirect:/assignment/my"
@@ -874,11 +906,11 @@ class AssignmentController(
      */
     @RequestMapping(value = ["/export/{assignmentId}"], method = [(RequestMethod.GET)])
     fun startAssignmentExport(@PathVariable assignmentId: String,
-                         @RequestParam(name="includeSubmissions", required = false) includeSubmissions: Boolean = false,
-                         principal: Principal): String {
+                              @RequestParam(name="includeSubmissions", required = false) includeSubmissions: Boolean = false,
+                              principal: Principal): String {
 
         val assignment = assignmentRepository.findById(assignmentId).orElse(null) ?:
-            throw IllegalArgumentException("assignment ${assignmentId} is not registered")
+        throw IllegalArgumentException("assignment ${assignmentId} is not registered")
 
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
@@ -923,7 +955,7 @@ class AssignmentController(
         produces = [org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE])
     @ResponseBody
     fun getAssignmentExportFile(@PathVariable taskId: String,
-                              response: HttpServletResponse): FileSystemResource {
+                                response: HttpServletResponse): FileSystemResource {
 
         val result = pendingTasks.get(taskId)
 
@@ -965,7 +997,7 @@ class AssignmentController(
                          request: HttpServletRequest): String {
 
         val originalFilename = file.originalFilename ?:
-            throw IllegalArgumentException("Original filename is null")
+        throw IllegalArgumentException("Original filename is null")
 
         if (!(originalFilename.endsWith(".dp", ignoreCase = true))) {
             redirectAttributes.addFlashAttribute("error", "Error: File must be .dp")
@@ -1017,8 +1049,8 @@ class AssignmentController(
         model["assignments"] = assignments // ordered client-side
         model["archived"] = archived
         model["allTags"] = assignmentTagRepository.findAll()
-                .map { it.selected = tags?.split(",")?.contains(it.name) ?: false; it }
-                .sortedBy { it.name }
+            .map { it.selected = tags?.split(",")?.contains(it.name) ?: false; it }
+            .sortedBy { it.name }
     }
 
 

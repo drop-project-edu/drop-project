@@ -103,16 +103,16 @@ class SubmissionService(
      */
     fun getSubmissionsList(assignment: Assignment): ArrayList<SubmissionInfo> {
         val submissions = submissionRepository
-                .findByAssignmentId(assignment.id)
-                .filter { it.getStatus() != SubmissionStatus.DELETED }
+            .findByAssignmentId(assignment.id)
+            .filter { it.getStatus() != SubmissionStatus.DELETED }
 
         val submissionsByGroup = submissions.groupBy { it -> it.group }
 
         val submissionInfoList = ArrayList<SubmissionInfo>()
         for ((group, submissionList) in submissionsByGroup) {
             val sortedSubmissionList =
-                    submissionList.sortedWith(compareByDescending<Submission> { it.submissionDate }
-                            .thenByDescending { it.statusDate })
+                submissionList.sortedWith(compareByDescending<Submission> { it.submissionDate }
+                    .thenByDescending { it.statusDate })
 
             // check if some submission has been marked as final. in that case, that goes into the start of the list
             var lastSubmission = sortedSubmissionList[0]
@@ -124,23 +124,23 @@ class SubmissionService(
             }
 
             lastSubmission.buildReportId?.let {
-                buildReportId ->
-                    val reportElements = submissionReportRepository.findBySubmissionId(lastSubmission.id)
-                    lastSubmission.reportElements = reportElements
+                    buildReportId ->
+                val reportElements = submissionReportRepository.findBySubmissionId(lastSubmission.id)
+                lastSubmission.reportElements = reportElements
 
-                    val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(lastSubmission,
-                            lastSubmission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
-                    val buildReportDB = buildReportRepository.getById(buildReportId)
-                    val buildReport = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
-                            mavenizedProjectFolder.absolutePath, assignment, lastSubmission)
-                    lastSubmission.ellapsed = buildReport.elapsedTimeJUnit()
-                    lastSubmission.teacherTests = buildReport.junitSummaryAsObject(TestType.TEACHER)
-                    lastSubmission.hiddenTests = buildReport.junitSummaryAsObject(TestType.HIDDEN)
-                    if (buildReport.jacocoResults.isNotEmpty()) {
-                        lastSubmission.coverage = buildReport.jacocoResults[0].lineCoveragePercent
-                    }
+                val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(lastSubmission,
+                    lastSubmission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
+                val buildReportDB = buildReportRepository.getById(buildReportId)
+                val buildReport = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
+                    mavenizedProjectFolder.absolutePath, assignment, lastSubmission)
+                lastSubmission.ellapsed = buildReport.elapsedTimeJUnit()
+                lastSubmission.teacherTests = buildReport.junitSummaryAsObject(TestType.TEACHER)
+                lastSubmission.hiddenTests = buildReport.junitSummaryAsObject(TestType.HIDDEN)
+                if (buildReport.jacocoResults.isNotEmpty()) {
+                    lastSubmission.coverage = buildReport.jacocoResults[0].lineCoveragePercent
+                }
 
-                    lastSubmission.testResults = buildReport.testResults()
+                lastSubmission.testResults = buildReport.testResults()
             }
 
             submissionInfoList.add(SubmissionInfo(group, lastSubmission, sortedSubmissionList))
@@ -287,7 +287,7 @@ class SubmissionService(
      *
      * @return a Submission
      */
-     fun getLastSubmission(principal: Principal, assignmentId: String): Submission? {
+    fun getLastSubmission(principal: Principal, assignmentId: String): Submission? {
         val groupsToWhichThisStudentBelongs = projectGroupRepository.getGroupsForAuthor(principal.realName())
         var lastSubmission: Submission? = null
         // TODO: This is ugly - should rethink data model for groups
@@ -401,12 +401,12 @@ class SubmissionService(
      * @property teacherRebuid is a Boolean, indicating if this "build" is being requested by a teacher
      * @property principal is a [Principal] representing the user making the request
      */
-     fun buildSubmission(projectFolder: File, assignment: Assignment,
-                                authorsStr: String,
-                                submission: Submission,
-                                asyncExecutor: Executor,
-                                teacherRebuild: Boolean = false,
-                                principal: Principal?) {
+    fun buildSubmission(projectFolder: File, assignment: Assignment,
+                        authorsStr: String,
+                        submission: Submission,
+                        asyncExecutor: Executor,
+                        teacherRebuild: Boolean = false,
+                        principal: Principal?) {
         val projectStructureErrors = checkProjectStructure(projectFolder, assignment)
         if (!projectStructureErrors.isEmpty()) {
             LOG.info("[${authorsStr}] Project Structure NOK")
@@ -529,27 +529,6 @@ class SubmissionService(
                 LOG.info("Removed mavenized project folder (${submission.submissionId}): ${mavenizedProjectFolder}")
             } else {
                 LOG.info("Error removing mavenized project folder (${submission.submissionId}): ${mavenizedProjectFolder}")
-            }
-        }
-    }
-
-    fun deleteOriginalFolderFor(submissions: List<Submission>) {
-        for (submission in submissions) {
-            val projectFolder =
-                if (submission.submissionId != null) {  // submission by upload
-                    submission.submissionFolder?.let { File(uploadSubmissionsRootLocation, it) }
-                } else {  // submission by git
-                    val gitSubmissionId = submission.gitSubmissionId ?: throw IllegalArgumentException("Git submission without gitSubmissionId")
-                    val gitSubmission = gitSubmissionRepository.findById(gitSubmissionId).orElse(null)
-                        ?: throw IllegalArgumentException("git submission ${gitSubmissionId} is not registered")
-                    File(gitSubmissionsRootLocation, gitSubmission.getFolderRelativeToStorageRoot())
-                }
-            if (projectFolder != null) {
-                if (projectFolder.deleteRecursively()) {
-                    LOG.info("Removed original project folder (${submission.submissionId}): ${projectFolder}")
-                } else {
-                    LOG.info("Error removing original project folder (${submission.submissionId}): ${projectFolder}")
-                }
             }
         }
     }
