@@ -82,7 +82,7 @@ class LoginController(val personalTokenRepository: PersonalTokenRepository) {
         var randomToken: String
         do {
             randomToken = (1..TOKEN_LENGTH)
-                .map { i -> kotlin.random.Random.nextInt(0, charPool.size) }
+                .map { _ -> kotlin.random.Random.nextInt(0, charPool.size) }
                 .map(charPool::get)
                 .joinToString("");
         } while (personalTokenRepository.getByPersonalToken(randomToken) != null)
