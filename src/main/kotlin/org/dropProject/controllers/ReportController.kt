@@ -19,9 +19,9 @@
  */
 package org.dropProject.controllers
 
-import net.lingala.zip4j.core.ZipFile
+import net.lingala.zip4j.ZipFile
 import net.lingala.zip4j.model.ZipParameters
-import net.lingala.zip4j.util.Zip4jConstants
+import net.lingala.zip4j.model.enums.CompressionLevel
 import org.apache.commons.io.FileUtils
 import org.dropProject.dao.*
 import org.dropProject.data.StudentHistory
@@ -282,8 +282,9 @@ class ReportController(
                 val zipFile = ZipFile(zFile)
                 val zipParameters = ZipParameters()
                 zipParameters.isIncludeRootFolder = false
-                zipParameters.compressionLevel = Zip4jConstants.DEFLATE_LEVEL_ULTRA
-                zipFile.createZipFileFromFolder(repositoryFolder, zipParameters, false, -1)
+                zipParameters.compressionLevel = CompressionLevel.ULTRA
+                zipFile.addFolder(repositoryFolder, zipParameters)
+//                zipFile.createZipFileFromFolder(repositoryFolder, zipParameters, false, -1)
 
                 LOG.info("Created ${zipFile.file.absolutePath}")
 

@@ -19,23 +19,15 @@
  */
 package org.dropProject.services
 
-import net.lingala.zip4j.core.ZipFile
+import net.lingala.zip4j.ZipFile
 import net.lingala.zip4j.exception.ZipException
 import net.lingala.zip4j.model.ZipParameters
-import net.lingala.zip4j.util.Zip4jConstants
-import org.springframework.scheduling.annotation.Async
-import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
-import org.dropProject.dao.Assignment
-import org.dropProject.dao.GitSubmission
-import org.dropProject.dao.Submission
-import org.dropProject.data.SubmissionInfo
-import org.dropProject.data.TestType
+import net.lingala.zip4j.model.enums.CompressionLevel
 import org.dropProject.repository.*
 import org.dropProject.storage.StorageException
+import org.springframework.stereotype.Service
 import java.io.File
 import java.nio.file.Path
-import java.util.ArrayList
 
 /**
  * Utility to create ZIP files based on folder contents.
@@ -59,8 +51,8 @@ class ZipService {
         val zipFile = ZipFile(zFile)
         val zipParameters = ZipParameters()
         zipParameters.isIncludeRootFolder = false
-        zipParameters.compressionLevel = Zip4jConstants.DEFLATE_LEVEL_ULTRA
-        zipFile.createZipFileFromFolder(projectFolder, zipParameters, false, -1)
+        zipParameters.compressionLevel = CompressionLevel.ULTRA
+        zipFile.addFolder(projectFolder, zipParameters)
         return zipFile
     }
 

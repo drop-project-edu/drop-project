@@ -19,7 +19,7 @@
  */
 package org.dropProject.controllers
 
-import net.lingala.zip4j.core.ZipFile
+import net.lingala.zip4j.ZipFile
 import org.apache.commons.io.FileUtils
 import org.junit.After
 import org.junit.Assert.*
