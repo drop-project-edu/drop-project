@@ -12,8 +12,9 @@ services:
       - ./db:/docker-entrypoint-initdb.d
 
   drop-project:
-    image: pedroalv3s/drop-project-mysql
+    image: pedroalv3s/drop-project
     environment:
+      SPRING_PROFILES_ACTIVE: mysql
       DB_URL: jdbc:mysql://db:3306/dp?connectTimeout=0&socketTimeout=0&autoReconnect=true&useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       DB_USERNAME: dp
       DB_PASSWORD: dp
