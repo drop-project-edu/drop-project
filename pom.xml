@@ -80,7 +80,7 @@
 		<dependency>
 			<groupId>org.apache.maven.shared</groupId>
 			<artifactId>maven-invoker</artifactId>
-			<version>3.0.1</version>
+			<version>3.2.0</version>
 		</dependency>
 
 
@@ -134,7 +134,7 @@
 		<dependency>
 			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-model</artifactId>
-			<version>3.0.2</version>
+			<version>3.8.6</version>
 		</dependency>
 
 		<!-- for parsing markdown file -->
