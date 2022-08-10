@@ -215,11 +215,13 @@ class AssignmentControllerTests {
     fun test_02_createNewAssignmentAndConnectWithGithub() {
 
         try {
-            testsHelper.createAndSetupAssignment(
+            val createdAssignment = testsHelper.createAndSetupAssignment(
                 mvc, assignmentRepository, "dummyAssignment1", "Dummy Assignment",
                 "org.dummy",
                 "UPLOAD", sampleJavaAssignmentRepo
             )
+            assertEquals("dummyAssignment1", createdAssignment.id)
+            assertEquals("0605ac7a93de4a6b112f8f779df430a9a631173f", createdAssignment.gitCurrentHash)
 
             val result = this.mvc.perform(get("/assignment/info/dummyAssignment1"))
                 .andExpect(status().isOk)

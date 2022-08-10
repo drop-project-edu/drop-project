@@ -81,6 +81,7 @@ enum class LeaderboardType {
  * @property gitRepositoryUrl is a String with the location of the git repository used to create the Assignment
  * @property gitRepositoryPubKey is a String with the Public Key of the git repository
  * @property gitRepositoryPrivKey is a String the Private Key of the git repository
+ * @property gitCurrentHash is a String with the hash of the current commit that is being used in the assignment
  * @property ownerUserId is a String with the user id of the user that created the Assignment
  * @property active is a Boolean indicating if the Assignment can receive submissions from students
  * @property archived is a Boolean indicating if the Assignment has been archived
@@ -136,6 +137,8 @@ data class Assignment(
         var gitRepositoryPrivKey: String? = null,
 
         var gitRepositoryFolder: String,  // relative to assignment.root.location
+
+        var gitCurrentHash: String? = null,  // updated on refresh
 
         @Column(nullable = false)
         @JsonView(JSONViews.TeacherAPI::class)

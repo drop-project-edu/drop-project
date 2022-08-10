@@ -46,6 +46,7 @@ data class SubmissionExport(
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     var statusDate: Date,
     var assignmentId: String,
+    var assignmentGitHash: String? = null,
     var buildReport: String? = null,
     var structureErrors: String? = null,
     var markedAsFinal: Boolean = false,

@@ -263,7 +263,7 @@ class SubmissionService(
             val submission = Submission(
                 submissionId = projectFolder.name, submissionDate = Date(),
                 status = SubmissionStatus.SUBMITTED.code, statusDate = Date(), assignmentId = assignment.id,
-                submitterUserId = principal.realName(),
+                assignmentGitHash = assignment.gitCurrentHash, submitterUserId = principal.realName(),
                 submissionFolder = projectFolder.relativeTo(storageService.rootFolder()).path
             )
             submission.group = group

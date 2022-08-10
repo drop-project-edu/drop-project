@@ -26,6 +26,7 @@ import org.dropProject.repository.*
 import org.dropProject.services.AssignmentService
 import org.dropProject.services.AssignmentTeacherFiles
 import org.dropProject.services.GitClient
+import org.eclipse.jgit.api.Git
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.ApplicationListener
@@ -245,6 +246,9 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
             }
             gitClient.clone(gitRepository, directory, assignment.gitRepositoryPrivKey!!.toByteArray())
             LOG.info("[${assignment.id}] Successfuly cloned ${gitRepository} to ${directory}")
+            val git = Git.open(File(assignmentsRootLocation, assignment.gitRepositoryFolder))
+            assignment.gitCurrentHash = gitClient.getLastCommitInfo(git)?.sha1
+
             // only save if it successfully cloned the assignment
             assignmentRepository.save(assignment)
 
@@ -270,6 +274,7 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
                 status = SubmissionStatus.VALIDATED.code,
                 statusDate = Timestamp.valueOf(LocalDateTime.parse(submissionDate)),
                 assignmentId = "sampleJavaProject",
+                assignmentGitHash = null,
                 submitterUserId = author.userId)
 
         submissionRepository.save(submission)

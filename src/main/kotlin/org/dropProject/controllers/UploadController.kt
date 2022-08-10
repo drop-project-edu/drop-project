@@ -19,7 +19,6 @@
  */
 package org.dropProject.controllers
 
-import org.apache.commons.io.FileUtils
 import org.springframework.stereotype.Controller
 import org.springframework.ui.ModelMap
 import org.springframework.validation.BindingResult
@@ -36,37 +35,21 @@ import org.springframework.http.ResponseEntity
 import org.dropProject.data.AuthorDetails
 import java.security.Principal
 import java.util.*
-import java.util.logging.Logger
 import org.springframework.http.HttpStatus
 import org.springframework.scheduling.annotation.EnableAsync
-import org.apache.any23.encoding.TikaEncodingDetector
-import org.dropProject.Constants
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.RefNotAdvertisedException
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
 import org.springframework.security.access.AccessDeniedException
 import org.dropProject.dao.*
 import org.dropProject.data.SubmissionResult
-import org.dropProject.extensions.existsCaseSensitive
-import org.dropProject.extensions.sanitize
 import org.dropProject.extensions.realName
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.*
 import org.dropProject.services.*
 import org.slf4j.LoggerFactory
 import org.springframework.context.MessageSource
-import java.io.IOException
-import java.io.InputStream
-import java.lang.IllegalStateException
-import java.nio.charset.Charset
-import java.nio.charset.UnsupportedCharsetException
-import java.nio.file.Paths
-import java.sql.Timestamp
-import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
 import java.util.concurrent.Executor
-import java.util.logging.Level
 import javax.servlet.http.HttpServletRequest
 
 /**
@@ -313,6 +296,7 @@ class UploadController(
                 submissionDate = submission.submissionDate,
                 submitterUserId = submission.submitterUserId,
                 assignmentId = submission.assignmentId,
+                assignmentGitHash = submission.assignmentGitHash,
                 submissionFolder = submission.submissionFolder,
                 status = SubmissionStatus.SUBMITTED_FOR_REBUILD.code,
                 statusDate = Date())
@@ -483,7 +467,7 @@ class UploadController(
      * @return A String identifying the relevant View
      */
     @RequestMapping(value = ["/student/setup-git-2/{gitSubmissionId}"], method = [(RequestMethod.POST)])
-    fun connectAssignmentToGitRepository(@PathVariable gitSubmissionId: String, redirectAttributes: RedirectAttributes,
+    fun connectSubmissionToGitRepository(@PathVariable gitSubmissionId: String, redirectAttributes: RedirectAttributes,
                                          model: ModelMap, principal: Principal): String {
 
         val gitSubmission = gitSubmissionRepository.getById(gitSubmissionId.toLong())
@@ -565,7 +549,7 @@ class UploadController(
      * @return a ResponseEntity<String>
      */
     @RequestMapping(value = ["/git-submission/refresh-git/{gitSubmissionId}"], method = [(RequestMethod.POST)])
-    fun refreshAssignmentGitRepository(@PathVariable gitSubmissionId: String,
+    fun refreshSubmissionGitRepository(@PathVariable gitSubmissionId: String,
                                        principal: Principal): ResponseEntity<String> {
 
         // check that it exists
@@ -652,7 +636,7 @@ class UploadController(
 
         val submission = Submission(gitSubmissionId = gitSubmission.id, submissionDate = Date(),
                 status = SubmissionStatus.SUBMITTED.code, statusDate = Date(), assignmentId = assignment.id,
-                submitterUserId = principal.realName())
+                assignmentGitHash = assignment.gitCurrentHash, submitterUserId = principal.realName())
         submission.group = gitSubmission.group
         submissionRepository.save(submission)
 

@@ -129,7 +129,7 @@ class UploadControllerTests {
         val assignment01 = Assignment(id = "testJavaProj", name = "Test Project (for automatic tests)",
                 packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
                 submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummy",
-                gitRepositoryFolder = "testJavaProj")
+                gitRepositoryFolder = "testJavaProj", gitCurrentHash = "somehash")
         assignmentRepository.save(assignment01)
 
         assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "testJavaProj",
@@ -408,6 +408,9 @@ class UploadControllerTests {
         assertNotNull(buildResult.elapsedTimeJUnit())
         assert(buildResult.elapsedTimeJUnit()!! > 1.toBigDecimal())
 
+        // check that the submission was associated with the right assignment git hash
+        val submissionFromDB = submissionRepository.getById(submissionId)
+        assertEquals("somehash", submissionFromDB.assignmentGitHash)
     }
 
     @Test
@@ -1450,7 +1453,7 @@ class UploadControllerTests {
         val report = reportResult.modelAndView!!.modelMap["submissions"] as List<SubmissionInfo>
         assertEquals(1, report.size)
         assertEquals(1,report[0].allSubmissions.size)
-        assertEquals(submissionId2,report[0].allSubmissions[0].id.toInt())
+        assertEquals(submissionId2,report[0].allSubmissions[0].id)
     }
 
     @Test

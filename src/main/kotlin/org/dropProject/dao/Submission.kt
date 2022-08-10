@@ -74,6 +74,7 @@ enum class SubmissionStatus(val code: String, val description: String) {
  * @property status is a String. The value will be the "Code" property of an [SubmissionStatus] object
  * @property statusDate is a [Date] representing the date and time when the Assignment's status was last updated
  * @property assignmentId is a String identifying the relevant Assignment
+ * @property assignmentGitHash is the git commit from the assignment that was used to validate this submission
  * @property buildReportId is a String
  * @property structureErrors is a String
  * @property markedAsFinal is a Boolean, indicating if this submission is marked as the group's final one. The
@@ -110,6 +111,7 @@ data class Submission(
         var statusDate: Date,
 
         val assignmentId: String,
+        val assignmentGitHash: String?,
 
         var buildReportId: Long? = null,  // build_report.id
 
@@ -149,10 +151,11 @@ data class Submission(
     @ManyToOne
     lateinit var group: ProjectGroup
 
-    constructor(submissionId: String, assignmentId: String, submitterNumber: String, status: String,
+    constructor(submissionId: String, assignmentId: String, assignmentGitHash: String?, submitterNumber: String, status: String,
                 statusDate: Date, group: ProjectGroup, submissionFolder: String) :
-            this(submissionId = submissionId, assignmentId = assignmentId, submitterUserId = submitterNumber,
-                    status = status, statusDate = statusDate, submissionDate = Date(), submissionFolder = submissionFolder) {
+            this(submissionId = submissionId, assignmentId = assignmentId, assignmentGitHash = assignmentGitHash,
+                 submitterUserId = submitterNumber, status = status, statusDate = statusDate, submissionDate = Date(),
+                 submissionFolder = submissionFolder) {
         this.group = group
     }
 

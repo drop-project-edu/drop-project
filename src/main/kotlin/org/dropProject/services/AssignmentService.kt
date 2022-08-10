@@ -33,6 +33,7 @@ import org.dropProject.extensions.realName
 import org.dropProject.forms.AssignmentForm
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.*
+import org.eclipse.jgit.api.Git
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.annotation.Cacheable
@@ -377,8 +378,8 @@ class AssignmentService(
                         id = id, submissionId = submissionId,
                         gitSubmissionId = gitSubmissionId, submissionFolder = submissionFolder,
                         submissionDate = submissionDate, submitterUserId = submitterUserId, status = getStatus().code,
-                        statusDate = statusDate, assignmentId = assignmentId, buildReport = buildReport,
-                        structureErrors = structureErrors, markedAsFinal = markedAsFinal,
+                        statusDate = statusDate, assignmentId = assignmentId, assignmentGitHash = assignmentGitHash,
+                        buildReport = buildReport, structureErrors = structureErrors, markedAsFinal = markedAsFinal,
                         authors = group.authors.map { author -> SubmissionExport.Author(author.userId, author.name) },
                         submissionReport = submissionReport,
                         junitReports = junitReports, jacocoReports = jacocoReports
@@ -570,6 +571,7 @@ class AssignmentService(
             val submission = Submission(
                 submissionId = it.submissionId, submissionDate = it.submissionDate,
                 status = it.status, statusDate = it.statusDate, assignmentId = it.assignmentId,
+                assignmentGitHash = it.assignmentGitHash,
                 submitterUserId = it.submitterUserId,
                 submissionFolder = it.submissionFolder,
                 gitSubmissionId = it.gitSubmissionId,
@@ -635,6 +637,11 @@ class AssignmentService(
             val directory = File(assignmentsRootLocation, newAssignment.gitRepositoryFolder)
             gitClient.clone(gitRepository, directory, newAssignment.gitRepositoryPrivKey!!.toByteArray())
             LOG.info("[${newAssignment.id}] Successfuly cloned ${gitRepository} to ${directory}")
+
+            // update hash
+            val git = Git.open(File(assignmentsRootLocation, newAssignment.gitRepositoryFolder))
+            newAssignment.gitCurrentHash = gitClient.getLastCommitInfo(git)?.sha1
+
         } catch (e: Exception) {
             LOG.info("Error cloning ${gitRepository} - ${e}")
             return Pair(newAssignment.id, "Error cloning ${gitRepository} - ${e.message}")

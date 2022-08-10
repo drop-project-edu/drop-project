@@ -54,7 +54,6 @@ import org.dropProject.services.AssignmentService
 import org.dropProject.services.PlagiarismComparison
 import org.dropProject.services.ZipService
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers
 import org.hamcrest.Matchers.*
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import java.util.*
@@ -586,23 +585,12 @@ class ReportControllerTests {
     @DirtiesContext
     fun exportCSVWithMandatoryTests() {
 
-        val assigment = assignmentRepository.getById(defaultAssignmentId)
+        val assignment = assignmentRepository.getById(defaultAssignmentId)
 
         // first, edit the assignment to add a mandatory test suffix
-        mvc.perform(
-            MockMvcRequestBuilders.post("/assignment/new")
-                .param("assignmentId", defaultAssignmentId)
-                .param("editMode", "true")
-                .param("assignmentName", assigment.name)
-                .param("assignmentPackage", assigment.packageName)
-                .param("submissionMethod", assigment.submissionMethod.toString())
-                .param("language", assigment.language.toString())
-                .param("gitRepositoryUrl", assigment.gitRepositoryUrl)
-                .param("mandatoryTestsSuffix", "_OBG")  // <<<<<<<<<
-                .with(user(TEACHER_1))
-        )
-            .andExpect(status().isFound())
-            .andExpect(header().string("Location", "/assignment/info/${defaultAssignmentId}"))
+        assignment.mandatoryTestsSuffix = "_OBG"
+        assignmentRepository.save(assignment)
+
 
         val now = Date()
         val nowStr = now.formatDefault()

@@ -19,6 +19,7 @@
  */
 package org.dropProject
 
+import org.dropProject.dao.Assignment
 import org.dropProject.repository.AssignmentRepository
 import org.dropProject.repository.GitSubmissionRepository
 import org.dropProject.repository.SubmissionRepository
@@ -144,7 +145,7 @@ class TestsHelper {
                                  activateRightAfterCloning: Boolean = false,
                                  hiddenTestsVisibility: String = "SHOW_PROGRESS",
                                  tags: String? = null,
-                                 dueDate: String? = null) {
+                                 dueDate: String? = null): Assignment {
 
         val user = User(teacherId, "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
 
@@ -172,7 +173,7 @@ class TestsHelper {
                 .andExpect(MockMvcResultMatchers.status().isOk)
 
         // inject private and public key to continue
-        val assignment = assignmentRepository.getById(assignmentId)
+        var assignment = assignmentRepository.getById(assignmentId)
         assignment.gitRepositoryPrivKey = privateKey
         assignment.gitRepositoryPubKey = publicKey
         if (activateRightAfterCloning) {
@@ -186,6 +187,11 @@ class TestsHelper {
                 .andExpect(MockMvcResultMatchers.status().isFound())
                 .andExpect(MockMvcResultMatchers.header().string("Location", "/assignment/info/${assignmentId}"))
                 .andExpect(MockMvcResultMatchers.flash().attribute("message", "Assignment was successfully created and connected to git repository"))
+
+        // refresh assignment
+        assignment = assignmentRepository.getById(assignmentId)
+
+        return assignment
     }
 
     fun connectToGitRepositoryAndBuildReport(mvc: MockMvc, gitSubmissionRepository: GitSubmissionRepository,
@@ -243,7 +249,7 @@ class TestsHelper {
 
     // returns the submission id
     fun uploadProject(mvc: MockMvc, projectName: String, assignmentId: String, uploader: User,
-                      authors: List<Pair<String,String>>? = null): Int {
+                      authors: List<Pair<String,String>>? = null): Long {
 
         val multipartFile = prepareFile(projectName, authors)
 
@@ -256,7 +262,7 @@ class TestsHelper {
 
         val contentJSON = JSONObject(contentString)
 
-        return contentJSON.getInt("submissionId")
+        return contentJSON.getLong("submissionId")
     }
 
     // returns the submission id

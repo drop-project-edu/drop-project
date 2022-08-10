@@ -208,6 +208,12 @@ class AssignmentController(
 
             val newAssignment = createAssignmentBasedOnForm(assignmentForm, principal)
 
+            if (!mustSetupGitConnection) {
+                // update hash
+                val git = Git.open(File(assignmentsRootLocation, newAssignment.gitRepositoryFolder))
+                newAssignment.gitCurrentHash = gitClient.getLastCommitInfo(git)?.sha1
+            }
+
             assignmentRepository.save(newAssignment)
 
             assignment = newAssignment
@@ -244,6 +250,10 @@ class AssignmentController(
             // TODO: check again for assignment integrity
 
             assignmentService.updateAssignment(existingAssignment, assignmentForm)
+
+            // update hash
+            val git = Git.open(File(assignmentsRootLocation, existingAssignment.gitRepositoryFolder))
+            existingAssignment.gitCurrentHash = gitClient.getLastCommitInfo(git)?.sha1
 
             assignmentRepository.save(existingAssignment)
 
@@ -474,6 +484,10 @@ class AssignmentController(
             LOG.info("Pulling git repository for ${assignmentId}")
             gitClient.pull(File(assignmentsRootLocation, assignment.gitRepositoryFolder), assignment.gitRepositoryPrivKey!!.toByteArray())
 
+            // update hash
+            val git = Git.open(File(assignmentsRootLocation, assignment.gitRepositoryFolder))
+            assignment.gitCurrentHash = gitClient.getLastCommitInfo(git)?.sha1
+
             // remove the reportId from all git submissions (if there are any) to signal the student that he should
             // generate a report again
             val gitSubmissionsForThisAssignment = gitSubmissionRepository.findByAssignmentId(assignmentId)
@@ -601,6 +615,10 @@ class AssignmentController(
             val directory = File(assignmentsRootLocation, assignment.gitRepositoryFolder)
             gitClient.clone(gitRepository, directory, assignment.gitRepositoryPrivKey!!.toByteArray())
             LOG.info("[${assignmentId}] Successfuly cloned ${gitRepository} to ${directory}")
+            // update hash
+            val git = Git.open(File(assignmentsRootLocation, assignment.gitRepositoryFolder))
+            assignment.gitCurrentHash = gitClient.getLastCommitInfo(git)?.sha1
+            assignmentRepository.save(assignment)
         } catch (e: Exception) {
             LOG.info("Error cloning ${gitRepository} - ${e}")
             model["error"] = "Error cloning ${gitRepository} - ${e.message}"
