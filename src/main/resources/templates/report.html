@@ -83,6 +83,15 @@
                 </form>
             </div>
 
+            <div class="btn-group" role="group">
+                <a th:href="@{'/checkPlagiarism/' + ${assignment.id}}"
+                   class="btn btn-default"
+                   data-placement="bottom"
+                   data-toggle="confirmation" data-title="Check plagiarism"
+                   data-content="This will check the last/final submissions for plagiarism"
+                   data-btn-ok-label="Continue" data-btn-cancel-label="Cancel">Check plagiarism</a>
+            </div>
+
             <div class="btn-group" role="group" th:if="${isAdmin}">
                 <form class="inline btn-group" method="post" th:action="@{'/cleanup/' + ${assignment.id}}" >
                     <input type="submit" value="Cleanup" class="btn btn-default" title="Remove non-final files" />

@@ -23,6 +23,7 @@ import org.apache.any23.encoding.TikaEncodingDetector
 import org.apache.commons.io.FileUtils
 import org.dropProject.Constants
 import org.dropProject.controllers.InvalidProjectStructureException
+import org.dropProject.controllers.UploadController
 import org.dropProject.dao.*
 import org.dropProject.data.AuthorDetails
 import org.springframework.scheduling.annotation.Async
@@ -52,8 +53,10 @@ import org.springframework.web.multipart.MultipartFile
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
+import java.lang.IllegalStateException
 import java.nio.charset.Charset
 import java.nio.charset.UnsupportedCharsetException
+import java.nio.file.Paths
 import java.security.Principal
 import java.sql.Timestamp
 import java.time.LocalDateTime
@@ -79,7 +82,8 @@ class SubmissionService(
     val projectGroupService: ProjectGroupService,
     val i18n: MessageSource,
     val buildWorker: BuildWorker,
-    val asyncExecutor: Executor
+    val asyncExecutor: Executor,
+    val zipService: ZipService
 ) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
@@ -99,9 +103,10 @@ class SubmissionService(
     /**
      * Returns all the SubmissionInfo objects related with [assignment].
      * @param assignment is the target Assignment
+     * @param retrieveReport if true, retrieves the build report associated with each submission
      * @return an ArrayList with SubmissionInfo objects
      */
-    fun getSubmissionsList(assignment: Assignment): ArrayList<SubmissionInfo> {
+    fun getSubmissionsList(assignment: Assignment, retrieveReport: Boolean = true): ArrayList<SubmissionInfo> {
         val submissions = submissionRepository
             .findByAssignmentId(assignment.id)
             .filter { it.getStatus() != SubmissionStatus.DELETED }
@@ -123,10 +128,11 @@ class SubmissionService(
                 }
             }
 
-            lastSubmission.buildReportId?.let {
-                    buildReportId ->
-                val reportElements = submissionReportRepository.findBySubmissionId(lastSubmission.id)
-                lastSubmission.reportElements = reportElements
+            if (retrieveReport) {
+                lastSubmission.buildReportId?.let {
+                        buildReportId ->
+                    val reportElements = submissionReportRepository.findBySubmissionId(lastSubmission.id)
+                    lastSubmission.reportElements = reportElements
 
                 val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(lastSubmission,
                     lastSubmission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
@@ -141,6 +147,7 @@ class SubmissionService(
                 }
 
                 lastSubmission.testResults = buildReport.testResults()
+            }
             }
 
             submissionInfoList.add(SubmissionInfo(group, lastSubmission, sortedSubmissionList))
@@ -531,5 +538,37 @@ class SubmissionService(
                 LOG.info("Error removing mavenized project folder (${submission.submissionId}): ${mavenizedProjectFolder}")
             }
         }
+    }
+
+    fun getOriginalProjectFolder(submission: Submission): File {
+        val projectFolder =
+            if (submission.submissionId != null) {  // submission through upload
+
+                val projectFolder = storageService.retrieveProjectFolder(submission)
+                    ?: throw IllegalArgumentException("projectFolder for ${submission.submissionId} doesn't exist")
+
+                LOG.info("Retrieved project folder: ${projectFolder.absolutePath}")
+
+                if (!projectFolder.exists()) {
+                    // let's check if there is a zip file with this project
+                    val projectZipFile = File("${projectFolder.absolutePath}.zip")
+                    if (projectZipFile.exists()) {
+                        zipService.unzip(Paths.get(projectZipFile.path), projectFolder.name)
+                    }
+                }
+
+                projectFolder
+
+            } else if (submission.gitSubmissionId != null) {   // submission through git
+                val gitSubmissionId = submission.gitSubmissionId ?: throw RuntimeException("Not possible")
+                val gitSubmission = gitSubmissionRepository.findById(gitSubmissionId).orElse(null) ?:
+                throw UploadController.SubmissionNotFoundException(submission.gitSubmissionId!!)
+
+                File(gitSubmissionsRootLocation, gitSubmission.getFolderRelativeToStorageRoot())
+
+            } else {
+                throw IllegalStateException("submission ${submission.id} has both submissionId and gitSubmissionId equal to null")
+            }
+        return projectFolder
     }
 }

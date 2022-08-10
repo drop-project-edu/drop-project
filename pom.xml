@@ -202,6 +202,13 @@
 			<version>3.0.0</version>
 		</dependency>
 
+		<!-- plagiarism checker -->
+		<dependency>
+			<groupId>de.jplag</groupId>
+			<artifactId>jplag</artifactId>
+			<version>3.0.0</version>
+		</dependency>
+
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>

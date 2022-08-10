@@ -51,8 +51,11 @@ import org.dropProject.extensions.formatDefault
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.*
 import org.dropProject.services.AssignmentService
+import org.dropProject.services.PlagiarismComparison
 import org.dropProject.services.ZipService
-import org.hamcrest.Matchers.contains
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers
+import org.hamcrest.Matchers.*
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import java.util.*
 import kotlin.collections.LinkedHashMap
@@ -1160,6 +1163,35 @@ class ReportControllerTests {
             .with(user(User("studentOther", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT"))))))
             .andExpect(status().isForbidden)
 
+    }
+
+    @Test
+    @DirtiesContext
+    fun testCheckPlagiarism() {
+
+        testsHelper.uploadProject(this.mvc, "projectCompilationErrors", defaultAssignmentId, STUDENT_1)
+        testsHelper.uploadProject(
+            this.mvc, "projectJUnitErrors", defaultAssignmentId, STUDENT_2,
+            listOf(STUDENT_2.username to "Student 2")
+        )
+
+        val mvcResult = this.mvc.perform(get("/checkPlagiarism/${defaultAssignmentId}").with(user(TEACHER_1)))
+            .andExpect(status().isOk)
+            .andReturn()
+
+        @Suppress("UNCHECKED_CAST")
+        val comparisons = mvcResult.modelAndView!!.modelMap["comparisons"] as List<PlagiarismComparison>
+        assertEquals(1, comparisons.size)
+        assertEquals(0, comparisons[0].matchId)
+        assertThat(comparisons[0].firstSubmission.id.toInt(), either(`is`(1)).or(`is`(2)))
+        assertThat(comparisons[0].secondSubmission.id.toInt(), either(`is`(1)).or(`is`(2)))
+        assertEquals(1, comparisons[0].firstNumTries)
+        assertEquals(1, comparisons[0].secondNumTries)
+        assertEquals(83, comparisons[0].similarityPercentage)
+
+        this.mvc.perform(get("/showPlagiarismMatchReport/${defaultAssignmentId}/0").with(user(TEACHER_1)))
+            .andExpect(status().isOk)
+            .andExpect(content().string(containsString("<TITLE>Matches for")))
     }
 
 }

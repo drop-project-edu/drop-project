@@ -318,35 +318,7 @@ class UploadController(
                 statusDate = Date())
         rebuiltSubmission.group = submission.group
 
-        val projectFolder =
-            if (submission.submissionId != null) {  // submission through upload
-
-                val projectFolder = storageService.retrieveProjectFolder(rebuiltSubmission)
-                        ?: throw IllegalArgumentException("projectFolder for ${rebuiltSubmission.submissionId} doesn't exist")
-
-                LOG.info("Retrieved project folder: ${projectFolder.absolutePath}")
-
-                if (!projectFolder.exists()) {
-                    // let's check if there is a zip file with this project
-                    val projectZipFile = File("${projectFolder.absolutePath}.zip")
-                    if (projectZipFile.exists()) {
-                        zipService.unzip(Paths.get(projectZipFile.path), projectFolder.name)
-                    }
-                }
-
-                projectFolder
-
-            } else if (submission.gitSubmissionId != null) {   // submission through git
-                val gitSubmissionId = submission.gitSubmissionId ?: throw RuntimeException("Not possible")
-                val gitSubmission = gitSubmissionRepository.findById(gitSubmissionId).orElse(null) ?:
-                                        throw SubmissionNotFoundException(submission.gitSubmissionId!!)
-
-                File(gitSubmissionsRootLocation, gitSubmission.getFolderRelativeToStorageRoot())
-
-            } else {
-                throw IllegalStateException("submission ${submission.id} has both submissionId and gitSubmissionId equal to null")
-            }
-
+        val projectFolder = submissionService.getOriginalProjectFolder(rebuiltSubmission)
         val authors = submissionService.getProjectAuthors(projectFolder)
 
         submissionRepository.save(rebuiltSubmission)

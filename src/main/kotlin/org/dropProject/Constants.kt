@@ -31,6 +31,8 @@ object Constants {
     const val TOO_MUCH_OUTPUT_THRESHOLD = 2500 // more than 2500 println's is too much
 
     const val CACHE_ARCHIVED_ASSIGNMENTS_KEY = "archivedAssignmentsCache"
+
+    const val SIMILARITY_THRESHOLD = 50  // minimum similarity to consider as plagiarism (percent)
 }
     
     

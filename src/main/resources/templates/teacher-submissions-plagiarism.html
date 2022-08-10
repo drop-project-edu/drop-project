@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="layout/layout :: head (pageTitle='Drop Project - Plagiarism Report')">
+</head>
+
+<body>
+
+<div th:replace="layout/layout :: header"></div>
+
+<!--/*@thymesVar id="assignment" type="org.dropProject.dao.Assignment"*/-->
+<!--/*@thymesVar id="comparisons" type="java.util.List<org.dropProject.services.PlagiarismComparison>"*/-->
+<div class="container" style="max-width: 900px; margin-bottom: 65px">
+
+    <div class="alert alert-info" th:text="${message}" th:if="${message}" />
+    <div class="alert alert-danger" th:text="${error}" th:if="${error}" />
+
+    <h1 class="page-header">Plagiarism report <small th:text="${assignment.id}"></small></h1>
+    <h6 th:text="${'Only matches above ' + T(org.dropProject.Constants).SIMILARITY_THRESHOLD} + '% similarity are considered'"/>
+
+    <p>&nbsp;</p>
+
+    <table class="table">
+        <thead>
+        <tr>
+            <th>First group <small>(# submissions)</small></th>
+            <th>Second group <small>(# submissions)</small></th>
+            <th class="text-center">Similarity</th>
+            <th class="text-center">Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+
+        <tr th:each="comparison : ${comparisons}">
+            <td>
+                <a th:href="@{'/buildReport/' + ${comparison.firstSubmission.id}}"
+                   th:text="${comparison.firstSubmission.group.authorsNameStr()}"
+                   th:title="${comparison.firstSubmission.group.authorsStr(', ')}" />
+                <small th:text="${'(' + comparison.firstNumTries + ')'}"/>
+            </td>
+            <td>
+                <a th:href="@{'/buildReport/' + ${comparison.secondSubmission.id}}"
+                   th:text="${comparison.secondSubmission.group.authorsNameStr()}"
+                   th:title="${comparison.secondSubmission.group.authorsStr(', ')}" />
+                <small th:text="${'(' + comparison.secondNumTries + ')'}"/>
+            </td>
+            <td class="text-center" th:text="${comparison.similarityPercentage + '%'}"></td>
+
+            <td class="text-nowrap text-center">
+                <a th:href="@{'/showPlagiarismMatchReport/' + ${assignment.id} + '/' + ${comparison.matchId}}" target="_blank">
+                    <span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span>
+                </a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+
+</div>
+
+<div th:replace="layout/layout :: footer"></div>
+
+</body>
+</html>

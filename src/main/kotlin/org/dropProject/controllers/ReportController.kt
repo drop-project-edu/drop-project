@@ -80,7 +80,8 @@ class ReportController(
         val templateEngine: TemplateEngine,
         val assignmentService: AssignmentService,
         val reportService: ReportService,
-        val i18n: MessageSource
+        val i18n: MessageSource,
+        val jPlagService: JPlagService,
 ) {
 
     @Value("\${mavenizedProjects.rootLocation}")
@@ -465,6 +466,76 @@ class ReportController(
             tempFolder.delete()
         }
 
+    }
+
+    @RequestMapping(value = ["/checkPlagiarism/{assignmentId}"], method = [(RequestMethod.GET)])
+    fun checkPlagiarism(@PathVariable assignmentId: String, model: ModelMap, principal: Principal): String {
+
+        val assignment = assignmentRepository.findById(assignmentId).orElse(null)
+            ?: throw IllegalArgumentException("assignment ${assignmentId} is not registered")
+        val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
+
+        if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
+            throw IllegalAccessError("Assignment reports can only be accessed by their owner or authorized teachers")
+        }
+
+        if (assignment.language != Language.JAVA) {
+            throw IllegalArgumentException("Plagiarism reports only available for Java assignments")
+        }
+
+        val submissionInfos = submissionService.getSubmissionsList(assignment, retrieveReport = false)
+
+        // check if there are any submissions marked as final. in that case, consider only final submissions
+        // for plagiarismo detection
+        val hasSubmissionsMarkedAsFinal = submissionInfos.any { it.lastSubmission.markedAsFinal }
+        val submissions = submissionInfos
+            .filter { !hasSubmissionsMarkedAsFinal || it.lastSubmission.markedAsFinal }
+            .map { it.lastSubmission }
+
+        val submissionsToCheckFolder = Files.createTempDirectory("dp-jplag-${assignmentId}-submissions").toFile()
+        val plagiarismReportFolder = Files.createTempDirectory("dp-jplag-${assignmentId}-report").toFile()
+        try {
+            jPlagService.prepareSubmissions(submissions, submissionsToCheckFolder)
+            LOG.info("Prepared submissions for jplag on ${submissionsToCheckFolder.absolutePath}")
+
+            val comparisons = jPlagService.checkSubmissions(submissionsToCheckFolder, assignmentId, plagiarismReportFolder)
+            LOG.info("Checked submissions using jplag on ${submissionsToCheckFolder.absolutePath}. " +
+                    "Wrote report to ${plagiarismReportFolder.absolutePath}")
+
+            // complement comparisons with info about the number of submissions
+            for (comparison in comparisons) {
+                comparison.firstNumTries = submissionInfos
+                    .find { it.lastSubmission.id == comparison.firstSubmission.id }?.allSubmissions?.count() ?: -1
+                comparison.secondNumTries = submissionInfos
+                    .find { it.lastSubmission.id == comparison.secondSubmission.id }?.allSubmissions?.count() ?: -1
+            }
+
+            model["assignment"] = assignment
+            model["comparisons"] = comparisons
+
+            return "teacher-submissions-plagiarism"
+
+        } finally {
+            submissionsToCheckFolder.delete()
+            // TODO: when to delete plagiarismReportFolder?
+        }
+    }
+
+    @RequestMapping(value = ["/showPlagiarismMatchReport/{assignmentId}/{matchId}"], method = [(RequestMethod.GET)])
+    @ResponseBody
+    fun showPlagiarismMatchReport(@PathVariable assignmentId: String,
+                                  @PathVariable matchId: Int,
+                                  model: ModelMap, principal: Principal): String {
+
+        val assignment = assignmentRepository.findById(assignmentId).orElse(null)
+            ?: throw IllegalArgumentException("assignment ${assignmentId} is not registered")
+        val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
+
+        if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
+            throw IllegalAccessError("Assignment reports can only be accessed by their owner or authorized teachers")
+        }
+
+        return jPlagService.getComparisonReportHtml(assignmentId, matchId)
     }
 
     /**
