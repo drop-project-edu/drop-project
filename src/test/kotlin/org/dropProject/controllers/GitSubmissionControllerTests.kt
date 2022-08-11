@@ -210,7 +210,9 @@ class GitSubmissionControllerTests {
 
         /*** GET /buildReport ***/
         val reportResult = this.mvc.perform(get("/buildReport/1"))
-                .andExpect(status().isOk())
+                .andExpect(status().isOk)
+                .andExpect(model().attribute("gitRepository", "https://github.com/drop-project-edu/sampleJavaSubmission"))
+                .andExpect(model().attribute("gitRepositoryWithHash", "https://github.com/drop-project-edu/sampleJavaSubmission/tree/88d14eac0debdc0baf8e3592d4744ce4979f3fd8"))
                 .andReturn()
 
         @Suppress("UNCHECKED_CAST")

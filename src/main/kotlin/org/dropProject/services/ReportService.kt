@@ -50,6 +50,7 @@ class FullBuildReport(
     var submission: Submission? = null,
     var gitSubmission: GitSubmission? = null,
     var gitRepository: String? = null,
+    var gitRepositoryWithHash: String? = null,
     var readmeHtml: String? = null,
     @JsonView(JSONViews.StudentAPI::class)
     var error: String? = null,
@@ -71,6 +72,7 @@ class ReportService(
     val assignmentRepository: AssignmentRepository,
     val submissionRepository: SubmissionRepository,
     val gitSubmissionRepository: GitSubmissionRepository,
+    val submissionGitInfoRepository: SubmissionGitInfoRepository,
     val submissionReportRepository: SubmissionReportRepository,
     val buildReportRepository: BuildReportRepository,
     val assignmentTeacherFiles: AssignmentTeacherFiles,
@@ -115,8 +117,12 @@ class ReportService(
             submission.gitSubmissionId?.let {
                     gitSubmissionId ->
                 val gitSubmission = gitSubmissionRepository.getById(gitSubmissionId)
+                val submissionGitInfo = submissionGitInfoRepository.getBySubmissionId(submissionId)
                 fullBuildReport.gitSubmission = gitSubmission
                 fullBuildReport.gitRepository = gitClient.convertSSHGithubURLtoHttpURL(gitSubmission.gitRepositoryUrl)
+                if (submissionGitInfo != null) {
+                    fullBuildReport.gitRepositoryWithHash = "${fullBuildReport.gitRepository}/tree/${submissionGitInfo.gitCommitHash}"
+                }
             }
 
             // check README

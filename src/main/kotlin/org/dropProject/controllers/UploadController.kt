@@ -63,6 +63,7 @@ class UploadController(
         val projectGroupRepository: ProjectGroupRepository,
         val submissionRepository: SubmissionRepository,
         val gitSubmissionRepository: GitSubmissionRepository,
+        val submissionGitInfoRepository: SubmissionGitInfoRepository,
         val assignmentRepository: AssignmentRepository,
         val assignmentACLRepository: AssignmentACLRepository,
         val assigneeRepository: AssigneeRepository,
@@ -649,6 +650,16 @@ class UploadController(
                 assignmentGitHash = assignment.gitCurrentHash, submitterUserId = principal.realName())
         submission.group = gitSubmission.group
         submissionRepository.save(submission)
+
+        // if it's a git submission, and there isn't already this info, set the git hash associated with this submission
+        if (submissionGitInfoRepository.getBySubmissionId(submission.id) == null) {
+            val git = Git.open(File(gitSubmissionsRootLocation, gitSubmission.getFolderRelativeToStorageRoot()))
+            val lastCommitInfo = gitClient.getLastCommitInfo(git)
+            if (lastCommitInfo != null) {
+                val submissionGitInfo = SubmissionGitInfo(submissionId = submission.id, gitCommitHash = lastCommitInfo.sha1)
+                submissionGitInfoRepository.save(submissionGitInfo)
+            }
+        }
 
         submissionService.buildSubmission(projectFolder, assignment, gitSubmission.group.authorsStr("|"), submission, asyncExecutor, principal = principal)
 

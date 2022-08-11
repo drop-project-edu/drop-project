@@ -33,7 +33,8 @@
 
     <h6 th:if="${gitSubmission} != null">
         Git repository: <a th:href="${gitRepository}" th:text="${gitRepository}">link</a> |
-        Last commit: <span th:text="${#dates.format(gitSubmission.lastCommitDate, 'dd-MM HH:mm:ss')}"></span>
+        Last commit: <a th:text="${#dates.format(gitSubmission.lastCommitDate, 'dd-MM HH:mm:ss')}"
+                        th:href="${gitRepositoryWithHash}"></a>
     </h6>
 
     <h6 th:if="${isTeacher}"></h6>

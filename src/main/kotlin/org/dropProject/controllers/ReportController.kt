@@ -180,6 +180,7 @@ class ReportController(
         model["submission"] = buildReport.submission
         model["gitSubmission"] = buildReport.gitSubmission
         model["gitRepository"] = buildReport.gitRepository
+        model["gitRepositoryWithHash"] = buildReport.gitRepositoryWithHash
         model["readmeHTML"] = buildReport.readmeHtml
         model["error"] = buildReport.error
         model["autoRefresh"] = buildReport.autoRefresh
