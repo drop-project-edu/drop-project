@@ -17,9 +17,9 @@
         <div class="alert alert-danger" th:text="${error}"/>
     </div>
 
-    <p><span th:text="#{student.git.setup.authorize1}">Tens que autorizar o Drop Project a aceder a</span> <strong><span th:text="${gitSubmission.gitRepositoryUrl}"></span></strong></p>
+    <p th:if="${!cloned}"><span th:text="#{student.git.setup.authorize1}">Tens que autorizar o Drop Project a aceder a</span> <strong><span th:text="${gitSubmission.gitRepositoryUrl}"></span></strong></p>
 
-    <p><span th:text="#{student.git.setup.authorize2}">Acede aos</span>
+    <p th:if="${!cloned}"><span th:text="#{student.git.setup.authorize2}">Acede aos</span>
         <a th:href="${repositorySettingsUrl}" target="_blank" th:text="#{student.git.setup.authorize3}">settings do teu repositório</a>
         <span th:text="#{student.git.setup.authorize4}">e adiciona esta chave pública (public key) à lista de access keys:</span>
         <span class="glyphicon glyphicon-question-sign" aria-hidden="true" data-toggle="popover"
@@ -27,7 +27,7 @@
               th:title="#{student.git.setup.authorize6}" data-html="true"
               data-content="&lt;img src='../img/github-deploy-keys-2.png' width='250'/&gt;"></span>
     </p>
-    <div class="alert alert-info">
+    <div th:if="${!cloned}" class="alert alert-info">
         <span>Title</span><pre>drop-project</pre>
         <span>Key</span>
         <pre th:text="${gitSubmission.gitRepositoryPubKey}"></pre>
@@ -37,7 +37,8 @@
         <div class="checkbox">
             <label>
                 <input type="checkbox" id="confirmCB" />
-                <span th:text="#{student.git.setup.authorize5}">Já adicionei esta chave à lista de access keys</span>
+                <span th:text="#{student.git.setup.authorize5}" th:if="${!cloned}">Já adicionei esta chave à lista de access keys</span>
+                <span th:text="#{student.git.setup.authorize7}" th:if="${cloned}">Já corrigi o problema acima</span>
             </label>
         </div>
         <button type="submit" class="btn btn-primary" id="connectBTN" disabled="disabled"

@@ -450,6 +450,7 @@ class UploadController(
         }
 
         model["gitSubmission"] = gitSubmission
+        model["cloned"] = false
 
         return "student-setup-git"
     }
@@ -483,10 +484,18 @@ class UploadController(
             }
 
             val gitRepository = gitSubmission.gitRepositoryUrl
+
+            if (gitRepository.contains("github")) {
+                val (username, reponame) = gitClient.getGitRepoInfo(gitRepository)
+                model["repositorySettingsUrl"] = "https://github.com/${username}/${reponame}/settings/keys"
+            }
+
+            model["cloned"] = false
             try {
                 val projectFolder = File(gitSubmissionsRootLocation, gitSubmission.getFolderRelativeToStorageRoot())
                 val git = gitClient.clone(gitRepository, projectFolder, gitSubmission.gitRepositoryPrivKey!!.toByteArray())
                 LOG.info("[${gitSubmission}] Successfuly cloned ${gitRepository} to ${projectFolder}")
+                model["cloned"] = true
 
                 // check that exists an AUTHORS.txt
                 val authors = submissionService.getProjectAuthors(projectFolder)
@@ -554,7 +563,7 @@ class UploadController(
 
         // check that it exists
         val gitSubmission = gitSubmissionRepository.findById(gitSubmissionId.toLong()).orElse(null) ?:
-            throw IllegalArgumentException("git submission ${gitSubmissionId} is not registered")
+        throw IllegalArgumentException("git submission ${gitSubmissionId} is not registered")
 
         if (!gitSubmission.group.contains(principal.realName())) {
             throw IllegalAccessError("Submissions can only be refreshed by their owners")
@@ -563,11 +572,12 @@ class UploadController(
         try {
             LOG.info("Pulling git repository for ${gitSubmissionId}")
             val git = gitClient.pull(File(gitSubmissionsRootLocation, gitSubmission.getFolderRelativeToStorageRoot()),
-                    gitSubmission.gitRepositoryPrivKey!!.toByteArray())
+                gitSubmission.gitRepositoryPrivKey!!.toByteArray())
             val lastCommitInfo = gitClient.getLastCommitInfo(git)
 
             if (lastCommitInfo?.date != gitSubmission.lastCommitDate) {
-                gitSubmission.lastSubmissionId = null
+                gitSubmission.lastSubmissionId = null  // to signal the student that it needs to rebuild
+                gitSubmission.lastCommitDate = lastCommitInfo?.date
                 gitSubmissionRepository.save(gitSubmission)
             }
 
@@ -611,7 +621,7 @@ class UploadController(
             assignmentService.checkAssignees(assignment.id, principal.realName())
         }
 
-        if (assignment.cooloffPeriod != null) {
+        if (assignment.cooloffPeriod != null && !request.isUserInRole("TEACHER")) {
             val lastSubmission = submissionService.getLastSubmission(principal, assignment.id)
             if (lastSubmission != null) {
                 val nextSubmissionTime = submissionService.calculateCoolOff(lastSubmission, assignment)
