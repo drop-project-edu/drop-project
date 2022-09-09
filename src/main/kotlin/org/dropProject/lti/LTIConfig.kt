@@ -1,3 +1,22 @@
+/*-
+ * ========================LICENSE_START=================================
+ * DropProject
+ * %%
+ * Copyright (C) 2019 - 2022 Pedro Alves
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * =========================LICENSE_END==================================
+ */
 package org.dropProject.lti
 
 import edu.uoc.elc.lti.tool.Registration
@@ -42,7 +61,7 @@ class LTIConfig {
 
     @Bean
     fun deepLinkingTokenBuilderService(): DeepLinkingTokenBuilderService {
-        return DeepLinkingTokenBuilderService { registration: Registration, kid: String? ->
+        return DeepLinkingTokenBuilderService { registration: Registration, _: String? ->
             val key = registration.keySet.keys[0]
             JWSTokenBuilder(key.publicKey, key.privateKey, key.algorithm)
         }
@@ -50,7 +69,7 @@ class LTIConfig {
 
     @Bean
     fun clientCredentialsTokenBuilderService(): ClientCredentialsTokenBuilderService {
-        return ClientCredentialsTokenBuilderService { registration: Registration, kid: String? ->
+        return ClientCredentialsTokenBuilderService { registration: Registration, _: String? ->
             val key = registration.keySet.keys[0]
             JWSClientCredentialsTokenBuilder(key.publicKey, key.privateKey, key.algorithm)
         }
