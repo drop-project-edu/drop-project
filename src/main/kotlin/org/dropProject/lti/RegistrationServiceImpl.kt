@@ -28,8 +28,10 @@ import edu.uoc.elc.spring.lti.tool.registration.RegistrationBean
 import edu.uoc.elc.spring.lti.tool.registration.RegistrationFactory
 import edu.uoc.elc.spring.lti.tool.registration.RegistrationService
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 
+@Profile("lti")
 @Service("dpRegistrationService")
 class RegistrationServiceImpl: RegistrationService {
 

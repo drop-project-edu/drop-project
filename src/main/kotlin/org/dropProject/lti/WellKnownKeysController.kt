@@ -24,9 +24,11 @@ import edu.uoc.elc.spring.lti.jkws.JwksKey
 import edu.uoc.elc.spring.lti.jkws.JwksKeyFactory
 import edu.uoc.elc.spring.lti.tool.registration.RegistrationService
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.context.annotation.Profile
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RestController
 
+@Profile("lti")
 @RestController
 class WellKnownKeysController(@Qualifier("dpRegistrationService")
                               val registrationService: RegistrationService) {
