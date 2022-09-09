@@ -214,6 +214,16 @@
 			<groupId>pt.ulusofona.deisi</groupId>
 			<artifactId>spring-boot-lti-advantage-for-dp</artifactId>
 			<version>1.0.1</version>
+			<exclusions>
+				<exclusion>
+					<groupId>edu.uoc.elc.lti</groupId>
+					<artifactId>lti-13</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>edu.uoc.elc.lti</groupId>
+					<artifactId>lti-13-jwt</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
