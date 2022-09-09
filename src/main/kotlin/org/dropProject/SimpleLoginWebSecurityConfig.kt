@@ -39,7 +39,7 @@ import java.util.*
 import java.util.logging.Logger
 
 
- @Profile("!deisi & !oauth2")
+ @Profile("!deisi & !oauth2 & !lti")
  @Configuration
  @EnableWebSecurity
  @Order(1)

@@ -19,6 +19,7 @@
  */
 package org.dropProject.controllers
 
+import edu.uoc.elc.lti.tool.Tool
 import org.springframework.stereotype.Controller
 import org.springframework.ui.ModelMap
 import org.springframework.validation.BindingResult
@@ -48,6 +49,7 @@ import org.dropProject.repository.*
 import org.dropProject.services.*
 import org.slf4j.LoggerFactory
 import org.springframework.context.MessageSource
+import org.springframework.security.core.Authentication
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.Executor
 import javax.servlet.http.HttpServletRequest
@@ -91,6 +93,19 @@ class UploadController(
 
     init {
         storageService.init()
+    }
+
+    /**
+     * This is only called after the LTI authentication flow
+     */
+    @RequestMapping(value = ["/"], method = [(RequestMethod.POST)])
+    fun postHomeFromLTIAuthentication(model: ModelMap, principal: Principal, authentication: Authentication): String {
+        val tool = authentication.credentials as Tool
+        if (tool.isValid) {
+            val assignmentId = tool.getCustomParameter("assignmentId")
+            return "redirect:/upload/${assignmentId}"
+        }
+        return "redirect:/"
     }
 
     /**

@@ -61,12 +61,18 @@ class APIAccessDeniedHandler(private val errorPage: String) : AccessDeniedHandle
 open class DropProjectSecurityConfig(val apiAuthenticationManager: PersonalTokenAuthenticationManager? = null) :
     WebSecurityConfigurerAdapter() {
 
+    /**
+     * Returns an array of ant matcher expressions which will be allowed without authentication
+     */
+    open fun getPublicUrls() = listOf("/public", "/login", "/loginFromDEISI", "/access-denied", "/error", "/h2-console/**",
+        "/api-docs", "/swagger-ui.html", "/swagger-ui/**", "/swagger-resources/**", "/v2/api-docs")
+
     override fun configure(http: HttpSecurity) {
         http
+            .csrf().ignoringAntMatchers("/").and() // disable csrf in case someone needs to access "/" by POST
             .authorizeRequests()
             .antMatchers(
-                "/public", "/login", "/loginFromDEISI", "/access-denied", "/error", "/h2-console/**",
-                "/api-docs", "/swagger-ui.html", "/swagger-ui/**", "/swagger-resources/**", "/v2/api-docs"
+                *getPublicUrls().toTypedArray()
             ).permitAll()
             .antMatchers(
                 "/", "/upload", "/upload/*", "/buildReport/*", "/student/**",
