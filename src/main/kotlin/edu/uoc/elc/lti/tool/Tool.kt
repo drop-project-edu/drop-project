@@ -166,11 +166,11 @@ class Tool {
     val customParameters: Map<String, Any>
         get() {
             @Suppress("UNCHECKED_CAST")
-            val claim: Map<String, Any> = claimAccessor!!.get(
+            val claim: Map<String, Any>? = claimAccessor!!.get(
                 ClaimsEnum.CUSTOM,
                 Map::class.java as Class<Map<String,Any>>
             )
-            return claim
+            return claim ?: emptyMap()
         }
 
     fun <T> getCustomClaim(claim: ClaimsEnum?, returnClass: Class<T>?): T {

@@ -103,6 +103,9 @@ class UploadController(
         val tool = authentication.credentials as Tool
         if (tool.isValid) {
             val assignmentId = tool.getCustomParameter("assignmentId")
+            if (assignmentId == null) {
+                throw IllegalAccessError("You must set a custom parameter in the (moodle) tool configuration - assignmentId=xxxx")
+            }
             return "redirect:/upload/${assignmentId}"
         }
         return "redirect:/"

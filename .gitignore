@@ -5,4 +5,4 @@ upload
 mavenized-projects-test
 mavenized-projects
 *.zip
-/src/main/resources/config/drop-project.properties
+/src/main/resources/config
