@@ -24,6 +24,7 @@ import edu.uoc.elc.spring.lti.security.User
 import edu.uoc.lti.claims.ClaimsEnum
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
 import org.springframework.core.io.ResourceLoader
 import org.springframework.security.core.Authentication
@@ -31,8 +32,8 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.AuthenticationUserDetailsService
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedGrantedAuthoritiesWebAuthenticationDetails
-import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
+import java.io.BufferedReader
 
 /**
  * This is based on the class LTIAuthenticationUserDetailsService in the spring-boot-lti-advantage-for-dp library
@@ -51,22 +52,31 @@ class LTIAuthenticationUserDetailsService<T: Authentication>: AuthenticationUser
     @Autowired
     lateinit var resourceLoader: ResourceLoader
 
+    @Value("\${dp.config.location:}")
+    val configLocationFolder: String = ""
     /**
      * The custom roles relies on the existence of a classpath accessible custom-roles.csv with the following format:
      *
      * user1;ROLE_XXX
      * user2;ROLE_DROP_PROJECT_ADMIN,ROLE_YYY
      *
-     * Notice that ROLE_STUDENT and ROLE_TEACHER are already handled automtically, no need to add these.
+     * Notice that ROLE_STUDENT and ROLE_TEACHER are already handled automatically, no need to add these.
+     *
+     * It first searches for env:DP_CONFIG_LOCATION/custom-roles.csv through FS and then, if it doesn't find it,
+     * searches for custom-roles.csv in the classpath.
+     * This allows local overriding.
      */
     val roles : Map<String, Array<String>> by lazy {  // username to roles list. e.g. "teacher1" -> ["ROLE_XXX,ROLE_ADMIN"]
         val internalRoles = mutableMapOf<String, Array<String>>()
 
-        if (resourceLoader.getResource("classpath:custom-roles.csv").exists()) {
+        val loadFromConfig = configLocationFolder.isNotEmpty() && resourceLoader.getResource("file:${configLocationFolder}/custom-roles.csv").exists()
+        val loadFromRoot = resourceLoader.getResource("classpath:custom-roles.csv").exists()
 
-            LOG.info("Found custom-roles.csv file. Will load (additional) user roles from there.")
+        if (loadFromConfig || loadFromRoot) {
+            val filenameAsResource = if (loadFromConfig) "file:${configLocationFolder}/custom-roles.csv" else "classpath:custom-roles.csv"
+            LOG.info("Found ${filenameAsResource}. Will load (additional) user roles from there.")
 
-            val rolesFile = resourceLoader.getResource("classpath:custom-roles.csv").file
+            val rolesFile: BufferedReader = resourceLoader.getResource(filenameAsResource).inputStream.bufferedReader()
             rolesFile.readLines().forEach { line ->
                 val (userid, rolesStr) = line.split(";")
                 val roles = rolesStr.split(",").toTypedArray()
@@ -78,7 +88,6 @@ class LTIAuthenticationUserDetailsService<T: Authentication>: AuthenticationUser
         } else {
             LOG.warn("Didn't find custom-roles.csv file. This is probably not intended. For example, there won't be no one with the admin role.")
         }
-
 
         internalRoles
     }
