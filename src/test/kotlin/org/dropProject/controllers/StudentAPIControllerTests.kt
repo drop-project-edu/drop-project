@@ -71,6 +71,13 @@ class StudentAPIControllerTests: APIControllerTests {
             gitRepositoryFolder = "testJavaProj")
         assignmentRepository.save(assignment01)
         assigneeRepository.save(Assignee(assignmentId = "testJavaProj", authorUserId = "student1"))
+
+        val assignment02 = Assignment(id = "testKotlinProj", name = "Test Project (for automatic tests)",
+            packageName = "org.dropProject.sampleAssignments.testKotlinProj", ownerUserId = "teacher1",
+            submissionMethod = SubmissionMethod.UPLOAD, active = false, gitRepositoryUrl = "git://dummy",
+            gitRepositoryFolder = "testKotlinProj")
+        assignmentRepository.save(assignment02)
+        assigneeRepository.save(Assignee(assignmentId = "testKotlinProj", authorUserId = "student1"))
     }
 
     @Test
