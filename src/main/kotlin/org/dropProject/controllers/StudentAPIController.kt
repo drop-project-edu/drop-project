@@ -70,6 +70,8 @@ class StudentAPIController(
         val authorizedAssignments = assigneeRepository.findByAuthorUserId(principal.realName())
         val result = authorizedAssignments.map {
             assignmentRepository.getById(it.assignmentId)
+        }.filter {
+            it.active
         }
         return ResponseEntity.ok(result)
     }
