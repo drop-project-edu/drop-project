@@ -108,4 +108,24 @@ class StudentAPIController(
             return ResponseEntity.ok().body(report)
         }
     }
+
+    @RequestMapping(value = ["/assignment/{assignmentId}/instructions"], method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_JSON_VALUE])
+    @JsonView(JSONViews.StudentAPI::class)  // to publish only certain fields of the Assignment
+    @ApiOperation(value = "Get the instructions associated with this assignment")
+    fun getInstructionsFragment(@PathVariable assignmentId: String) : ResponseEntity<String> {
+
+        val assignment = assignmentRepository.findById(assignmentId).orElse(null)
+
+        var instructions = ""
+
+        if (assignment != null) {
+
+            instructions = reportService.assignmentTeacherFiles.getHtmlInstructionsFragment(assignment)
+
+        }
+
+        return ResponseEntity.ok().body(instructions)
+
+    }
+
 }
