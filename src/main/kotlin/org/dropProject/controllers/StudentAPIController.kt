@@ -34,6 +34,7 @@ import org.dropProject.services.AssignmentService
 import org.dropProject.services.FullBuildReport
 import org.dropProject.services.ReportService
 import org.dropProject.services.SubmissionService
+import org.dropProject.services.AssignmentTeacherFiles
 import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -57,7 +58,8 @@ class StudentAPIController(
     val assigneeRepository: AssigneeRepository,
     val submissionService: SubmissionService,
     val assignmentService: AssignmentService,
-    val reportService: ReportService
+    val reportService: ReportService,
+    val assignmentTeacherFiles: AssignmentTeacherFiles
 ) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
@@ -120,7 +122,7 @@ class StudentAPIController(
 
         if (assignment != null) {
 
-            instructions = reportService.assignmentTeacherFiles.getHtmlInstructionsFragment(assignment)
+            instructions = assignmentTeacherFiles.getHtmlInstructionsFragment(assignment)
 
         }
 
