@@ -71,6 +71,21 @@ class StudentAPIControllerTests: APIControllerTests {
             gitRepositoryFolder = "testJavaProj")
         assignmentRepository.save(assignment01)
         assigneeRepository.save(Assignee(assignmentId = "testJavaProj", authorUserId = "student1"))
+
+        val assignment02 = Assignment(id = "testKotlinProj", name = "Test Project (for automatic tests)",
+            packageName = "org.dropProject.sampleAssignments.testKotlinProj", ownerUserId = "teacher1",
+            submissionMethod = SubmissionMethod.UPLOAD, active = false, gitRepositoryUrl = "git://dummy",
+            gitRepositoryFolder = "testKotlinProj")
+        assignmentRepository.save(assignment02)
+        assigneeRepository.save(Assignee(assignmentId = "testKotlinProj", authorUserId = "student1"))
+
+        val assignmentWithInstructions = Assignment(id = "sampleJavaProject", name = "Test Project (for automatic tests)",
+            packageName = "org.dropProject.samples.sampleJavaAssignment", ownerUserId = "teacher1",
+            submissionMethod = SubmissionMethod.GIT, active = true, gitRepositoryUrl = "git://dummy",
+            gitRepositoryFolder = "sampleJavaProject")
+        assignmentRepository.save(assignmentWithInstructions)
+        assigneeRepository.save(Assignee(assignmentId = "sampleJavaProject", authorUserId = "student1"))
+
     }
 
     @Test
@@ -170,4 +185,24 @@ class StudentAPIControllerTests: APIControllerTests {
                 startsWith("FAILURE: org.dropProject.sampleAssignments.testProj.TestTeacherProject.testFuncaoParaTestar")))
 
     }
+
+    @Test
+    @DirtiesContext
+    fun `get html fragment of assignment`() {
+
+        val assignmentId = "sampleJavaProject"
+
+        val token = generateToken("student1", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")), mvc)
+
+        this.mvc.perform(
+            get("/api/student/assignment/${assignmentId}/instructions")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("authorization", testsHelper.header("student1", token)))
+            .andExpect(status().isOk)
+            .andExpect(content().string(containsString("<h2>Sample Java Assignment</h2>")))
+            .andExpect(content().string(containsString("<p>This is just a very simple Java assignment just to experiment with Drop Project</p>")))
+
+
+    }
+
 }

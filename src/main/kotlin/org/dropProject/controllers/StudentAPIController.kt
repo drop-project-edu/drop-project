@@ -34,6 +34,7 @@ import org.dropProject.services.AssignmentService
 import org.dropProject.services.FullBuildReport
 import org.dropProject.services.ReportService
 import org.dropProject.services.SubmissionService
+import org.dropProject.services.AssignmentTeacherFiles
 import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -57,7 +58,8 @@ class StudentAPIController(
     val assigneeRepository: AssigneeRepository,
     val submissionService: SubmissionService,
     val assignmentService: AssignmentService,
-    val reportService: ReportService
+    val reportService: ReportService,
+    val assignmentTeacherFiles: AssignmentTeacherFiles
 ) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
@@ -70,6 +72,8 @@ class StudentAPIController(
         val authorizedAssignments = assigneeRepository.findByAuthorUserId(principal.realName())
         val result = authorizedAssignments.map {
             assignmentRepository.getById(it.assignmentId)
+        }.filter {
+            it.active
         }
         return ResponseEntity.ok(result)
     }
@@ -106,4 +110,24 @@ class StudentAPIController(
             return ResponseEntity.ok().body(report)
         }
     }
+
+    @RequestMapping(value = ["/assignment/{assignmentId}/instructions"], method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_JSON_VALUE])
+    @JsonView(JSONViews.StudentAPI::class)  // to publish only certain fields of the Assignment
+    @ApiOperation(value = "Get the instructions associated with this assignment")
+    fun getInstructionsFragment(@PathVariable assignmentId: String) : ResponseEntity<String> {
+
+        val assignment = assignmentRepository.findById(assignmentId).orElse(null)
+
+        var instructions = ""
+
+        if (assignment != null) {
+
+            instructions = assignmentTeacherFiles.getHtmlInstructionsFragment(assignment)
+
+        }
+
+        return ResponseEntity.ok().body(instructions)
+
+    }
+
 }
