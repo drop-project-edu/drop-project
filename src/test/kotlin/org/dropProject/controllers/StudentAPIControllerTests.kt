@@ -126,6 +126,13 @@ class StudentAPIControllerTests: APIControllerTests {
                     "dueDate":null,
                     "submissionMethod":"UPLOAD",
                     "language":"JAVA",
+                    "active":true },
+                    {"id":"sampleJavaProject",
+                    "name":"Test Project (for automatic tests)",
+                    "packageName":"org.dropProject.samples.sampleJavaAssignment",
+                    "dueDate":null,
+                    "submissionMethod":"GIT",
+                    "language":"JAVA",
                     "active":true }
                 ]
             """.trimIndent()))
