@@ -499,7 +499,7 @@ class ReportController(
             jPlagService.prepareSubmissions(submissions, submissionsToCheckFolder)
             LOG.info("Prepared submissions for jplag on ${submissionsToCheckFolder.absolutePath}")
 
-            val comparisons = jPlagService.checkSubmissions(submissionsToCheckFolder, assignmentId, plagiarismReportFolder)
+            val comparisons = jPlagService.checkSubmissions(submissionsToCheckFolder, assignment, plagiarismReportFolder)
             LOG.info("Checked submissions using jplag on ${submissionsToCheckFolder.absolutePath}. " +
                     "Wrote report to ${plagiarismReportFolder.absolutePath}")
 

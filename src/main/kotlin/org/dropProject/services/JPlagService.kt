@@ -21,10 +21,10 @@ package org.dropProject.services
 
 import de.jplag.JPlag
 import de.jplag.options.JPlagOptions
-import de.jplag.options.LanguageOption
-import de.jplag.reporting.Report
+import de.jplag.reporting.reportobject.ReportObjectFactory
 import org.apache.commons.io.FileUtils
 import org.dropProject.Constants
+import org.dropProject.dao.Assignment
 import org.dropProject.dao.Submission
 import org.dropProject.repository.SubmissionRepository
 import org.springframework.stereotype.Service
@@ -68,18 +68,23 @@ class JPlagService(private val submissionService: SubmissionService,
      * reports for each match (showing the code side by side)
      * Finally, it associates the assignmentId with the outputReportFolder in a local variable for future reference
      */
-    fun checkSubmissions(baseFolder: File, assignmentId: String, outputReportFolder: File): List<PlagiarismComparison> {
+    fun checkSubmissions(baseFolder: File, assignment: Assignment, outputReportFolder: File): List<PlagiarismComparison> {
 
-        val options = JPlagOptions(baseFolder.absolutePath, LanguageOption.JAVA)
-        options.similarityThreshold = Constants.SIMILARITY_THRESHOLD.toFloat()  // ignore comparisons below this similarity
+        val language = when (assignment.language) {
+            org.dropProject.dao.Language.JAVA -> de.jplag.java.Language()
+            org.dropProject.dao.Language.KOTLIN -> de.jplag.kotlin.Language()
+        }
+        val options = JPlagOptions(language, mutableSetOf(baseFolder), setOf())
+            .withSimilarityThreshold(Constants.SIMILARITY_THRESHOLD.toDouble())  // ignore comparisons below this similarity
         val jplag = JPlag(options)
         val result = jplag.run()
 
-        val jplagComparisons = result.comparisons
+        val jplagComparisons = result.allComparisons
 
-        val report = Report(outputReportFolder, options)
-        report.writeResult(result)
-        reportFoldersByAssignmentId[assignmentId] = outputReportFolder
+        val reportObjectFactory = ReportObjectFactory()
+        reportObjectFactory.createAndSaveReport(result, outputReportFolder.absolutePath)
+
+        reportFoldersByAssignmentId[assignment.id] = outputReportFolder
 
         val comparisons = jplagComparisons.mapIndexed { idx, jplagComparison ->
             PlagiarismComparison(idx,

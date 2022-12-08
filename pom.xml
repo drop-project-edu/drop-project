@@ -206,7 +206,17 @@
 		<dependency>
 			<groupId>de.jplag</groupId>
 			<artifactId>jplag</artifactId>
-			<version>3.0.0</version>
+			<version>4.1.0</version>
+		</dependency>
+		<dependency> <!-- support for java plagiarism detection -->
+			<groupId>de.jplag</groupId>
+			<artifactId>java</artifactId>
+			<version>4.1.0</version>
+		</dependency>
+		<dependency> <!-- support for kotlin plagiarism detection -->
+			<groupId>de.jplag</groupId>
+			<artifactId>kotlin</artifactId>
+			<version>4.1.0</version>
 		</dependency>
 
 		<dependency>
