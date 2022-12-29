@@ -480,10 +480,6 @@ class ReportController(
             throw IllegalAccessError("Assignment reports can only be accessed by their owner or authorized teachers")
         }
 
-        if (assignment.language != Language.JAVA) {
-            throw IllegalArgumentException("Plagiarism reports only available for Java assignments")
-        }
-
         val submissionInfos = submissionService.getSubmissionsList(assignment, retrieveReport = false)
 
         // check if there are any submissions marked as final. in that case, consider only final submissions
