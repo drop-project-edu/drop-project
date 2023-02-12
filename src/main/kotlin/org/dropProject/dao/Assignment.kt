@@ -21,10 +21,12 @@ package org.dropProject.dao
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonView
 import org.dropProject.data.JSONViews
 import org.dropProject.extensions.format
 import org.dropProject.forms.SubmissionMethod
+import org.dropProject.services.AssignmentInstructions
 import java.util.*
 import javax.persistence.*
 
@@ -166,7 +168,16 @@ data class Assignment(
     var authorizedStudentIds: List<String>? = null,
 
     @Transient
-    var tagsStr: List<String>? = null
+    var tagsStr: List<String>? = null,
+
+    @JsonView(JSONViews.StudentAPI::class)
+    @Transient
+    var instructions: AssignmentInstructions? = null,
+
+    @JsonView(JSONViews.StudentAPI::class)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Transient
+    var error: String? = null
 ) {
 
     fun dueDateFormatted(): String? {
