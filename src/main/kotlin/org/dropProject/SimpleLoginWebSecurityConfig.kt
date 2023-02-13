@@ -23,6 +23,7 @@ import org.dropProject.security.DropProjectSecurityConfig
 import org.dropProject.security.PersonalTokenAuthenticationManager
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
@@ -39,7 +40,7 @@ import java.util.*
 import java.util.logging.Logger
 
 
- @Profile("!deisi & !oauth2")
+ @Profile("!deisi & !oauth2 & !lti")
  @Configuration
  @EnableWebSecurity
  @Order(1)
@@ -49,6 +50,9 @@ class SimpleLoginWebSecurityConfig(val manager: PersonalTokenAuthenticationManag
 
     @Autowired
     lateinit var resourceLoader: ResourceLoader
+
+    @Value("\${dp.config.location:}")
+    val configLocationFolder: String = ""
 
     override fun configure(http: HttpSecurity) {
 
@@ -75,11 +79,14 @@ class SimpleLoginWebSecurityConfig(val manager: PersonalTokenAuthenticationManag
 
         val usersList = mutableListOf<UserDetails>()
 
-        if (resourceLoader.getResource("classpath:users.csv").exists()) {
+        val loadFromConfig = configLocationFolder.isNotEmpty() && resourceLoader.getResource("file:${configLocationFolder}/users.csv").exists()
+        val loadFromRoot = resourceLoader.getResource("classpath:users.csv").exists()
 
-            LOG.info("Found users.csv file. Will load user details from there.")
+        if (loadFromConfig || loadFromRoot) {
+            val filenameAsResource = if (loadFromConfig) "file:${configLocationFolder}/users.csv" else "classpath:users.csv"
+            LOG.info("Found ${filenameAsResource}. Will load user details from there.")
 
-            val usersFile = resourceLoader.getResource("classpath:users.csv").file
+            val usersFile = resourceLoader.getResource(filenameAsResource).inputStream.bufferedReader()
             usersFile.readLines().forEach {
                 if (it != "username;password;roles") {  // skip header
                     val (username, password, rolesStr) = it.split(";")
