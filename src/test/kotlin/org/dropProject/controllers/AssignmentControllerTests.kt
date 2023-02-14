@@ -221,7 +221,7 @@ class AssignmentControllerTests {
                 "UPLOAD", sampleJavaAssignmentRepo
             )
             assertEquals("dummyAssignment1", createdAssignment.id)
-            assertEquals("0605ac7a93de4a6b112f8f779df430a9a631173f", createdAssignment.gitCurrentHash)
+            assertEquals("f3c3cf4f18decadba6b7ae35d740eb8b6a277b89", createdAssignment.gitCurrentHash)
 
             val result = this.mvc.perform(get("/assignment/info/dummyAssignment1"))
                 .andExpect(status().isOk)
@@ -239,7 +239,7 @@ class AssignmentControllerTests {
             assertEquals("Doesn't use the 'dropProject.currentUserId' system property", report[1].message)
             assertEquals("POM file is prepared to prevent stacktrace trimming on junit errors", report[2].message)
             assertEquals("Found 1 test classes", report[3].message)
-            assertEquals("You haven't defined a timeout for 4 test methods.", report[4].message)
+            assertEquals("You have defined 4 test methods with timeout.", report[4].message)
             assertEquals("You are using a recent version of checkstyle.", report[5].message)
 
             // change the assignment to have a mandatory tests suffix
@@ -1111,7 +1111,7 @@ class AssignmentControllerTests {
             val testMethods = mvcResult.modelAndView!!.modelMap["tests"] as List<AssignmentTestMethod>
             assertEquals(4, testMethods.size)
             assertThat(testMethods.map { it.testMethod },
-                contains("testFindMax", "testFindMaxWithNull", "testFindMaxAllNegative", "testFindMaxNegativeAndPositive"))
+                contains("test_001_FindMax", "test_002_FindMaxAllNegative", "test_003_FindMaxNegativeAndPositive", "test_004_FindMaxWithNull", ))
 
         } finally {
 
