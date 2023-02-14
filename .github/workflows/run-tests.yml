@@ -24,7 +24,7 @@ jobs:
           restore-keys: ${{ runner.os }}-m2
       - name: Build with Maven
         env:
-          DP_M2_HOME: /usr/share/apache-maven-3.8.6
+          DP_M2_HOME: /usr/share/apache-maven-3.8.7
           DP_MVN_REPO: ~/.m2
         run: mvn --batch-mode --update-snapshots verify
       - name: Upload coverage to codecov
