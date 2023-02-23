@@ -69,7 +69,7 @@ class StudentAPIController(
             assignmentRepository.getById(it.assignmentId)
         }.filter {
             it.active
-        }.map { it.copy(instructions = assignmentTeacherFiles.getHtmlInstructionsFragment(it)) }
+        }.map { it.copy(instructions = assignmentTeacherFiles.getInstructions(it)) }
         return ResponseEntity.ok(result)
     }
 
@@ -85,7 +85,7 @@ class StudentAPIController(
     ): ResponseEntity<SubmissionResult> {
 
         return submissionService.uploadSubmission(bindingResult, uploadForm, request, principal, file,
-            assignmentRepository, assignmentService)
+            assignmentRepository, assignmentService, uploadByAPI = true)
     }
 
     @RequestMapping(value = ["/submissions/{submissionId}"], method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_JSON_VALUE])
@@ -118,7 +118,7 @@ class StudentAPIController(
 
         var assignment = assignmentRepository.findById(assignmentID).orElse(null)
 
-        assignment?.instructions = assignmentTeacherFiles.getHtmlInstructionsFragment(assignment)
+        assignment?.instructions = assignmentTeacherFiles.getInstructions(assignment)
 
         if (assignment == null) {
             assignmentInfoResponse.errorCode = 404

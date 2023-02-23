@@ -181,6 +181,7 @@ class SubmissionService(
         file: MultipartFile,
         assignmentRepository: AssignmentRepository,  // have to pass this repository to avoid circular references
         assignmentService: AssignmentService,  // have to pass this repository to avoid circular references
+        uploadByAPI : Boolean = false
     ): ResponseEntity<SubmissionResult> {
         if (bindingResult.hasErrors()) {
             return ResponseEntity.internalServerError().body(SubmissionResult(error="Internal error"))
@@ -264,7 +265,8 @@ class SubmissionService(
                 submissionId = projectFolder.name, submissionDate = Date(),
                 status = SubmissionStatus.SUBMITTED.code, statusDate = Date(), assignmentId = assignment.id,
                 assignmentGitHash = assignment.gitCurrentHash, submitterUserId = principal.realName(),
-                submissionFolder = projectFolder.relativeTo(storageService.rootFolder()).path
+                submissionFolder = projectFolder.relativeTo(storageService.rootFolder()).path,
+                uploadByAPI = uploadByAPI
             )
             submission.group = group
             submissionRepository.save(submission)

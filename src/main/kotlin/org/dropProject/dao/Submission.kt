@@ -146,7 +146,9 @@ data class Submission(
 
         @Transient
         @JsonView(JSONViews.StudentAPI::class)
-        var overdue: Boolean? = null
+        var overdue: Boolean? = null,
+
+        var uploadByAPI: Boolean = false
 ) {
     @ManyToOne
     lateinit var group: ProjectGroup
