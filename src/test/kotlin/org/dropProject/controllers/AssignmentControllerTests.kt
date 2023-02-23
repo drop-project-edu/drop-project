@@ -70,6 +70,7 @@ import java.io.File
 import java.util.*
 
 const val sampleJavaAssignmentRepo = "git@github.com:drop-project-edu/sampleJavaAssignment.git"
+const val sampleJavaAssignmentWithJUnit5Repo = "git@github.com:drop-project-edu/sampleJavaAssignmentWithJunit5.git"
 
 @RunWith(SpringRunner::class)
 @AutoConfigureMockMvc
@@ -1592,5 +1593,47 @@ class AssignmentControllerTests {
 
     }
 
+
+    @Test
+    @WithMockUser("teacher1", roles = ["TEACHER"])
+    @DirtiesContext
+    fun test_27_createNewAssignmentAndInfoWithTestMethodsWithJUnit5() {
+
+        try {
+            testsHelper.createAndSetupAssignment(
+                mvc, assignmentRepository, "dummyAssignmentTests", "Dummy Assignment",
+                "org.dummy",
+                "UPLOAD", sampleJavaAssignmentWithJUnit5Repo
+            )
+
+            val mvcResult = this.mvc.perform(get("/assignment/info/dummyAssignmentTests"))
+                .andExpect(status().isOk)
+                .andReturn()
+
+
+            @Suppress("UNCHECKED_CAST")
+            val report = mvcResult.modelAndView!!.modelMap["report"] as List<AssignmentReport>
+            assertEquals(6, report.size)
+            assertEquals("Assignment has a pom.xml", report[0].message)
+            assertEquals("Doesn't use the 'dropProject.currentUserId' system property", report[1].message)
+            assertEquals("POM file is prepared to prevent stacktrace trimming on junit errors", report[2].message)
+            assertEquals("Found 1 test classes", report[3].message)
+            assertEquals("You have defined a global timeout for the test methods.", report[4].message)
+            assertEquals("You are using a recent version of checkstyle.", report[5].message)
+
+            @Suppress("UNCHECKED_CAST")
+            val testMethods = mvcResult.modelAndView!!.modelMap["tests"] as List<AssignmentTestMethod>
+            assertEquals(4, testMethods.size)
+            assertThat(testMethods.map { it.testMethod },
+                contains("test_001_FindMax", "test_002_FindMaxAllNegative", "test_003_FindMaxNegativeAndPositive", "test_004_FindMaxWithNull", ))
+
+        } finally {
+
+            // cleanup assignment files
+            if (File(assignmentsRootLocation, "dummyAssignmentTests").exists()) {
+                File(assignmentsRootLocation, "dummyAssignmentTests").deleteRecursively()
+            }
+        }
+    }
 }
     

@@ -91,6 +91,9 @@ class MavenInvoker {
 
         if (securityManagerEnabled) {
             dpArgLine += " -Djava.security.manager=org.dropProject.security.SandboxSecurityManager"
+            dpArgLine += " -DdropProject.maven.repository=$mavenRepository"
+            // uncomment this to diagnose problems within our custom security manager (SandboxSecurityManager)
+//            dpArgLine += " -DdropProject.securityManager.debug=true"
         }
 
         // TODO: The line below doesn't work form multiple properties. so, for now, we'll replace the property
@@ -160,7 +163,7 @@ class MavenInvoker {
             val securityManagerDependency = Dependency()
             securityManagerDependency.artifactId = "drop-project-security-manager"
             securityManagerDependency.groupId = "pt.ulusofona.deisi"
-            securityManagerDependency.version = "0.1.1"
+            securityManagerDependency.version = "0.1.3"
             securityManagerDependency.scope = "test"
             model.dependencies.add(securityManagerDependency)
         }
