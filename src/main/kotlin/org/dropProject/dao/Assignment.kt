@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonView
 import org.dropProject.data.JSONViews
 import org.dropProject.extensions.format
 import org.dropProject.forms.SubmissionMethod
+import org.dropProject.services.AssignmentInstructions
 import java.util.*
 import javax.persistence.*
 
@@ -95,23 +96,23 @@ enum class LeaderboardType {
 @Entity
 @JsonIgnoreProperties(ignoreUnknown = true)  // this is useful to improve backward-compatible imports
 data class Assignment(
-        @Id
+    @Id
         @JsonView(JSONViews.StudentAPI::class)  // include this field on API calls
         @Column(length = 50)
         val id: String,
 
-        @Column(nullable = false)
+    @Column(nullable = false)
         @JsonView(JSONViews.StudentAPI::class)
         var name: String,
 
-        @JsonView(JSONViews.StudentAPI::class)
+    @JsonView(JSONViews.StudentAPI::class)
         var packageName: String? = null,
 
-        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
         @JsonView(JSONViews.StudentAPI::class)
         var dueDate: Date? = null,
 
-        @Column(nullable = false)
+    @Column(nullable = false)
         @JsonView(JSONViews.StudentAPI::class)
         var submissionMethod: SubmissionMethod,
 
@@ -163,10 +164,14 @@ data class Assignment(
         var lastSubmissionDate: Date? = null,
 
         @Transient
-    var authorizedStudentIds: List<String>? = null,
+        var authorizedStudentIds: List<String>? = null,
 
-    @Transient
-    var tagsStr: List<String>? = null
+        @Transient
+        var tagsStr: List<String>? = null,
+
+        @JsonView(JSONViews.StudentAPI::class)
+        @Transient
+        var instructions: AssignmentInstructions? = null,
 ) {
 
     fun dueDateFormatted(): String? {

@@ -19,23 +19,31 @@
  */
 package org.dropProject.services
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonView
 import org.apache.commons.io.FileUtils
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
-import org.dropProject.Constants
 import org.dropProject.dao.*
+import org.dropProject.data.JSONViews
 import org.dropProject.repository.AssignmentTestMethodRepository
 import org.dropProject.repository.BuildReportRepository
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.ApplicationContext
 import org.springframework.context.MessageSource
-import org.springframework.context.support.ResourceBundleMessageSource
+import org.springframework.stereotype.Service
 import java.io.File
-import java.io.FileNotFoundException
 import java.security.Principal
 import java.util.*
 
+enum class AssignmentInstructionsFormat {
+    HTML
+}
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class AssignmentInstructions(
+    @JsonView(JSONViews.StudentAPI::class)
+    var format: AssignmentInstructionsFormat? = null,
+    @JsonView(JSONViews.StudentAPI::class)
+    var body: String? = null
+)
 /**
  * Provides functionality related with an Assignment's Teacher Files (for example, checking if the Teacher's submission
  * compiles, passes the CheckStyle, and so on).
@@ -57,13 +65,17 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
     @Value("\${spring.web.locale}")
     val currentLocale : Locale = Locale.getDefault()
 
-    fun getHtmlInstructionsFragment(assignment: Assignment) : String {
-        try {
-            val fragment = File(assignmentsRootLocation, "${assignment.gitRepositoryFolder}/instructions.html").readText()
-            return fragment
-        } catch (e: FileNotFoundException) {
-            return ""
+    fun getHtmlInstructionsFragment(assignment: Assignment) : AssignmentInstructions {
+
+        val instructions = AssignmentInstructions()
+        val files = File("${assignmentsRootLocation}/${assignment.gitRepositoryFolder}").listFiles { _, name -> name.startsWith("instructions")}
+        if (files != null && files.isNotEmpty()) {
+            val fragment = files[0]
+            val extension = fragment.name.substringAfterLast(".","")
+            instructions.format = AssignmentInstructionsFormat.valueOf(extension.uppercase())
+            instructions.body = fragment.readText()
         }
+        return instructions
     }
 
     fun copyTeacherFilesTo(assignment: Assignment, mavenizedProjectFolder: File) {
@@ -84,7 +96,7 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
      *
      * @param packageName is a String with the Assignment's expected package name
      * @param language is a Language, identifying the programming language that is used in the [Assignment]
-     * @param hasStudentTests is a Boolean indicating if the [Assignement] requires/allows student tests
+     * @param hasStudentTests is a Boolean indicating if the [Assignment] requires/allows student tests
      *
      * @return a String
      */
