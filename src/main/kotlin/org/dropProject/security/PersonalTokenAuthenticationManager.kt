@@ -20,18 +20,19 @@
 package org.dropProject.security
 
 import org.dropProject.dao.TokenStatus
-import org.dropProject.repository.AssignmentRepository
 import org.dropProject.repository.PersonalTokenRepository
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.CredentialsExpiredException
 import org.springframework.security.authentication.InternalAuthenticationServiceException
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
+import org.springframework.security.core.AuthenticationException
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.stereotype.Component
 import java.util.*
 
+class InexistentPersonalTokenException: AuthenticationException("Inexistent or expired personal token")
 
 @Component
 class PersonalTokenAuthenticationManager(val personalTokenRepository: PersonalTokenRepository): AuthenticationManager {
@@ -60,7 +61,6 @@ class PersonalTokenAuthenticationManager(val personalTokenRepository: PersonalTo
             return UsernamePasswordAuthenticationToken(username, personalToken, grantedAuths)
         }
 
-        throw InternalAuthenticationServiceException("Invalid personal token")
-
+        throw InexistentPersonalTokenException()
     }
 }
