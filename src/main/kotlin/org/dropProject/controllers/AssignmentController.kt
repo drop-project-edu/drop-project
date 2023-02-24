@@ -757,7 +757,7 @@ class AssignmentController(
                         gitSubmissionRepository.deleteById(gitSubmissionId)
                     }
                 } catch (e: Exception) {
-                    LOG.warn("Error removing stuff related to submission ${submission.id}. Moving on...", e)
+                    LOG.warn("Error removing stuff related to submission ${submission.id} - $e Moving on...")
                 }
             }
 
