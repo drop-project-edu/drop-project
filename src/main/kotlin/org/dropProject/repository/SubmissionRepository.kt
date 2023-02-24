@@ -19,13 +19,14 @@
  */
 package org.dropProject.repository
 
-import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.data.jpa.repository.Query
-import org.springframework.transaction.annotation.Transactional
 import org.dropProject.dao.ProjectGroup
 import org.dropProject.dao.Submission
-import org.dropProject.dao.SubmissionStatus
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
+import org.springframework.data.jpa.repository.Query
+import org.springframework.transaction.annotation.Transactional
 import java.util.*
+
 
 /**
  * Provides functions to query [Submission]s that have been persisted in the database.
@@ -58,6 +59,9 @@ interface SubmissionRepository : JpaRepository<Submission, Long> {
 
     @Transactional
     fun deleteByGitSubmissionId(gitSubmissionId: Long)
+
+    @Transactional
+    fun deleteAllByAssignmentId(assignmentId: String)
 
     fun findByGroupIn(groups: List<ProjectGroup>): List<Submission>
 }

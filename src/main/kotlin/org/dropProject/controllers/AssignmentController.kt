@@ -762,7 +762,7 @@ class AssignmentController(
             }
 
             LOG.info("Removing all the submissions from DB")
-            submissionRepository.deleteAllInBatch(submissions)
+            submissionRepository.deleteAllByAssignmentId(assignmentId)
         }
 
         assignmentService.clearAllTags(assignment, clearOrphans = true)
