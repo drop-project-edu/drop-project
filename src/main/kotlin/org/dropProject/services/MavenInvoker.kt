@@ -91,7 +91,7 @@ class MavenInvoker {
 
         if (securityManagerEnabled) {
             dpArgLine += " -Djava.security.manager=org.dropProject.security.SandboxSecurityManager"
-            dpArgLine += " -DdropProject.maven.repository=$mavenRepository"
+            dpArgLine += " -DdropProject.maven.repository=${File(mavenRepository).absolutePath}"
             // uncomment this to diagnose problems within our custom security manager (SandboxSecurityManager)
 //            dpArgLine += " -DdropProject.securityManager.debug=true"
         }
