@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonView
 import io.swagger.annotations.*
 import org.dropProject.dao.Assignment
 import org.dropProject.dao.Indicator
+import org.dropProject.dao.SubmissionMode
 import org.dropProject.data.AssignmentInfoResponse
 import org.dropProject.data.JSONViews
 import org.dropProject.data.SubmissionResult
@@ -85,7 +86,7 @@ class StudentAPIController(
     ): ResponseEntity<SubmissionResult> {
 
         return submissionService.uploadSubmission(bindingResult, uploadForm, request, principal, file,
-            assignmentRepository, assignmentService, uploadByAPI = true)
+            assignmentRepository, assignmentService, submissionMode = SubmissionMode.API)
     }
 
     @RequestMapping(value = ["/submissions/{submissionId}"], method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_JSON_VALUE])

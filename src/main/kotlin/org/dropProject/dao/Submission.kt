@@ -64,6 +64,10 @@ enum class SubmissionStatus(val code: String, val description: String) {
     }
 }
 
+enum class SubmissionMode {
+    UPLOAD, GIT, API
+}
+
 /**
  * Represents a Submission, which is a single interaction of the student (or group) with an [Assignment].
  * @property id is a primary-key like generated value
@@ -86,6 +90,7 @@ enum class SubmissionStatus(val code: String, val description: String) {
  * @property testResults is a List of [JUnitMethodResult] containing the result for each evaluation JUnit Test
  * @property group is the [ProjectGrop] that performed the submission.
  */
+
 @Entity @JsonInclude(JsonInclude.Include.NON_EMPTY)
 data class Submission(
         @Id @GeneratedValue
@@ -148,16 +153,16 @@ data class Submission(
         @JsonView(JSONViews.StudentAPI::class)
         var overdue: Boolean? = null,
 
-        var uploadByAPI: Boolean = false
+        var submissionMode: SubmissionMode? = null
 ) {
     @ManyToOne
     lateinit var group: ProjectGroup
 
     constructor(submissionId: String, assignmentId: String, assignmentGitHash: String?, submitterNumber: String, status: String,
-                statusDate: Date, group: ProjectGroup, submissionFolder: String) :
+                statusDate: Date, group: ProjectGroup, submissionFolder: String, submissionMode: SubmissionMode) :
             this(submissionId = submissionId, assignmentId = assignmentId, assignmentGitHash = assignmentGitHash,
                  submitterUserId = submitterNumber, status = status, statusDate = statusDate, submissionDate = Date(),
-                 submissionFolder = submissionFolder) {
+                 submissionFolder = submissionFolder, submissionMode = submissionMode) {
         this.group = group
     }
 

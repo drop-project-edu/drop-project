@@ -29,17 +29,18 @@ class TestSubmissionStatus {
     fun testSubmissionConstructor() {
         val projGroup = ProjectGroup()
         val date = Date()
-        var submission = Submission("123", "proj-lp2-1920-p1", null, "1", "V", date, projGroup, "")
+        var submission = Submission("123", "proj-lp2-1920-p1", null, "1", "V", date, projGroup, "", submissionMode = SubmissionMode.UPLOAD)
         assertEquals("123", submission.submissionId)
         assertEquals("proj-lp2-1920-p1", submission.assignmentId)
         assertEquals(date, submission.statusDate)
         assertEquals(projGroup, submission.group)
         assertEquals("", submission.submissionFolder)
+        assertEquals(SubmissionMode.UPLOAD, submission.submissionMode)
     }
 
     @Test
     fun testSubmissionSetCoverage() {
-        var submission = Submission("123", "proj-lp2-19-20-p1", null, "1", "V", Date(), ProjectGroup(), "")
+        var submission = Submission("123", "proj-lp2-19-20-p1", null, "1", "V", Date(), ProjectGroup(), "", submissionMode = SubmissionMode.UPLOAD)
         submission.coverage = 95
         assertEquals(95, submission.coverage!!)
     }

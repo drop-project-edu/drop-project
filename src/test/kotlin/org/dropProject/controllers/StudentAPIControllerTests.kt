@@ -158,12 +158,14 @@ class StudentAPIControllerTests: APIControllerTests {
                 .header("authorization", testsHelper.header("student1", token)))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.assignment.id", `is`("testJavaProj")))
+            .andExpect(jsonPath("$.assignment.submissionMethod", `is`("UPLOAD")))
             .andExpect(jsonPath("$.submission.status", `is`("VALIDATED")))
             .andExpect(jsonPath("$.structureErrors").isArray)
             .andExpect(jsonPath("$.structureErrors", hasSize<Array<String>>(2)))
-//            .andReturn()
+     //      .andReturn()
 
-//        println(result.getResponse().getContentAsString());
+
+        //println(result.getResponse().getContentAsString());
     }
 
     @Test
@@ -211,7 +213,7 @@ class StudentAPIControllerTests: APIControllerTests {
             .andExpect(jsonPath("$.assignment.language", `is`("JAVA")))
             .andExpect(jsonPath("$.assignment.instructions.format", `is`("HTML")))
             .andExpect(jsonPath("$.assignment.instructions.body", containsString("<h2>Sample Java Assignment</h2>")))
-            .andExpect(jsonPath("$.errorCode" ).doesNotExist())
+            .andExpect(jsonPath("$.errorCode").doesNotExist())
 
     }
 
