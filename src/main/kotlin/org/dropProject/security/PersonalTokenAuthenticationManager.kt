@@ -43,8 +43,8 @@ class PersonalTokenAuthenticationManager(val personalTokenRepository: PersonalTo
 
         val (username,personalToken) = credentials.split(":")
 
-        val personalTokenDB = personalTokenRepository.getFirstByUserIdOrderByStatusDateDesc(username)
-        if (personalTokenDB != null && personalTokenDB.status == TokenStatus.ACTIVE) {
+        val personalTokenDB = personalTokenRepository.getFirstByUserIdAndStatusOrderByStatusDateDesc(username, TokenStatus.ACTIVE)
+        if (personalTokenDB != null) {
             if (personalTokenDB.expirationDate.before(Date())) {
                 throw CredentialsExpiredException("Personal token is expired")
             }
