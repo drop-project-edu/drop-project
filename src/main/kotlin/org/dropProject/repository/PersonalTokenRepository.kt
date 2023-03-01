@@ -23,13 +23,14 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.transaction.annotation.Transactional
 import org.dropProject.dao.Assignee
 import org.dropProject.dao.PersonalToken
+import org.dropProject.dao.TokenStatus
 
 /**
  * Provides functions to query [PersonalToken]s
  */
 interface PersonalTokenRepository : JpaRepository<PersonalToken, String> {
 
-    fun getFirstByUserIdOrderByStatusDateDesc(userId: String) : PersonalToken?
+    fun getFirstByUserIdAndStatusOrderByStatusDateDesc(userId: String, status: TokenStatus) : PersonalToken?
     fun getByPersonalToken(personalToken: String) : PersonalToken?
 
 }

@@ -13,9 +13,9 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '15'
-      # uncomment this when github actions don't find maven
-#      - name: Check maven version
-#        run: mvn --version
+      # this is just to find the maven folder, used in the build
+      - name: Check maven version
+        run: mvn --version
       - name: Cache Maven packages
         uses: actions/cache@v3
         with:
@@ -24,7 +24,7 @@ jobs:
           restore-keys: ${{ runner.os }}-m2
       - name: Build with Maven
         env:
-          DP_M2_HOME: /usr/share/apache-maven-3.9.0
+          DP_M2_HOME: /usr/share/apache-maven-3.8.7
           DP_MVN_REPO: ~/.m2
         run: mvn --batch-mode --update-snapshots verify
       - name: Upload coverage to codecov
