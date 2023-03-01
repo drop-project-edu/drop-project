@@ -259,7 +259,7 @@ class UploadController(
                request: HttpServletRequest): ResponseEntity<SubmissionResult> {
 
         return submissionService.uploadSubmission(bindingResult, uploadForm, request, principal, file,
-            assignmentRepository, assignmentService)
+            assignmentRepository, assignmentService, SubmissionMode.UPLOAD)
     }
 
     /**
