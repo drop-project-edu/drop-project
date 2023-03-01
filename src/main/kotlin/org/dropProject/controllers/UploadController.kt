@@ -194,7 +194,7 @@ class UploadController(
 
         model["assignment"] = assignment
         model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.realName(), assignment.id)
-        model["instructionsFragment"] = assignmentTeacherFiles.getHtmlInstructionsFragment(assignment)
+        model["instructionsFragment"] = assignmentTeacherFiles.getInstructions(assignment).body //quick fix
         model["packageTree"] = assignmentTeacherFiles.buildPackageTree(
                 assignment.packageName, assignment.language, assignment.acceptsStudentTests)
 
@@ -429,7 +429,7 @@ class UploadController(
 
         model["assignment"] = assignment
         model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.realName(), assignment.id)
-        model["instructionsFragment"] = assignmentTeacherFiles.getHtmlInstructionsFragment(assignment)
+        model["instructionsFragment"] = assignmentTeacherFiles.getInstructions(assignment).body //quick fix
         model["packageTree"] = assignmentTeacherFiles.buildPackageTree(
                 assignment.packageName, assignment.language, assignment.acceptsStudentTests)
 

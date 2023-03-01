@@ -277,7 +277,7 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
                 statusDate = Timestamp.valueOf(LocalDateTime.parse(submissionDate)),
                 assignmentId = "sampleJavaProject",
                 assignmentGitHash = null,
-                submitterUserId = author.userId)
+                submitterUserId = author.userId, submissionMode = SubmissionMode.UPLOAD)
 
         submissionRepository.save(submission)
 

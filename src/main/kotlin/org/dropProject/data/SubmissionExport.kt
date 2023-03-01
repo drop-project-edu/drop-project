@@ -21,6 +21,7 @@ package org.dropProject.data
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnore
+import org.dropProject.dao.SubmissionMode
 import java.util.*
 import javax.persistence.Column
 
@@ -53,7 +54,8 @@ data class SubmissionExport(
     var authors: List<Author>,
     var submissionReport: List<SubmissionReport>,
     var junitReports: List<JUnitReport>?,
-    var jacocoReports: List<JacocoReport>?
+    var jacocoReports: List<JacocoReport>?,
+    var submissionMode: SubmissionMode? = null
 )
 {
 

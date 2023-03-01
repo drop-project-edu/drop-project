@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonView
 import io.swagger.annotations.*
 import org.dropProject.dao.Assignment
 import org.dropProject.dao.Indicator
+import org.dropProject.dao.SubmissionMode
 import org.dropProject.data.AssignmentInfoResponse
 import org.dropProject.data.JSONViews
 import org.dropProject.data.SubmissionResult
@@ -69,7 +70,7 @@ class StudentAPIController(
             assignmentRepository.getById(it.assignmentId)
         }.filter {
             it.active
-        }.map { it.copy(instructions = assignmentTeacherFiles.getHtmlInstructionsFragment(it)) }
+        }.map { it.copy(instructions = assignmentTeacherFiles.getInstructions(it)) }
         return ResponseEntity.ok(result)
     }
 
@@ -85,7 +86,7 @@ class StudentAPIController(
     ): ResponseEntity<SubmissionResult> {
 
         return submissionService.uploadSubmission(bindingResult, uploadForm, request, principal, file,
-            assignmentRepository, assignmentService)
+            assignmentRepository, assignmentService, submissionMode = SubmissionMode.API)
     }
 
     @RequestMapping(value = ["/submissions/{submissionId}"], method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_JSON_VALUE])
@@ -118,7 +119,7 @@ class StudentAPIController(
 
         var assignment = assignmentRepository.findById(assignmentID).orElse(null)
 
-        assignment?.instructions = assignmentTeacherFiles.getHtmlInstructionsFragment(assignment)
+        assignment?.instructions = assignmentTeacherFiles.getInstructions(assignment)
 
         if (assignment == null) {
             assignmentInfoResponse.errorCode = 404

@@ -65,7 +65,7 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
     @Value("\${spring.web.locale}")
     val currentLocale : Locale = Locale.getDefault()
 
-    fun getHtmlInstructionsFragment(assignment: Assignment) : AssignmentInstructions {
+    fun getInstructions(assignment: Assignment) : AssignmentInstructions {
 
         val instructions = AssignmentInstructions()
         val files = File("${assignmentsRootLocation}/${assignment.gitRepositoryFolder}").listFiles { _, name -> name.startsWith("instructions")}
