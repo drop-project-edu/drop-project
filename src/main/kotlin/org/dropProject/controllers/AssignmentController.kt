@@ -771,6 +771,7 @@ class AssignmentController(
         assignmentACLRepository.deleteByAssignmentId(assignmentId)
         assignmentReportRepository.deleteByAssignmentId(assignmentId)
         assignmentRepository.deleteById(assignmentId)
+        assigneeRepository.deleteByAssignmentId(assignmentId)
 
         val rootFolder = File(assignmentsRootLocation, assignment.gitRepositoryFolder)
 
