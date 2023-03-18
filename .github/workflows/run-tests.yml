@@ -13,11 +13,11 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '15'
-      # uncomment this when github actions don't find maven
-#      - name: Check maven version
-#        run: mvn --version
+      # this is just to find the maven folder, used in the build
+      - name: Check maven version
+        run: mvn --version
       - name: Cache Maven packages
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}

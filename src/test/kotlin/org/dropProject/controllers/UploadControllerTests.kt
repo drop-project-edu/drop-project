@@ -607,6 +607,85 @@ class UploadControllerTests {
 
     @Test
     @DirtiesContext
+    fun uploadProjectJunit5Errors() {
+        // this test is similar to uploadProjectJunitErrors but with a JUnit 5 enabled assignment
+
+        val assignment = Assignment(id = "testJavaProjJUnit5", name = "Test Project (for automatic tests)",
+            packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
+            submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummy",
+            gitRepositoryFolder = "testJavaProjJUnit5", gitCurrentHash = "somehash")
+        assignmentRepository.save(assignment)
+
+        assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "testJavaProjJUnit5", testClass = "TestTeacherProject", testMethod = "testFuncaoParaTestar"))
+        assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "testJavaProjJUnit5", testClass = "TestTeacherProject", testMethod = "testFuncaoLentaParaTestar"))
+        assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "testJavaProjJUnit5", testClass = "TestTeacherHiddenProject", testMethod = "testFuncaoParaTestarQueNaoApareceAosAlunos"))
+
+        val submissionId = testsHelper.uploadProject(this.mvc, "projectJUnitErrors", "testJavaProjJUnit5", STUDENT_1)
+
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId"))
+            .andExpect(status().isOk())
+            .andReturn()
+
+        @Suppress("UNCHECKED_CAST")
+        val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
+        assertEquals("Summary should be 5 lines", 5, summary.size)
+        assertEquals("projectStructure should be OK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
+        assertEquals("projectStructure should be OK (value)", "OK", summary[0].reportValue)
+        assertEquals("compilation should be OK (key)", Indicator.COMPILATION, summary[1].indicator)
+        assertEquals("compilation should be OK (value)", "OK", summary[1].reportValue)
+        assertEquals("checkstyle should be OK (key)", Indicator.CHECKSTYLE, summary[2].indicator)
+        assertEquals("checkstyle should be OK (value)", "OK", summary[2].reportValue)
+        assertEquals("junit (public) should be NOK (key)", Indicator.TEACHER_UNIT_TESTS, summary[3].indicator)
+        assertEquals("junit (public) should be NOK (value)", "NOK", summary[3].reportValue)
+        assertEquals("junit (public) should pass 1 test", 1, summary[3].reportProgress)
+        assertEquals("junit (public) should have total 2 tests", 2, summary[3].reportGoal)
+        assertEquals("junit (hidden) should be NOK (key)", Indicator.HIDDEN_UNIT_TESTS, summary[4].indicator)
+        assertEquals("junit (hidden) should be NOK (value)", "NOK", summary[4].reportValue)
+        assertEquals("junit (hidden) should pass 0 tests", 0, summary[4].reportProgress)
+        assertEquals("junit (hidden) should have total 1 test", 1, summary[4].reportGoal)
+
+        val buildResult = reportResult.modelAndView!!.modelMap["buildReport"] as BuildReport
+        assert(buildResult.hasJUnitErrors(TestType.TEACHER) == true)
+        assert(buildResult.junitSummaryTeacher!!.startsWith("Tests run: 2, Failures: 1, Errors: 0"))
+        assertNotNull(buildResult.junitErrorsTeacher)
+        assert(buildResult.junitErrorsTeacher!!.contains("org.opentest4j.AssertionFailedError: expected: <3> but was: <0>"))
+        assertEquals(2, buildResult.junitSummaryAsObject(TestType.TEACHER)?.numTests)
+        assertEquals(1, buildResult.junitSummaryAsObject(TestType.TEACHER)?.numFailures)
+        assertEquals(0, buildResult.junitSummaryAsObject(TestType.TEACHER)?.numErrors)
+        assertEquals("1/2", buildResult.junitSummaryAsObject(TestType.TEACHER)?.toStr())
+        val stackTraceTeacher = buildResult.junitErrorsTeacher
+        assertEquals("""
+            |FAILURE: org.dropProject.sampleAssignments.testProj.TestTeacherProject.testFuncaoParaTestar
+            |org.opentest4j.AssertionFailedError: expected: <3> but was: <0>
+	        |${'\t'}at org.dropProject.sampleAssignments.testProj.TestTeacherProject.testFuncaoParaTestar(TestTeacherProject.java:13)
+        """.trimMargin(), stackTraceTeacher?.trimEnd())
+
+        assert(buildResult.hasJUnitErrors(TestType.HIDDEN) == true)
+        assert(buildResult.junitSummaryHidden!!.startsWith("Tests run: 1, Failures: 0, Errors: 1"))
+        assertNotNull(buildResult.junitErrorsHidden)
+        assert(buildResult.junitErrorsHidden!!.contains("java.lang.ArithmeticException: / by zero"))
+        assertEquals(1, buildResult.junitSummaryAsObject(TestType.HIDDEN)?.numTests)
+        assertEquals(0, buildResult.junitSummaryAsObject(TestType.HIDDEN)?.numFailures)
+        assertEquals(1, buildResult.junitSummaryAsObject(TestType.HIDDEN)?.numErrors)
+        assertEquals("0/1", buildResult.junitSummaryAsObject(TestType.HIDDEN)?.toStr())
+        val stackTraceHidden = buildResult.junitErrorsHidden
+        assertEquals("""
+            |ERROR: org.dropProject.sampleAssignments.testProj.TestTeacherHiddenProject.testFuncaoParaTestarQueNaoApareceAosAlunos
+            |java.lang.ArithmeticException: / by zero
+            |${'\t'}at org.dropProject.sampleAssignments.testProj.Main.funcaoQueRebenta(Main.java:14)
+            |${'\t'}at org.dropProject.sampleAssignments.testProj.TestTeacherHiddenProject.testFuncaoParaTestarQueNaoApareceAosAlunos(TestTeacherHiddenProject.java:13)
+        """.trimMargin(), stackTraceHidden?.trimEnd())
+
+        val testResults = buildResult.testResults()
+        assertNotNull(testResults)
+        assertEquals(3, testResults!!.size)
+        assertEquals("testFuncaoParaTestar", testResults[0].methodName)
+        assertEquals("testFuncaoLentaParaTestar", testResults[1].methodName)
+        assertEquals("testFuncaoParaTestarQueNaoApareceAosAlunos", testResults[2].methodName)
+    }
+
+    @Test
+    @DirtiesContext
     fun uploadProjectJunitWithSkippedTests() {
 
         // this assignment has one test marked with @Ignore
