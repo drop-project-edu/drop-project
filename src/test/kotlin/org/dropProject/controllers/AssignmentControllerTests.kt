@@ -850,6 +850,55 @@ class AssignmentControllerTests {
 
     @Test
     @DirtiesContext
+    fun test_12_3_deleteAssignmentAndCheckRepositories() {
+        val STUDENT_1 = User("student1", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
+        val TEACHER_1 = User("teacher1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
+
+        // make a copy of the "testJavaProj" assignment files and create an assignment based on the copy
+        // so that we can safely delete it, without affecting the original files
+        val assignmentFolder = File(assignmentsRootLocation, "testJavaProjForDelete")
+        FileUtils.copyDirectory(File(assignmentsRootLocation, "testJavaProj"), assignmentFolder)
+
+        // create initial assignment
+        val assignment = Assignment(
+            id = "testJavaProj", name = "Test Project (for automatic tests)",
+            packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
+            submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
+            gitRepositoryFolder = "testJavaProjForDelete", public = false
+        )
+        assignmentRepository.save(assignment)
+        assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student1"))
+
+        //check if assignment is in Assignee Repository
+        assertTrue("${assignment.id} should be in assignee repository",
+            assigneeRepository.findByAuthorUserId(STUDENT_1.username).isNotEmpty())
+
+        //check if assignment is in assignment Repository
+        assertTrue("${assignment.id} should be in assignment repository",
+            assignmentRepository.existsById(assignment.id))
+
+        // succeed on deleting the assignment
+        this.mvc.perform(
+            post("/assignment/delete/testJavaProj")
+                .with(user(TEACHER_1))
+        )
+            .andExpect(status().isFound)
+            .andExpect(header().string("Location", "/assignment/my"))
+            .andExpect(flash().attribute("message", "Assignment was successfully deleted"))
+
+        //check if assignment was deleted in Assignee Repository
+        assertFalse("${assignment.id} should have been deleted from assignee repository",
+            assigneeRepository.existsByAssignmentId(assignment.id))
+        assertTrue("${assignment.id} should have been deleted from assignee repository",
+            assigneeRepository.findByAuthorUserId(STUDENT_1.username).isEmpty())
+
+        //check if assignment was deleted in assignment Repository
+        assertFalse("${assignment.id} should have been deleted from assignment repository",
+            assignmentRepository.existsById(assignment.id))
+    }
+
+    @Test
+    @DirtiesContext
     fun test_13_listArchivedAssignments() {
 
         val user = User("p1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
