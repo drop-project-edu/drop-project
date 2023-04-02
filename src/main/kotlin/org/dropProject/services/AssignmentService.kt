@@ -382,7 +382,7 @@ class AssignmentService(
                         buildReport = buildReport, structureErrors = structureErrors, markedAsFinal = markedAsFinal,
                         authors = group.authors.map { author -> SubmissionExport.Author(author.userId, author.name) },
                         submissionReport = submissionReport,
-                        junitReports = junitReports, jacocoReports = jacocoReports
+                        junitReports = junitReports, jacocoReports = jacocoReports, submissionMode = submissionMode
                     )
                     submissionsExport.add(submissionExport)
                 }
@@ -577,7 +577,8 @@ class AssignmentService(
                 gitSubmissionId = it.gitSubmissionId,
                 buildReportId = buildReportId,
                 structureErrors = it.structureErrors,
-                markedAsFinal = it.markedAsFinal
+                markedAsFinal = it.markedAsFinal,
+                submissionMode = it.submissionMode
             )
 
             submission.group = group

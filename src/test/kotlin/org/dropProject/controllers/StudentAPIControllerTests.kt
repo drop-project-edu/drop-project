@@ -136,6 +136,7 @@ class StudentAPIControllerTests: APIControllerTests {
                     "active":true }
                 ]
             """.trimIndent()))
+            .andExpect(jsonPath("$[0].instructions.format", `is`("HTML")))
 
         // println(result.getResponse().getContentAsString());
     }
@@ -157,12 +158,14 @@ class StudentAPIControllerTests: APIControllerTests {
                 .header("authorization", testsHelper.header("student1", token)))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.assignment.id", `is`("testJavaProj")))
+            .andExpect(jsonPath("$.assignment.submissionMethod", `is`("UPLOAD")))
             .andExpect(jsonPath("$.submission.status", `is`("VALIDATED")))
             .andExpect(jsonPath("$.structureErrors").isArray)
             .andExpect(jsonPath("$.structureErrors", hasSize<Array<String>>(2)))
-//            .andReturn()
+     //      .andReturn()
 
-//        println(result.getResponse().getContentAsString());
+
+        //println(result.getResponse().getContentAsString());
     }
 
     @Test
@@ -195,21 +198,37 @@ class StudentAPIControllerTests: APIControllerTests {
 
     @Test
     @DirtiesContext
-    fun `get html fragment of assignment`() {
+    fun `try to get existent assignment information`() {
 
         val assignmentId = "sampleJavaProject"
 
         val token = generateToken("student1", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")), mvc)
 
         this.mvc.perform(
-            get("/api/student/assignment/${assignmentId}/instructions")
+            get("/api/student/assignments/${assignmentId}")
                 .contentType(MediaType.APPLICATION_JSON)
                 .header("authorization", testsHelper.header("student1", token)))
             .andExpect(status().isOk)
-            .andExpect(content().string(containsString("<h2>Sample Java Assignment</h2>")))
-            .andExpect(content().string(containsString("<p>This is just a very simple Java assignment just to experiment with Drop Project</p>")))
+            .andExpect(jsonPath("$.assignment.id", `is`("sampleJavaProject")))
+            .andExpect(jsonPath("$.assignment.language", `is`("JAVA")))
+            .andExpect(jsonPath("$.assignment.instructions.format", `is`("HTML")))
+            .andExpect(jsonPath("$.assignment.instructions.body", containsString("<h2>Sample Java Assignment</h2>")))
+            .andExpect(jsonPath("$.errorCode").doesNotExist())
 
+    }
 
+    @Test
+    @DirtiesContext
+    fun `try to get nonexistent assignment information`() {
+
+        val token = generateToken("student1", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")), mvc)
+
+        this.mvc.perform(
+            get("/api/student/assignments/nonexistentID")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("authorization", testsHelper.header("student1", token)))
+            .andExpect(jsonPath("$.assignment").doesNotExist())
+            .andExpect(jsonPath("$.errorCode", `is`(404)))
     }
 
 }

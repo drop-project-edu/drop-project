@@ -278,18 +278,26 @@ class AssignmentValidator {
                 var invalidTestMethods = 0
                 var validTestMethods = 0
                 var mandatoryTestMethods = 0
+                var hasGlobalTimeout = false
                 for (testClass in testClasses) {
                     val testClassSource = builder.addSource(testClass)
                     testClassSource.classes.forEach {
+
+                        if (it.annotations.any { annotation -> annotation.type.fullyQualifiedName == "org.junit.jupiter.api.Timeout" }) {
+                            hasGlobalTimeout = true
+                        }
+
                         it.methods.forEach {
                             val methodName = it.name
 
-                            if (!it.annotations.any { it.type.fullyQualifiedName == "org.junit.Ignore" ||
-                                            it.type.fullyQualifiedName == "Ignore" }) {  // ignore @Ignore
+                            if (!it.annotations.any { it.type.fullyQualifiedName == "org.junit.Ignore" ||  // ignore @Ignore (junit4)
+                                            it.type.fullyQualifiedName == "org.junit.jupiter.api.Disabled" ||  // ignore @Disabled (junit5)
+                                            it.type.fullyQualifiedName == "Ignore" }) {
                                 it.annotations.forEach {
-                                    if (it.type.fullyQualifiedName == "org.junit.Test" ||  // found @Test
-                                            it.type.fullyQualifiedName == "Test") {  // qdox doesn't handle import *
-                                        if (it.getNamedParameter("timeout") == null) {
+                                    if (it.type.fullyQualifiedName == "org.junit.Test" ||  // found @Test (junit4)
+                                        it.type.fullyQualifiedName == "org.junit.jupiter.api.Test" ||  // found @Test (junit5)
+                                        it.type.fullyQualifiedName == "Test") {  // qdox doesn't handle import *
+                                        if (it.getNamedParameter("timeout") == null && !hasGlobalTimeout) {
                                             invalidTestMethods++
                                         } else {
                                             validTestMethods++
@@ -316,9 +324,15 @@ class AssignmentValidator {
                 if (invalidTestMethods > 0) {
                     report.add(Info(InfoType.WARNING, "You haven't defined a timeout for ${invalidTestMethods} test methods.",
                             "If you don't define a timeout, students submitting projects with infinite loops or wait conditions " +
-                                    "will degrade the server. Example: Use @Test(timeout=500) to set a timeout of 500 miliseconds."))
+                                    "will degrade the server. Example: Use @Test(timeout=500) to set a timeout of 500 miliseconds (JUnit 4) or" +
+                                    "@Timeout (JUnit 5)."))
                 } else if (validTestMethods > 0) {
-                    report.add(Info(InfoType.INFO, "You have defined ${validTestMethods} test methods with timeout."))
+                    if (hasGlobalTimeout) {
+                        report.add(Info(InfoType.INFO, "You have defined a global timeout for the test methods."))
+                    } else {
+                        report.add(Info(InfoType.INFO, "You have defined ${validTestMethods} test methods with timeout."))
+                    }
+
                 }
 
                 if (!assignment.mandatoryTestsSuffix.isNullOrEmpty()) {

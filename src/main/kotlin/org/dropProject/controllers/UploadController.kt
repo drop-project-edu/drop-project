@@ -19,6 +19,7 @@
  */
 package org.dropProject.controllers
 
+import edu.uoc.elc.lti.tool.Tool
 import org.springframework.stereotype.Controller
 import org.springframework.ui.ModelMap
 import org.springframework.validation.BindingResult
@@ -48,6 +49,7 @@ import org.dropProject.repository.*
 import org.dropProject.services.*
 import org.slf4j.LoggerFactory
 import org.springframework.context.MessageSource
+import org.springframework.security.core.Authentication
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.Executor
 import javax.servlet.http.HttpServletRequest
@@ -91,6 +93,22 @@ class UploadController(
 
     init {
         storageService.init()
+    }
+
+    /**
+     * This is only called after the LTI authentication flow
+     */
+    @RequestMapping(value = ["/"], method = [(RequestMethod.POST)])
+    fun postHomeFromLTIAuthentication(model: ModelMap, principal: Principal, authentication: Authentication): String {
+        val tool = authentication.credentials as Tool
+        if (tool.isValid) {
+            val assignmentId = tool.getCustomParameter("assignmentId")
+            if (assignmentId == null) {
+                throw IllegalAccessError("You must set a custom parameter in the (moodle) tool configuration - assignmentId=xxxx")
+            }
+            return "redirect:/upload/${assignmentId}"
+        }
+        return "redirect:/"
     }
 
     /**
@@ -176,7 +194,7 @@ class UploadController(
 
         model["assignment"] = assignment
         model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.realName(), assignment.id)
-        model["instructionsFragment"] = assignmentTeacherFiles.getHtmlInstructionsFragment(assignment)
+        model["instructionsFragment"] = assignmentTeacherFiles.getInstructions(assignment).body //quick fix
         model["packageTree"] = assignmentTeacherFiles.buildPackageTree(
                 assignment.packageName, assignment.language, assignment.acceptsStudentTests)
 
@@ -241,7 +259,7 @@ class UploadController(
                request: HttpServletRequest): ResponseEntity<SubmissionResult> {
 
         return submissionService.uploadSubmission(bindingResult, uploadForm, request, principal, file,
-            assignmentRepository, assignmentService)
+            assignmentRepository, assignmentService, SubmissionMode.UPLOAD)
     }
 
     /**
@@ -411,7 +429,7 @@ class UploadController(
 
         model["assignment"] = assignment
         model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.realName(), assignment.id)
-        model["instructionsFragment"] = assignmentTeacherFiles.getHtmlInstructionsFragment(assignment)
+        model["instructionsFragment"] = assignmentTeacherFiles.getInstructions(assignment).body //quick fix
         model["packageTree"] = assignmentTeacherFiles.buildPackageTree(
                 assignment.packageName, assignment.language, assignment.acceptsStudentTests)
 

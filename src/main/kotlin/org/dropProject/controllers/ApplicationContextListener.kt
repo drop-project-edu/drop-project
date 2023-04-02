@@ -21,6 +21,7 @@ package org.dropProject.controllers
 
 
 import org.dropProject.dao.*
+import org.dropProject.extensions.getContent
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.*
 import org.dropProject.services.AssignmentService
@@ -32,6 +33,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.ApplicationListener
 import org.springframework.context.annotation.Profile
 import org.springframework.context.event.ContextRefreshedEvent
+import org.springframework.core.io.ClassPathResource
 import org.springframework.core.io.ResourceLoader
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
@@ -275,7 +277,7 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
                 statusDate = Timestamp.valueOf(LocalDateTime.parse(submissionDate)),
                 assignmentId = "sampleJavaProject",
                 assignmentGitHash = null,
-                submitterUserId = author.userId)
+                submitterUserId = author.userId, submissionMode = SubmissionMode.UPLOAD)
 
         submissionRepository.save(submission)
 
@@ -307,7 +309,8 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
                 reportProgress = teacherTestsProgress, reportGoal = teacherTestsGoal))
 
         // this file must be coherent with the report
-        val buildReport = BuildReport(buildReport = resourceLoader.getResource("classpath:/initialData/${submissionName}MavenOutput.txt").file.readText())
+        val buildReport = BuildReport(buildReport =
+            (resourceLoader.getResource("classpath:/initialData/${submissionName}MavenOutput.txt") as ClassPathResource).getContent())
         buildReportRepository.save(buildReport)
 
         submission.buildReportId = buildReport.id
@@ -315,7 +318,7 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
 
         jUnitReportRepository.save(JUnitReport(submissionId = submission.id,
                 fileName = "TEST-org.dropProject.samples.sampleJavaAssignment.TestTeacherProject.xml",
-                xmlReport = resourceLoader.getResource("classpath:/initialData/${submissionName}JUnitXml.txt").file.readText()))
+                xmlReport = (resourceLoader.getResource("classpath:/initialData/${submissionName}JUnitXml.txt")as ClassPathResource).getContent()))
 
         return submission.id
     }

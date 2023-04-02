@@ -79,8 +79,7 @@ class GlobalControllerAdvice {
     fun isDemoMode() : Boolean {
         if (userDetailsManager != null && userDetailsManager is InMemoryUserDetailsManager) {
             return userDetailsManager.userExists("student1") ||
-                    userDetailsManager.userExists("teacher1") ||
-                    userDetailsManager.userExists("admin")
+                    userDetailsManager.userExists("teacher1")
         } else {
             return false
         }

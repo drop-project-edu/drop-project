@@ -58,16 +58,17 @@ class LoginController(val personalTokenRepository: PersonalTokenRepository) {
 
     @RequestMapping(value = ["/personalToken"], method = [RequestMethod.GET])
     fun getPersonalToken(principal: Principal, model: ModelMap): String {
-        val token = personalTokenRepository.getFirstByUserIdOrderByStatusDateDesc(principal.realName())
-        if (token?.status == TokenStatus.ACTIVE) {
-            model["token"] = token
-        }
+        val token = personalTokenRepository.
+            getFirstByUserIdAndStatusOrderByStatusDateDesc(principal.realName(), TokenStatus.ACTIVE)
+
+        model["token"] = token
         return "personal-tokens-list"
     }
 
     @RequestMapping(value = ["/personalToken"], method = [RequestMethod.POST])
     fun generatePersonalToken(principal: Principal, model: ModelMap): String {
-        val previousToken = personalTokenRepository.getFirstByUserIdOrderByStatusDateDesc(principal.realName())
+        val previousToken = personalTokenRepository
+            .getFirstByUserIdAndStatusOrderByStatusDateDesc(principal.realName(), TokenStatus.ACTIVE)
         if (previousToken != null) {
             previousToken.status = TokenStatus.DELETED
             previousToken.statusDate = Date()

@@ -70,6 +70,7 @@ import java.io.File
 import java.util.*
 
 const val sampleJavaAssignmentRepo = "git@github.com:drop-project-edu/sampleJavaAssignment.git"
+const val sampleJavaAssignmentWithJUnit5Repo = "git@github.com:drop-project-edu/sampleJavaAssignmentWithJunit5.git"
 
 @RunWith(SpringRunner::class)
 @AutoConfigureMockMvc
@@ -221,7 +222,7 @@ class AssignmentControllerTests {
                 "UPLOAD", sampleJavaAssignmentRepo
             )
             assertEquals("dummyAssignment1", createdAssignment.id)
-            assertEquals("0605ac7a93de4a6b112f8f779df430a9a631173f", createdAssignment.gitCurrentHash)
+            assertEquals("f3c3cf4f18decadba6b7ae35d740eb8b6a277b89", createdAssignment.gitCurrentHash)
 
             val result = this.mvc.perform(get("/assignment/info/dummyAssignment1"))
                 .andExpect(status().isOk)
@@ -239,7 +240,7 @@ class AssignmentControllerTests {
             assertEquals("Doesn't use the 'dropProject.currentUserId' system property", report[1].message)
             assertEquals("POM file is prepared to prevent stacktrace trimming on junit errors", report[2].message)
             assertEquals("Found 1 test classes", report[3].message)
-            assertEquals("You haven't defined a timeout for 4 test methods.", report[4].message)
+            assertEquals("You have defined 4 test methods with timeout.", report[4].message)
             assertEquals("You are using a recent version of checkstyle.", report[5].message)
 
             // change the assignment to have a mandatory tests suffix
@@ -1111,7 +1112,7 @@ class AssignmentControllerTests {
             val testMethods = mvcResult.modelAndView!!.modelMap["tests"] as List<AssignmentTestMethod>
             assertEquals(4, testMethods.size)
             assertThat(testMethods.map { it.testMethod },
-                contains("testFindMax", "testFindMaxWithNull", "testFindMaxAllNegative", "testFindMaxNegativeAndPositive"))
+                contains("test_001_FindMax", "test_002_FindMaxAllNegative", "test_003_FindMaxNegativeAndPositive", "test_004_FindMaxWithNull", ))
 
         } finally {
 
@@ -1592,5 +1593,47 @@ class AssignmentControllerTests {
 
     }
 
+
+    @Test
+    @WithMockUser("teacher1", roles = ["TEACHER"])
+    @DirtiesContext
+    fun test_27_createNewAssignmentAndInfoWithTestMethodsWithJUnit5() {
+
+        try {
+            testsHelper.createAndSetupAssignment(
+                mvc, assignmentRepository, "dummyAssignmentTests", "Dummy Assignment",
+                "org.dummy",
+                "UPLOAD", sampleJavaAssignmentWithJUnit5Repo
+            )
+
+            val mvcResult = this.mvc.perform(get("/assignment/info/dummyAssignmentTests"))
+                .andExpect(status().isOk)
+                .andReturn()
+
+
+            @Suppress("UNCHECKED_CAST")
+            val report = mvcResult.modelAndView!!.modelMap["report"] as List<AssignmentReport>
+            assertEquals(6, report.size)
+            assertEquals("Assignment has a pom.xml", report[0].message)
+            assertEquals("Doesn't use the 'dropProject.currentUserId' system property", report[1].message)
+            assertEquals("POM file is prepared to prevent stacktrace trimming on junit errors", report[2].message)
+            assertEquals("Found 1 test classes", report[3].message)
+            assertEquals("You have defined a global timeout for the test methods.", report[4].message)
+            assertEquals("You are using a recent version of checkstyle.", report[5].message)
+
+            @Suppress("UNCHECKED_CAST")
+            val testMethods = mvcResult.modelAndView!!.modelMap["tests"] as List<AssignmentTestMethod>
+            assertEquals(4, testMethods.size)
+            assertThat(testMethods.map { it.testMethod },
+                contains("test_001_FindMax", "test_002_FindMaxAllNegative", "test_003_FindMaxNegativeAndPositive", "test_004_FindMaxWithNull", ))
+
+        } finally {
+
+            // cleanup assignment files
+            if (File(assignmentsRootLocation, "dummyAssignmentTests").exists()) {
+                File(assignmentsRootLocation, "dummyAssignmentTests").deleteRecursively()
+            }
+        }
+    }
 }
     

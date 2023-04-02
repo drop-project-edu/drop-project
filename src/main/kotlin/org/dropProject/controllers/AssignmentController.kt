@@ -757,12 +757,12 @@ class AssignmentController(
                         gitSubmissionRepository.deleteById(gitSubmissionId)
                     }
                 } catch (e: Exception) {
-                    LOG.warn("Error removing stuff related to submission ${submission.id}. Moving on...", e)
+                    LOG.warn("Error removing stuff related to submission ${submission.id} - $e Moving on...")
                 }
             }
 
             LOG.info("Removing all the submissions from DB")
-            submissionRepository.deleteAllInBatch(submissions)
+            submissionRepository.deleteAllByAssignmentId(assignmentId)
         }
 
         assignmentService.clearAllTags(assignment, clearOrphans = true)

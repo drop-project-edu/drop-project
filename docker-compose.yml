@@ -12,12 +12,17 @@ services:
       - ./db:/docker-entrypoint-initdb.d
 
   drop-project:
-    image: pedroalv3s/drop-project
+    image: pedroalv3s/drop-project:v0.9.8-beta
     environment:
-      SPRING_PROFILES_ACTIVE: mysql
+      SPRING_PROFILES_ACTIVE: mysql,lti
+      SPRING_CONFIG_ADDITIONAL-LOCATION: /usr/src/app/conf/
+      DP_CONFIG_LOCATION: /usr/src/app/conf/
       DB_URL: jdbc:mysql://db:3306/dp?connectTimeout=0&socketTimeout=0&autoReconnect=true&useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       DB_USERNAME: dp
       DB_PASSWORD: dp
+      SERVER_SERVLET_CONTEXT_PATH: /dp-test
+    volumes:
+      - ./conf:/usr/src/app/conf
     ports:
       - "8080:8080"
     links:

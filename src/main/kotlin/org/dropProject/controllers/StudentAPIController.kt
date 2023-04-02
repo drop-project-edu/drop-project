@@ -23,22 +23,18 @@ import com.fasterxml.jackson.annotation.JsonView
 import io.swagger.annotations.*
 import org.dropProject.dao.Assignment
 import org.dropProject.dao.Indicator
-import org.dropProject.dao.SubmissionReport
+import org.dropProject.dao.SubmissionMode
+import org.dropProject.data.AssignmentInfoResponse
 import org.dropProject.data.JSONViews
 import org.dropProject.data.SubmissionResult
 import org.dropProject.extensions.realName
 import org.dropProject.forms.UploadForm
 import org.dropProject.repository.AssigneeRepository
 import org.dropProject.repository.AssignmentRepository
-import org.dropProject.services.AssignmentService
-import org.dropProject.services.FullBuildReport
-import org.dropProject.services.ReportService
-import org.dropProject.services.SubmissionService
-import org.dropProject.services.AssignmentTeacherFiles
+import org.dropProject.services.*
 import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
-import org.springframework.ui.ModelMap
 import org.springframework.validation.BindingResult
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
@@ -74,7 +70,7 @@ class StudentAPIController(
             assignmentRepository.getById(it.assignmentId)
         }.filter {
             it.active
-        }
+        }.map { it.copy(instructions = assignmentTeacherFiles.getInstructions(it)) }
         return ResponseEntity.ok(result)
     }
 
@@ -90,7 +86,7 @@ class StudentAPIController(
     ): ResponseEntity<SubmissionResult> {
 
         return submissionService.uploadSubmission(bindingResult, uploadForm, request, principal, file,
-            assignmentRepository, assignmentService)
+            assignmentRepository, assignmentService, submissionMode = SubmissionMode.API)
     }
 
     @RequestMapping(value = ["/submissions/{submissionId}"], method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_JSON_VALUE])
@@ -111,22 +107,29 @@ class StudentAPIController(
         }
     }
 
-    @RequestMapping(value = ["/assignment/{assignmentId}/instructions"], method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_JSON_VALUE])
+    @RequestMapping(value = ["/assignments/{assignmentID}"], method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_JSON_VALUE])
     @JsonView(JSONViews.StudentAPI::class)  // to publish only certain fields of the Assignment
-    @ApiOperation(value = "Get the instructions associated with this assignment")
-    fun getInstructionsFragment(@PathVariable assignmentId: String) : ResponseEntity<String> {
+    @ApiOperation(value = "Get specific assignment information")
+    fun getAssignmentInfo(principal: Principal, @PathVariable assignmentID: String) : ResponseEntity<AssignmentInfoResponse> {
 
-        val assignment = assignmentRepository.findById(assignmentId).orElse(null)
+        //control access on w-list
+        assignmentService.checkAssignees(assignmentID, principal.realName())
 
-        var instructions = ""
+        val assignmentInfoResponse = AssignmentInfoResponse()
 
-        if (assignment != null) {
+        var assignment = assignmentRepository.findById(assignmentID).orElse(null)
 
-            instructions = assignmentTeacherFiles.getHtmlInstructionsFragment(assignment)
+        assignment?.instructions = assignmentTeacherFiles.getInstructions(assignment)
 
+        if (assignment == null) {
+            assignmentInfoResponse.errorCode = 404
+        } else if (!assignment.active) {
+            assignment=null
+            assignmentInfoResponse.errorCode = 403
         }
+        assignmentInfoResponse.assignment = assignment
 
-        return ResponseEntity.ok().body(instructions)
+        return ResponseEntity.ok().body(assignmentInfoResponse)
 
     }
 

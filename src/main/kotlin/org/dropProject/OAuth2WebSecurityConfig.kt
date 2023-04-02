@@ -22,6 +22,7 @@ package org.dropProject
 import org.dropProject.security.DropProjectSecurityConfig
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 import org.springframework.core.io.ResourceLoader
@@ -40,6 +41,9 @@ class OAuth2WebSecurityConfig : DropProjectSecurityConfig() {
 
     @Autowired
     lateinit var resourceLoader: ResourceLoader
+
+    @Value("\${dp.config.location:}")
+    val configLocationFolder: String = ""
 
     var idKey: String? = null
     val idValues = mutableMapOf<String, Array<String>>()  // idValue to roles list. e.g. "palves" -> ["ROLE_TEACHER,ROLE_ADMIN"]
@@ -63,11 +67,14 @@ class OAuth2WebSecurityConfig : DropProjectSecurityConfig() {
      */
     fun userAuthoritiesMapper(): GrantedAuthoritiesMapper {
 
-        if (resourceLoader.getResource("classpath:oauth-roles.csv").exists()) {
+        val loadFromConfig = configLocationFolder.isNotEmpty() && resourceLoader.getResource("file:${configLocationFolder}/oauth-roles.csv").exists()
+        val loadFromRoot = resourceLoader.getResource("classpath:oauth-roles.csv").exists()
 
-            LOG.info("Found oauth-roles.csv file. Will load user roles from there.")
+        if (loadFromConfig || loadFromRoot) {
+            val filenameAsResource = if (loadFromConfig) "file:${configLocationFolder}/oauth-roles.csv" else "classpath:oauth-roles.csv"
+            LOG.info("Found ${filenameAsResource}. Will load user roles from there.")
 
-            val rolesFile = resourceLoader.getResource("classpath:oauth-roles.csv").file
+            val rolesFile = resourceLoader.getResource(filenameAsResource).inputStream.bufferedReader()
             rolesFile.readLines().forEachIndexed { index, line ->
                 if (index == 0) {
                     idKey = line.split(";")[0]
