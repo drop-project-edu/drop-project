@@ -122,8 +122,8 @@
                 <tbody>
 
                 <tr th:each="submissionInfo : ${submissions}">
-                    <td th:text="${submissionInfo.projectGroup.authorsStr(', ')}" th:title="${submissionInfo.projectGroup.authorsNameStr()}"></td>
-                    <td th:text="${submissionInfo.projectGroup.authorsNameStr()}" th:title="${submissionInfo.projectGroup.authorsStr(', ')}"></td>
+                    <td th:text="${submissionInfo.projectGroup.authorsIdStr(', ')}" th:title="${submissionInfo.projectGroup.authorsNameStr()}"></td>
+                    <td th:text="${submissionInfo.projectGroup.authorsNameStr()}" th:title="${submissionInfo.projectGroup.authorsIdStr(', ')}"></td>
                     <td class="text-center"><a class="btn btn-default btn-sm" th:href="@{/submissions/(assignmentId=${submissionInfo.lastSubmission.assignmentId},groupId=${submissionInfo.projectGroup.id})}"
                                                th:text="${submissionInfo.allSubmissions.size()}"></a></td>
                     <td class="text-center" th:text="${#dates.format(submissionInfo.lastSubmission.submissionDate, 'dd/MMM HH:mm:ss')}"

@@ -40,7 +40,7 @@ data class ProjectGroup(
     @OneToMany(mappedBy = "group")
     val submissions: MutableSet<Submission> = HashSet()
 
-    fun authorsStr(separator: String = ","): String {
+    fun authorsIdStr(separator: String = ","): String {
         return authors
                 .map { it -> it.userId }
                 .sortedBy { it }
@@ -54,6 +54,12 @@ data class ProjectGroup(
                 .joinToString(separator = ",")
     }
 
+    fun authorsStr(separator: String = "$"): String {
+        return authors
+            .map { "${it.userId.trim()}_${it.name.trim()}" }
+            .joinToString(separator = separator)
+    }
+
     fun contains(authorName: String) : Boolean {
         return authors
                 .map { it -> it.userId }
@@ -64,11 +70,11 @@ data class ProjectGroup(
 
     override fun equals(other: Any?): Boolean {
         val otherProjectGroup = other as ProjectGroup
-        return authorsStr().equals(otherProjectGroup.authorsStr())
+        return authorsIdStr().equals(otherProjectGroup.authorsIdStr())
     }
 
     override fun hashCode(): Int {
-        return authorsStr().hashCode()
+        return authorsIdStr().hashCode()
     }
 
 }

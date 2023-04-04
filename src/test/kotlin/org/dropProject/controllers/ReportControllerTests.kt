@@ -55,7 +55,6 @@ import org.dropProject.services.PlagiarismComparison
 import org.dropProject.services.ZipService
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import java.util.*
 import kotlin.collections.LinkedHashMap
 
@@ -202,13 +201,13 @@ class ReportControllerTests {
         val report = reportResult.modelAndView!!.modelMap["submissions"] as List<SubmissionInfo>
 
         assertEquals("report should have 4 lines", 4, report.size)
-        assertEquals("student1", report[0].projectGroup.authorsStr())
+        assertEquals("student1", report[0].projectGroup.authorsIdStr())
         assertEquals(2, report[0].allSubmissions.size)
-        assertEquals("student2", report[1].projectGroup.authorsStr())
+        assertEquals("student2", report[1].projectGroup.authorsIdStr())
         assertEquals(1, report[1].allSubmissions.size)
-        assertEquals("student3", report[2].projectGroup.authorsStr())
+        assertEquals("student3", report[2].projectGroup.authorsIdStr())
         assertEquals(1, report[2].allSubmissions.size)
-        assertEquals("student4,student5", report[3].projectGroup.authorsStr())
+        assertEquals("student4,student5", report[3].projectGroup.authorsIdStr())
         assertEquals(1, report[3].allSubmissions.size)
     }
 
@@ -477,7 +476,7 @@ class ReportControllerTests {
         val report = reportResult.modelAndView!!.modelMap["submissions"] as List<Submission>
 
         assertEquals("report should have 4 lines", 4, report.size)
-        assertEquals("student3", report[3].group.authorsStr())  // this should be the last one because it has junit errors
+        assertEquals("student3", report[3].group.authorsIdStr())  // this should be the last one because it has junit errors
 
         // the others should pass all tests and have ascending order of ellapsed time
         val others = report.dropLast(1)
@@ -1175,11 +1174,11 @@ class ReportControllerTests {
         assertThat(comparisons[0].secondSubmission.id.toInt(), either(`is`(1)).or(`is`(2)))
         assertEquals(1, comparisons[0].firstNumTries)
         assertEquals(1, comparisons[0].secondNumTries)
-        assertEquals(83, comparisons[0].similarityPercentage)
+        assertEquals(80, comparisons[0].similarityPercentage)
 
-        this.mvc.perform(get("/showPlagiarismMatchReport/${defaultAssignmentId}/0").with(user(TEACHER_1)))
+        this.mvc.perform(get("/downloadPlagiarismMatchReport/${defaultAssignmentId}").with(user(TEACHER_1)))
             .andExpect(status().isOk)
-            .andExpect(content().string(containsString("<TITLE>Matches for")))
+            .andExpect(header().string("Content-Disposition", "attachment; filename=dp-jplag-${defaultAssignmentId}-report.zip"))
     }
 
 }

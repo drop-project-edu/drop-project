@@ -35,7 +35,7 @@
         </thead>
         <tbody>
         <tr th:each="submission : ${pendingSubmissions}">
-            <td th:text="${submission.group.authorsStr(', ')}" th:title="${submission.group.authorsNameStr()}"></td>
+            <td th:text="${submission.group.authorsIdStr(', ')}" th:title="${submission.group.authorsNameStr()}"></td>
             <td th:text="${submission.assignmentId}"></td>
             <td th:text="${#dates.format(submission.submissionDate, 'dd/MMM HH:mm:ss')}"></td>
             <td th:text="${submission.getStatus().description}"></td>

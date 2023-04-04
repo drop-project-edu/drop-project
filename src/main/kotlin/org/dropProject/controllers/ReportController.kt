@@ -219,7 +219,7 @@ class ReportController(
                     wasRebuilt = submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
             LOG.info("[${principal.realName()}] downloaded ${projectFolder.name}")
 
-            val zipFilename = submission.group.authorsStr().replace(",", "_") + "_mavenized"
+            val zipFilename = submission.group.authorsIdStr().replace(",", "_") + "_mavenized"
             val zipFile = zipService.createZipFromFolder(zipFilename, projectFolder)
 
             LOG.info("Created ${zipFile.file.absolutePath}")
@@ -265,7 +265,7 @@ class ReportController(
 
                 LOG.info("[${principal.realName()}] downloaded ${projectFile.name}")
 
-                val filename = submission.group.authorsStr().replace(",", "_")
+                val filename = submission.group.authorsIdStr().replace(",", "_")
                 response.setHeader("Content-Disposition", "attachment; filename=${filename}.zip")
 
                 return FileSystemResource(projectFile)
@@ -276,7 +276,7 @@ class ReportController(
                         ?: throw IllegalArgumentException("git submission ${gitSubmissionId} is not registered")
                 val repositoryFolder = File(gitSubmissionsRootLocation, gitSubmission.getFolderRelativeToStorageRoot())
 
-                val zipFilename = submission.group.authorsStr().replace(",", "_")
+                val zipFilename = submission.group.authorsIdStr().replace(",", "_")
                 val zFile = File.createTempFile(zipFilename, ".zip")
                 if (zFile.exists()) {
                     zFile.delete();
@@ -331,7 +331,7 @@ class ReportController(
         val tempFolder = Files.createTempDirectory("dp-${assignmentId}").toFile()
         try {
             for (submissionInfo in submissionInfoList) {
-                val projectFolder = File(tempFolder, submissionInfo.projectGroup.authorsStr("_"))
+                val projectFolder = File(tempFolder, submissionInfo.projectGroup.authorsIdStr("_"))
                 projectFolder.mkdir()
 
                 val submission = submissionInfo.lastSubmission
@@ -411,7 +411,7 @@ class ReportController(
                             "Probably, it has structure errors. This submission will not be included in the zip file.")
                 } else {
 
-                    val projectFolder = File(tempFolder, submissionInfo.projectGroup.authorsStr("_"))
+                    val projectFolder = File(tempFolder, submissionInfo.projectGroup.authorsIdStr("_"))
                     projectFolder.mkdir()
 
                     LOG.info("Copying ${originalProjectFolder.absolutePath} to ${projectFolder.absolutePath}")
@@ -430,7 +430,7 @@ class ReportController(
                             .forEach {
                                 newPomFileContent.add(
                                         if (!firstArtifactIdLineFound && it.contains("<artifactId>")) {
-                                            val projectGroupStr = submissionInfo.projectGroup.authorsStr("_")
+                                            val projectGroupStr = submissionInfo.projectGroup.authorsIdStr("_")
                                             modulesList.add(projectGroupStr)
                                             firstArtifactIdLineFound = true
                                             "    <artifactId>${assignmentId}-${projectGroupStr}</artifactId>"
@@ -489,18 +489,19 @@ class ReportController(
             .filter { !hasSubmissionsMarkedAsFinal || it.lastSubmission.markedAsFinal }
             .map { it.lastSubmission }
 
-        val submissionsToCheckFolder = Files.createTempDirectory("dp-jplag-${assignmentId}-submissions").toFile()
-        val plagiarismReportFolder = Files.createTempDirectory("dp-jplag-${assignmentId}-report").toFile()
+        val tempDir = FileSystemResource(System.getProperty("java.io.tmpdir")).file
+        val submissionsToCheckFolder = File(tempDir, "dp-jplag-${assignmentId}-submissions")
+        val plagiarismReportFolder = File(tempDir, "dp-jplag-${assignmentId}-report")
         try {
             jPlagService.prepareSubmissions(submissions, submissionsToCheckFolder)
             LOG.info("Prepared submissions for jplag on ${submissionsToCheckFolder.absolutePath}")
 
-            val comparisons = jPlagService.checkSubmissions(submissionsToCheckFolder, assignment, plagiarismReportFolder)
+            val result = jPlagService.checkSubmissions(submissionsToCheckFolder, assignment, plagiarismReportFolder)
             LOG.info("Checked submissions using jplag on ${submissionsToCheckFolder.absolutePath}. " +
-                    "Wrote report to ${plagiarismReportFolder.absolutePath}")
+                    "Wrote report to ${plagiarismReportFolder.absolutePath}.zip")
 
             // complement comparisons with info about the number of submissions
-            for (comparison in comparisons) {
+            for (comparison in result.comparisons) {
                 comparison.firstNumTries = submissionInfos
                     .find { it.lastSubmission.id == comparison.firstSubmission.id }?.allSubmissions?.count() ?: -1
                 comparison.secondNumTries = submissionInfos
@@ -508,7 +509,8 @@ class ReportController(
             }
 
             model["assignment"] = assignment
-            model["comparisons"] = comparisons
+            model["comparisons"] = result.comparisons
+            model["ignoredSubmissions"] = result.ignoredSubmissions
 
             return "teacher-submissions-plagiarism"
 
@@ -518,21 +520,27 @@ class ReportController(
         }
     }
 
-    @RequestMapping(value = ["/showPlagiarismMatchReport/{assignmentId}/{matchId}"], method = [(RequestMethod.GET)])
+
+    @RequestMapping(value = ["/downloadPlagiarismMatchReport/{assignmentId}"],
+        method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
     @ResponseBody
-    fun showPlagiarismMatchReport(@PathVariable assignmentId: String,
-                                  @PathVariable matchId: Int,
-                                  model: ModelMap, principal: Principal): String {
+    fun downloadPlagiarismMatchReport(@PathVariable assignmentId: String, principal: Principal,
+                                  response: HttpServletResponse): FileSystemResource {
 
         val assignment = assignmentRepository.findById(assignmentId).orElse(null)
             ?: throw IllegalArgumentException("assignment ${assignmentId} is not registered")
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
-        if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
-            throw IllegalAccessError("Assignment reports can only be accessed by their owner or authorized teachers")
+        if (principal.realName() != assignment.ownerUserId && acl.find { it.userId == principal.realName() } == null) {
+            throw IllegalAccessError("Plagiarism match reports can only be accessed by their owner or authorized teachers")
         }
 
-        return jPlagService.getComparisonReportHtml(assignmentId, matchId)
+        val tempDir = FileSystemResource(System.getProperty("java.io.tmpdir")).file
+        val plagiarismReportFile = File(tempDir, "dp-jplag-${assignmentId}-report.zip")
+
+        response.setHeader("Content-Disposition", "attachment; filename=dp-jplag-${assignmentId}-report.zip")
+
+        return FileSystemResource(plagiarismReportFile.absoluteFile)
     }
 
     /**

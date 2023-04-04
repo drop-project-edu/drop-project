@@ -32,7 +32,7 @@ object Constants {
 
     const val CACHE_ARCHIVED_ASSIGNMENTS_KEY = "archivedAssignmentsCache"
 
-    const val SIMILARITY_THRESHOLD = 50  // minimum similarity to consider as plagiarism (percent)
+    const val SIMILARITY_THRESHOLD = 0.5  // minimum similarity to consider as plagiarism (0.0 .. 1.0)
 }
     
     

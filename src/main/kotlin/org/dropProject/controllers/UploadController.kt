@@ -679,7 +679,7 @@ class UploadController(
             }
         }
 
-        submissionService.buildSubmission(projectFolder, assignment, gitSubmission.group.authorsStr("|"), submission, asyncExecutor, principal = principal)
+        submissionService.buildSubmission(projectFolder, assignment, gitSubmission.group.authorsIdStr("|"), submission, asyncExecutor, principal = principal)
 
         return ResponseEntity("{ \"submissionId\": \"${submission.id}\"}", HttpStatus.OK)
 
