@@ -3,18 +3,20 @@ version: '3.5'
 services:
   db:
     image: mysql:8.0
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci
     environment:
       MYSQL_ROOT_PASSWORD: s3cret
       MYSQL_DATABASE: dp
       MYSQL_USER: dp
       MYSQL_PASSWORD: dp
     volumes:
-      - ./db:/docker-entrypoint-initdb.d
+      - ./db:/var/lib/mysql
 
   drop-project:
-    image: pedroalv3s/drop-project:v0.9.8-beta
+    image: pedroalv3s/drop-project:v0.9.8-beta2
+    restart: "on-failure"
     environment:
-      SPRING_PROFILES_ACTIVE: mysql,lti
+      SPRING_PROFILES_ACTIVE: mysql
       SPRING_CONFIG_ADDITIONAL-LOCATION: /usr/src/app/conf/
       DP_CONFIG_LOCATION: /usr/src/app/conf/
       DB_URL: jdbc:mysql://db:3306/dp?connectTimeout=0&socketTimeout=0&autoReconnect=true&useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
@@ -27,3 +29,14 @@ services:
       - "8080:8080"
     links:
       - db
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    restart: always
+    depends_on:
+      - db
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: s3cret
+    ports:
+      - "8096:80"

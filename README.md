@@ -23,7 +23,7 @@ Several checks are performed on each project:
 
 ## Requirements
 
-* Java 14+ JDK (a compiler is needed)
+* Java 17+ JDK (a compiler is needed)
 * Maven
 * Servlet Engine (Tested with tomcat and jetty)
 * MySQL
