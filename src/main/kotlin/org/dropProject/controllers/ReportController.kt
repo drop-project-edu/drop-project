@@ -835,7 +835,7 @@ class ReportController(
 
         val authorGroups = authorRepository.findByUserId(studentId);
 
-        if (authorGroups == null) {
+        if (authorGroups.isNullOrEmpty()) {
             model["message"] = "Student with id $studentId does not exist"
             return "student-history"
         }
