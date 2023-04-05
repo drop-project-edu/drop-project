@@ -80,10 +80,11 @@ class SubmissionService(
     val storageService: StorageService,
     val projectGroupRepository: ProjectGroupRepository,
     val projectGroupService: ProjectGroupService,
+    val assignmentTestMethodRepository: AssignmentTestMethodRepository,
     val i18n: MessageSource,
     val buildWorker: BuildWorker,
     val asyncExecutor: Executor,
-    val zipService: ZipService
+    val zipService: ZipService,
 ) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
@@ -107,11 +108,12 @@ class SubmissionService(
      * @return an ArrayList with SubmissionInfo objects
      */
     fun getSubmissionsList(assignment: Assignment, retrieveReport: Boolean = true): ArrayList<SubmissionInfo> {
+
         val submissions = submissionRepository
             .findByAssignmentId(assignment.id)
             .filter { it.getStatus() != SubmissionStatus.DELETED }
 
-        val submissionsByGroup = submissions.groupBy { it -> it.group }
+        val submissionsByGroup = submissions.groupBy { it.group }
 
         val submissionInfoList = ArrayList<SubmissionInfo>()
         for ((group, submissionList) in submissionsByGroup) {
@@ -129,14 +131,13 @@ class SubmissionService(
             }
 
             if (retrieveReport) {
-                lastSubmission.buildReportId?.let {
-                        buildReportId ->
+                lastSubmission.buildReport?.let {
+                        buildReportDB ->
                     val reportElements = submissionReportRepository.findBySubmissionId(lastSubmission.id)
                     lastSubmission.reportElements = reportElements
 
                 val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(lastSubmission,
                     lastSubmission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
-                val buildReportDB = buildReportRepository.getById(buildReportId)
                 val buildReport = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
                     mavenizedProjectFolder.absolutePath, assignment, lastSubmission)
                 lastSubmission.ellapsed = buildReport.elapsedTimeJUnit()

@@ -165,7 +165,7 @@ class BuildWorker(
 
                 val buildReportDB = buildReportRepository.save(org.dropProject.dao.BuildReport(
                         buildReport = buildReport.mavenOutput()))
-                submission.buildReportId = buildReportDB.id
+                submission.buildReport = buildReportDB
 
                 // store the junit reports in the DB
                 File("${mavenizedProjectFolder}/target/surefire-reports")

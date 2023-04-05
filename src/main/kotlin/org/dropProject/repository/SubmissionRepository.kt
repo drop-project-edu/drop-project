@@ -24,6 +24,7 @@ import org.dropProject.dao.Submission
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
 import org.springframework.transaction.annotation.Transactional
 import java.util.*
 
@@ -33,7 +34,9 @@ import java.util.*
  */
 interface SubmissionRepository : JpaRepository<Submission, Long> {
 
-    fun findByAssignmentId(assignmentId: String) : List<Submission>
+    // this left join instructs hibernate to fetch submissions and corresponding buildReports with just one query
+    @Query("SELECT s from Submission s LEFT JOIN FETCH s.buildReport LEFT JOIN FETCH s.group WHERE s.assignmentId = :assignmentId")
+    fun findByAssignmentId(@Param("assignmentId") assignmentId: String) : List<Submission>
 
     @Query("SELECT COUNT(DISTINCT s.group) FROM Submission s WHERE s.assignmentId = ?1 and s.status <> 'D'")  // TODO Replace by constant
     fun findUniqueSubmittersByAssignmentId(assignmentId: String) : Long

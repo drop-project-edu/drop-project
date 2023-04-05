@@ -361,7 +361,7 @@ class AssignmentService(
             submissions.forEach {
                 with(it) {
                     val buildReport =
-                        if (buildReportId != null) buildReportRepository.findByIdOrNull(buildReportId)?.buildReport else null
+                        if (buildReport != null) buildReport!!.buildReport else null
                     val submissionReport = submissionReportRepository.findBySubmissionId(id).map { eachReport ->
                         SubmissionExport.SubmissionReport(
                             eachReport.reportKey, eachReport.reportValue,
@@ -559,11 +559,11 @@ class AssignmentService(
             val authorDetailsList = it.authors.map { a -> AuthorDetails(a.name, a.userId) }
             val group = projectGroupService.getOrCreateProjectGroup(authorDetailsList)
 
-            val buildReportId: Long? =
+            val buildReport: BuildReport? =
                 if (it.buildReport != null) {
                     val buildReport = BuildReport(buildReport = it.buildReport!!)
                     buildReportRepository.save(buildReport)
-                    buildReport.id
+                    buildReport
                 } else {
                     null
                 }
@@ -575,7 +575,7 @@ class AssignmentService(
                 submitterUserId = it.submitterUserId,
                 submissionFolder = it.submissionFolder,
                 gitSubmissionId = it.gitSubmissionId,
-                buildReportId = buildReportId,
+                buildReport = buildReport,
                 structureErrors = it.structureErrors,
                 markedAsFinal = it.markedAsFinal,
                 submissionMode = it.submissionMode

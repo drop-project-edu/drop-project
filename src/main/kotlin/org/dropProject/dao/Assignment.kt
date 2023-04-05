@@ -20,8 +20,10 @@
 package org.dropProject.dao
 
 import com.fasterxml.jackson.annotation.JsonFormat
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonView
+import org.apache.commons.lang.mutable.Mutable
 import org.dropProject.data.JSONViews
 import org.dropProject.extensions.format
 import org.dropProject.forms.SubmissionMethod
@@ -97,81 +99,85 @@ enum class LeaderboardType {
 @JsonIgnoreProperties(ignoreUnknown = true)  // this is useful to improve backward-compatible imports
 data class Assignment(
     @Id
-        @JsonView(JSONViews.StudentAPI::class)  // include this field on API calls
-        @Column(length = 50)
-        val id: String,
+    @JsonView(JSONViews.StudentAPI::class)  // include this field on API calls
+    @Column(length = 50)
+    val id: String,
 
     @Column(nullable = false)
-        @JsonView(JSONViews.StudentAPI::class)
-        var name: String,
+    @JsonView(JSONViews.StudentAPI::class)
+    var name: String,
 
     @JsonView(JSONViews.StudentAPI::class)
-        var packageName: String? = null,
+    var packageName: String? = null,
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
-        @JsonView(JSONViews.StudentAPI::class)
-        var dueDate: Date? = null,
+    @JsonView(JSONViews.StudentAPI::class)
+    var dueDate: Date? = null,
 
     @Column(nullable = false)
-        @JsonView(JSONViews.StudentAPI::class)
-        var submissionMethod: SubmissionMethod,
+    @JsonView(JSONViews.StudentAPI::class)
+    var submissionMethod: SubmissionMethod,
 
-        @Column(nullable = false)
-        @JsonView(JSONViews.StudentAPI::class)
-        var language: Language = Language.JAVA,
+    @Column(nullable = false)
+    @JsonView(JSONViews.StudentAPI::class)
+    var language: Language = Language.JAVA,
 
-        var acceptsStudentTests: Boolean = false,
-        var minStudentTests: Int? = null,
-        var calculateStudentTestsCoverage: Boolean = false,
-        var hiddenTestsVisibility: TestVisibility? = null,
-        var mandatoryTestsSuffix: String? = null,
-        var cooloffPeriod: Int? = null, // minutes
-        var maxMemoryMb: Int? = null,
-        var showLeaderBoard: Boolean = false,
-        var leaderboardType: LeaderboardType? = null,
+    var acceptsStudentTests: Boolean = false,
+    var minStudentTests: Int? = null,
+    var calculateStudentTestsCoverage: Boolean = false,
+    var hiddenTestsVisibility: TestVisibility? = null,
+    var mandatoryTestsSuffix: String? = null,
+    var cooloffPeriod: Int? = null, // minutes
+    var maxMemoryMb: Int? = null,
+    var showLeaderBoard: Boolean = false,
+    var leaderboardType: LeaderboardType? = null,
 
-        @JsonView(JSONViews.TeacherAPI::class)
-        val gitRepositoryUrl: String,
-        @Column(columnDefinition = "TEXT")
-        var gitRepositoryPubKey: String? = null,
-        @Column(columnDefinition = "TEXT")
-        var gitRepositoryPrivKey: String? = null,
+    @JsonView(JSONViews.TeacherAPI::class)
+    val gitRepositoryUrl: String,
+    @Column(columnDefinition = "TEXT")
+    var gitRepositoryPubKey: String? = null,
+    @Column(columnDefinition = "TEXT")
+    var gitRepositoryPrivKey: String? = null,
 
-        var gitRepositoryFolder: String,  // relative to assignment.root.location
+    var gitRepositoryFolder: String,  // relative to assignment.root.location
 
-        var gitCurrentHash: String? = null,  // updated on refresh
+    var gitCurrentHash: String? = null,  // updated on refresh
 
-        @Column(nullable = false)
-        @JsonView(JSONViews.TeacherAPI::class)
-        var ownerUserId: String = "",
+    @Column(nullable = false)
+    @JsonView(JSONViews.TeacherAPI::class)
+    var ownerUserId: String = "",
 
-        @JsonView(JSONViews.StudentAPI::class)
-        var active: Boolean = false,
-        var archived: Boolean = false,
+    @JsonView(JSONViews.StudentAPI::class)
+    var active: Boolean = false,
+    var archived: Boolean = false,
 
-        var buildReportId: Long? = null,  // build_report.id
+    var buildReportId: Long? = null,  // build_report.id
 
-        @Transient
-        var numSubmissions: Int = 0,
+    @OneToMany(mappedBy = "assignment", fetch = FetchType.EAGER)
+    @JsonIgnore
+    var assignmentTestMethods: MutableList<AssignmentTestMethod> = mutableListOf(),
 
-        @Transient
-        var numUniqueSubmitters: Int = 0,
+    @Transient
+    var numSubmissions: Int = 0,
 
-        @Transient
-        var public: Boolean = true,
+    @Transient
+    var numUniqueSubmitters: Int = 0,
 
-        @Transient
-        var lastSubmissionDate: Date? = null,
+    @Transient
+    var public: Boolean = true,
 
-        @Transient
-        var authorizedStudentIds: List<String>? = null,
+    @Transient
+    var lastSubmissionDate: Date? = null,
 
-        @Transient
-        var tagsStr: List<String>? = null,
+    @Transient
+    var authorizedStudentIds: List<String>? = null,
 
-        @JsonView(JSONViews.StudentAPI::class)
-        @Transient
-        var instructions: AssignmentInstructions? = null,
+    @Transient
+    var tagsStr: List<String>? = null,
+
+    @JsonView(JSONViews.StudentAPI::class)
+    @Transient
+    var instructions: AssignmentInstructions? = null,
 ) {
 
     fun dueDateFormatted(): String? {
@@ -184,5 +190,9 @@ data class Assignment(
         }
 
         return false
+    }
+
+    override fun toString(): String {
+        return "$id - $name"
     }
 }

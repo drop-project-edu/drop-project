@@ -147,13 +147,13 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
         assignmentService.addTagToAssignment(assignment, "sample")
         assignmentACLRepository.save(AssignmentACL(assignmentId = assignment.id, userId = "admin"))
 
-        assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "sampleJavaProject",
+        assignmentTestMethodRepository.save(AssignmentTestMethod(assignment = assignment,
                 testClass = "TestTeacherProject", testMethod = "testFindMax"))
-        assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "sampleJavaProject",
+        assignmentTestMethodRepository.save(AssignmentTestMethod(assignment = assignment,
                 testClass = "TestTeacherProject", testMethod = "testFindMaxWithNull"))
-        assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "sampleJavaProject",
+        assignmentTestMethodRepository.save(AssignmentTestMethod(assignment = assignment,
                 testClass = "TestTeacherProject", testMethod = "testFindMaxAllNegative"))
-        assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "sampleJavaProject",
+        assignmentTestMethodRepository.save(AssignmentTestMethod(assignment = assignment,
                 testClass = "TestTeacherProject", testMethod = "testFindMaxNegativeAndPositive"))
 
         val gitRepository = assignment.gitRepositoryUrl
@@ -233,11 +233,11 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
         assignmentService.addTagToAssignment(assignment, "sample")
         assignmentService.addTagToAssignment(assignment, "kotlin")
 
-        assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "sampleKotlinProject",
+        assignmentTestMethodRepository.save(AssignmentTestMethod(assignment = assignment,
                 testClass = "TestTeacherProject", testMethod = "testFindMax"))
-        assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "sampleKotlinProject",
+        assignmentTestMethodRepository.save(AssignmentTestMethod(assignment = assignment,
                 testClass = "TestTeacherProject", testMethod = "testFindMaxAllNegative"))
-        assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "sampleKotlinProject",
+        assignmentTestMethodRepository.save(AssignmentTestMethod(assignment = assignment,
                 testClass = "TestTeacherProject", testMethod = "testFindMaxNegativeAndPositive"))
 
         val gitRepository = assignment.gitRepositoryUrl
@@ -313,7 +313,7 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
             (resourceLoader.getResource("classpath:/initialData/${submissionName}MavenOutput.txt") as ClassPathResource).getContent())
         buildReportRepository.save(buildReport)
 
-        submission.buildReportId = buildReport.id
+        submission.buildReport = buildReport
         submissionRepository.save(submission)
 
         jUnitReportRepository.save(JUnitReport(submissionId = submission.id,

@@ -22,7 +22,6 @@ package org.dropProject.data
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonView
 import org.dropProject.dao.Assignment
-import org.dropProject.dao.AssignmentTestMethod
 import org.dropProject.dao.Language
 import org.dropProject.services.JUnitMethodResult
 import org.dropProject.services.JUnitMethodResultType
@@ -51,15 +50,13 @@ enum class TestType {
  * @property assignment identifies the [Assignment] that Submission targetted.
  * @property junitResults is a List of [JunitResults] with the result of evaluating the Submission using JUnit tests
  * @property jacocoResults is a List of [JacocoResults] with the result of evaluating the Submission's code coverage
- * @property assignmentTestMethods is a List of [AssignmentTestMethod]. Each object describes on of the executed Unit Tests
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)  // exclude nulls and empty fields from serialization
 data class BuildReport(val mavenOutputLines: List<String>,
                        val mavenizedProjectFolder: String,
                        val assignment: Assignment,
                        val junitResults: List<JUnitResults>,
-                       val jacocoResults: List<JacocoResults>,
-                       val assignmentTestMethods: List<AssignmentTestMethod>) {
+                       val jacocoResults: List<JacocoResults>) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
@@ -460,7 +457,7 @@ data class BuildReport(val mavenOutputLines: List<String>,
     }
 
     fun testResults() : List<JUnitMethodResult>? {
-        if (assignmentTestMethods.isEmpty()) {
+        if (assignment.assignmentTestMethods.isEmpty()) {
             return null  // assignment is not properly configured
         }
 
@@ -472,7 +469,7 @@ data class BuildReport(val mavenOutputLines: List<String>,
         }
 
         var result = mutableListOf<JUnitMethodResult>()
-        for (assignmentTest in assignmentTestMethods) {
+        for (assignmentTest in assignment.assignmentTestMethods) {
             var found = false
             for (submissionTest in globalMethodResults) {
                 if (submissionTest.methodName.equals(assignmentTest.testMethod) &&

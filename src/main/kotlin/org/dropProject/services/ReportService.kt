@@ -167,9 +167,8 @@ class ReportService(
                     }
                     fullBuildReport.authors = authors
 
-                    submission.buildReportId?.let {
-                            buildReportId ->
-                        val buildReportDB = buildReportRepository.getById(buildReportId)
+                    submission.buildReport?.let {
+                            buildReportDB ->
                         fullBuildReport.buildReport = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
                             mavenizedProjectFolder.absolutePath, assignment, submission)
                     }

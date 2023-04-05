@@ -30,7 +30,7 @@ import javax.persistence.*
  * @property xmlReport is a String with the XML version of the report
  */
 @Entity
-@Table(uniqueConstraints=[UniqueConstraint(columnNames = ["submissionId", "fileName"])])
+@Table(uniqueConstraints=[UniqueConstraint(columnNames = ["submissionId", "fileName"])], indexes = [Index(columnList = "submissionId")])
 data class JUnitReport(
         @Id @GeneratedValue
         val id: Long = 0,

@@ -19,9 +19,7 @@
  */
 package org.dropProject.dao
 
-import javax.persistence.Entity
-import javax.persistence.GeneratedValue
-import javax.persistence.Id
+import javax.persistence.*
 
 /**
  * Represents an [Assignment]'s JUnit test method/function.
@@ -37,7 +35,9 @@ data class AssignmentTestMethod(
         @GeneratedValue
         val id: Long = 0,
 
-        val assignmentId: String,  // pseudo FK
+        @ManyToOne
+        @JoinColumn(name = "assignment_id", nullable = false)
+        val assignment: Assignment,
 
         val testClass: String,
         val testMethod: String

@@ -155,7 +155,7 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
         assignmentTestMethodRepository.deleteAllByAssignmentId(assignment.id)
         for (testMethod in assignmentValidator.testMethods) {
             val parts = testMethod.split(":")
-            assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = assignment.id,
+            assignmentTestMethodRepository.save(AssignmentTestMethod(assignment = assignment,
                                                                      testClass = parts[0], testMethod = parts[1]))
         }
 

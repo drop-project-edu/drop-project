@@ -132,11 +132,11 @@ class UploadControllerTests {
                 gitRepositoryFolder = "testJavaProj", gitCurrentHash = "somehash")
         assignmentRepository.save(assignment01)
 
-        assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "testJavaProj",
+        assignmentTestMethodRepository.save(AssignmentTestMethod(assignment = assignment01,
                                                 testClass = "TestTeacherProject", testMethod = "testFuncaoParaTestar"))
-        assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "testJavaProj",
+        assignmentTestMethodRepository.save(AssignmentTestMethod(assignment = assignment01,
                                                 testClass = "TestTeacherProject", testMethod = "testFuncaoLentaParaTestar"))
-        assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "testJavaProj",
+        assignmentTestMethodRepository.save(AssignmentTestMethod(assignment = assignment01,
                                                 testClass = "TestTeacherHiddenProject", testMethod = "testFuncaoParaTestarQueNaoApareceAosAlunos"))
     }
 
@@ -616,9 +616,9 @@ class UploadControllerTests {
             gitRepositoryFolder = "testJavaProjJUnit5", gitCurrentHash = "somehash")
         assignmentRepository.save(assignment)
 
-        assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "testJavaProjJUnit5", testClass = "TestTeacherProject", testMethod = "testFuncaoParaTestar"))
-        assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "testJavaProjJUnit5", testClass = "TestTeacherProject", testMethod = "testFuncaoLentaParaTestar"))
-        assignmentTestMethodRepository.save(AssignmentTestMethod(assignmentId = "testJavaProjJUnit5", testClass = "TestTeacherHiddenProject", testMethod = "testFuncaoParaTestarQueNaoApareceAosAlunos"))
+        assignmentTestMethodRepository.save(AssignmentTestMethod(assignment = assignment, testClass = "TestTeacherProject", testMethod = "testFuncaoParaTestar"))
+        assignmentTestMethodRepository.save(AssignmentTestMethod(assignment = assignment, testClass = "TestTeacherProject", testMethod = "testFuncaoLentaParaTestar"))
+        assignmentTestMethodRepository.save(AssignmentTestMethod(assignment = assignment, testClass = "TestTeacherHiddenProject", testMethod = "testFuncaoParaTestarQueNaoApareceAosAlunos"))
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectJUnitErrors", "testJavaProjJUnit5", STUDENT_1)
 

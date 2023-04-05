@@ -21,9 +21,8 @@ package org.dropProject.dao
 
 import com.fasterxml.jackson.annotation.JsonView
 import org.dropProject.data.JSONViews
-import javax.persistence.Entity
-import javax.persistence.GeneratedValue
-import javax.persistence.Id
+import javax.persistence.*
+import kotlin.jvm.Transient
 
 /**
  * Enum representing the multiple evaluation criteria that a Submission can be subject to. Some of the criteria
@@ -63,6 +62,7 @@ enum class Indicator(val code: String, val description: String) {
  * @property reportGoal is an Int. It only makes sense for certain indicators, like TEACHER_UNIT_TESTS
  */
 @Entity
+@Table(indexes = [Index(columnList = "submissionId")])
 data class SubmissionReport(
         @Id @GeneratedValue
         val id: Long = 0,

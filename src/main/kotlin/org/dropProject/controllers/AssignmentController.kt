@@ -749,8 +749,8 @@ class AssignmentController(
                     submissionReportRepository.deleteBySubmissionId(submission.id)
                     jUnitReportRepository.deleteBySubmissionId(submission.id)
                     jacocoReportRepository.deleteBySubmissionId(submission.id)
-                    submission.buildReportId?.let {
-                        buildReportRepository.deleteById(it)
+                    submission.buildReport?.let {
+                        buildReportRepository.deleteById(it.id)
                     }
                     if (submission.submissionId == null) {  // submission by git
                         val gitSubmissionId = submission.gitSubmissionId ?: throw IllegalArgumentException("Git submission without gitSubmissionId")
@@ -799,6 +799,7 @@ class AssignmentController(
      * @return A String with the name of the relevant View
      */
     @RequestMapping(value = ["/toggle-status/{assignmentId}"], method = [(RequestMethod.GET), (RequestMethod.POST)])
+    @Transactional  // this is needed since checkAssignmentFiles will insert assignmentTestMethods in the BD
     fun toggleAssignmentStatus(@PathVariable assignmentId: String, redirectAttributes: RedirectAttributes,
                                principal: Principal): String {
 
@@ -812,7 +813,7 @@ class AssignmentController(
             throw IllegalAccessException("Assignments can only be changed by their owner or authorized teachers")
         }
 
-        if (assignment.active != true) {
+        if (!assignment.active) {
 
             // check if it has been setup for git connection and if there is a repository folder
             if (!File(assignmentsRootLocation, assignment.gitRepositoryFolder).exists()) {

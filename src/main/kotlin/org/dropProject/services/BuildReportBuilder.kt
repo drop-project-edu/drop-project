@@ -54,9 +54,6 @@ class BuildReportBuilder {
     @Autowired
     lateinit var jacocoReportRepository: JacocoReportRepository
 
-    @Autowired
-    lateinit var assignmentTestMethodRepository: AssignmentTestMethodRepository
-
     /**
      * Builds a BuildReport
      *
@@ -111,14 +108,6 @@ class BuildReportBuilder {
                 emptyList<JacocoResults>()
             }
 
-        val assignmentTestMethods =
-                if (submission != null) {
-                    assignmentTestMethodRepository.findByAssignmentId(assignment.id)
-                } else {
-                    emptyList()
-                }
-
-        return BuildReport(mavenOutputLines, mavenizedProjectFolder, assignment, jUnitResults, jacocoResults,
-                assignmentTestMethods)
+        return BuildReport(mavenOutputLines, mavenizedProjectFolder, assignment, jUnitResults, jacocoResults)
     }
 }

@@ -569,11 +569,10 @@ class ReportController(
             val reportElements = submissionReportRepository.findBySubmissionId(submission.id)
             submission.reportElements = reportElements
             submission.overdue = assignment.overdue(submission)
-            submission.buildReportId?.let {
-                buildReportId ->
+            submission.buildReport?.let {
+                buildReportDB ->
                     val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
                             submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
-                    val buildReportDB = buildReportRepository.getById(buildReportId)
                     val buildReport = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
                             mavenizedProjectFolder.absolutePath, assignment, submission)
                     submission.ellapsed = buildReport.elapsedTimeJUnit()
@@ -615,11 +614,10 @@ class ReportController(
             val reportElements = submissionReportRepository.findBySubmissionId(submission.id)
             submission.reportElements = reportElements
             submission.overdue = assignment.overdue(submission)
-            submission.buildReportId?.let {
-                    buildReportId ->
+            submission.buildReport?.let {
+                    buildReportDB ->
                         val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
                                 submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
-                        val buildReportDB = buildReportRepository.getById(buildReportId)
                         val buildReport = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
                                 mavenizedProjectFolder.absolutePath, assignment, submission)
                         submission.ellapsed = buildReport.elapsedTimeJUnit()
@@ -670,11 +668,10 @@ class ReportController(
             val reportElements = submissionReportRepository.findBySubmissionId(submission.id)
             submission.reportElements = reportElements
             submission.overdue = assignment.overdue(submission)
-            submission.buildReportId?.let {
-                buildReportId ->
+            submission.buildReport?.let {
+                buildReportDB ->
                     val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
                             submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
-                    val buildReportDB = buildReportRepository.getById(buildReportId)
                     val buildReport = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
                             mavenizedProjectFolder.absolutePath, assignment, submission)
                     submission.ellapsed = buildReport.elapsedTimeJUnit()

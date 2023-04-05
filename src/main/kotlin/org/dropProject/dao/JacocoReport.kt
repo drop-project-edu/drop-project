@@ -31,7 +31,7 @@ import javax.persistence.*
  * @property csvReport is a String with the CSV version of the report
  */
 @Entity
-@Table(uniqueConstraints=[UniqueConstraint(columnNames = ["submissionId", "fileName"])])
+@Table(uniqueConstraints=[UniqueConstraint(columnNames = ["submissionId", "fileName"])], indexes = [Index(columnList = "submissionId")])
 data class JacocoReport(
         @Id @GeneratedValue
         val id: Long = 0,

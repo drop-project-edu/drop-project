@@ -127,19 +127,19 @@ class ReportControllerTests {
 
         assignmentTestMethodRepository.save(
             AssignmentTestMethod(
-                assignmentId = "testJavaProj",
+                assignment = assignment01,
                 testClass = "TestTeacherProject", testMethod = "testFuncaoParaTestar"
             )
         )
         assignmentTestMethodRepository.save(
             AssignmentTestMethod(
-                assignmentId = "testJavaProj",
+                assignment = assignment01,
                 testClass = "TestTeacherProject", testMethod = "testFuncaoLentaParaTestar"
             )
         )
         assignmentTestMethodRepository.save(
             AssignmentTestMethod(
-                assignmentId = "testJavaProj",
+                assignment = assignment01,
                 testClass = "TestTeacherHiddenProject", testMethod = "testFuncaoParaTestarQueNaoApareceAosAlunos"
             )
         )

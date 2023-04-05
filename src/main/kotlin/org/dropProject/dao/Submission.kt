@@ -118,7 +118,11 @@ data class Submission(
         val assignmentId: String,
         val assignmentGitHash: String?,
 
-        var buildReportId: Long? = null,  // build_report.id
+        @OneToOne
+        @JoinColumn(name = "build_report_id")
+        var buildReport: BuildReport? = null,
+
+//        var buildReportId: Long? = null,  // build_report.id
 
         @Column(columnDefinition = "TEXT")
         var structureErrors: String? = null,
