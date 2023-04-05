@@ -135,14 +135,14 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
     }
 
     private fun createAndPopulateSampleJavaAssignment() {
-        val assignment = Assignment(id = "sampleJavaProject", name = "Sample Java Assignment",
-                packageName = "org.dropProject.samples.sampleJavaAssignment", ownerUserId = "teacher1",
-                submissionMethod = SubmissionMethod.UPLOAD,
-                gitRepositoryUrl = "git@github.com:drop-project-edu/sampleJavaAssignment.git",
-                gitRepositoryPrivKey = sampleJavaAssignmentPrivateKey,
-                gitRepositoryPubKey = sampleJavaAssignmentPublicKey,
-                gitRepositoryFolder = "sampleJavaProject",
-                active = true)
+        val assignment = assignmentRepository.save(Assignment(id = "sampleJavaProject", name = "Sample Java Assignment",
+            packageName = "org.dropProject.samples.sampleJavaAssignment", ownerUserId = "teacher1",
+            submissionMethod = SubmissionMethod.UPLOAD,
+            gitRepositoryUrl = "git@github.com:drop-project-edu/sampleJavaAssignment.git",
+            gitRepositoryPrivKey = sampleJavaAssignmentPrivateKey,
+            gitRepositoryPubKey = sampleJavaAssignmentPublicKey,
+            gitRepositoryFolder = "sampleJavaProject",
+            active = true))
 
         assignmentService.addTagToAssignment(assignment, "sample")
         assignmentACLRepository.save(AssignmentACL(assignmentId = assignment.id, userId = "admin"))
@@ -221,14 +221,14 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
     }
 
     private fun createAndPopulateSampleKotlinAssignment() {
-        val assignment = Assignment(id = "sampleKotlinProject", name = "Sample Kotlin Assignment",
+        val assignment = assignmentRepository.save(Assignment(id = "sampleKotlinProject", name = "Sample Kotlin Assignment",
                 packageName = "org.dropProject.samples.sampleKotlinAssignment", ownerUserId = "teacher1",
                 submissionMethod = SubmissionMethod.UPLOAD, language = Language.KOTLIN,
                 gitRepositoryUrl = "git@github.com:drop-project-edu/sampleKotlinAssignment.git",
                 gitRepositoryPrivKey = sampleJavaAssignmentPrivateKey,
                 gitRepositoryPubKey = sampleJavaAssignmentPublicKey,
                 gitRepositoryFolder = "sampleKotlinProject",
-                active = true)
+                active = true))
 
         assignmentService.addTagToAssignment(assignment, "sample")
         assignmentService.addTagToAssignment(assignment, "kotlin")
