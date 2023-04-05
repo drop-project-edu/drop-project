@@ -1423,16 +1423,17 @@ class AssignmentControllerTests {
         assertEquals("OK", node.at("/2/submissionReport/3/value").asText())
         assertEquals(2, node.at("/2/submissionReport/3/progress").asInt())
         assertEquals(2, node.at("/2/submissionReport/3/goal").asInt())
-        assertEquals("TEST-org.dropProject.sampleAssignments.testProj.TestTeacherHiddenProject.xml",
-                     node.at("/2/junitReports/0/filename").asText())
-        if (!node.at("/2/junitReports/0/xmlReport").asText().contains("<testsuite tests=\"1\" failures=\"0\"")) {
-            fail("invalid xmlReport")
-        }
         assertEquals("TEST-org.dropProject.sampleAssignments.testProj.TestTeacherProject.xml",
-            node.at("/2/junitReports/1/filename").asText())
-        if (!node.at("/2/junitReports/1/xmlReport").asText().contains("<testsuite tests=\"2\" failures=\"0\"")) {
+            node.at("/2/junitReports/0/filename").asText())
+        if (!node.at("/2/junitReports/0/xmlReport").asText().contains("<testsuite tests=\"2\" failures=\"0\"")) {
             fail("invalid xmlReport")
         }
+        assertEquals("TEST-org.dropProject.sampleAssignments.testProj.TestTeacherHiddenProject.xml",
+                     node.at("/2/junitReports/1/filename").asText())
+        if (!node.at("/2/junitReports/1/xmlReport").asText().contains("<testsuite tests=\"1\" failures=\"0\"")) {
+            fail("invalid xmlReport")
+        }
+
 
         assertEquals("student4", node.at("/3/authors/0/userId").asText())
         assertEquals("student5", node.at("/3/authors/1/userId").asText())
