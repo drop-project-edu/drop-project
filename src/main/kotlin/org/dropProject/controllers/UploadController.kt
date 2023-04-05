@@ -152,8 +152,9 @@ class UploadController(
         }
 
         model["assignments"] = assignments
+        model["isTeacher"] = request.isUserInRole("TEACHER")
 
-        return "student-assignments-list"
+        return "assignments-list"
     }
 
 
