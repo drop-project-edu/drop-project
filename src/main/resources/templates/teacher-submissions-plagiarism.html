@@ -16,7 +16,7 @@
     <div class="alert alert-danger" th:text="${error}" th:if="${error}" />
 
     <h1 class="page-header">Plagiarism report <small th:text="${assignment.id}"></small></h1>
-    <h6 th:text="${'Only matches above ' + T(org.dropProject.Constants).SIMILARITY_THRESHOLD} + '% similarity are considered'"/>
+    <h6 th:text="${'Only matches above ' + T(org.dropProject.Constants).SIMILARITY_THRESHOLD*100} + '% similarity are considered'"/>
 
     <table class="table">
         <thead>
