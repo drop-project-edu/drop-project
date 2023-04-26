@@ -491,7 +491,9 @@ class ReportController(
 
         val tempDir = FileSystemResource(System.getProperty("java.io.tmpdir")).file
         val submissionsToCheckFolder = File(tempDir, "dp-jplag-${assignmentId}-submissions")
+        submissionsToCheckFolder.deleteRecursively()  // make sure it doesn't exist
         val plagiarismReportFolder = File(tempDir, "dp-jplag-${assignmentId}-report")
+        plagiarismReportFolder.deleteRecursively()  // make sure it doesn't exist
         try {
             jPlagService.prepareSubmissions(submissions, submissionsToCheckFolder)
             LOG.info("Prepared submissions for jplag on ${submissionsToCheckFolder.absolutePath}")
