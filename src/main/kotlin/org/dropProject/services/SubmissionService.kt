@@ -508,16 +508,19 @@ class SubmissionService(
             FileUtils.copyDirectory(File(projectFolder, "test-files"), File(mavenizedProjectFolder, "test-files"))
         }
         FileUtils.copyFile(File(projectFolder, "AUTHORS.txt"),File(mavenizedProjectFolder, "AUTHORS.txt"))
-        if (submission.gitSubmissionId == null && deleteOriginalProjectFolder) {  // don't delete git submissions
-            FileUtils.deleteDirectory(projectFolder)  // TODO: This seems duplicate with the lines below...
-        }
 
         // next, copy the project files submitted by the teachers (will override eventually the student files)
         assignmentTeacherFiles.copyTeacherFilesTo(assignment, mavenizedProjectFolder)
 
-        // if the students have a README file, copy it over the teacher's README
+        // if the students have a README file (either .md or .txt), copy it over the teacher's README
         if (File(projectFolder, "README.md").exists()) {
             FileUtils.copyFile(File(projectFolder, "README.md"), File(mavenizedProjectFolder, "README.md"))
+        } else if (File(projectFolder, "README.txt").exists()) {
+            FileUtils.copyFile(File(projectFolder, "README.txt"), File(mavenizedProjectFolder, "README.txt"))
+        }
+
+        if (submission.gitSubmissionId == null && deleteOriginalProjectFolder) {  // don't delete git submissions
+            FileUtils.deleteDirectory(projectFolder)  // TODO: This seems duplicate with the lines below...
         }
 
         // finally remove the original project folder (the zip file is still kept)

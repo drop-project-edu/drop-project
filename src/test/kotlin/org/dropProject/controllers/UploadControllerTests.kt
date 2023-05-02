@@ -425,7 +425,32 @@ class UploadControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
-        println()
+        assertEquals("Summary should be 5 lines", 5, summary.size)
+        assertEquals("projectStructure should be OK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
+        assertEquals("projectStructure should be OK (value)", "OK", summary[0].reportValue)
+        assertEquals("compilation should be OK (key)", Indicator.COMPILATION, summary[1].indicator)
+        assertEquals("compilation should be OK (value)", "OK", summary[1].reportValue)
+        assertEquals("checkstyle should be OK (key)", Indicator.CHECKSTYLE, summary[2].indicator)
+        assertEquals("checkstyle should be OK (value)", "OK", summary[2].reportValue)
+        assertEquals("junit should be OK (key)", Indicator.TEACHER_UNIT_TESTS, summary[3].indicator)
+        assertEquals("junit should be OK (value)", "OK", summary[3].reportValue)
+    }
+
+    @Test
+    @DirtiesContext
+    fun uploadProjectWithREADME() {
+
+        val submissionId = testsHelper.uploadProject(this.mvc, "projectWithREADME", "testJavaProj", STUDENT_1)
+
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId"))
+            .andExpect(status().isOk())
+            .andReturn()
+
+        @Suppress("UNCHECKED_CAST")
+        val readmeContent = reportResult.modelAndView!!.modelMap["readmeHTML"] as String
+        if (!readmeContent.contains("Test README")) {
+            fail("README doesn't contain 'Test README'")
+        }
     }
 
     @Test

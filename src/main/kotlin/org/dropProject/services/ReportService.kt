@@ -128,14 +128,17 @@ class ReportService(
             // check README
             val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
                 submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
-            if (File(mavenizedProjectFolder, "README.md").exists()) {
-                val readmeContent = File(mavenizedProjectFolder, "README.md").readText()
-                val parser = Parser.builder()
-                    .extensions(listOf(AutolinkExtension.create()))
-                    .build()
-                val document = parser.parse(readmeContent)
-                val renderer = HtmlRenderer.builder().build()
-                fullBuildReport.readmeHtml = "<hr/>\n" + renderer.render(document) + "<hr/>\n"
+            if (File(mavenizedProjectFolder, "README.txt").exists()) {
+                val readmeContent = File(mavenizedProjectFolder, "README.txt").readText()
+                fullBuildReport.readmeHtml = "<pre>$readmeContent</pre>"
+            } else if (File(mavenizedProjectFolder, "README.md").exists()) {
+                    val readmeContent = File(mavenizedProjectFolder, "README.md").readText()
+                    val parser = Parser.builder()
+                        .extensions(listOf(AutolinkExtension.create()))
+                        .build()
+                    val document = parser.parse(readmeContent)
+                    val renderer = HtmlRenderer.builder().build()
+                    fullBuildReport.readmeHtml = "<hr/>\n" + renderer.render(document) + "<hr/>\n"
             }
 
             // check the submission status
