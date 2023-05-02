@@ -784,9 +784,9 @@ class ReportController(
 
         val comparator: Comparator<Submission> =
                 when (assignment.leaderboardType ?: LeaderboardType.TESTS_OK) {
-                    LeaderboardType.TESTS_OK -> compareBy { -it.teacherTests!!.progress }
-                    LeaderboardType.ELLAPSED -> compareBy({ -it.teacherTests!!.progress }, { it.ellapsed })
-                    LeaderboardType.COVERAGE -> compareBy({ -it.teacherTests!!.progress }, { -(it.coverage ?: 0) })
+                    LeaderboardType.TESTS_OK -> compareBy({ -it.teacherTests!!.progress }, { it.statusDate.time })
+                    LeaderboardType.ELLAPSED -> compareBy({ -it.teacherTests!!.progress }, { it.ellapsed }, { it.statusDate.time })
+                    LeaderboardType.COVERAGE -> compareBy({ -it.teacherTests!!.progress }, { -(it.coverage ?: 0) }, { it.statusDate.time })
                 }
 
         val sortedList =
