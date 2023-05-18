@@ -64,13 +64,19 @@ class StudentAPIController(
     @JsonView(JSONViews.StudentAPI::class)  // to publish only certain fields of the Assignment
     @ApiOperation(value = "Get all the current assignments assigned or associated with the person identified by the \"basic auth\" header",
                   response = Assignment::class, responseContainer = "List", ignoreJsonView = false)
-    fun getCurrentAssignments(principal: Principal): ResponseEntity<List<Assignment>> {
+    fun getCurrentAssignments(principal: Principal, request: HttpServletRequest): ResponseEntity<List<Assignment>> {
+
         val authorizedAssignments = assigneeRepository.findByAuthorUserId(principal.realName())
-        val result = authorizedAssignments.map {
+        var result = authorizedAssignments.map {
             assignmentRepository.getById(it.assignmentId)
         }.filter {
             it.active
         }.map { it.copy(instructions = assignmentTeacherFiles.getInstructions(it)) }
+
+        if (request.isUserInRole("TEACHER")) {
+            val assignments = assignmentService.getMyAssignments(principal, archived = false)
+            result = result + assignments
+        }
         return ResponseEntity.ok(result)
     }
 
@@ -100,10 +106,10 @@ class StudentAPIController(
         // remove results from hidden tests
         report.summary?.removeIf { it.reportKey == Indicator.HIDDEN_UNIT_TESTS.code}
 
-        if (report.error != null) {
-            return ResponseEntity.internalServerError().body(report)
+        return if (report.error != null) {
+            ResponseEntity.internalServerError().body(report)
         } else {
-            return ResponseEntity.ok().body(report)
+            ResponseEntity.ok().body(report)
         }
     }
 
