@@ -60,6 +60,7 @@ import java.nio.file.Paths
 import java.security.Principal
 import java.sql.Timestamp
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.*
 import java.util.concurrent.Executor
@@ -218,8 +219,10 @@ class SubmissionService(
             if (lastSubmission != null) {
                 val nextSubmissionTime = calculateCoolOff(lastSubmission, assignment)
                 if (nextSubmissionTime != null) {
+                    val tRemaining = nextSubmissionTime.format(
+                        DateTimeFormatter.ofPattern("HH:mm"))
                     LOG.warn("[${principal.realName()}] can't submit because he is in cool-off period")
-                    throw AccessDeniedException("[${principal.realName()}] can't submit because he is in cool-off period")
+                    throw AccessDeniedException("[${principal.realName()}] can't submit because he is in cool-off period, submit again at $tRemaining")
                 }
             }
         }
