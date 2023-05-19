@@ -120,7 +120,7 @@ class MavenInvoker {
                 if (showMavenOutput) {
                     println(">>> ${line}")
                 }
-                if (line.startsWith("\tat ")) {  // count lines that are not associated with stacktraces
+                if (!line.startsWith("\tat ")) {  // count lines that are not associated with stacktraces
                     numLines++
                 }
                 if (numLines < Constants.TOO_MUCH_OUTPUT_THRESHOLD) {
