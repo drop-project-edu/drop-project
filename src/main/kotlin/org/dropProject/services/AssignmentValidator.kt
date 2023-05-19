@@ -76,6 +76,11 @@ class AssignmentValidator {
         val reader = MavenXpp3Reader()
         val model = reader.read(FileReader(pomFile))
 
+        if (assignment.packageName == null) {
+            report.add(Info(InfoType.WARNING, "Assignment without package.",
+                "If you don't set a package for the assignment, Drop Project won't be able to filter stacktraces that are shown to the students."));
+        }
+
         validateCurrentUserIdSystemVariable(assignmentFolder, model)
         validateUntrimmedStacktrace(model)
         validateProperTestClasses(assignmentFolder, assignment)

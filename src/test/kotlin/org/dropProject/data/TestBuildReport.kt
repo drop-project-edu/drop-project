@@ -19,8 +19,6 @@
  */
 package org.dropProject.data
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -32,6 +30,7 @@ import org.dropProject.dao.Language
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.AssignmentTestMethodRepository
 import org.dropProject.services.BuildReportBuilder
+import org.junit.Assert.*
 import org.junit.Ignore
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
@@ -255,5 +254,17 @@ class TestBuildReport {
         assertTrue(!buildReport.mavenExecutionFailed())
         assertEquals(1, buildReport.compilationErrors.size)
         assertEquals("Invalid call to System.exit(). Please remove this instruction", buildReport.compilationErrors[0])
+    }
+
+    @Test
+    fun testTestsDidntRun() {
+
+        val mavenOutputLines = resourceLoader.getResource("file:src/test/sampleMavenOutputs/testsDidntRun.txt").file.readLines()
+
+        val buildReport = buildReportBuilder.build(mavenOutputLines,
+            "someMavenizedProj",
+            dummyJavaAssignment)
+
+        assertTrue(buildReport.mavenExecutionFailed())
     }
 }
