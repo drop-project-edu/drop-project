@@ -153,7 +153,7 @@ data class Assignment(
 
     var buildReportId: Long? = null,  // build_report.id
 
-    @OneToMany(mappedBy = "assignment", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "assignment", fetch = FetchType.EAGER, cascade = [CascadeType.ALL])
     @JsonIgnore
     var assignmentTestMethods: MutableList<AssignmentTestMethod> = mutableListOf(),
 
