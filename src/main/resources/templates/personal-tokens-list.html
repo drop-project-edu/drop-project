@@ -27,7 +27,9 @@
         <tbody>
         <tr>
             <td>
-                <h4><i class="glyphicon glyphicon-lock"></i> Token: <span th:text="${token.personalToken}">abcdef</span></h4>
+                <h4><i class="glyphicon glyphicon-lock"></i> Token: <span
+                        id="token" th:text="${token.personalToken}">abcdef</span>
+                </h4>
                 <small th:text="${'Expires on ' + token.expirationDate }">Expires on xxxx</small>
             </td>
         </tr>
@@ -35,12 +37,19 @@
     </table>
 
     <form th:action="@{/personalToken}" method="post">
-        <input type="submit" value="Generate a new token" class="btn btn-primary" />
+        <p>
+            <input type="submit" value="Generate a new token" class="btn btn-primary"/>
+            <button th:if="${token != null}" type="button" class="btn btn-primary" onclick="copyToClipboard('btnText','token')">
+                <span class="glyphicon glyphicon-link"></span> <span id="btnText" class="text-center">Copy</span>
+            </button>
+        </p>
     </form>
 
 </div>
 
 <div th:replace="layout/layout :: footer"></div>
+
+<script th:src="@{/js/copyToClipboard.js}"></script>
 
 </body>
 </html>

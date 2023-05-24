@@ -15,11 +15,13 @@
         <span class="label label-warning col-sm-1" th:if="${!assignment.active}">Inactive</span>
     </div>
 
-    <p th:if="${isTeacher}" >
-        <a class="btn btn-default" th:href="@{'/assignment/info/' + ${assignment.id}}">Show assignment info <small>(only visible for teachers)</small></a>
+    <p th:if="${isTeacher}">
+        <a class="btn btn-default" th:href="@{'/assignment/info/' + ${assignment.id}}">Show assignment info <small>(only
+            visible for teachers)</small></a>
     </p>
 
-    <small th:if="${assignment?.dueDate != null}">Deadline: <span th:text="${assignment.dueDateFormatted()}"></span></small>
+    <small th:if="${assignment?.dueDate != null}">Deadline: <span
+            th:text="${assignment.dueDateFormatted()}"></span></small>
 
     <div th:if="${error}">
         <div class="alert alert-danger" th:text="${error}"/>
@@ -28,21 +30,28 @@
     <div th:if="${uploadForm}">
         <form th:object="${uploadForm}" enctype="multipart/form-data" method="post"
               class="dropzone" id="dpDropzone" th:action="@{/upload}" th:if="${coolOffEnd == null}">
-            <input type="hidden" th:field="*{assignmentId}" />
+            <input type="hidden" th:field="*{assignmentId}"/>
         </form>
         <div class="panel" th:if="${coolOffEnd != null}">
-            <img th:src="@{/img/iconfinder_cat_sleep_185528.png}" />
+            <img th:src="@{/img/iconfinder_cat_sleep_185528.png}"/>
             &nbsp;
             <span class="lead" th:text="#{student.upload.form.cool-off1}">Relaxa. Estás em período cool-off...</span>
             <span th:text="#{student.upload.form.cool-off2(${coolOffEnd})}"></span>
         </div>
         <br/>
-        <a th:if="${uploadSubmission != null}" class="btn btn-default btn-md"
-           th:href="@{'/buildReport/' + ${uploadSubmission.id}}"
-        th:text="#{student.upload.form.visualize-report-btn}">Visualizar último relatório</a>
+        <p>
+            <a th:if="${uploadSubmission != null}" class="btn btn-default btn-md"
+               th:href="@{'/buildReport/' + ${uploadSubmission.id}}"
+               th:text="#{student.upload.form.visualize-report-btn}">Visualizar último relatório</a>
+            <button type="button" class="btn btn-default btn-md"  onclick="copyToClipboard('btnText')">
+                <span class="glyphicon glyphicon-link"></span> <span th:text="#{student.upload.form.copy-assignmentID-btn}" id="btnText">Copiar ID</span>
+            </button>
+        </p>
+
         <div class="panel panel-default" th:if="${isTeacher and assignment?.cooloffPeriod != null}">
             <div class="panel-body">
-                <img width="16" th:src="@{/img/info.png}"/> Cool-off turned on for students. Teachers are not affected by this.
+                <img width="16" th:src="@{/img/info.png}"/> Cool-off turned on for students. Teachers are not affected
+                by this.
             </div>
         </div>
 
@@ -76,6 +85,7 @@
     /*]]>*/
 </script>
 <script th:src="@{/js/dropproject.js}"></script>
+<script th:src="@{/js/copyToClipboard.js}"></script>
 
 </body>
 </html>
