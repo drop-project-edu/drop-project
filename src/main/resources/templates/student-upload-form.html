@@ -11,7 +11,15 @@
 <div class="container" style="max-width: 760px; margin-bottom: 65px">
 
     <div class="row">
-        <h1 class="page-header col-sm-11" th:if="${assignment != null}" th:text="${assignment.name}">Assignment</h1>
+        <h1 class="page-header col-sm-11" th:if="${assignment != null}">
+            <span th:text="${assignment.name}">
+                Assignment
+            </span>
+            <button type="button" class="btn btn-default btn-sm" onclick="copyToClipboard('btnText')">
+                <span class="glyphicon glyphicon-duplicate" style="vertical-align: middle"></span>
+                <span id="btnText"></span>
+            </button>
+        </h1>
         <span class="label label-warning col-sm-1" th:if="${!assignment.active}">Inactive</span>
     </div>
 
@@ -39,14 +47,9 @@
             <span th:text="#{student.upload.form.cool-off2(${coolOffEnd})}"></span>
         </div>
         <br/>
-        <p>
-            <a th:if="${uploadSubmission != null}" class="btn btn-default btn-md"
-               th:href="@{'/buildReport/' + ${uploadSubmission.id}}"
-               th:text="#{student.upload.form.visualize-report-btn}">Visualizar último relatório</a>
-            <button type="button" class="btn btn-default btn-md"  onclick="copyToClipboard('btnText')">
-                <span class="glyphicon glyphicon-link"></span> <span th:text="#{student.upload.form.copy-assignmentID-btn}" id="btnText">Copiar ID</span>
-            </button>
-        </p>
+        <a th:if="${uploadSubmission != null}" class="btn btn-default btn-md"
+           th:href="@{'/buildReport/' + ${uploadSubmission.id}}"
+           th:text="#{student.upload.form.visualize-report-btn}">Visualizar último relatório</a>
 
         <div class="panel panel-default" th:if="${isTeacher and assignment?.cooloffPeriod != null}">
             <div class="panel-body">

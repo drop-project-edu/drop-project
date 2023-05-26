@@ -40,7 +40,7 @@
         <p>
             <input type="submit" value="Generate a new token" class="btn btn-primary"/>
             <button th:if="${token != null}" type="button" class="btn btn-primary" onclick="copyToClipboard('btnText','token')">
-                <span class="glyphicon glyphicon-link"></span> <span id="btnText" class="text-center">Copy</span>
+                <span class="glyphicon glyphicon-duplicate"></span> <span id="btnText">Copy</span>
             </button>
         </p>
     </form>
