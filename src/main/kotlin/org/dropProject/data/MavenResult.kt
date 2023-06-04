@@ -31,5 +31,7 @@ import org.dropProject.Constants
 data class MavenResult(val resultCode : Int,
                        val outputLines: List<String>,
                        var expiredByTimeout : Boolean = false) {
-    fun tooMuchOutput() = outputLines.size >= Constants.TOO_MUCH_OUTPUT_THRESHOLD
+    fun tooMuchOutput() = outputLines
+        .filter { !it.startsWith("\tat ") }  // count lines that are not associated with stacktraces
+        .size >= Constants.TOO_MUCH_OUTPUT_THRESHOLD
 }

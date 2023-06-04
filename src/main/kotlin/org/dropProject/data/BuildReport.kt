@@ -107,6 +107,12 @@ data class BuildReport(val mavenOutputLines: List<String>,
                         it.startsWith("[ERROR] Failed to execute goal org.jetbrains.kotlin:kotlin-maven-plugin")
             }.isEmpty()
         }
+
+        // if there were problems with the pom.xml, it is a fatal error
+        if (mavenOutputLines.any { it.startsWith("[WARNING] Some problems were encountered while building the effective model") }) {
+            return true
+        }
+
         return false;
     }
 

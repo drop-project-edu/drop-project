@@ -1,0 +1,65 @@
+[INFO] Scanning for projects...
+[WARNING]
+[WARNING] Some problems were encountered while building the effective model for pt.ulusofona.deisi.dropProject:sampleJavaAssignment:jar:1.0-SNAPSHOT
+[WARNING] 'dependencies.dependency.version' for org.junit.jupiter:junit-jupiter:jar is either LATEST or RELEASE (both of them are being deprecated) @ line 19, column 16
+[WARNING]
+[WARNING] It is highly recommended to fix these problems because they threaten the stability of your build.
+[WARNING]
+[WARNING] For this reason, future Maven versions might no longer support building such malformed projects.
+[WARNING]
+[INFO]
+[INFO] --------< pt.ulusofona.deisi.dropProject:sampleJavaAssignment >---------
+[INFO] Building AED - Mini Teste 2 - Classes / Objectos / Funções / Ordenaçao (v5) 1.0-SNAPSHOT
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO]
+[INFO] --- maven-clean-plugin:2.5:clean (default-clean) @ sampleJavaAssignment ---
+[INFO]
+[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ sampleJavaAssignment ---
+[WARNING] Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
+[INFO] skip non existing resourceDirectory someMavenizedProject/src/main/resources
+[INFO]
+[INFO] --- maven-compiler-plugin:3.1:compile (default-compile) @ sampleJavaAssignment ---
+[INFO] Changes detected - recompiling the module!
+[WARNING] File encoding has not been set, using platform encoding UTF-8, i.e. build is platform dependent!
+[INFO] Compiling 3 source files to someMavenizedProject/target/classes
+[INFO]
+[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ sampleJavaAssignment ---
+[WARNING] Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
+[INFO] skip non existing resourceDirectory someMavenizedProject/src/main/resources
+[INFO]
+[INFO] --- maven-compiler-plugin:3.1:compile (default-compile) @ sampleJavaAssignment ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO]
+[INFO] --- maven-checkstyle-plugin:3.1.2:check (validate) @ sampleJavaAssignment ---
+[INFO] Starting audit...
+Audit done.
+[INFO] You have 0 Checkstyle violations.
+[INFO]
+[INFO] --- maven-resources-plugin:2.6:testResources (default-testResources) @ sampleJavaAssignment ---
+[WARNING] Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
+[INFO] skip non existing resourceDirectory someMavenizedProject/src/test/resources
+[INFO]
+[INFO] --- maven-compiler-plugin:3.1:testCompile (default-testCompile) @ sampleJavaAssignment ---
+[INFO] Changes detected - recompiling the module!
+[WARNING] File encoding has not been set, using platform encoding UTF-8, i.e. build is platform dependent!
+[INFO] Compiling 1 source file to someMavenizedProject/target/test-classes
+[INFO]
+[INFO] --- maven-surefire-plugin:2.19.1:test (default-test) @ sampleJavaAssignment ---
+
+-------------------------------------------------------
+ T E S T S
+-------------------------------------------------------
+NOTE: Picked up JDK_JAVA_OPTIONS:  --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.rmi/sun.rmi.transport=ALL-UNNAMED
+WARNING: A command line option has enabled the Security Manager
+WARNING: The Security Manager is deprecated and will be removed in a future release
+
+Results :
+
+Tests run: 0, Failures: 0, Errors: 0, Skipped: 0
+
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 5.189 s
+[INFO] Finished at: 2023-05-16T09:34:02+01:00
+[INFO] ------------------------------------------------------------------------

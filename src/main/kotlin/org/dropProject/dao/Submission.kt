@@ -118,7 +118,7 @@ data class Submission(
         val assignmentId: String,
         val assignmentGitHash: String?,
 
-        @OneToOne
+        @OneToOne(cascade = [CascadeType.REMOVE])
         @JoinColumn(name = "build_report_id")
         var buildReport: BuildReport? = null,
 

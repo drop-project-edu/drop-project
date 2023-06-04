@@ -46,6 +46,7 @@ class TestAssignmentValidator {
 
     val dummyAssignment = Assignment(id = "dummy", name = "", gitRepositoryUrl = "",
             gitRepositoryFolder = "", ownerUserId = "p4997", submissionMethod = SubmissionMethod.UPLOAD,
+            packageName = "org.dropProject.samples",
             hiddenTestsVisibility = TestVisibility.HIDE_EVERYTHING)
 
     @Before
@@ -162,5 +163,30 @@ class TestAssignmentValidator {
         val report = assignmentValidator.report
         assertTrue(report.any { it.type == AssignmentValidator.InfoType.ERROR &&
         it.message == "You are using an outdated version of checkstyle."})
+    }
+
+    @Test
+    fun `Test testJavaProjJUnit5`() {
+
+        val assignmentFolder = resourceLoader.getResource("file:${sampleAssignmentsRootFolder}/testJavaProjJUnit5").file
+        assignmentValidator.validate(assignmentFolder, dummyAssignment)
+        val report = assignmentValidator.report
+        assertTrue(report.any { it.type == AssignmentValidator.InfoType.INFO &&
+                it.message == "You have defined a global timeout for the test methods."})
+    }
+
+    @Test
+    fun `Test testJavaProj without package`() {
+
+        val assignmentFolder = resourceLoader.getResource("file:${sampleAssignmentsRootFolder}/testJavaProj").file
+
+        dummyAssignment.packageName = null  // <<<< this is important
+
+        assignmentValidator.validate(assignmentFolder, dummyAssignment)
+        val report = assignmentValidator.report
+        assertTrue(report.any {
+            it.type == AssignmentValidator.InfoType.WARNING &&
+                    it.message == "Assignment without package."
+        })
     }
 }
