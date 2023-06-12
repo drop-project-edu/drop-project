@@ -46,10 +46,16 @@
             <span class="lead" th:text="#{student.upload.form.cool-off1}">Relaxa. Estás em período cool-off...</span>
             <span th:text="#{student.upload.form.cool-off2(${coolOffEnd})}"></span>
         </div>
-        <br/>
+
+        <p class="text-right small" style="padding-top: 4px" th:if="${coolOffEnd == null}">
+            <span th:text="#{student.upload.form.intellij-plugin}">Também pode submeter diretamente a partir do IntelliJ</span> <strong> <a href="https://www.youtube.com/watch?v=fkqXJ04pUjs&t=4s">[+info]</a></strong>
+        </p>
+        
         <a th:if="${uploadSubmission != null}" class="btn btn-default btn-md"
            th:href="@{'/buildReport/' + ${uploadSubmission.id}}"
            th:text="#{student.upload.form.visualize-report-btn}">Visualizar último relatório</a>
+
+        <br/>
 
         <div class="panel panel-default" th:if="${isTeacher and assignment?.cooloffPeriod != null}">
             <div class="panel-body">
@@ -58,7 +64,6 @@
             </div>
         </div>
 
-        <br/>
         <br/>
 
         <div th:utext="${instructionsFragment}"></div>
