@@ -19,6 +19,7 @@
  */
 package org.dropProject.services
 
+import com.fasterxml.jackson.annotation.JsonView
 import org.apache.maven.plugin.surefire.log.api.PrintStreamLogger
 import org.apache.maven.plugins.surefire.report.ReportTestCase
 import org.apache.maven.plugins.surefire.report.TestSuiteXmlParser
@@ -27,6 +28,7 @@ import java.io.InputStreamReader
 import org.apache.maven.plugins.surefire.report.ReportTestSuite
 import org.dropProject.Constants
 import org.dropProject.dao.Assignment
+import org.dropProject.data.JSONViews
 import java.io.ByteArrayInputStream
 import java.util.*
 
@@ -48,12 +50,19 @@ enum class JUnitMethodResultType(val value: String) {
  * @property failureErrorLine is a String
  * @property failureDetail is a String
  */
-data class JUnitMethodResult(val methodName: String,
-                             val fullMethodName: String,
-                             val type: JUnitMethodResultType,
-                             val failureType: String?,
-                             val failureErrorLine: String?,
-                             val failureDetail: String?) {
+data class JUnitMethodResult(
+    @JsonView(JSONViews.StudentAPI::class)
+    val methodName: String,
+    @JsonView(JSONViews.StudentAPI::class)
+    val fullMethodName: String,
+    @JsonView(JSONViews.StudentAPI::class)
+    val type: JUnitMethodResultType,
+    @JsonView(JSONViews.StudentAPI::class)
+    val failureType: String?,
+    @JsonView(JSONViews.StudentAPI::class)
+    val failureErrorLine: String?,
+    @JsonView(JSONViews.StudentAPI::class)
+    val failureDetail: String?) {
 
     companion object {
         fun empty(): JUnitMethodResult {

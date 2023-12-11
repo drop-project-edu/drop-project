@@ -94,6 +94,7 @@ enum class SubmissionMode {
 @Entity @JsonInclude(JsonInclude.Include.NON_EMPTY)
 data class Submission(
         @Id @GeneratedValue
+        @JsonView(JSONViews.StudentAPI::class)
         val id: Long = 0,
         val submissionId: String? = null,
         var gitSubmissionId: Long? = null,
@@ -127,6 +128,7 @@ data class Submission(
         @Column(columnDefinition = "TEXT")
         var structureErrors: String? = null,
 
+        @JsonView(JSONViews.TeacherAPI::class)
         var markedAsFinal: Boolean = false,
 
         @Transient
@@ -144,6 +146,7 @@ data class Submission(
         var teacherTests: JUnitSummary? = null,
 
         @Transient
+        @JsonView(JSONViews.TeacherAPI::class)
         var hiddenTests: JUnitSummary? = null,
 
         @Transient

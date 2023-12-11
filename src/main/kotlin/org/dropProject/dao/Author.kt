@@ -19,6 +19,8 @@
  */
 package org.dropProject.dao
 
+import com.fasterxml.jackson.annotation.JsonView
+import org.dropProject.data.JSONViews
 import javax.persistence.*
 
 /**
@@ -32,10 +34,12 @@ import javax.persistence.*
 @Entity
 class Author(
         @Id @GeneratedValue
+        @JsonView(JSONViews.TeacherAPI::class)
         val id: Long = 0,
         name: String,
         val userId: String) {
 
+    @JsonView(JSONViews.TeacherAPI::class)
     val name: String = name.trim()
 
     @ManyToOne
