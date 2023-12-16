@@ -21,31 +21,21 @@ package org.dropProject.controllers
 
 import com.fasterxml.jackson.annotation.JsonView
 import io.swagger.annotations.*
-import net.lingala.zip4j.ZipFile
-import net.lingala.zip4j.model.ZipParameters
-import net.lingala.zip4j.model.enums.CompressionLevel
 import org.dropProject.dao.*
 import org.dropProject.data.JSONViews
 import org.dropProject.data.SubmissionInfo
-import org.dropProject.data.SubmissionResult
 import org.dropProject.extensions.realName
-import org.dropProject.forms.UploadForm
 import org.dropProject.repository.*
 import org.dropProject.services.*
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.io.FileSystemResource
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.ui.ModelMap
-import org.springframework.validation.BindingResult
 import org.springframework.web.bind.annotation.*
-import org.springframework.web.multipart.MultipartFile
-import java.io.File
 import java.security.Principal
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
-import javax.validation.Valid
 
 
 @RestController
@@ -116,45 +106,13 @@ class TeacherAPIController(
         return ResponseEntity.ok(model["submissions"] as List<SubmissionInfo>)
     }
 
-    /*@Suppress("UNCHECKED_CAST")
-    @GetMapping(value = ["/assignments/{assignmentId}/submissions/{groupId}"])
-    @JsonView(JSONViews.TeacherAPI::class)
-    @ApiOperation(
-        value = "",
-        response = Submission::class, responseContainer = "List", ignoreJsonView = false
-    )
-    fun getGroupAssignmentSubmissions(@PathVariable assignmentId: String, @PathVariable groupId: Long, model: ModelMap,
-                                      principal: Principal, request: HttpServletRequest): ResponseEntity<List<Submission>> {
-        val assignment = assignmentRepository.getById(assignmentId)
-
-        val submissions = submissionRepository
-            .findByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(ProjectGroup(groupId), assignmentId)
-            .filter { it.getStatus() != SubmissionStatus.DELETED }
-
-        for (submission in submissions) {
-            val reportElements = submissionReportRepository.findBySubmissionId(submission.id)
-            submission.reportElements = reportElements
-            submission.overdue = assignment.overdue(submission)
-            submission.buildReport?.let {
-                    buildReportDB ->
-                val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
-                    submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
-                val buildReport = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
-                    mavenizedProjectFolder.absolutePath, assignment, submission)
-                submission.ellapsed = buildReport.elapsedTimeJUnit()
-                submission.teacherTests = buildReport.junitSummaryAsObject()
-            }
-        }
-
-        return ResponseEntity.ok(submissions)
-    }*/
-
     @GetMapping(value = ["/download/{submissionId}"], produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
     @ApiOperation(
         value = "Get all the submissions for the assignment identified by the assignmentID variable"
     )
     fun downloadProject(@PathVariable submissionId: Long, principal: Principal,
                         request: HttpServletRequest, response: HttpServletResponse): FileSystemResource {
+
         val submission = submissionRepository.findById(submissionId).orElse(null)
         if (submission != null) {
 
@@ -182,7 +140,7 @@ class TeacherAPIController(
     }
 
     @RequestMapping(value = ["/submissions/{submissionId}"], method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_JSON_VALUE])
-    @JsonView(JSONViews.TeacherAPI::class)  // to publish only certain fields of the Assignment
+    @JsonView(JSONViews.TeacherAPI::class)
     @ApiOperation(value = "Get the build report associated with this submission")
     fun getBuildReport(@PathVariable submissionId: Long, principal: Principal,
                        request: HttpServletRequest): ResponseEntity<FullBuildReport> {
