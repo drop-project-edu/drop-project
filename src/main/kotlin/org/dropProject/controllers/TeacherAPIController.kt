@@ -33,6 +33,7 @@ import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.ui.ModelMap
 import org.springframework.web.bind.annotation.*
+import java.nio.file.Files
 import java.security.Principal
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
@@ -139,6 +140,11 @@ class TeacherAPIController(
 
             val projectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
                 wasRebuilt = submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
+
+            if (!Files.exists(projectFolder.toPath())) {
+                throw ResourceNotFoundException()
+            }
+
             LOG.info("[${principal.realName()}] downloaded ${projectFolder.name}")
 
             val zipFilename = submission.group.authorsIdStr().replace(",", "_") + "_mavenized"
