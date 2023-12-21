@@ -33,6 +33,7 @@ import org.dropProject.dao.Submission
 data class SubmissionInfo(
     @JsonView(JSONViews.TeacherAPI::class)
     val projectGroup: ProjectGroup,
+    @JsonView(JSONViews.TeacherAPI::class)
     val lastSubmission: Submission,
     @JsonView(JSONViews.TeacherAPI::class)
     val allSubmissions: List<Submission>) {

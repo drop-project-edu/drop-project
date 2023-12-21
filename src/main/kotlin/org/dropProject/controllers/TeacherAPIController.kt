@@ -80,36 +80,52 @@ class TeacherAPIController(
         value = "Get all the submissions for the assignment identified by the assignmentID variable",
         response = SubmissionInfo::class, responseContainer = "List", ignoreJsonView = false
     )
-    fun getAssignmentSubmissions(@PathVariable assignmentId: String, model: ModelMap,
-                                 principal: Principal, request: HttpServletRequest): ResponseEntity<List<SubmissionInfo>> {
-        val assignment = assignmentRepository.getById(assignmentId)
+    fun getAssignmentLatestSubmission(@PathVariable assignmentId: String, model: ModelMap,
+                                      principal: Principal, request: HttpServletRequest): ResponseEntity<List<SubmissionInfo>> {
         assignmentService.getAllSubmissionsForAssignment(assignmentId, principal, model, request, mode = "summary")
 
-        for (submissionInfo in (model["submissions"] as List<SubmissionInfo>)) {
-            for (submission in submissionInfo.allSubmissions) {
-                val reportElements = submissionReportRepository.findBySubmissionId(submission.id)
-                submission.reportElements = reportElements
-                submission.overdue = assignment.overdue(submission)
-                submission.buildReport?.let {
-                        buildReportDB ->
-                    val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
-                        submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
-                    val buildReport = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
-                        mavenizedProjectFolder.absolutePath, assignment, submission)
-                    submission.ellapsed = buildReport.elapsedTimeJUnit()
-                    submission.teacherTests = buildReport.junitSummaryAsObject()
-                    submission.testResults = buildReport.testResults()
-                }
+        val result = (model["submissions"] as List<SubmissionInfo>).map{
+            SubmissionInfo(it.projectGroup, it.lastSubmission, listOf())
+        }
+
+        return ResponseEntity.ok(result)
+    }
+
+    @GetMapping(value = ["/assignments/{assignmentId}/submissions/{groupId}"])
+    @JsonView(JSONViews.TeacherAPI::class)
+    @ApiOperation(
+        value = "",
+        response = Submission::class, responseContainer = "List", ignoreJsonView = false
+    )
+    fun getGroupAssignmentSubmissions(@PathVariable assignmentId: String, @PathVariable groupId: Long, model: ModelMap,
+                                      principal: Principal, request: HttpServletRequest): ResponseEntity<List<Submission>> {
+        val assignment = assignmentRepository.getById(assignmentId)
+
+        val submissions = submissionRepository
+            .findByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(ProjectGroup(groupId), assignmentId)
+            .filter { it.getStatus() != SubmissionStatus.DELETED }
+
+        for (submission in submissions) {
+            val reportElements = submissionReportRepository.findBySubmissionId(submission.id)
+            submission.reportElements = reportElements
+            submission.overdue = assignment.overdue(submission)
+            submission.buildReport?.let {
+                    buildReportDB ->
+                val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
+                    submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
+                val buildReport = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
+                    mavenizedProjectFolder.absolutePath, assignment, submission)
+                submission.ellapsed = buildReport.elapsedTimeJUnit()
+                submission.teacherTests = buildReport.junitSummaryAsObject()
             }
         }
 
-        return ResponseEntity.ok(model["submissions"] as List<SubmissionInfo>)
+        return ResponseEntity.ok(submissions)
     }
 
     @GetMapping(value = ["/download/{submissionId}"], produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
-    @ApiOperation(
-        value = "Get all the submissions for the assignment identified by the assignmentID variable"
-    )
+    @JsonView(JSONViews.TeacherAPI::class)
+    @ApiOperation(value = "Download the mavenized zip file for this submission")
     fun downloadProject(@PathVariable submissionId: Long, principal: Principal,
                         request: HttpServletRequest, response: HttpServletResponse): FileSystemResource {
 
