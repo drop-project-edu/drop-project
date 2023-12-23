@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.core.io.FileSystemResource
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.AccessDeniedException
 import org.springframework.ui.ModelMap
 import org.springframework.web.bind.annotation.*
 import java.nio.file.Files
@@ -64,7 +65,7 @@ class TeacherAPIController(
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
     @GetMapping(value = ["/assignments/current"], produces = [MediaType.APPLICATION_JSON_VALUE])
-    @JsonView(JSONViews.TeacherAPI::class)  // to publish only certain fields of the Assignment
+    @JsonView(JSONViews.TeacherAPI::class)
     @ApiOperation(
         value = "Get all the current assignments created or visible to the person identified by the \"basic auth\" header",
         response = Assignment::class, responseContainer = "List", ignoreJsonView = false
@@ -135,7 +136,7 @@ class TeacherAPIController(
 
             // check that principal belongs to the group that made this submission
             if (!request.isUserInRole("TEACHER")) {
-                throw org.springframework.security.access.AccessDeniedException("${principal.realName()} is not allowed to view this report")
+                throw AccessDeniedException("${principal.realName()} is not allowed to view this report")
             }
 
             val projectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
@@ -161,7 +162,7 @@ class TeacherAPIController(
         }
     }
 
-    @RequestMapping(value = ["/submissions/{submissionId}"], method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_JSON_VALUE])
+    @GetMapping(value = ["/submissions/{submissionId}"], produces = [MediaType.APPLICATION_JSON_VALUE])
     @JsonView(JSONViews.TeacherAPI::class)
     @ApiOperation(value = "Get the build report associated with this submission")
     fun getBuildReport(@PathVariable submissionId: Long, principal: Principal,
