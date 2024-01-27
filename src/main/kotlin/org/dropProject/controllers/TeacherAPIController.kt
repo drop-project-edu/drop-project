@@ -79,10 +79,10 @@ class TeacherAPIController(
     @GetMapping(value = ["/assignments/{assignmentId}/submissions"], produces = [MediaType.APPLICATION_JSON_VALUE])
     @JsonView(JSONViews.TeacherAPI::class)
     @ApiOperation(
-        value = "Get all the submissions for the assignment identified by the assignmentID variable",
+        value = "Get the latest submissions by each group for the assignment identified by the assignmentID variable",
         response = SubmissionInfo::class, responseContainer = "List", ignoreJsonView = false
     )
-    fun getAssignmentLatestSubmission(@PathVariable assignmentId: String, model: ModelMap,
+    fun getAssignmentLatestSubmissions(@PathVariable assignmentId: String, model: ModelMap,
                                       principal: Principal, request: HttpServletRequest): ResponseEntity<List<SubmissionInfo>> {
         assignmentService.getAllSubmissionsForAssignment(assignmentId, principal, model, request, mode = "summary")
 
