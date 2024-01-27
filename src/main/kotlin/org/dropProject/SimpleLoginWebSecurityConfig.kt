@@ -36,15 +36,12 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.core.userdetails.User
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.provisioning.InMemoryUserDetailsManager
+import org.springframework.stereotype.Component
 import java.util.*
 import java.util.logging.Logger
 
-
- @Profile("!deisi & !oauth2 & !lti")
- @Configuration
- @EnableWebSecurity
- @Order(1)
-class SimpleLoginWebSecurityConfig(val manager: PersonalTokenAuthenticationManager) : DropProjectSecurityConfig(manager) {
+@Component
+class InMemoryUserDetailsManagerFactory {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
@@ -54,25 +51,6 @@ class SimpleLoginWebSecurityConfig(val manager: PersonalTokenAuthenticationManag
     @Value("\${dp.config.location:}")
     val configLocationFolder: String = ""
 
-    override fun configure(http: HttpSecurity) {
-
-        super.configure(http)
-
-        http
-                .csrf().disable().httpBasic()
-                .and().formLogin()
-                .loginPage("/login")
-                .permitAll()
-                .and().logout()
-                .permitAll()
-    }
-
-    @Autowired
-    fun configureGlobal(auth: AuthenticationManagerBuilder) {
-        auth.userDetailsService(inMemoryUserDetailsManager())
-    }
-
-    @Bean
     fun inMemoryUserDetailsManager(): InMemoryUserDetailsManager {
 
         LOG.info("Using inMemoryAuthentication")
@@ -107,6 +85,33 @@ class SimpleLoginWebSecurityConfig(val manager: PersonalTokenAuthenticationManag
         }
 
         return InMemoryUserDetailsManager(usersList)
+
+    }
+}
+
+@Profile("!deisi & !oauth2 & !lti")
+@Configuration
+@EnableWebSecurity
+@Order(1)
+class SimpleLoginWebSecurityConfig(val manager: PersonalTokenAuthenticationManager,
+                                   val inMemoryUserDetailsManagerFactory: InMemoryUserDetailsManagerFactory) : DropProjectSecurityConfig(manager) {
+
+    override fun configure(http: HttpSecurity) {
+
+        super.configure(http)
+
+        http
+                .csrf().disable().httpBasic()
+                .and().formLogin()
+                .loginPage("/login")
+                .permitAll()
+                .and().logout()
+                .permitAll()
+    }
+
+    @Autowired
+    fun configureGlobal(auth: AuthenticationManagerBuilder) {
+        auth.userDetailsService(inMemoryUserDetailsManagerFactory.inMemoryUserDetailsManager())
     }
 
 }
