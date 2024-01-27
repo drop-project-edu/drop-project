@@ -749,9 +749,10 @@ class AssignmentController(
                     submissionReportRepository.deleteBySubmissionId(submission.id)
                     jUnitReportRepository.deleteBySubmissionId(submission.id)
                     jacocoReportRepository.deleteBySubmissionId(submission.id)
-                    submission.buildReport?.let {
-                        buildReportRepository.deleteById(it.id)
-                    }
+                    // This is not needed since the build_report_id is a foreign key with cascade delete
+//                    submission.buildReport?.let {
+//                        buildReportRepository.deleteById(it.id)
+//                    }
                     if (submission.submissionId == null) {  // submission by git
                         val gitSubmissionId = submission.gitSubmissionId ?: throw IllegalArgumentException("Git submission without gitSubmissionId")
                         gitSubmissionRepository.deleteById(gitSubmissionId)
