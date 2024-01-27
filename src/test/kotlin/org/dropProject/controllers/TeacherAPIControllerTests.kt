@@ -20,17 +20,18 @@
 package org.dropProject.controllers
 
 import org.dropProject.TestsHelper
-import org.dropProject.dao.Assignee
-import org.dropProject.dao.Assignment
+import org.dropProject.dao.*
+import org.dropProject.extensions.getContent
 import org.dropProject.forms.SubmissionMethod
-import org.dropProject.repository.AssigneeRepository
-import org.dropProject.repository.AssignmentRepository
+import org.dropProject.repository.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.core.io.ClassPathResource
+import org.springframework.core.io.ResourceLoader
 import org.springframework.http.MediaType
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.test.annotation.DirtiesContext
@@ -42,12 +43,15 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.transaction.annotation.Transactional
+import java.sql.Timestamp
+import java.time.LocalDateTime
 
 @RunWith(SpringRunner::class)
 @AutoConfigureMockMvc
 @SpringBootTest
 @TestPropertySource(locations = ["classpath:drop-project-test.properties"])
 @ActiveProfiles("test")
+@Transactional
 class TeacherAPIControllerTests: APIControllerTests {
 
     @Autowired
@@ -60,7 +64,92 @@ class TeacherAPIControllerTests: APIControllerTests {
     lateinit var assigneeRepository: AssigneeRepository
 
     @Autowired
-    private lateinit var testsHelper: TestsHelper
+    lateinit var authorRepository: AuthorRepository
+
+    @Autowired
+    lateinit var submissionRepository: SubmissionRepository
+
+    @Autowired
+    lateinit var projectGroupRepository: ProjectGroupRepository
+
+    @Autowired
+    lateinit var submissionReportRepository: SubmissionReportRepository
+
+    @Autowired
+    lateinit var buildReportRepository: BuildReportRepository
+
+    @Autowired
+    lateinit var jUnitReportRepository: JUnitReportRepository
+
+    @Autowired
+    lateinit var resourceLoader: ResourceLoader
+
+    @Autowired
+    lateinit var testsHelper: TestsHelper
+
+    fun uploadStudentSubmission(submissionId: String, author: Author, submissionDate: String, submissionName: String,
+                                        teacherTestsIndicator: String, teacherTestsProgress: Int,
+                                        teacherTestsGoal: Int) : Long {
+
+        val submission = Submission(submissionId = submissionId,
+            submissionDate = Timestamp.valueOf(LocalDateTime.parse(submissionDate)),
+            status = SubmissionStatus.VALIDATED.code,
+            statusDate = Timestamp.valueOf(LocalDateTime.parse(submissionDate)),
+            assignmentId = "testJavaProj",
+            assignmentGitHash = null,
+            submitterUserId = author.userId, submissionMode = SubmissionMode.UPLOAD)
+
+        submissionRepository.save(submission)
+
+        val groups = projectGroupRepository.getGroupsForAuthor(author.userId)
+        lateinit var group : ProjectGroup
+        if (groups.isEmpty()) {
+            group = ProjectGroup()
+            group.authors.add(author)
+        } else {
+            group = groups[0]
+        }
+        group.submissions.add(submission)
+        projectGroupRepository.save(group)
+
+        author.group = group
+        submission.group = group
+
+        authorRepository.save(author)
+        submissionRepository.save(submission)
+
+        submissionReportRepository.save(
+            SubmissionReport(submissionId = submission.id,
+            reportKey = Indicator.PROJECT_STRUCTURE.code, reportValue = "OK")
+        )
+        submissionReportRepository.save(
+            SubmissionReport(submissionId = submission.id,
+            reportKey = Indicator.COMPILATION.code, reportValue = "OK")
+        )
+        submissionReportRepository.save(
+            SubmissionReport(submissionId = submission.id,
+            reportKey = Indicator.CHECKSTYLE.code, reportValue = "OK")
+        )
+        submissionReportRepository.save(
+            SubmissionReport(submissionId = submission.id,
+            reportKey = Indicator.TEACHER_UNIT_TESTS.code, reportValue = teacherTestsIndicator,
+            reportProgress = teacherTestsProgress, reportGoal = teacherTestsGoal)
+        )
+
+        // this file must be coherent with the report
+        val buildReport = BuildReport(buildReport =
+        (resourceLoader.getResource("classpath:/initialData/${submissionName}MavenOutput.txt") as ClassPathResource).getContent())
+        buildReportRepository.save(buildReport)
+
+        submission.buildReport = buildReport
+        submissionRepository.save(submission)
+
+        jUnitReportRepository.save(JUnitReport(submissionId = submission.id,
+            fileName = "TEST-org.dropProject.samples.sampleJavaAssignment.TestTeacherProject.xml",
+            xmlReport = (resourceLoader.getResource("classpath:/initialData/${submissionName}JUnitXml.txt")as ClassPathResource).getContent()))
+
+        return submission.id
+    }
 
     @Before
     fun setup() {
@@ -71,6 +160,13 @@ class TeacherAPIControllerTests: APIControllerTests {
             gitRepositoryFolder = "testJavaProj")
         assignmentRepository.save(assignment01)
         assigneeRepository.save(Assignee(assignmentId = "testJavaProj", authorUserId = "student1"))
+
+        val author = Author(name = "Student 1", userId = "student1")
+
+        authorRepository.save(author)
+
+        uploadStudentSubmission("1", author, "2019-01-01T10:34:00", "javaSubmissionError", "NOK", 1, 2)
+        uploadStudentSubmission("2", author, "2019-01-02T11:05:03", "javaSubmissionOk", "OK", 2, 2)
     }
 
     @Test
@@ -135,5 +231,144 @@ class TeacherAPIControllerTests: APIControllerTests {
                     "active":true }
                 ]
             """.trimIndent()))
+    }
+
+    @Test
+    @DirtiesContext
+    fun `try to get an assignment's latest submissions with a teacher profile`() {
+
+        assigneeRepository.deleteAll()
+        assignmentRepository.deleteAll()
+
+        setup()
+
+        val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
+
+        this.mvc.perform(
+            get("/api/teacher/assignments/testJavaProj/submissions")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("authorization", testsHelper.header("teacher1", token)))
+            .andExpect(status().isOk)
+            .andExpect(content().json("""
+                [
+                   {"projectGroup":{"id":1,"authors":[{"id":1,"name":"Student 1"}]},
+                    "lastSubmission":{"id":2,
+                                      "submissionDate":"2019-01-02T11:05:03.000+00:00",
+                                      "status":"VALIDATED",
+                                      "statusDate":"2019-01-02T11:05:03.000+00:00",
+                                      "markedAsFinal":false },
+                    "allSubmissions":[] }
+                ]
+            """.trimIndent()))
+    }
+
+    @Test
+    @DirtiesContext
+    fun `try to get a group's submissions to an assignment with a teacher profile`() {
+
+        assigneeRepository.deleteAll()
+        assignmentRepository.deleteAll()
+        authorRepository.deleteAll()
+
+        setup()
+
+        val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
+
+        this.mvc.perform(
+            get("/api/teacher/assignments/testJavaProj/submissions/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("authorization", testsHelper.header("teacher1", token)))
+            .andExpect(status().isOk)
+            .andExpect(content().json("""
+                [
+                   {"id":2,
+                    "submissionDate":"2019-01-02T11:05:03.000+00:00",
+                    "status":"VALIDATED",
+                    "statusDate":"2019-01-02T11:05:03.000+00:00",
+                    "markedAsFinal":false,
+                    "teacherTests":{"numTests":4,"numFailures":0,"numErrors":0,"numSkipped":0,"ellapsed":0.007,"numMandatoryOK":0,"numMandatoryNOK":0},
+                    "overdue":false },
+                   {"id":1,
+                    "submissionDate":"2019-01-01T10:34:00.000+00:00",
+                    "status":"VALIDATED",
+                    "statusDate":"2019-01-01T10:34:00.000+00:00",
+                    "markedAsFinal":false,
+                    "teacherTests":{"numTests":4,"numFailures":1,"numErrors":0,"numSkipped":0,"ellapsed":0.012,"numMandatoryOK":0,"numMandatoryNOK":0},
+                    "overdue":false }
+                ]
+            """.trimIndent()))
+    }
+
+    @Test
+    @DirtiesContext
+    fun `try to get a submission's build report`() {
+
+        assigneeRepository.deleteAll()
+        assignmentRepository.deleteAll()
+        authorRepository.deleteAll()
+
+        setup()
+
+        val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
+
+        this.mvc.perform(
+            get("/api/teacher/submissions/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("authorization", testsHelper.header("teacher1", token)))
+            .andExpect(status().isOk()).andExpect(content().json("""
+                {"numSubmissions":0,
+                 "assignment":{"id":"testJavaProj",
+                               "name":"Test Project (for automatic tests)",
+                               "packageName":"org.dropProject.sampleAssignments.testProj",
+                               "dueDate":null,
+                               "submissionMethod":"UPLOAD",
+                               "language":"JAVA",
+                               "gitRepositoryUrl":"git://dummy",
+                               "ownerUserId":"teacher1",
+                               "active":true,
+                               "numSubmissions":0,
+                               "instructions":null },
+                 "submission":{"id":1,
+                               "submissionDate":"2019-01-01T10:34:00.000+00:00",
+                               "status":"VALIDATED",
+                               "statusDate":"2019-01-01T10:34:00.000+00:00",
+                               "markedAsFinal":false },
+                 "summary":[{"reportKey":"PS",
+                             "reportValue":"OK",
+                             "reportProgress":null,
+                             "reportGoal":null },
+                            {"reportKey":"C",
+                             "reportValue":"OK",
+                             "reportProgress":null,
+                             "reportGoal":null },
+                            {"reportKey":"CS",
+                             "reportValue":"OK",
+                             "reportProgress":null,
+                             "reportGoal":null },
+                            {"reportKey":"TT",
+                             "reportValue":"NOK",
+                             "reportProgress":1,
+                             "reportGoal":2 }],
+                 "buildReport":{"junitSummaryTeacher":"Tests run: 4, Failures: 1, Errors: 0, Time elapsed: 0.012 sec",
+                                "junitErrorsTeacher":"FAILURE: org.dropProject.samples.sampleJavaAssignment.TestTeacherProject.testFindMax\njava.lang.AssertionError: expected:<7> but was:<-2147483648>\n\n" }}
+            """.trimIndent()))
+    }
+
+    @Test
+    @DirtiesContext
+    fun `try to download a non-existing submission zip file`() {
+
+        assigneeRepository.deleteAll()
+        assignmentRepository.deleteAll()
+
+        setup()
+
+        val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
+
+        this.mvc.perform(
+            get("/api/teacher/download/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("authorization", testsHelper.header("teacher1", token)))
+            .andExpect(status().is5xxServerError())
     }
 }

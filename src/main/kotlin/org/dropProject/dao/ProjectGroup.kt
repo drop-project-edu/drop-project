@@ -19,6 +19,8 @@
  */
 package org.dropProject.dao
 
+import com.fasterxml.jackson.annotation.JsonView
+import org.dropProject.data.JSONViews
 import java.util.HashSet
 import javax.persistence.*
 
@@ -32,9 +34,11 @@ import javax.persistence.*
 @Entity
 data class ProjectGroup(
         @Id @GeneratedValue
+        @JsonView(JSONViews.TeacherAPI::class)
         val id: Long = 0
 ){
     @OneToMany(mappedBy = "group", fetch = FetchType.EAGER)
+    @JsonView(JSONViews.TeacherAPI::class)
     val authors: MutableSet<Author> = HashSet()
 
     @OneToMany(mappedBy = "group")
