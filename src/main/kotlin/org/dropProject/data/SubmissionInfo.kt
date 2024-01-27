@@ -19,6 +19,7 @@
  */
 package org.dropProject.data
 
+import com.fasterxml.jackson.annotation.JsonView
 import org.dropProject.dao.ProjectGroup
 import org.dropProject.dao.Submission
 
@@ -29,7 +30,11 @@ import org.dropProject.dao.Submission
  * @property lastSubmission is the last (most recent) [Submission] performed by the ProjectGroup
  * @property allSubmissions is a List of [Submission]s
  */
-data class SubmissionInfo(val projectGroup: ProjectGroup,
-                     val lastSubmission: Submission,
-                     val allSubmissions: List<Submission>) {
+data class SubmissionInfo(
+    @JsonView(JSONViews.TeacherAPI::class)
+    val projectGroup: ProjectGroup,
+    @JsonView(JSONViews.TeacherAPI::class)
+    val lastSubmission: Submission,
+    @JsonView(JSONViews.TeacherAPI::class)
+    val allSubmissions: List<Submission>) {
 }

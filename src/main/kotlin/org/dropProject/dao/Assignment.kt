@@ -157,6 +157,7 @@ data class Assignment(
     @JsonIgnore
     var assignmentTestMethods: MutableList<AssignmentTestMethod> = mutableListOf(),
 
+    @JsonView(JSONViews.TeacherAPI::class)
     @Transient
     var numSubmissions: Int = 0,
 

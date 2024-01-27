@@ -19,6 +19,8 @@
  */
 package org.dropProject.data
 
+import com.fasterxml.jackson.annotation.JsonView
+
 /**
  * Represents the summary of execution of a set of JUnit Tests.
  *
@@ -29,13 +31,21 @@ package org.dropProject.data
  * @property numSkipped is an Int
  * @property ellapsed is a Float representing the time that the execution of the tests took
  */
+
 data class JUnitSummary(
+        @JsonView(JSONViews.TeacherAPI::class)
         val numTests: Int,
+        @JsonView(JSONViews.TeacherAPI::class)
         val numFailures: Int,
+        @JsonView(JSONViews.TeacherAPI::class)
         val numErrors: Int,
+        @JsonView(JSONViews.TeacherAPI::class)
         val numSkipped: Int,
+        @JsonView(JSONViews.TeacherAPI::class)
         val ellapsed: Float,
+        @JsonView(JSONViews.TeacherAPI::class)
         val numMandatoryOK: Int,
+        @JsonView(JSONViews.TeacherAPI::class)
         val numMandatoryNOK: Int
 ) {
 
