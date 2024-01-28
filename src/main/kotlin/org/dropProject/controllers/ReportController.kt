@@ -19,11 +19,13 @@
  */
 package org.dropProject.controllers
 
+import com.fasterxml.jackson.annotation.JsonView
 import net.lingala.zip4j.ZipFile
 import net.lingala.zip4j.model.ZipParameters
 import net.lingala.zip4j.model.enums.CompressionLevel
 import org.apache.commons.io.FileUtils
 import org.dropProject.dao.*
+import org.dropProject.data.JSONViews
 import org.dropProject.data.StudentHistory
 import org.dropProject.data.TestType
 import org.dropProject.extensions.formatDefault
@@ -813,7 +815,12 @@ class ReportController(
     }
 
     // TODO: Pass this to the APIController in the future
-    data class StudentListResponse(val value: String, val text: String)
+    data class StudentListResponse(
+        @JsonView(JSONViews.TeacherAPI::class)
+        val value: String,
+        @JsonView(JSONViews.TeacherAPI::class)
+        val text: String
+    )
     @RequestMapping(value = ["/studentList"], method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_JSON_VALUE])
     fun getStudentList(@RequestParam("q") q: String): ResponseEntity<List<StudentListResponse>> {
 
