@@ -261,8 +261,8 @@ class TeacherAPIController(
     @GetMapping(value = ["/submissions/{submissionId}/markAsFinal"])
     @ApiOperation(value = "Mark the submission as final")
     fun markAsFinal(@PathVariable submissionId: Long, principal: Principal): Boolean {
-        val submission = submissionRepository.findById(submissionId).orElse(null)
-        val assignment = assignmentRepository.findById(submission.assignmentId).orElse(null)
+        val submission = submissionRepository.findById(submissionId).orElse(null) ?: return false
+        val assignment = assignmentRepository.findById(submission.assignmentId).orElse(null) ?: return false
 
         val acl = assignmentACLRepository.findByAssignmentId(assignment.id)
         if ((principal.realName() != assignment.ownerUserId && acl.find { it.userId == principal.realName() } == null)
