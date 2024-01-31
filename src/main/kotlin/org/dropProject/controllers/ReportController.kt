@@ -26,7 +26,6 @@ import net.lingala.zip4j.model.enums.CompressionLevel
 import org.apache.commons.io.FileUtils
 import org.dropProject.dao.*
 import org.dropProject.data.JSONViews
-import org.dropProject.data.StudentHistory
 import org.dropProject.data.TestType
 import org.dropProject.extensions.formatDefault
 import org.dropProject.extensions.realName
@@ -64,26 +63,27 @@ import javax.servlet.http.HttpServletResponse
  */
 @Controller
 class ReportController(
-        val authorRepository: AuthorRepository,
-        val projectGroupRepository: ProjectGroupRepository,
-        val assignmentRepository: AssignmentRepository,
-        val assignmentACLRepository: AssignmentACLRepository,
-        val assignmentTestMethodRepository: AssignmentTestMethodRepository,
-        val submissionRepository: SubmissionRepository,
-        val gitSubmissionRepository: GitSubmissionRepository,
-        val submissionReportRepository: SubmissionReportRepository,
-        val buildReportRepository: BuildReportRepository,
-        val assignmentTeacherFiles: AssignmentTeacherFiles,
-        val buildReportBuilder: BuildReportBuilder,
-        val gitClient: GitClient,
-        val submissionService: SubmissionService,
-        val storageService: StorageService,
-        val zipService: ZipService,
-        val templateEngine: TemplateEngine,
-        val assignmentService: AssignmentService,
-        val reportService: ReportService,
-        val i18n: MessageSource,
-        val jPlagService: JPlagService,
+    val authorRepository: AuthorRepository,
+    val projectGroupRepository: ProjectGroupRepository,
+    val assignmentRepository: AssignmentRepository,
+    val assignmentACLRepository: AssignmentACLRepository,
+    val assignmentTestMethodRepository: AssignmentTestMethodRepository,
+    val submissionRepository: SubmissionRepository,
+    val gitSubmissionRepository: GitSubmissionRepository,
+    val submissionReportRepository: SubmissionReportRepository,
+    val buildReportRepository: BuildReportRepository,
+    val assignmentTeacherFiles: AssignmentTeacherFiles,
+    val buildReportBuilder: BuildReportBuilder,
+    val gitClient: GitClient,
+    val submissionService: SubmissionService,
+    val storageService: StorageService,
+    val zipService: ZipService,
+    val templateEngine: TemplateEngine,
+    val assignmentService: AssignmentService,
+    val reportService: ReportService,
+    val i18n: MessageSource,
+    val jPlagService: JPlagService,
+    val studentService: StudentService,
 ) {
 
     @Value("\${mavenizedProjects.rootLocation}")
@@ -838,54 +838,11 @@ class ReportController(
     fun getStudentHistory(@RequestParam("id") studentId: String, model: ModelMap,
                        principal: Principal, request: HttpServletRequest): String {
 
-        if (!request.isUserInRole("TEACHER")) {
-            throw AccessDeniedException("${principal.realName()} is not allowed to view this report")
-        }
+        model["studentHistory"] = studentService.getStudentHistory(studentId, principal)
 
-        val authorGroups = authorRepository.findByUserId(studentId);
-
-        if (authorGroups.isNullOrEmpty()) {
+        if (model["studentHistory"] == null) {
             model["message"] = "Student with id $studentId does not exist"
-            return "student-history"
         }
-
-        val projectGroups = projectGroupRepository.getGroupsForAuthor(studentId)
-
-        // since there may be several authors (same student in different groups), we'll just choose the
-        // first one, since the goals is to just get his name
-        val studentHistory = StudentHistory(authorGroups[0])
-
-        // store assignments on hashmap for performance reasons
-        // the key is a pair (assignmentId, groupId), since a student can participate
-        // in the same assignment with different groups
-        val assignmentsMap = HashMap<Pair<String,Long>,Assignment>()
-
-        val submissions = submissionRepository.findByGroupIn(projectGroups)
-        val submissionIds = submissions.map { it.id }
-        val submissionReports = submissionReportRepository.findBySubmissionIdIn(submissionIds)
-        for (submission in submissions) {
-            // fill indicators
-            submission.reportElements = submissionReports.filter { it.submissionId == submission.id }
-
-            val assignmentAndGroup = Pair(submission.assignmentId, submission.group.id)
-            if (!assignmentsMap.containsKey(assignmentAndGroup)) {
-                val assignment = assignmentRepository.findById(submission.assignmentId).get()
-                assignmentsMap[assignmentAndGroup] = assignment;
-                studentHistory.addGroupAndAssignment(submission.group, assignment)
-            }
-
-            studentHistory.addSubmission(submission)
-        }
-
-        studentHistory.ensureSubmissionsAreSorted()
-
-        // 1- gather all assignments
-        // 2- where was the student signalleed?
-        // 3- students he works it
-
-        //model["submissions"] = submissions
-        //model["assignments"] = assignments
-        model["studentHistory"] = studentHistory
 
         return "student-history";
     }

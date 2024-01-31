@@ -38,7 +38,6 @@ import org.springframework.ui.ModelMap
 import org.springframework.web.bind.annotation.*
 import java.nio.file.Files
 import java.security.Principal
-import java.util.HashMap
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
@@ -66,7 +65,8 @@ class TeacherAPIController(
     val reportService: ReportService,
     val authorRepository: AuthorRepository,
     val projectGroupRepository: ProjectGroupRepository,
-    val assignmentACLRepository: AssignmentACLRepository
+    val assignmentACLRepository: AssignmentACLRepository,
+    val studentService: StudentService
 ) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
@@ -189,61 +189,9 @@ class TeacherAPIController(
     @ApiOperation(value = "Get the student's student history")
     fun getStudentHistory(@PathVariable studentId: String,
                           principal: Principal, request: HttpServletRequest): ResponseEntity<StudentHistory> {
-        val authorGroups = authorRepository.findByUserId(studentId)
 
-        if (authorGroups.isNullOrEmpty()) {
-            throw ResourceNotFoundException()
-        }
-
-        val projectGroups = projectGroupRepository.getGroupsForAuthor(studentId)
-
-        // since there may be several authors (same student in different groups), we'll just choose the
-        // first one, since the goals is to just get his name
-        val studentHistory = StudentHistory(authorGroups[0])
-
-        // store assignments on hashmap for performance reasons
-        // the key is a pair (assignmentId, groupId), since a student can participate
-        // in the same assignment with different groups
-        val assignmentsMap = HashMap<Pair<String,Long>,Assignment>()
-
-        val submissions = submissionRepository.findByGroupIn(projectGroups)
-        val submissionIds = submissions.map { it.id }
-        val submissionReports = submissionReportRepository.findBySubmissionIdIn(submissionIds)
-        for (submission in submissions) {
-            val assignmentAndGroup = Pair(submission.assignmentId, submission.group.id)
-            val assignment = assignmentRepository.findById(submission.assignmentId).get()
-
-            // fill indicators
-            submission.reportElements = submissionReports.filter { it.submissionId == submission.id }
-            submission.overdue = assignment.overdue(submission)
-            submission.buildReport?.let {
-                    buildReportDB ->
-                val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
-                    submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
-                val buildReport = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
-                    mavenizedProjectFolder.absolutePath, assignment, submission)
-                submission.ellapsed = buildReport.elapsedTimeJUnit()
-                submission.teacherTests = buildReport.junitSummaryAsObject()
-            }
-
-            if (!assignmentsMap.containsKey(assignmentAndGroup)) {
-
-                val acl = assignmentACLRepository.findByAssignmentId(submission.assignmentId)
-
-                if (principal.realName() != assignment.ownerUserId && acl.find { it.userId == principal.realName() } == null) {
-                    continue
-                }
-
-                assignmentsMap[assignmentAndGroup] = assignment
-                studentHistory.addGroupAndAssignment(submission.group, assignment)
-            }
-
-            studentHistory.addSubmission(submission)
-        }
-
-        studentHistory.ensureSubmissionsAreSorted()
-
-        return ResponseEntity.ok().body(studentHistory)
+        return ResponseEntity.ok().body(studentService.getStudentHistory(studentId, principal)
+            ?: throw ResourceNotFoundException())
     }
 
     @GetMapping(value = ["/studentSearch/{query}"], produces = [MediaType.APPLICATION_JSON_VALUE])
