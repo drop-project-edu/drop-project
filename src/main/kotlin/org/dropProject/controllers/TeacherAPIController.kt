@@ -61,9 +61,7 @@ class TeacherAPIController(
     val submissionReportRepository: SubmissionReportRepository,
     val submissionService: SubmissionService,
     val gitSubmissionRepository: GitSubmissionRepository,
-    val buildReportBuilder: BuildReportBuilder,
     val reportService: ReportService,
-    val authorRepository: AuthorRepository,
     val projectGroupRepository: ProjectGroupRepository,
     val assignmentACLRepository: AssignmentACLRepository,
     val studentService: StudentService
@@ -108,26 +106,12 @@ class TeacherAPIController(
     )
     fun getGroupAssignmentSubmissions(@PathVariable assignmentId: String, @PathVariable groupId: Long, model: ModelMap,
                                       principal: Principal, request: HttpServletRequest): ResponseEntity<List<Submission>> {
-        val assignment = assignmentRepository.getById(assignmentId)
 
         val submissions = submissionRepository
             .findByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(ProjectGroup(groupId), assignmentId)
             .filter { it.getStatus() != SubmissionStatus.DELETED }
 
-        for (submission in submissions) {
-            val reportElements = submissionReportRepository.findBySubmissionId(submission.id)
-            submission.reportElements = reportElements
-            submission.overdue = assignment.overdue(submission)
-            submission.buildReport?.let {
-                    buildReportDB ->
-                val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
-                    submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
-                val buildReport = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
-                    mavenizedProjectFolder.absolutePath, assignment, submission)
-                submission.ellapsed = buildReport.elapsedTimeJUnit()
-                submission.teacherTests = buildReport.junitSummaryAsObject()
-            }
-        }
+        submissionService.fillIndicatorsFor(submissions)
 
         return ResponseEntity.ok(submissions)
     }
@@ -197,13 +181,9 @@ class TeacherAPIController(
     @GetMapping(value = ["/studentSearch/{query}"], produces = [MediaType.APPLICATION_JSON_VALUE])
     @JsonView(JSONViews.TeacherAPI::class)
     @ApiOperation(value = "Get all students that match the query value")
-    fun searchStudents(@PathVariable("query") query: String): ResponseEntity<List<ReportController.StudentListResponse>> {
-        val result = authorRepository.findAll()
-            .filter { it.name.lowercase().contains(query.lowercase()) || it.userId.lowercase().contains(query.lowercase())}
-            .distinctBy { it.userId }
-            .map { ReportController.StudentListResponse(it.userId, it.name) }
+    fun searchStudents(@PathVariable("query") query: String): ResponseEntity<List<StudentListResponse>> {
 
-        return ResponseEntity(result, HttpStatus.OK)
+        return ResponseEntity(studentService.getStudentList(query), HttpStatus.OK)
     }
 
     @GetMapping(value = ["/submissions/{submissionId}/markAsFinal"])
@@ -227,7 +207,7 @@ class TeacherAPIController(
     @GetMapping(value = ["/assignmentSearch/{query}"], produces = [MediaType.APPLICATION_JSON_VALUE])
     @JsonView(JSONViews.TeacherAPI::class)
     @ApiOperation(value = "Get all assignments that match the query value")
-    fun searchAssignments(@PathVariable("query") query: String, principal: Principal): ResponseEntity<List<ReportController.StudentListResponse>> {
+    fun searchAssignments(@PathVariable("query") query: String, principal: Principal): ResponseEntity<List<StudentListResponse>> {
         val result = assignmentRepository.findAll()
             .filter {
                 val acl = assignmentACLRepository.findByAssignmentId(it.id)
@@ -240,7 +220,7 @@ class TeacherAPIController(
                         || it.tagsStr?.map { t -> t.lowercase() }?.contains(query.lowercase()) == true
             }
             .distinctBy { it.id }
-            .map { ReportController.StudentListResponse(it.id, it.name) }
+            .map { StudentListResponse(it.id, it.name) }
 
         return ResponseEntity(result, HttpStatus.OK)
     }

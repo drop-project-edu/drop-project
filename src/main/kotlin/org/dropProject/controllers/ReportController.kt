@@ -19,13 +19,11 @@
  */
 package org.dropProject.controllers
 
-import com.fasterxml.jackson.annotation.JsonView
 import net.lingala.zip4j.ZipFile
 import net.lingala.zip4j.model.ZipParameters
 import net.lingala.zip4j.model.enums.CompressionLevel
 import org.apache.commons.io.FileUtils
 import org.dropProject.dao.*
-import org.dropProject.data.JSONViews
 import org.dropProject.data.TestType
 import org.dropProject.extensions.formatDefault
 import org.dropProject.extensions.realName
@@ -35,7 +33,6 @@ import org.dropProject.services.*
 import org.dropProject.storage.StorageService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.context.MessageSource
 import org.springframework.core.io.FileSystemResource
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -63,15 +60,12 @@ import javax.servlet.http.HttpServletResponse
  */
 @Controller
 class ReportController(
-    val authorRepository: AuthorRepository,
     val projectGroupRepository: ProjectGroupRepository,
     val assignmentRepository: AssignmentRepository,
     val assignmentACLRepository: AssignmentACLRepository,
-    val assignmentTestMethodRepository: AssignmentTestMethodRepository,
     val submissionRepository: SubmissionRepository,
     val gitSubmissionRepository: GitSubmissionRepository,
     val submissionReportRepository: SubmissionReportRepository,
-    val buildReportRepository: BuildReportRepository,
     val assignmentTeacherFiles: AssignmentTeacherFiles,
     val buildReportBuilder: BuildReportBuilder,
     val gitClient: GitClient,
@@ -81,7 +75,6 @@ class ReportController(
     val templateEngine: TemplateEngine,
     val assignmentService: AssignmentService,
     val reportService: ReportService,
-    val i18n: MessageSource,
     val jPlagService: JPlagService,
     val studentService: StudentService,
 ) {
@@ -214,7 +207,7 @@ class ReportController(
 
             // check that principal belongs to the group that made this submission
             if (!request.isUserInRole("TEACHER")) {
-                throw org.springframework.security.access.AccessDeniedException("${principal.realName()} is not allowed to view this report")
+                throw AccessDeniedException("${principal.realName()} is not allowed to view this report")
             }
 
             val projectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
@@ -257,7 +250,7 @@ class ReportController(
             if (!request.isUserInRole("TEACHER")) {
                 val groupElements = submission.group.authors
                 if (groupElements.filter { it -> it.userId == principal.realName() }.isEmpty()) {
-                    throw org.springframework.security.access.AccessDeniedException("${principal.realName()} is not allowed to view this report")
+                    throw AccessDeniedException("${principal.realName()} is not allowed to view this report")
                 }
             }
 
@@ -569,20 +562,8 @@ class ReportController(
         val submissions = submissionRepository
                 .findBySubmitterUserIdAndAssignmentId(principal.realName(), assignmentId)
                 .filter { it.getStatus() != SubmissionStatus.DELETED }
-        for (submission in submissions) {
-            val reportElements = submissionReportRepository.findBySubmissionId(submission.id)
-            submission.reportElements = reportElements
-            submission.overdue = assignment.overdue(submission)
-            submission.buildReport?.let {
-                buildReportDB ->
-                    val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
-                            submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
-                    val buildReport = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
-                            mavenizedProjectFolder.absolutePath, assignment, submission)
-                    submission.ellapsed = buildReport.elapsedTimeJUnit()
-                    submission.teacherTests = buildReport.junitSummaryAsObject()
-            }
-        }
+
+        submissionService.fillIndicatorsFor(submissions)
 
         model["submissions"] = submissions
 
@@ -814,22 +795,10 @@ class ReportController(
         return "student-history-form"
     }
 
-    // TODO: Pass this to the APIController in the future
-    data class StudentListResponse(
-        @JsonView(JSONViews.TeacherAPI::class)
-        val value: String,
-        @JsonView(JSONViews.TeacherAPI::class)
-        val text: String
-    )
     @RequestMapping(value = ["/studentList"], method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_JSON_VALUE])
     fun getStudentList(@RequestParam("q") q: String): ResponseEntity<List<StudentListResponse>> {
 
-        val result = authorRepository.findAll()
-            .filter { it.name.lowercase().contains(q.lowercase()) || it.userId.lowercase().contains(q.lowercase())}
-            .distinctBy { it.userId }
-            .map { StudentListResponse(it.userId, it.name) }
-
-        return ResponseEntity(result, HttpStatus.OK)
+        return ResponseEntity(studentService.getStudentList(q), HttpStatus.OK)
     }
 
     // For now, this will list assignments even if the teacher making the request

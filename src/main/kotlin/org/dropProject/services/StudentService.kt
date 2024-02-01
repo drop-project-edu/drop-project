@@ -19,9 +19,9 @@
  */
 package org.dropProject.services
 
-import org.dropProject.controllers.ResourceNotFoundException
+import com.fasterxml.jackson.annotation.JsonView
 import org.dropProject.dao.Assignment
-import org.dropProject.dao.SubmissionStatus
+import org.dropProject.data.JSONViews
 import org.dropProject.data.StudentHistory
 import org.dropProject.extensions.realName
 import org.dropProject.repository.*
@@ -32,6 +32,14 @@ import java.util.HashMap
 /**
  * Contains functionality related with students
  */
+
+data class StudentListResponse(
+    @JsonView(JSONViews.TeacherAPI::class)
+    val value: String,
+    @JsonView(JSONViews.TeacherAPI::class)
+    val text: String
+)
+
 @Service
 class StudentService(
     val authorRepository: AuthorRepository,
@@ -40,8 +48,8 @@ class StudentService(
     val submissionReportRepository: SubmissionReportRepository,
     val assignmentRepository: AssignmentRepository,
     val assignmentTeacherFiles: AssignmentTeacherFiles,
-    val buildReportBuilder: BuildReportBuilder,
-    val assignmentACLRepository: AssignmentACLRepository
+    val assignmentACLRepository: AssignmentACLRepository,
+    val submissionService: SubmissionService
 ) {
     fun getStudentHistory(studentId: String, principal: Principal): StudentHistory? {
         val authorGroups = authorRepository.findByUserId(studentId)
@@ -62,24 +70,12 @@ class StudentService(
         val assignmentsMap = HashMap<Pair<String,Long>, Assignment>()
 
         val submissions = submissionRepository.findByGroupIn(projectGroups)
-        val submissionIds = submissions.map { it.id }
-        val submissionReports = submissionReportRepository.findBySubmissionIdIn(submissionIds)
+
+        submissionService.fillIndicatorsFor(submissions)
+
         for (submission in submissions) {
             val assignmentAndGroup = Pair(submission.assignmentId, submission.group.id)
             val assignment = assignmentRepository.findById(submission.assignmentId).get()
-
-            // fill indicators
-            submission.reportElements = submissionReports.filter { it.submissionId == submission.id }
-            submission.overdue = assignment.overdue(submission)
-            submission.buildReport?.let {
-                    buildReportDB ->
-                val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
-                    submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
-                val buildReport = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
-                    mavenizedProjectFolder.absolutePath, assignment, submission)
-                submission.ellapsed = buildReport.elapsedTimeJUnit()
-                submission.teacherTests = buildReport.junitSummaryAsObject()
-            }
 
             if (!assignmentsMap.containsKey(assignmentAndGroup)) {
 
@@ -100,4 +96,10 @@ class StudentService(
 
         return studentHistory
     }
+
+    fun getStudentList(query: String): List<StudentListResponse> =
+        authorRepository.findAll()
+            .filter { it.name.lowercase().contains(query.lowercase()) || it.userId.lowercase().contains(query.lowercase())}
+            .distinctBy { it.userId }
+            .map { StudentListResponse(it.userId, it.name) }
 }
