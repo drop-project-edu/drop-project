@@ -23,12 +23,14 @@ import com.fasterxml.jackson.annotation.JsonView
 import io.swagger.annotations.*
 import org.dropProject.dao.*
 import org.dropProject.data.JSONViews
+import org.dropProject.data.StudentHistory
 import org.dropProject.data.SubmissionInfo
 import org.dropProject.extensions.realName
 import org.dropProject.repository.*
 import org.dropProject.services.*
 import org.slf4j.LoggerFactory
 import org.springframework.core.io.FileSystemResource
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.AccessDeniedException
@@ -57,9 +59,12 @@ class TeacherAPIController(
     val zipService: ZipService,
     val submissionRepository: SubmissionRepository,
     val submissionReportRepository: SubmissionReportRepository,
+    val submissionService: SubmissionService,
     val gitSubmissionRepository: GitSubmissionRepository,
-    val buildReportBuilder: BuildReportBuilder,
-    val reportService: ReportService
+    val reportService: ReportService,
+    val projectGroupRepository: ProjectGroupRepository,
+    val assignmentACLRepository: AssignmentACLRepository,
+    val studentService: StudentService
 ) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
@@ -101,26 +106,12 @@ class TeacherAPIController(
     )
     fun getGroupAssignmentSubmissions(@PathVariable assignmentId: String, @PathVariable groupId: Long, model: ModelMap,
                                       principal: Principal, request: HttpServletRequest): ResponseEntity<List<Submission>> {
-        val assignment = assignmentRepository.getById(assignmentId)
 
         val submissions = submissionRepository
             .findByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(ProjectGroup(groupId), assignmentId)
             .filter { it.getStatus() != SubmissionStatus.DELETED }
 
-        for (submission in submissions) {
-            val reportElements = submissionReportRepository.findBySubmissionId(submission.id)
-            submission.reportElements = reportElements
-            submission.overdue = assignment.overdue(submission)
-            submission.buildReport?.let {
-                    buildReportDB ->
-                val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
-                    submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
-                val buildReport = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
-                    mavenizedProjectFolder.absolutePath, assignment, submission)
-                submission.ellapsed = buildReport.elapsedTimeJUnit()
-                submission.teacherTests = buildReport.junitSummaryAsObject()
-            }
-        }
+        submissionService.fillIndicatorsFor(submissions)
 
         return ResponseEntity.ok(submissions)
     }
@@ -175,5 +166,62 @@ class TeacherAPIController(
         } else {
             ResponseEntity.ok().body(report)
         }
+    }
+
+    @GetMapping(value = ["/studentHistory/{studentId}"], produces = [MediaType.APPLICATION_JSON_VALUE])
+    @JsonView(JSONViews.TeacherAPI::class)
+    @ApiOperation(value = "Get the student's student history")
+    fun getStudentHistory(@PathVariable studentId: String,
+                          principal: Principal, request: HttpServletRequest): ResponseEntity<StudentHistory> {
+
+        return ResponseEntity.ok().body(studentService.getStudentHistory(studentId, principal)
+            ?: throw ResourceNotFoundException())
+    }
+
+    @GetMapping(value = ["/studentSearch/{query}"], produces = [MediaType.APPLICATION_JSON_VALUE])
+    @JsonView(JSONViews.TeacherAPI::class)
+    @ApiOperation(value = "Get all students that match the query value")
+    fun searchStudents(@PathVariable("query") query: String): ResponseEntity<List<StudentListResponse>> {
+
+        return ResponseEntity(studentService.getStudentList(query), HttpStatus.OK)
+    }
+
+    @GetMapping(value = ["/submissions/{submissionId}/markAsFinal"])
+    @ApiOperation(value = "Mark the submission as final")
+    fun markAsFinal(@PathVariable submissionId: Long, principal: Principal): Boolean {
+        val submission = submissionRepository.findById(submissionId).orElse(null) ?: return false
+        val assignment = assignmentRepository.findById(submission.assignmentId).orElse(null) ?: return false
+
+        val acl = assignmentACLRepository.findByAssignmentId(assignment.id)
+        if ((principal.realName() != assignment.ownerUserId && acl.find { it.userId == principal.realName() } == null)
+            || submission.markedAsFinal) {
+            return false
+        }
+
+        submissionService.markAsFinal(submission)
+        submissionRepository.save(submission)
+
+        return true
+    }
+
+    @GetMapping(value = ["/assignmentSearch/{query}"], produces = [MediaType.APPLICATION_JSON_VALUE])
+    @JsonView(JSONViews.TeacherAPI::class)
+    @ApiOperation(value = "Get all assignments that match the query value")
+    fun searchAssignments(@PathVariable("query") query: String, principal: Principal): ResponseEntity<List<StudentListResponse>> {
+        val result = assignmentRepository.findAll()
+            .filter {
+                val acl = assignmentACLRepository.findByAssignmentId(it.id)
+                !(principal.realName() != it.ownerUserId && acl.find { a -> a.userId == principal.realName() } == null)
+            }
+            .filter {
+                it.tagsStr = assignmentService.getTagsStr(it)
+                it.name.lowercase().contains(query.lowercase())
+                        || it.id.lowercase().contains(query.lowercase())
+                        || it.tagsStr?.map { t -> t.lowercase() }?.contains(query.lowercase()) == true
+            }
+            .distinctBy { it.id }
+            .map { StudentListResponse(it.id, it.name) }
+
+        return ResponseEntity(result, HttpStatus.OK)
     }
 }

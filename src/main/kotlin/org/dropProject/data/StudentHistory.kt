@@ -19,16 +19,18 @@
  */
 package org.dropProject.data
 
+import com.fasterxml.jackson.annotation.JsonView
 import org.dropProject.dao.Assignment
 import org.dropProject.dao.Author
 import org.dropProject.dao.ProjectGroup
 import org.dropProject.dao.Submission
 
 class StudentHistoryEntry(val group: ProjectGroup,
-                          val assignment: Assignment) {
+                          @JsonView(JSONViews.TeacherAPI::class) val assignment: Assignment) {
 
     var sorted = false
     val submissions: ArrayList<Submission> = ArrayList<Submission>()
+    @JsonView(JSONViews.TeacherAPI::class)
     var sortedSubmissions: List<Submission> = ArrayList<Submission>()
 
     fun addSubmission(s: Submission) {
@@ -54,9 +56,8 @@ class StudentHistoryEntry(val group: ProjectGroup,
 }
 
 class StudentHistory(val author : Author) {
-
     var groupByAssignment = HashMap<Long?, ArrayList<Assignment>>()
-
+    @JsonView(JSONViews.TeacherAPI::class)
     var history = ArrayList<StudentHistoryEntry>()
 
     fun addGroupAndAssignment(group: ProjectGroup, assignment: Assignment) {

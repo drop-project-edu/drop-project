@@ -24,11 +24,10 @@ import com.fasterxml.jackson.annotation.JsonView
 import org.dropProject.data.JSONViews
 import org.dropProject.data.JUnitSummary
 import org.dropProject.services.JUnitMethodResult
-import java.io.File
-import java.util.*
-import javax.persistence.*
 import java.math.BigDecimal
 import java.text.SimpleDateFormat
+import java.util.*
+import javax.persistence.*
 
 /**
  * Enum represening the possible statuses that a Submission can be in.
@@ -163,6 +162,7 @@ data class Submission(
         var submissionMode: SubmissionMode? = null
 ) {
     @ManyToOne
+    @JsonView(JSONViews.TeacherAPI::class)
     lateinit var group: ProjectGroup
 
     constructor(submissionId: String, assignmentId: String, assignmentGitHash: String?, submitterNumber: String, status: String,
