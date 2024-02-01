@@ -371,4 +371,238 @@ class TeacherAPIControllerTests: APIControllerTests {
                 .header("authorization", testsHelper.header("teacher1", token)))
             .andExpect(status().is5xxServerError())
     }
+
+    @Test
+    @DirtiesContext
+    fun `try to search for an existing student`() {
+        assigneeRepository.deleteAll()
+        assignmentRepository.deleteAll()
+        authorRepository.deleteAll()
+
+        setup()
+
+        val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
+
+        this.mvc.perform(
+            get("/api/teacher/studentSearch/student1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("authorization", testsHelper.header("teacher1", token)))
+            .andExpect(status().isOk()).andExpect(content().json("""
+                [
+                  {
+                    "value": "student1",
+                    "text": "Student 1"
+                  }
+                ]
+            """.trimIndent()))
+    }
+
+    @Test
+    @DirtiesContext
+    fun `try to search for a non existing student`() {
+        assigneeRepository.deleteAll()
+        assignmentRepository.deleteAll()
+        authorRepository.deleteAll()
+
+        setup()
+
+        val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
+
+        this.mvc.perform(
+            get("/api/teacher/studentSearch/student2")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("authorization", testsHelper.header("teacher1", token)))
+            .andExpect(status().isOk()).andExpect(content().json("""
+                []
+            """.trimIndent()))
+    }
+
+    @Test
+    @DirtiesContext
+    fun `try to search for an assignment`() {
+        assigneeRepository.deleteAll()
+        assignmentRepository.deleteAll()
+
+        setup()
+
+        val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
+
+        this.mvc.perform(
+            get("/api/teacher/assignmentSearch/testJavaProj")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("authorization", testsHelper.header("teacher1", token)))
+            .andExpect(status().isOk()).andExpect(content().json("""
+                [
+                  {
+                    "value": "testJavaProj",
+                    "text": "Test Project (for automatic tests)"
+                  }
+                ]
+            """.trimIndent()))
+    }
+
+    @Test
+    @DirtiesContext
+    fun `try to search for a non existing assignment`() {
+        assigneeRepository.deleteAll()
+        assignmentRepository.deleteAll()
+
+        setup()
+
+        val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
+
+        this.mvc.perform(
+            get("/api/teacher/assignmentSearch/testProj")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("authorization", testsHelper.header("teacher1", token)))
+            .andExpect(status().isOk()).andExpect(content().json("""
+                []
+            """.trimIndent()))
+    }
+
+    @Test
+    @DirtiesContext
+    fun `try to access a student's history`() {
+        assigneeRepository.deleteAll()
+        assignmentRepository.deleteAll()
+        authorRepository.deleteAll()
+
+        setup()
+
+        val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
+
+        this.mvc.perform(
+            get("/api/teacher/studentHistory/student1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("authorization", testsHelper.header("teacher1", token)))
+            .andExpect(status().isOk()).andExpect(content().json("""
+                {
+                  "history": [
+                    {
+                      "assignment": {
+                        "id": "testJavaProj",
+                        "name": "Test Project (for automatic tests)",
+                        "packageName": "org.dropProject.sampleAssignments.testProj",
+                        "dueDate": null,
+                        "submissionMethod": "UPLOAD",
+                        "language": "JAVA",
+                        "gitRepositoryUrl": "git://dummy",
+                        "ownerUserId": "teacher1",
+                        "active": true,
+                        "numSubmissions": 0,
+                        "instructions": null
+                      },
+                      "sortedSubmissions": [
+                        {
+                          "id": 4,
+                          "submissionDate": "2019-01-02T11:05:03.000+00:00",
+                          "status": "VALIDATED",
+                          "statusDate": "2019-01-02T11:05:03.000+00:00",
+                          "markedAsFinal": false,
+                          "teacherTests": {
+                            "numTests": 4,
+                            "numFailures": 0,
+                            "numErrors": 0,
+                            "numSkipped": 0,
+                            "ellapsed": 0.007,
+                            "numMandatoryOK": 0,
+                            "numMandatoryNOK": 0
+                          },
+                          "overdue": false,
+                          "group": {
+                            "id": 2,
+                            "authors": [
+                              {
+                                "id": 2,
+                                "name": "Student 1"
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "id": 3,
+                          "submissionDate": "2019-01-01T10:34:00.000+00:00",
+                          "status": "VALIDATED",
+                          "statusDate": "2019-01-01T10:34:00.000+00:00",
+                          "markedAsFinal": false,
+                          "teacherTests": {
+                            "numTests": 4,
+                            "numFailures": 1,
+                            "numErrors": 0,
+                            "numSkipped": 0,
+                            "ellapsed": 0.012,
+                            "numMandatoryOK": 0,
+                            "numMandatoryNOK": 0
+                          },
+                          "overdue": false,
+                          "group": {
+                            "id": 2,
+                            "authors": [
+                              {
+                                "id": 2,
+                                "name": "Student 1"
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+            """.trimIndent()))
+    }
+
+    @Test
+    @DirtiesContext
+    fun `try to access a non existent student's history`() {
+        assigneeRepository.deleteAll()
+        assignmentRepository.deleteAll()
+        authorRepository.deleteAll()
+
+        setup()
+
+        val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
+
+        this.mvc.perform(
+            get("/api/teacher/studentHistory/student2")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("authorization", testsHelper.header("teacher1", token)))
+            .andExpect(status().is5xxServerError())
+    }
+
+    @Test
+    @DirtiesContext
+    fun `try to mark a submission as final`() {
+        assigneeRepository.deleteAll()
+        assignmentRepository.deleteAll()
+        authorRepository.deleteAll()
+
+        setup()
+
+        val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
+
+        this.mvc.perform(
+            get("/api/teacher/submissions/1/markAsFinal")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("authorization", testsHelper.header("teacher1", token)))
+            .andExpect(status().isOk()).andExpect(content().string("true"))
+    }
+
+    @Test
+    @DirtiesContext
+    fun `try to mark a non existing submission as final`() {
+        assigneeRepository.deleteAll()
+        assignmentRepository.deleteAll()
+        authorRepository.deleteAll()
+
+        setup()
+
+        val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
+
+        this.mvc.perform(
+            get("/api/teacher/submissions/0/markAsFinal")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("authorization", testsHelper.header("teacher1", token)))
+            .andExpect(status().isOk()).andExpect(content().string("false"))
+    }
 }

@@ -26,9 +26,7 @@ import org.dropProject.controllers.InvalidProjectStructureException
 import org.dropProject.controllers.UploadController
 import org.dropProject.dao.*
 import org.dropProject.data.AuthorDetails
-import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 import org.dropProject.data.SubmissionInfo
 import org.dropProject.data.SubmissionResult
 import org.dropProject.data.TestType
@@ -42,8 +40,6 @@ import org.dropProject.storage.StorageService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.MessageSource
-import org.springframework.core.io.FileSystemResource
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.scheduling.annotation.EnableAsync
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
@@ -75,17 +71,16 @@ class SubmissionService(
     val submissionRepository: SubmissionRepository,
     val gitSubmissionRepository: GitSubmissionRepository,
     val submissionReportRepository: SubmissionReportRepository,
-    val buildReportRepository: BuildReportRepository,
     val assignmentTeacherFiles: AssignmentTeacherFiles,
     val buildReportBuilder: BuildReportBuilder,
     val storageService: StorageService,
     val projectGroupRepository: ProjectGroupRepository,
     val projectGroupService: ProjectGroupService,
-    val assignmentTestMethodRepository: AssignmentTestMethodRepository,
     val i18n: MessageSource,
     val buildWorker: BuildWorker,
     val asyncExecutor: Executor,
     val zipService: ZipService,
+    val assignmentRepository: AssignmentRepository,
 ) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
@@ -579,5 +574,22 @@ class SubmissionService(
                 throw IllegalStateException("submission ${submission.id} has both submissionId and gitSubmissionId equal to null")
             }
         return projectFolder
+    }
+
+    fun fillIndicatorsFor(submissions: List<Submission>) {
+        for (submission in submissions) {
+            val assignment = assignmentRepository.getById(submission.assignmentId)
+            submission.reportElements = submissionReportRepository.findBySubmissionId(submission.id)
+            submission.overdue = assignment.overdue(submission)
+            submission.buildReport?.let {
+                    buildReportDB ->
+                val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
+                    submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
+                val buildReport = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
+                    mavenizedProjectFolder.absolutePath, assignment, submission)
+                submission.ellapsed = buildReport.elapsedTimeJUnit()
+                submission.teacherTests = buildReport.junitSummaryAsObject()
+            }
+        }
     }
 }
