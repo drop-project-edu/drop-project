@@ -150,6 +150,22 @@
                     <label class="col-sm-3 control-label">Mandatory tests suffix:</label>
                     <div class="col-sm-9 read-row" th:text="${assignment.mandatoryTestsSuffix}"></div>
                 </div>
+                <div class="form-group" th:if="${assignment.projectGroupRestrictions?.minGroupSize}">
+                    <label class="col-sm-3 control-label">Group size:</label>
+                    <div class="col-sm-9 read-row" th:text="${assignment.projectGroupRestrictions.minGroupSize + ' - ' + assignment.projectGroupRestrictions.maxGroupSize +  ' students'}"></div>
+                </div>
+                <div class="form-group" th:if="${assignment.projectGroupRestrictions?.exceptionsAsList()}">
+                    <label class="col-sm-3 control-label">Exceptions to group size:</label>
+                    <div class="col-sm-9 read-row" th:if="${!assignment.projectGroupRestrictions?.exceptionsAsList().isEmpty()}">
+                        <table class="table table-bordered">
+                            <tbody>
+                            <tr th:each="studentId : ${assignment.projectGroupRestrictions?.exceptionsAsList()}">
+                                <td th:text="${studentId}"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Open to:</label>
                     <div class="col-sm-9 read-row" th:if="${assignees.isEmpty()}">Everyone through this <a th:href="@{'/upload/' + ${assignment.id}}">link</a></div>

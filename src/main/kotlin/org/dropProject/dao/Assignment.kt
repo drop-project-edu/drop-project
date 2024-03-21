@@ -179,6 +179,10 @@ data class Assignment(
     @JsonView(JSONViews.StudentAPI::class)
     @Transient
     var instructions: AssignmentInstructions? = null,
+
+    @OneToOne(cascade = [CascadeType.REMOVE])
+    @JoinColumn(name = "project_group_restrictions_id")
+    var projectGroupRestrictions: ProjectGroupRestrictions? = null,
 ) {
 
     fun dueDateFormatted(): String? {

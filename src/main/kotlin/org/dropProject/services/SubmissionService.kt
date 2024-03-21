@@ -22,6 +22,7 @@ package org.dropProject.services
 import org.apache.any23.encoding.TikaEncodingDetector
 import org.apache.commons.io.FileUtils
 import org.dropProject.Constants
+import org.dropProject.controllers.InvalidProjectGroupException
 import org.dropProject.controllers.InvalidProjectStructureException
 import org.dropProject.controllers.UploadController
 import org.dropProject.dao.*
@@ -237,13 +238,18 @@ class SubmissionService(
 
             // check if the principal is one of group elements
             if (authors.filter { it.number == principal.realName() }.isEmpty()) {
-                throw InvalidProjectStructureException(
-                    i18n.getMessage(
-                        "student.submit.notAGroupElement",
-                        null,
-                        currentLocale
-                    )
+                throw InvalidProjectStructureException(i18n.getMessage("student.submit.notAGroupElement", null, currentLocale)
                 )
+            }
+
+            // check if the group complies with possible group restrictions
+            if (assignment.projectGroupRestrictions != null) {
+                val restrictions = assignment.projectGroupRestrictions!!
+                if (authors.size !in restrictions.minGroupSize .. (restrictions.maxGroupSize ?: 50) &&
+                    restrictions.exceptionsAsList()?.contains(principal.realName()) != true) {
+                    throw InvalidProjectGroupException(i18n.getMessage("student.submit.invalidGroup",
+                        arrayOf(restrictions.minGroupSize, restrictions.maxGroupSize ?: ""), currentLocale))
+                }
             }
 
             val group = projectGroupService.getOrCreateProjectGroup(authors)
