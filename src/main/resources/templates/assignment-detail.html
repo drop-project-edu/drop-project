@@ -86,7 +86,9 @@
                 </div>
                 <div class="form-group" >
                     <label class="col-sm-3 control-label">Connected to:</label>
-                    <div th:if="${assignment.gitRepositoryPrivKey != null}" class="col-sm-9 read-row" th:text="${assignment.gitRepositoryUrl}"></div>
+                    <a th:if="${assignment.gitRepositoryPrivKey != null}" class="col-sm-9 read-row"
+                        th:text="${assignment.gitRepositoryUrl}"
+                        th:href="${assignment.linkToGithub()}">link to github</a>
                     <div th:if="${assignment.gitRepositoryPrivKey == null}" class="col-sm-9 read-row alert alert-warning">This assignment is not yet connected to a git repository!</div>
                 </div>
                 <div class="form-group" th:if="${lastCommitInfoStr != null}">

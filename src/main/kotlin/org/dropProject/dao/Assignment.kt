@@ -200,4 +200,18 @@ data class Assignment(
     override fun toString(): String {
         return "$id - $name"
     }
+
+    fun linkToGithub(): String? {
+        if (gitRepositoryPrivKey == null) {
+            return null
+        }
+
+        val parts = gitRepositoryUrl.split(":")
+        val hostAndPath = parts[1].removeSuffix(".git").split("/")
+        val username = parts[0].substringAfter("@")
+        val host = hostAndPath[0]
+        val repositoryName = hostAndPath[1]
+
+        return "https://$host/$username/$repositoryName"
+    }
 }

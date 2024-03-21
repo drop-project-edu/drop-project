@@ -23,7 +23,7 @@
 
     <h1 class="page-header" th:text="'Build report for submission ' + ${submission.id}"></h1>
     <h6>
-        Assignment: <span th:text="${assignment.id}"></span> |
+        Assignment: <a th:href="${assignment.linkToGithub()}" th:text="${assignment.id}"></a> |
         Submitted: <span th:text="${#dates.format(submission.submissionDate, 'dd-MM HH:mm:ss')}"></span>
         <a th:if="${isTeacher}"
            th:href="@{'/submissions?assignmentId=' + ${assignment.id} + '&groupId=' + ${submission.group.id}}">(other submissions)</a>
