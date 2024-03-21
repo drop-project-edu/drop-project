@@ -37,6 +37,6 @@ data class AssignmentTagsCompositeKey(
 @Entity
 @IdClass(AssignmentTagsCompositeKey::class)
 data class AssignmentTags(
-    @Id val assignmentId: String,
+    @Id @Column(length = 50) val assignmentId: String,
     @Id val tagId: Long
 )

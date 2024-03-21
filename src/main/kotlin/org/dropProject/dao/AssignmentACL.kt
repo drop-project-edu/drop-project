@@ -19,6 +19,7 @@
  */
 package org.dropProject.dao
 
+import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.Id
@@ -36,6 +37,7 @@ data class AssignmentACL(
     @GeneratedValue
     val id: Long = 0,
 
+    @Column(length = 50)
     val assignmentId: String,
     val userId: String
 )

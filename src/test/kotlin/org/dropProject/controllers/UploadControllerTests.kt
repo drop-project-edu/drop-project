@@ -1613,7 +1613,7 @@ class UploadControllerTests {
 
         val error = testsHelper.uploadProject(this.mvc, "projectOKIndividual", "testJavaProj", STUDENT_1,
             expectedResultMatcher = status().isInternalServerError())
-        assertEquals("This assignment only accepts submissions from groups with 2-2 elements.", error)
+        assertEquals("This assignment only accepts submissions from groups with 2..2 elements.", error)
 
         // add this student to exceptions
         projectGroupRestrictions.exceptions = "student1,student3"
