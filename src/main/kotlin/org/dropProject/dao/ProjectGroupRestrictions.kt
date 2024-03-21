@@ -1,5 +1,6 @@
 package org.dropProject.dao
 
+import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.Id
@@ -12,6 +13,8 @@ data class ProjectGroupRestrictions(
 
     var minGroupSize: Int = 1,
     var maxGroupSize: Int? = null,
+
+    @Column(length = 1000)
     var exceptions: String? = null  // comma separated list of users that are exempt from the restrictions
 ) {
 
