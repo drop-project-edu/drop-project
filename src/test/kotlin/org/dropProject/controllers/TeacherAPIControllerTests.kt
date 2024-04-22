@@ -251,13 +251,22 @@ class TeacherAPIControllerTests: APIControllerTests {
             .andExpect(status().isOk)
             .andExpect(content().json("""
                 [
-                   {"projectGroup":{"id":1,"authors":[{"id":1,"name":"Student 1"}]},
-                    "lastSubmission":{"id":2,
-                                      "submissionDate":"2019-01-02T11:05:03.000+00:00",
-                                      "status":"VALIDATED",
-                                      "statusDate":"2019-01-02T11:05:03.000+00:00",
-                                      "markedAsFinal":false },
-                    "allSubmissions":[] }
+                  {"projectGroup": {"id": 1,"authors": [{"id": 1,"name": "Student 1"}]},
+                   "lastSubmission": {"id": 2,
+                                      "submissionDate": "2019-01-02T11:05:03.000+00:00",
+                                      "status": "VALIDATED",
+                                      "statusDate": "2019-01-02T11:05:03.000+00:00",
+                                      "markedAsFinal": false,
+                                      "teacherTests": {"numTests": 4,
+                                                       "numFailures": 0,
+                                                       "numErrors": 0,
+                                                       "numSkipped": 0,
+                                                       "ellapsed": 0.007,
+                                                       "numMandatoryOK": 0,
+                                                       "numMandatoryNOK": 0 },
+                                      "group": {"id": 1,
+                                                "authors": [{"id": 1,"name": "Student 1" }]} },
+                    "numSubmissions": 4 }
                 ]
             """.trimIndent()))
     }

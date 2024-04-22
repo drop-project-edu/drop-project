@@ -22,6 +22,7 @@ package org.dropProject.controllers
 import com.fasterxml.jackson.annotation.JsonView
 import io.swagger.annotations.*
 import org.dropProject.dao.*
+import org.dropProject.data.AssignmentLatestSubmissionsResponse
 import org.dropProject.data.JSONViews
 import org.dropProject.data.StudentHistory
 import org.dropProject.data.SubmissionInfo
@@ -88,11 +89,11 @@ class TeacherAPIController(
         response = SubmissionInfo::class, responseContainer = "List", ignoreJsonView = false
     )
     fun getAssignmentLatestSubmissions(@PathVariable assignmentId: String, model: ModelMap,
-                                      principal: Principal, request: HttpServletRequest): ResponseEntity<List<SubmissionInfo>> {
+                                      principal: Principal, request: HttpServletRequest): ResponseEntity<List<AssignmentLatestSubmissionsResponse>> {
         assignmentService.getAllSubmissionsForAssignment(assignmentId, principal, model, request, mode = "summary")
 
         val result = (model["submissions"] as List<SubmissionInfo>).map{
-            SubmissionInfo(it.projectGroup, it.lastSubmission, listOf())
+            AssignmentLatestSubmissionsResponse(it.projectGroup, it.lastSubmission, it.allSubmissions.size)
         }
 
         return ResponseEntity.ok(result)
