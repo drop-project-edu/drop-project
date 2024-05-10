@@ -39,6 +39,7 @@ import org.springframework.ui.ModelMap
 import org.springframework.web.bind.annotation.*
 import java.nio.file.Files
 import java.security.Principal
+import java.util.*
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
@@ -88,11 +89,13 @@ class TeacherAPIController(
         value = "Get the latest submissions by each group for the assignment identified by the assignmentID variable",
         response = SubmissionInfo::class, responseContainer = "List", ignoreJsonView = false
     )
-    fun getAssignmentLatestSubmissions(@PathVariable assignmentId: String, model: ModelMap,
-                                      principal: Principal, request: HttpServletRequest): ResponseEntity<List<AssignmentLatestSubmissionsResponse>> {
+    fun getAssignmentLatestSubmissions(
+        @PathVariable assignmentId: String, model: ModelMap,
+        principal: Principal, request: HttpServletRequest
+    ): ResponseEntity<List<AssignmentLatestSubmissionsResponse>> {
         assignmentService.getAllSubmissionsForAssignment(assignmentId, principal, model, request, mode = "summary")
 
-        val result = (model["submissions"] as List<SubmissionInfo>).map{
+        val result = (model["submissions"] as List<SubmissionInfo>).map {
             AssignmentLatestSubmissionsResponse(it.projectGroup, it.lastSubmission, it.allSubmissions.size)
         }
 
@@ -105,8 +108,10 @@ class TeacherAPIController(
         value = "",
         response = Submission::class, responseContainer = "List", ignoreJsonView = false
     )
-    fun getGroupAssignmentSubmissions(@PathVariable assignmentId: String, @PathVariable groupId: Long, model: ModelMap,
-                                      principal: Principal, request: HttpServletRequest): ResponseEntity<List<Submission>> {
+    fun getGroupAssignmentSubmissions(
+        @PathVariable assignmentId: String, @PathVariable groupId: Long, model: ModelMap,
+        principal: Principal, request: HttpServletRequest
+    ): ResponseEntity<List<Submission>> {
 
         val submissions = submissionRepository
             .findByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(ProjectGroup(groupId), assignmentId)
@@ -120,8 +125,10 @@ class TeacherAPIController(
     @GetMapping(value = ["/download/{submissionId}"], produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
     @JsonView(JSONViews.TeacherAPI::class)
     @ApiOperation(value = "Download the mavenized zip file for this submission")
-    fun downloadProject(@PathVariable submissionId: Long, principal: Principal,
-                        request: HttpServletRequest, response: HttpServletResponse): FileSystemResource {
+    fun downloadProject(
+        @PathVariable submissionId: Long, principal: Principal,
+        request: HttpServletRequest, response: HttpServletResponse
+    ): FileSystemResource {
 
         val submission = submissionRepository.findById(submissionId).orElse(null)
         if (submission != null) {
@@ -131,8 +138,10 @@ class TeacherAPIController(
                 throw AccessDeniedException("${principal.realName()} is not allowed to view this report")
             }
 
-            val projectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
-                wasRebuilt = submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
+            val projectFolder = assignmentTeacherFiles.getProjectFolderAsFile(
+                submission,
+                wasRebuilt = submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT
+            )
 
             if (!Files.exists(projectFolder.toPath())) {
                 throw ResourceNotFoundException()
@@ -157,8 +166,10 @@ class TeacherAPIController(
     @GetMapping(value = ["/submissions/{submissionId}"], produces = [MediaType.APPLICATION_JSON_VALUE])
     @JsonView(JSONViews.TeacherAPI::class)
     @ApiOperation(value = "Get the build report associated with this submission")
-    fun getBuildReport(@PathVariable submissionId: Long, principal: Principal,
-                       request: HttpServletRequest): ResponseEntity<FullBuildReport> {
+    fun getBuildReport(
+        @PathVariable submissionId: Long, principal: Principal,
+        request: HttpServletRequest
+    ): ResponseEntity<FullBuildReport> {
 
         val report = reportService.buildReport(submissionId, principal, request)
 
@@ -172,11 +183,15 @@ class TeacherAPIController(
     @GetMapping(value = ["/studentHistory/{studentId}"], produces = [MediaType.APPLICATION_JSON_VALUE])
     @JsonView(JSONViews.TeacherAPI::class)
     @ApiOperation(value = "Get the student's student history")
-    fun getStudentHistory(@PathVariable studentId: String,
-                          principal: Principal, request: HttpServletRequest): ResponseEntity<StudentHistory> {
+    fun getStudentHistory(
+        @PathVariable studentId: String,
+        principal: Principal, request: HttpServletRequest
+    ): ResponseEntity<StudentHistory> {
 
-        return ResponseEntity.ok().body(studentService.getStudentHistory(studentId, principal)
-            ?: throw ResourceNotFoundException())
+        return ResponseEntity.ok().body(
+            studentService.getStudentHistory(studentId, principal)
+                ?: throw ResourceNotFoundException()
+        )
     }
 
     @GetMapping(value = ["/studentSearch/{query}"], produces = [MediaType.APPLICATION_JSON_VALUE])
@@ -205,10 +220,73 @@ class TeacherAPIController(
         return true
     }
 
+    @Suppress("UNCHECKED_CAST")
+    @GetMapping(
+        value = ["/assignments/{assignmentId}/previewMarkBestSubmissions"],
+        produces = [MediaType.APPLICATION_JSON_VALUE]
+    )
+    @JsonView(JSONViews.TeacherAPI::class)
+    @ApiOperation(value = "Get a list of each group's best submissions for the assignment")
+    fun previewMarkBestSubmissions(
+        @PathVariable assignmentId: String, model: ModelMap,
+        @RequestParam ignoreOutsideOfDeadlineSubmissions: Boolean = false,
+        request: HttpServletRequest, principal: Principal
+    ): ResponseEntity<List<Submission>> {
+
+        assignmentService.getAllSubmissionsForAssignment(assignmentId, principal, model, request, mode = "summary")
+
+        val groupSubmissions = (model["submissions"] as List<SubmissionInfo>).groupBy { it.projectGroup }
+        val bestSubmissions = mutableListOf<Submission>()
+
+        for (value in groupSubmissions.values) {
+            if (value.firstOrNull() == null
+                || value.first().allSubmissions.any
+                    { it.submissionDate > ((model["assignment"] as Assignment).dueDate ?: Date()) }
+            ) {
+
+                continue
+            }
+
+            submissionService.fillIndicatorsFor(value.first().allSubmissions)
+
+            fun getScore(submission: Submission) =
+                submission.teacherTests?.progress ?: 0
+
+            val sortedSubmissions = value.first().allSubmissions.sortedByDescending { getScore(it) }
+            val topScore = getScore(sortedSubmissions.first())
+
+            val bestSubmission = value.firstOrNull()?.allSubmissions
+                ?.filter { getScore(it) == topScore }
+                ?.maxByOrNull { it.submissionDate }
+
+            if (bestSubmission != null) {
+                bestSubmissions.add(bestSubmission)
+            }
+        }
+
+        return ResponseEntity.ok(bestSubmissions)
+    }
+
+    @PostMapping(value = ["/markMultipleAsFinal"],
+        consumes = [MediaType.APPLICATION_JSON_VALUE], produces = [MediaType.APPLICATION_JSON_VALUE])
+    @JsonView(JSONViews.TeacherAPI::class)
+    @ApiOperation(value = "Mark multiple assignments as final")
+    fun markMultipleAsFinal(@RequestBody submissions: List<Long>, principal: Principal): Boolean {
+
+        for (submission in submissions) {
+            markAsFinal(submission, principal)
+        }
+
+        return true
+    }
+
     @GetMapping(value = ["/assignmentSearch/{query}"], produces = [MediaType.APPLICATION_JSON_VALUE])
     @JsonView(JSONViews.TeacherAPI::class)
     @ApiOperation(value = "Get all assignments that match the query value")
-    fun searchAssignments(@PathVariable("query") query: String, principal: Principal): ResponseEntity<List<StudentListResponse>> {
+    fun searchAssignments(
+        @PathVariable("query") query: String,
+        principal: Principal
+    ): ResponseEntity<List<StudentListResponse>> {
         val result = assignmentRepository.findAll()
             .filter {
                 val acl = assignmentACLRepository.findByAssignmentId(it.id)
