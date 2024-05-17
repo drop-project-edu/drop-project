@@ -665,4 +665,24 @@ class TeacherAPIControllerTests: APIControllerTests {
         assertFalse { submissions[1]?.first()?.markedAsFinal == true } // first submission gets unmarked since 1 and 2 are made by the same student
         assertTrue { submissions[2]?.first()?.markedAsFinal == true }
     }
+
+    @Test
+    @DirtiesContext
+    fun `try to deactivate an assignment`() {
+        assigneeRepository.deleteAll()
+        assignmentRepository.deleteAll()
+        authorRepository.deleteAll()
+
+        setup()
+
+        val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
+
+        this.mvc.perform(
+            get("/api/teacher/assignments/testJavaProj/toggleState")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("authorization", testsHelper.header("teacher1", token)))
+            .andExpect(status().isOk()).andExpect(content().string("true"))
+
+        assertFalse { assignmentRepository.getReferenceById("testJavaProj").active }
+    }
 }

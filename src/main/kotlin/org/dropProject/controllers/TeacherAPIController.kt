@@ -66,7 +66,7 @@ class TeacherAPIController(
     val reportService: ReportService,
     val projectGroupRepository: ProjectGroupRepository,
     val assignmentACLRepository: AssignmentACLRepository,
-    val studentService: StudentService
+    val studentService: StudentService,
 ) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
@@ -302,5 +302,26 @@ class TeacherAPIController(
             .map { StudentListResponse(it.id, it.name) }
 
         return ResponseEntity(result, HttpStatus.OK)
+    }
+
+    @GetMapping(value = ["/assignments/{assignmentId}/toggleState"], produces = [MediaType.APPLICATION_JSON_VALUE])
+    @JsonView(JSONViews.TeacherAPI::class)
+    @ApiOperation(value = "Deactivate the assignment")
+    fun toggleAssignmentState(
+        @PathVariable("assignmentId") assignmentId: String,
+        principal: Principal
+    ): Boolean {
+
+        val assignment = assignmentRepository.findById(assignmentId).orElse(null) ?: return false
+        val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
+
+        if (principal.realName() != assignment.ownerUserId && acl.find { it.userId == principal.realName() } == null) {
+            return false
+        }
+
+        assignment.active = !assignment.active
+        assignmentRepository.save(assignment)
+
+        return true
     }
 }
