@@ -25,7 +25,8 @@
     <h6>
         Assignment: <a th:if="${isTeacher}" th:href="${assignment.linkToGithub()}" th:text="${assignment.id}"></a>
         <span th:if="${!isTeacher}" th:text="${assignment.id}"></span> |
-        Submitted: <span th:text="${#dates.format(submission.submissionDate, 'dd-MM HH:mm:ss')}"></span>
+        Submitted: <span th:text="${#dates.format(submission.submissionDate, 'dd-MM HH:mm:ss')}"></span> |
+        Submissions: <span th:text="${numSubmissions}"></span>
         <a th:if="${isTeacher}"
            th:href="@{'/submissions?assignmentId=' + ${assignment.id} + '&groupId=' + ${submission.group.id}}">(other submissions)</a>
         <span th:if="${submission.overdue}" class="label label-danger">Overdue</span>
