@@ -78,6 +78,7 @@ class AssignmentController(
     val buildReportRepository: BuildReportRepository,
     val jUnitReportRepository: JUnitReportRepository,
     val jacocoReportRepository: JacocoReportRepository,
+    val projectGroupRestrictionsRepository: ProjectGroupRestrictionsRepository,
     val gitClient: GitClient,
     val assignmentTeacherFiles: AssignmentTeacherFiles,
     val submissionService: SubmissionService,
@@ -132,30 +133,52 @@ class AssignmentController(
                                redirectAttributes: RedirectAttributes,
                                principal: Principal): String {
 
-        if (bindingResult.hasErrors()) {
-            return "assignment-form"
-        }
-
         var mustSetupGitConnection = false
 
         if (assignmentForm.acceptsStudentTests &&
             (assignmentForm.minStudentTests == null || assignmentForm.minStudentTests!! < 1)) {
             LOG.warn("Error: You must require at least one student test")
             bindingResult.rejectValue("acceptsStudentTests", "acceptsStudentTests.atLeastOne", "Error: You must require at least one student test")
-            return "assignment-form"
         }
 
         if (!assignmentForm.acceptsStudentTests && assignmentForm.minStudentTests != null) {
             LOG.warn("If you require ${assignmentForm.minStudentTests} student tests, you must check 'Accepts student tests'")
             bindingResult.rejectValue("acceptsStudentTests", "acceptsStudentTests.mustCheck",
                 "Error: If you require ${assignmentForm.minStudentTests} student tests, you must check 'Accepts student tests'")
-            return "assignment-form"
         }
 
         if (!assignmentForm.acceptsStudentTests && assignmentForm.calculateStudentTestsCoverage) {
             LOG.warn("If you want to calculate coverage of student tests, you must check 'Accepts student tests'")
             bindingResult.rejectValue("acceptsStudentTests", "acceptsStudentTests.mustCheck",
                 "Error: If you want to calculate coverage of student tests, you must check 'Accepts student tests'")
+        }
+
+        if (assignmentForm.minGroupSize != null && assignmentForm.minGroupSize!! < 1) {
+            LOG.warn("Min group size must be >= 1")
+            bindingResult.rejectValue("minGroupSize", "minGroupSize.greaterThan1",
+                "Error: Min group size must be >= 1")
+        }
+
+        if (assignmentForm.maxGroupSize != null && assignmentForm.minGroupSize == null) {
+            LOG.warn("If you fill in the max group size, you must also fill in the min group size")
+            bindingResult.rejectValue("minGroupSize", "minGroupSize.mustExist",
+                "Error: If you fill in the max group size, you must also fill in the min group size")
+        }
+
+        if (assignmentForm.minGroupSize != null && assignmentForm.maxGroupSize != null &&
+            assignmentForm.minGroupSize!! > assignmentForm.maxGroupSize!!) {
+            LOG.warn("Max must be greater or equal to min")
+            bindingResult.rejectValue("minGroupSize", "minGroupSize.maxGreaterThanMin",
+                "Error: Max must be greater or equal to min")
+        }
+
+        if (!assignmentForm.exceptions.isNullOrBlank() && assignmentForm.minGroupSize == null) {
+            LOG.warn("Max must be greater or equal to min")
+            bindingResult.rejectValue("exceptions", "exceptions.minSizeNotSet",
+                "Error: Exceptions to group size should only be filled in when you set the min group size")
+        }
+
+        if (bindingResult.hasErrors()) {
             return "assignment-form"
         }
 
@@ -320,6 +343,15 @@ class AssignmentController(
             hiddenTestsVisibility = assignmentForm.hiddenTestsVisibility,
             leaderboardType = assignmentForm.leaderboardType)
 
+        // we only need to check minGroupSize since maxGroupSize and exceptions depend on this field
+        if (assignmentForm.minGroupSize != null) {
+            val projectGroupRestrictions = ProjectGroupRestrictions(minGroupSize = assignmentForm.minGroupSize!!,
+                maxGroupSize = assignmentForm.maxGroupSize,
+                exceptions = assignmentForm.exceptions)
+            projectGroupRestrictionsRepository.save(projectGroupRestrictions)
+            newAssignment.projectGroupRestrictions = projectGroupRestrictions
+        }
+
         // associate tags
         val tagNames = assignmentForm.assignmentTags?.lowercase(Locale.getDefault())?.split(",")
         tagNames?.forEach {
@@ -436,7 +468,10 @@ class AssignmentController(
             cooloffPeriod = assignment.cooloffPeriod,
             hiddenTestsVisibility = assignment.hiddenTestsVisibility,
             maxMemoryMb = assignment.maxMemoryMb,
-            leaderboardType = assignment.leaderboardType
+            leaderboardType = assignment.leaderboardType,
+            minGroupSize = assignment.projectGroupRestrictions?.minGroupSize,
+            maxGroupSize = assignment.projectGroupRestrictions?.maxGroupSize,
+            exceptions = assignment.projectGroupRestrictions?.exceptions,
         )
 
         val assignees = assigneeRepository.findByAssignmentIdOrderByAuthorUserId(assignment.id)

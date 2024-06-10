@@ -73,6 +73,7 @@ class AssignmentService(
     val buildReportRepository: BuildReportRepository,
     val jUnitReportRepository: JUnitReportRepository,
     val jacocoReportRepository: JacocoReportRepository,
+    val projectGroupRestrictionsRepository: ProjectGroupRestrictionsRepository,
     val zipService: ZipService,
     val pendingTasks: PendingTasks,
     val projectGroupService: ProjectGroupService,
@@ -329,6 +330,27 @@ class AssignmentService(
         existingAssignment.showLeaderBoard = assignmentForm.leaderboardType != null
         existingAssignment.hiddenTestsVisibility = assignmentForm.hiddenTestsVisibility
         existingAssignment.leaderboardType = assignmentForm.leaderboardType
+
+        // remove projectGroupRestrictions if minGroupSize was updated to null
+        if (assignmentForm.minGroupSize == null && existingAssignment.projectGroupRestrictions != null) {
+            val projectGroupRestrictions = existingAssignment.projectGroupRestrictions!!
+            existingAssignment.projectGroupRestrictions = null
+            projectGroupRestrictionsRepository.delete(projectGroupRestrictions)
+        }
+
+        if (assignmentForm.minGroupSize != null) {
+            if (existingAssignment.projectGroupRestrictions != null) {
+                existingAssignment.projectGroupRestrictions!!.minGroupSize = assignmentForm.minGroupSize!!
+                existingAssignment.projectGroupRestrictions!!.maxGroupSize = assignmentForm.maxGroupSize
+                existingAssignment.projectGroupRestrictions!!.exceptions = assignmentForm.exceptions
+                projectGroupRestrictionsRepository.save(existingAssignment.projectGroupRestrictions!!)
+            } else {
+                val newProjectGroupRestrictions = ProjectGroupRestrictions(minGroupSize = assignmentForm.minGroupSize!!,
+                    maxGroupSize = assignmentForm.maxGroupSize, exceptions = assignmentForm.exceptions)
+                projectGroupRestrictionsRepository.save(newProjectGroupRestrictions)
+                existingAssignment.projectGroupRestrictions = newProjectGroupRestrictions
+            }
+        }
 
         // update tags
         val tagNames = assignmentForm.assignmentTags?.lowercase(Locale.getDefault())?.split(",")

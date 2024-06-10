@@ -754,13 +754,19 @@ class UploadController(
     }
 
     @ExceptionHandler(StorageException::class)
-    fun handleStorageError(e: StorageException): ResponseEntity<String> {
+    fun handleError(e: StorageException): ResponseEntity<String> {
         LOG.error(e.message)
         return ResponseEntity("{\"error\": \"Falha a gravar ficheiro => ${e.message}\"}", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(InvalidProjectStructureException::class)
-    fun handleStorageError(e: InvalidProjectStructureException): ResponseEntity<String> {
+    fun handleError(e: InvalidProjectStructureException): ResponseEntity<String> {
+        LOG.warn(e.message)
+        return ResponseEntity("{\"error\": \"${e.message}\"}", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(InvalidProjectGroupException::class)
+    fun handleError(e: InvalidProjectGroupException): ResponseEntity<String> {
         LOG.warn(e.message)
         return ResponseEntity("{\"error\": \"${e.message}\"}", HttpStatus.INTERNAL_SERVER_ERROR);
     }

@@ -2,7 +2,7 @@
  * ========================LICENSE_START=================================
  * DropProject
  * %%
- * Copyright (C) 2019 Pedro Alves
+ * Copyright (C) 2019 - 2024 Pedro Alves
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,21 +23,29 @@ import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.Id
+import javax.persistence.PrePersist
 
-/**
- * Represents the association between an [Assignment] and a user that can access it.
- *
- * @property id is a primary-key like generated value
- * @assignmentId is a String, identifying the Assignment
- * @userId is a String, identifying the user
- */
 @Entity
-data class AssignmentACL(
-    @Id
-    @GeneratedValue
+data class ProjectGroupRestrictions(
+    @Id @GeneratedValue
     val id: Long = 0,
 
-    @Column(length = 50)
-    val assignmentId: String,
-    val userId: String
-)
+    var minGroupSize: Int = 1,
+    var maxGroupSize: Int? = null,
+
+    @Column(length = 1000)
+    var exceptions: String? = null  // comma separated list of users that are exempt from the restrictions
+) {
+
+    @PrePersist
+    fun prePersist() {
+        exceptions = exceptions?.replace(" ", "")?.replace("\n", "")
+    }
+
+    fun exceptionsAsList(): List<String>? {
+        if (exceptions == null) {
+            return null
+        }
+        return exceptions!!.split(",").sorted()
+    }
+}

@@ -17,26 +17,9 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.dao
-
-import java.io.Serializable
-import javax.persistence.*
-
-@Embeddable
-data class AssignmentTagsCompositeKey(
-    val assignmentId: String,
-    val tagId: Long): Serializable
+package org.dropProject.controllers
 
 /**
- * Represents an associate table between assignments and assignmentTags. Due to problems with spring "magic", i've decided to implement
- * this relation by hand
- *
- * @property assignmentId .
- * @property tagId .
+ * Represents an Exception that is raised when the group that submitted a project doesn't comply with the restrictions of the assignment.
  */
-@Entity
-@IdClass(AssignmentTagsCompositeKey::class)
-data class AssignmentTags(
-    @Id @Column(length = 50) val assignmentId: String,
-    @Id val tagId: Long
-)
+class InvalidProjectGroupException(message: String?, cause: Throwable? = null) : RuntimeException(message, cause)

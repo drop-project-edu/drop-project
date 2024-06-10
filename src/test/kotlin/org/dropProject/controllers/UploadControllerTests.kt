@@ -57,6 +57,7 @@ import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import java.io.File
 import java.nio.file.Files
@@ -103,6 +104,9 @@ class UploadControllerTests {
 
     @Autowired
     lateinit var assignmentTestMethodRepository: AssignmentTestMethodRepository
+
+    @Autowired
+    lateinit var projectGroupRestrictionsRepository: ProjectGroupRestrictionsRepository
 
     @Autowired
     lateinit var zipService: ZipService
@@ -409,7 +413,7 @@ class UploadControllerTests {
         assert(buildResult.elapsedTimeJUnit()!! > 1.toBigDecimal())
 
         // check that the submission was associated with the right assignment git hash
-        val submissionFromDB = submissionRepository.getById(submissionId)
+        val submissionFromDB = submissionRepository.getById(submissionId.toLong())
         assertEquals("somehash", submissionFromDB.assignmentGitHash)
     }
 
@@ -515,10 +519,10 @@ class UploadControllerTests {
                 .andExpect(model().attribute("numSubmissions", 0L))
 
         val submissionId1 = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
-        assertEquals("wrong submissionId", 1, submissionId1)
+        assertEquals("wrong submissionId", 1, submissionId1.toLong())
 
         val submissionId2 = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
-        assertEquals("wrong submissionId", 2, submissionId2)
+        assertEquals("wrong submissionId", 2, submissionId2.toLong())
 
         // let's change the AUTHORS
         val path = File(projectRoot, "AUTHORS.txt").toPath()
@@ -534,7 +538,7 @@ class UploadControllerTests {
             writer.close()
 
             val submissionId3 = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
-            assertEquals("wrong submissionId", 3, submissionId3)
+            assertEquals("wrong submissionId", 3, submissionId3.toLong())
 
         } finally {
             val writer = Files.newBufferedWriter(path)
@@ -1557,7 +1561,7 @@ class UploadControllerTests {
         val report = reportResult.modelAndView!!.modelMap["submissions"] as List<SubmissionInfo>
         assertEquals(1, report.size)
         assertEquals(1,report[0].allSubmissions.size)
-        assertEquals(submissionId2,report[0].allSubmissions[0].id)
+        assertEquals(submissionId2.toLong(),report[0].allSubmissions[0].id)
     }
 
     @Test
@@ -1594,6 +1598,29 @@ class UploadControllerTests {
         assertNotNull(lastSubmission2)
         assertEquals(submissionId.toLong(), lastSubmission2!!.id)
 
+    }
+
+    @Test
+    @DirtiesContext
+    fun `upload project that violates the group restrictions of the assignment`() {
+
+        val projectGroupRestrictions = ProjectGroupRestrictions(minGroupSize = 2, maxGroupSize = 2, exceptions = "student3")
+        projectGroupRestrictionsRepository.save(projectGroupRestrictions)
+
+        val assignment = assignmentRepository.findById("testJavaProj").get()
+        assignment.projectGroupRestrictions = projectGroupRestrictions
+        assignmentRepository.save(assignment)
+
+        val error = testsHelper.uploadProject(this.mvc, "projectOKIndividual", "testJavaProj", STUDENT_1,
+            expectedResultMatcher = status().isInternalServerError())
+        assertEquals("This assignment only accepts submissions from groups with 2..2 elements.", error)
+
+        // add this student to exceptions
+        projectGroupRestrictions.exceptions = "student1,student3"
+        projectGroupRestrictionsRepository.save(projectGroupRestrictions)
+
+        testsHelper.uploadProject(this.mvc, "projectOKIndividual", "testJavaProj", STUDENT_1,
+            expectedResultMatcher = status().isOk())
     }
 
 }

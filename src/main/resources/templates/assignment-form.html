@@ -180,6 +180,27 @@
             </div>
         </div>
 
+        <div class="form-group">
+            <label for="minGroupSize" class="col-sm-3 control-label">Group size (optional)</label>
+            <div class="col-sm-9" th:classappend="${#fields.hasErrors('minGroupSize')} ? 'has-error' : ''">
+                <div class="form-inline">
+                <input th:field="*{minGroupSize}" type="number" class="form-control" id="minGroupSize" min="1" max="10" /> to
+                <input th:field="*{maxGroupSize}" type="number" class="form-control" id="maxGroupSize" min="1" max="10"  /> students
+                </div>
+                <p class="help-block" th:if="${#fields.hasErrors('minGroupSize')}" th:errors="*{minGroupSize}">Error</p>
+                <p class="help-block" th:if="${!#fields.hasErrors('minGroupSize')}">How many students are allowed on each group?</p>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="exceptions" class="col-sm-3 control-label">Exceptions to group size (optional)</label>
+            <div class="col-sm-9">
+                <textarea th:field="*{exceptions}" class="form-control" id="exceptions" rows="3" placeholder="a21701234,a21705678" />
+                <p class="help-block" th:if="${#fields.hasErrors('exceptions')}" th:errors="*{exceptions}">Error</p>
+                <p class="help-block" th:if="${!#fields.hasErrors('exceptions')}">Comma separated list of student id's that are exempt from the
+                group size restrictions</p>
+            </div>
+        </div>
+
         <div class="form-group" th:classappend="${#fields.hasErrors('assignees')} ? 'has-error' : ''">
             <label for="assignees" class="col-sm-3 control-label">Open to (optional)</label>
             <div class="col-sm-9">
@@ -197,6 +218,9 @@
                 <p class="help-block" th:if="${!#fields.hasErrors('acl')}" >A comma-separated list of userid's that are allowed to manage this assignment</p>
             </div>
         </div>
+
+
+
         <input name="editMode" type="hidden" value="true" th:if="*{editMode}" />
         <button type="submit" class="btn btn-primary">Save</button>
     </form>

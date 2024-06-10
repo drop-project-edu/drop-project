@@ -36,6 +36,7 @@ import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequ
 import org.springframework.stereotype.Service
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.ResultMatcher
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import java.io.File
@@ -145,7 +146,11 @@ class TestsHelper {
                                  activateRightAfterCloning: Boolean = false,
                                  hiddenTestsVisibility: String = "SHOW_PROGRESS",
                                  tags: String? = null,
-                                 dueDate: String? = null): Assignment {
+                                 dueDate: String? = null,
+                                 minGroupSize: String? = null,
+                                 maxGroupSize: String? = null,
+                                 exceptions: String? = null,
+                                 ): Assignment {
 
         val user = User(teacherId, "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
 
@@ -163,6 +168,9 @@ class TestsHelper {
                 .param("hiddenTestsVisibility", hiddenTestsVisibility)
                 .param("assignmentTags", tags)
                 .param("dueDate", dueDate)
+                .param("minGroupSize", minGroupSize)
+                .param("maxGroupSize", maxGroupSize)
+                .param("exceptions", exceptions)
         )
                 .andExpect(MockMvcResultMatchers.status().isFound())
                 .andExpect(MockMvcResultMatchers.header().string("Location", "/assignment/setup-git/${assignmentId}"))
@@ -249,7 +257,8 @@ class TestsHelper {
 
     // returns the submission id
     fun uploadProject(mvc: MockMvc, projectName: String, assignmentId: String, uploader: User,
-                      authors: List<Pair<String,String>>? = null): Long {
+                      authors: List<Pair<String,String>>? = null,
+                      expectedResultMatcher: ResultMatcher = MockMvcResultMatchers.status().isOk()): String {
 
         val multipartFile = prepareFile(projectName, authors)
 
@@ -257,12 +266,16 @@ class TestsHelper {
                 .file(multipartFile)
                 .param("assignmentId", assignmentId)
                 .with(user(uploader)))
-                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(expectedResultMatcher)
                 .andReturn().response.contentAsString
 
         val contentJSON = JSONObject(contentString)
 
-        return contentJSON.getLong("submissionId")
+        if (contentJSON.has("error")) {
+            return contentJSON.getString("error");
+        }
+
+        return contentJSON.getString("submissionId")
     }
 
     // returns the submission id

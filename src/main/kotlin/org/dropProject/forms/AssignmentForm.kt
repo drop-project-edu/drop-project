@@ -77,6 +77,10 @@ data class AssignmentForm(
         @field:NotEmpty(message = "Error: Git repository must not be empty")
         var gitRepositoryUrl: String? = null,
 
-        var acl: String? = null
+        var acl: String? = null,
+
+        var minGroupSize: Int? = null,
+        var maxGroupSize: Int? = null,
+        var exceptions: String? = null
 )
     

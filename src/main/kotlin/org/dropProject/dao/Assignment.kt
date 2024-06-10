@@ -179,6 +179,10 @@ data class Assignment(
     @JsonView(JSONViews.StudentAPI::class)
     @Transient
     var instructions: AssignmentInstructions? = null,
+
+    @OneToOne(cascade = [CascadeType.REMOVE])
+    @JoinColumn(name = "project_group_restrictions_id")
+    var projectGroupRestrictions: ProjectGroupRestrictions? = null,
 ) {
 
     fun dueDateFormatted(): String? {
@@ -195,5 +199,19 @@ data class Assignment(
 
     override fun toString(): String {
         return "$id - $name"
+    }
+
+    fun linkToGithub(): String? {
+        if (gitRepositoryPrivKey == null) {
+            return null
+        }
+
+        val parts = gitRepositoryUrl.split(":")
+        val hostAndPath = parts[1].removeSuffix(".git").split("/")
+        val host = parts[0].substringAfter("@")
+        val username = hostAndPath[0]
+        val repositoryName = hostAndPath[1]
+
+        return "https://$host/$username/$repositoryName"
     }
 }

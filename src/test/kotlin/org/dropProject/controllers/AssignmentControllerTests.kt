@@ -100,6 +100,9 @@ class AssignmentControllerTests {
     lateinit var assignmentTagRepository: AssignmentTagRepository
 
     @Autowired
+    lateinit var projectGroupRestrictionsRepository: ProjectGroupRestrictionsRepository
+
+    @Autowired
     lateinit var assignmentService: AssignmentService
 
     @Autowired
@@ -191,6 +194,48 @@ class AssignmentControllerTests {
             .andExpect(status().isOk())
             .andExpect(view().name("assignment-form"))
             .andExpect(model().attributeHasFieldErrors("assignmentForm", "acl"))
+
+        mvc.perform(
+            post("/assignment/new")
+                .param("assignmentId", "assignmentId")
+                .param("assignmentName", "assignmentName")
+                .param("assignmentPackage", "assignmentPackage")
+                .param("language", "JAVA")
+                .param("submissionMethod", "UPLOAD")
+                .param("gitRepositoryUrl", "git://dummy")
+                .param("minGroupSize", "-1")
+        )
+            .andExpect(status().isOk())
+            .andExpect(view().name("assignment-form"))
+            .andExpect(model().attributeHasFieldErrors("assignmentForm", "minGroupSize"))
+
+        mvc.perform(
+            post("/assignment/new")
+                .param("assignmentId", "assignmentId")
+                .param("assignmentName", "assignmentName")
+                .param("assignmentPackage", "assignmentPackage")
+                .param("language", "JAVA")
+                .param("submissionMethod", "UPLOAD")
+                .param("gitRepositoryUrl", "git://dummy")
+                .param("maxGroupSize", "2")  // <<< minGroupSize is missing
+        )
+            .andExpect(status().isOk())
+            .andExpect(view().name("assignment-form"))
+            .andExpect(model().attributeHasFieldErrors("assignmentForm", "minGroupSize"))
+
+        mvc.perform(
+            post("/assignment/new")
+                .param("assignmentId", "assignmentId")
+                .param("assignmentName", "assignmentName")
+                .param("assignmentPackage", "assignmentPackage")
+                .param("language", "JAVA")
+                .param("submissionMethod", "UPLOAD")
+                .param("gitRepositoryUrl", "git://dummy")
+                .param("exceptions", "user1,user2")  // <<< minGroupSize is missing
+        )
+            .andExpect(status().isOk())
+            .andExpect(view().name("assignment-form"))
+            .andExpect(model().attributeHasFieldErrors("assignmentForm", "exceptions"))
 
 
         mvc.perform(
@@ -1678,6 +1723,118 @@ class AssignmentControllerTests {
             // cleanup assignment files
             if (File(assignmentsRootLocation, "dummyAssignmentTests").exists()) {
                 File(assignmentsRootLocation, "dummyAssignmentTests").deleteRecursively()
+            }
+        }
+    }
+
+    @Test
+    @WithMockUser("teacher1", roles = ["TEACHER"])
+    @DirtiesContext
+    fun test_28_createAssignmentWithProjectGroupRestrictions() {
+
+        try {
+
+            testsHelper.createAndSetupAssignment(
+                mvc, assignmentRepository, "dummyAssignment7", "Dummy Assignment",
+                "org.dummy",
+                "UPLOAD", sampleJavaAssignmentRepo,
+                minGroupSize = "2",
+                maxGroupSize = "2",
+                exceptions = "student3,\n   student4"
+            )
+
+            // get assignment detail
+            val mvcResult = this.mvc.perform(get("/assignment/info/dummyAssignment7"))
+                .andExpect(status().isOk)
+                .andReturn()
+
+            @Suppress("UNCHECKED_CAST")
+            val assignment = mvcResult.modelAndView!!.modelMap["assignment"] as Assignment
+            assertNotNull(assignment.projectGroupRestrictions)
+            assertEquals(2, assignment.projectGroupRestrictions?.minGroupSize)
+            assertEquals(2, assignment.projectGroupRestrictions?.maxGroupSize)
+            assertEquals("student3,student4", assignment.projectGroupRestrictions?.exceptions)
+
+            // get edit form
+            this.mvc.perform(get("/assignment/edit/dummyAssignment7"))
+                .andExpect(status().isOk)
+                .andExpect(model().hasNoErrors())
+                .andExpect(
+                    model().attribute(
+                        "assignmentForm",
+                        AssignmentForm(
+                            assignmentId = "dummyAssignment7",
+                            assignmentName = "Dummy Assignment",
+                            assignmentPackage = "org.dummy",
+                            submissionMethod = SubmissionMethod.UPLOAD,
+                            language = Language.JAVA,
+                            gitRepositoryUrl = sampleJavaAssignmentRepo,
+                            hiddenTestsVisibility = TestVisibility.SHOW_PROGRESS,
+                            editMode = true,
+                            assignmentTags = "",
+                            minGroupSize = 2,
+                            maxGroupSize = 2,
+                            exceptions = "student3,student4",
+                        )
+                    )
+                )
+
+            // post a change
+            mvc.perform(
+                post("/assignment/new")
+                    .param("assignmentId", "dummyAssignment7")
+                    .param("assignmentName", "New Name")
+                    .param("editMode", "true")
+                    .param("submissionMethod", "UPLOAD")
+                    .param("language", "JAVA")
+                    .param("gitRepositoryUrl", sampleJavaAssignmentRepo)
+                    .param("minGroupSize", "1")
+                    .param("maxGroupSize", "2")
+                    .param("exceptions", "student3,student4,student5")
+            )
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", "/assignment/info/dummyAssignment7"))
+
+            // get assignment detail
+            val mvcResult2 = this.mvc.perform(get("/assignment/info/dummyAssignment7"))
+                .andExpect(status().isOk)
+                .andReturn()
+
+            @Suppress("UNCHECKED_CAST")
+            val assignment2 = mvcResult2.modelAndView!!.modelMap["assignment"] as Assignment
+            assertNotNull(assignment2.projectGroupRestrictions)
+            assertEquals(1, assignment2.projectGroupRestrictions?.minGroupSize)
+            assertEquals(2, assignment2.projectGroupRestrictions?.maxGroupSize)
+            assertEquals("student3,student4,student5", assignment2.projectGroupRestrictions?.exceptions)
+
+            // post another change
+            mvc.perform(
+                post("/assignment/new")
+                    .param("assignmentId", "dummyAssignment7")
+                    .param("assignmentName", "New Name")
+                    .param("editMode", "true")
+                    .param("submissionMethod", "UPLOAD")
+                    .param("language", "JAVA")
+                    .param("gitRepositoryUrl", sampleJavaAssignmentRepo)
+                    // minGroupSize and the others no longer exist
+            )
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", "/assignment/info/dummyAssignment7"))
+
+            // get assignment detail
+            val mvcResult3 = this.mvc.perform(get("/assignment/info/dummyAssignment7"))
+                .andExpect(status().isOk)
+                .andReturn()
+
+            @Suppress("UNCHECKED_CAST")
+            val assignment3 = mvcResult3.modelAndView!!.modelMap["assignment"] as Assignment
+            assertNull(assignment3.projectGroupRestrictions)
+
+        } finally {
+
+            // cleanup assignment files
+            if (File(assignmentsRootLocation, "dummyAssignment7").exists()) {
+                File(assignmentsRootLocation, "dummyAssignment7").deleteRecursively()
             }
         }
     }

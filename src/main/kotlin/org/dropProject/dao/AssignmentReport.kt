@@ -37,7 +37,7 @@ data class AssignmentReport(
         @Id @GeneratedValue
         val id: Long = 0,
 
-        @Column(nullable = false)
+        @Column(nullable = false, length = 50)
         val assignmentId: String,  // assignment.id
 
         @Column(nullable = false)

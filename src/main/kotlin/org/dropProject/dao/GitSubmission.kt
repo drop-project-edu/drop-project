@@ -46,6 +46,7 @@ data class GitSubmission(
         @Id @GeneratedValue
         val id: Long = 0,
 
+        @Column(length = 50)
         val assignmentId: String,
         var submitterUserId: String,
 

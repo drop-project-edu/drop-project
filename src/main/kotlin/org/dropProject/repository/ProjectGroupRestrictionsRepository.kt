@@ -17,26 +17,12 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.dao
+package org.dropProject.repository
 
-import java.io.Serializable
-import javax.persistence.*
-
-@Embeddable
-data class AssignmentTagsCompositeKey(
-    val assignmentId: String,
-    val tagId: Long): Serializable
+import org.dropProject.dao.ProjectGroupRestrictions
+import org.springframework.data.jpa.repository.JpaRepository
 
 /**
- * Represents an associate table between assignments and assignmentTags. Due to problems with spring "magic", i've decided to implement
- * this relation by hand
- *
- * @property assignmentId .
- * @property tagId .
+ * Provides functions to query [ProjectGroupRestrictions]s that have been persisted in the database.
  */
-@Entity
-@IdClass(AssignmentTagsCompositeKey::class)
-data class AssignmentTags(
-    @Id @Column(length = 50) val assignmentId: String,
-    @Id val tagId: Long
-)
+interface ProjectGroupRestrictionsRepository : JpaRepository<ProjectGroupRestrictions, Long>

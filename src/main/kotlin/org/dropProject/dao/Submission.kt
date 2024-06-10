@@ -115,6 +115,7 @@ data class Submission(
         @JsonView(JSONViews.StudentAPI::class)
         var statusDate: Date,
 
+        @Column(length = 50)
         val assignmentId: String,
         val assignmentGitHash: String?,
 
