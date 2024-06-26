@@ -173,6 +173,7 @@ data class Assignment(
     @Transient
     var authorizedStudentIds: List<String>? = null,
 
+    @JsonView(JSONViews.TeacherAPI::class)
     @Transient
     var tagsStr: List<String>? = null,
 
