@@ -78,6 +78,11 @@ class TeacherAPIController(
     )
     fun getCurrentAssignments(principal: Principal): ResponseEntity<List<Assignment>> {
         val assignments = assignmentService.getMyAssignments(principal, archived = false)
+
+        assignments.forEach {
+            it.tagsStr = assignmentService.getTagsStr(it)
+        }
+
         return ResponseEntity.ok(assignments)
     }
 
