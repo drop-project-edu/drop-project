@@ -156,7 +156,7 @@
                     <label class="col-sm-3 control-label">Group size:</label>
                     <div class="col-sm-9 read-row" th:text="${assignment.projectGroupRestrictions.minGroupSize + ' - ' + assignment.projectGroupRestrictions.maxGroupSize +  ' students'}"></div>
                 </div>
-                <div class="form-group" th:if="${!assignment.projectGroupRestrictions?.exceptionsAsList().isEmpty()}">
+                <div class="form-group" th:if="${assignment.projectGroupRestrictions != null and !assignment.projectGroupRestrictions?.exceptionsAsList().isEmpty()}">
                     <label class="col-sm-3 control-label">Exceptions to group size:</label>
                     <div class="col-sm-9 read-row">
                         <table class="table table-bordered">
