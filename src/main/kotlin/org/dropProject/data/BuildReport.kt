@@ -31,6 +31,12 @@ import org.slf4j.LoggerFactory
 import java.math.BigDecimal
 
 /**
+ * Escape sequence used by detek error messages
+ */
+private const val ESC = "\u001B"
+private val escapeSequenceRegex = """$ESC\[\d+m""".toRegex()
+
+/**
  * Enum representing the types of tests that DP supports:
  * - Student tests - unit tests written by the students to test their own work;
  * - Teacher - unit tests written by the teachers to test the student's work; The detailed results of these tests are
@@ -505,6 +511,7 @@ data class BuildReport(val mavenOutputLines: List<String>,
      */
     private fun translateDetektError(originalError: String) : String {
 
+
         // TODO language
         return originalError
                 .replace("VariableNaming -", "Nome da variável deve começar por letra minúscula. " +
@@ -523,5 +530,6 @@ data class BuildReport(val mavenOutputLines: List<String>,
                 .replace("MaxLineLength -", "Linha demasiado comprida -")
                 .replace("LongMethod -", "Função com demasiadas linhas de código -")
                 .replace("ForbiddenKeywords -", "Utilização de instruções proibidas -")
+                .replace(escapeSequenceRegex, "")  // remove extra escape characters used for coloring
     }
 }
