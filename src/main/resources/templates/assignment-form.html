@@ -193,7 +193,7 @@
         </div>
         <div class="form-group">
             <label for="exceptions" class="col-sm-3 control-label">Exceptions to group size (optional)</label>
-            <div class="col-sm-9">
+            <div class="col-sm-9" th:classappend="${#fields.hasErrors('exceptions')} ? 'has-error' : ''">
                 <textarea th:field="*{exceptions}" class="form-control" id="exceptions" rows="3" placeholder="a21701234,a21705678" />
                 <p class="help-block" th:if="${#fields.hasErrors('exceptions')}" th:errors="*{exceptions}">Error</p>
                 <p class="help-block" th:if="${!#fields.hasErrors('exceptions')}">Comma separated list of student id's that are exempt from the
@@ -203,7 +203,7 @@
 
         <div class="form-group" th:classappend="${#fields.hasErrors('assignees')} ? 'has-error' : ''">
             <label for="assignees" class="col-sm-3 control-label">Open to (optional)</label>
-            <div class="col-sm-9">
+            <div class="col-sm-9" th:classappend="${#fields.hasErrors('assignees')} ? 'has-error' : ''">
                 <textarea th:field="*{assignees}" class="form-control" id="assignees" rows="3" placeholder="a21701234,a21705678" />
                 <p class="help-block" th:if="${#fields.hasErrors('assignees')}" th:errors="*{assignees}">Error</p>
                 <p class="help-block" th:if="${!#fields.hasErrors('assignees')}">Comma separated list of student id's that are allowed to upload submissions (new lines and spaces will be trimmed)</p>

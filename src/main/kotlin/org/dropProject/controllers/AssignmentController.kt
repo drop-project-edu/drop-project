@@ -173,7 +173,7 @@ class AssignmentController(
         }
 
         if (!assignmentForm.exceptions.isNullOrBlank() && assignmentForm.minGroupSize == null) {
-            LOG.warn("Max must be greater or equal to min")
+            LOG.warn("Exceptions to group size should only be filled in when you set the min group size")
             bindingResult.rejectValue("exceptions", "exceptions.minSizeNotSet",
                 "Error: Exceptions to group size should only be filled in when you set the min group size")
         }

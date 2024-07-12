@@ -24,6 +24,7 @@ import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.Id
 import javax.persistence.PrePersist
+import javax.persistence.PreUpdate
 
 @Entity
 data class ProjectGroupRestrictions(
@@ -38,13 +39,14 @@ data class ProjectGroupRestrictions(
 ) {
 
     @PrePersist
+    @PreUpdate
     fun prePersist() {
-        exceptions = exceptions?.replace(" ", "")?.replace("\n", "")
+        exceptions = exceptions?.replace(" ", "")?.replace("\n", "")?.replace("\r", "")
     }
 
-    fun exceptionsAsList(): List<String>? {
-        if (exceptions == null) {
-            return null
+    fun exceptionsAsList(): List<String> {
+        if (exceptions.isNullOrBlank()) {
+            return emptyList()
         }
         return exceptions!!.split(",").sorted()
     }
