@@ -80,7 +80,7 @@ The application should now be accessible on [http://localhost:8080](http://local
 
 ### Demo mode (in memory database)
 
-    docker run -p 8080:8080 pedroalv3s/drop-project-demo
+    docker run -p 8080:8080 pedroalv3s/drop-project
 
 ### Production mode (using mysql)
 
