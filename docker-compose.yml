@@ -2,7 +2,7 @@ version: '3.5'
 
 services:
   db:
-    image: mysql:8.0
+    image: mysql:8.0.35
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci
     environment:
       MYSQL_ROOT_PASSWORD: s3cret
@@ -13,7 +13,7 @@ services:
       - ./db:/var/lib/mysql
 
   drop-project:
-    image: pedroalv3s/drop-project:v0.9.8-beta2
+    image: pedroalv3s/drop-project:v0.9.8
     restart: "on-failure"
     environment:
       SPRING_PROFILES_ACTIVE: mysql
