@@ -1154,7 +1154,7 @@ class ReportControllerTests {
 
     @Test
     @DirtiesContext
-    fun testCheckPlagiarism() {
+    fun testCheckPlagiarismJava() {
 
         testsHelper.uploadProject(this.mvc, "projectCompilationErrors", defaultAssignmentId, STUDENT_1)
         testsHelper.uploadProject(
@@ -1179,6 +1179,41 @@ class ReportControllerTests {
         this.mvc.perform(get("/downloadPlagiarismMatchReport/${defaultAssignmentId}").with(user(TEACHER_1)))
             .andExpect(status().isOk)
             .andExpect(header().string("Content-Disposition", "attachment; filename=dp-jplag-${defaultAssignmentId}-report.zip"))
+    }
+
+    @Test
+    @DirtiesContext
+    fun testCheckPlagiarismKotlin() {
+
+        val assignmentKotlin = Assignment(id = "testKotlinProj", name = "Test Project (for automatic tests)",
+            packageName = "org.dropproject.samples.samplekotlinassignment", ownerUserId = "teacher1",
+            submissionMethod = SubmissionMethod.UPLOAD, active = true, language = Language.KOTLIN,
+            gitRepositoryUrl = "git://dummyRepo",
+            gitRepositoryFolder = "testKotlinProj2")
+        assignmentRepository.save(assignmentKotlin)
+
+        testsHelper.uploadProject(this.mvc, "projectKotlinOK", "testKotlinProj", STUDENT_1)
+        testsHelper.uploadProject(this.mvc, "projectKotlinOK2", "testKotlinProj", STUDENT_2)
+
+        val mvcResult = this.mvc.perform(get("/checkPlagiarism/testKotlinProj").with(user(TEACHER_1)))
+            .andExpect(status().isOk)
+            .andReturn()
+
+        @Suppress("UNCHECKED_CAST")
+        val comparisons = mvcResult.modelAndView!!.modelMap["comparisons"] as List<PlagiarismComparison>
+        assertEquals(1, comparisons.size)
+        assertEquals(0, comparisons[0].matchId)
+        assertThat(comparisons[0].firstSubmission.id.toInt(), either(`is`(1)).or(`is`(2)))
+        assertThat(comparisons[0].secondSubmission.id.toInt(), either(`is`(1)).or(`is`(2)))
+        assertEquals(1, comparisons[0].firstNumTries)
+        assertEquals(1, comparisons[0].secondNumTries)
+        assertEquals(92, comparisons[0].similarityPercentage)
+
+        this.mvc.perform(get("/downloadPlagiarismMatchReport/testKotlinProj").with(user(TEACHER_1)))
+            .andExpect(status().isOk)
+            .andExpect(header().string("Content-Disposition", "attachment; filename=dp-jplag-testKotlinProj-report.zip"))
+
+
     }
 
 }
