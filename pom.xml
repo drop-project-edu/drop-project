@@ -216,7 +216,7 @@
 		<dependency>  <!-- support for kotlin plagiarism detection, with a non-official fix to support kotlin 1.9 -->
 			<groupId>org.dropproject</groupId>
 			<artifactId>jplag-kotlin-fix-1.9</artifactId>
-			<version>4.3.0</version>
+			<version>4.3.0.1</version>
 		</dependency>
 <!--		<dependency> &lt;!&ndash; support for kotlin plagiarism detection &ndash;&gt;-->
 <!--			<groupId>de.jplag</groupId>-->
