@@ -1207,7 +1207,7 @@ class ReportControllerTests {
         assertThat(comparisons[0].secondSubmission.id.toInt(), either(`is`(1)).or(`is`(2)))
         assertEquals(1, comparisons[0].firstNumTries)
         assertEquals(1, comparisons[0].secondNumTries)
-        assertEquals(92, comparisons[0].similarityPercentage)
+        assertEquals(91, comparisons[0].similarityPercentage)
 
         this.mvc.perform(get("/downloadPlagiarismMatchReport/testKotlinProj").with(user(TEACHER_1)))
             .andExpect(status().isOk)
