@@ -479,6 +479,14 @@ class SubmissionService(
             erros.add("O projecto contém uma pasta README.md mas devia ser um ficheiro") // TODO language
         }
 
+        if (File(projectFolder, "src")
+                .walkTopDown()
+                .filter { it.extension in listOf("java", "kt") }
+                .filter { !it.name.startsWith("Test") }
+                .any { containsSearchString(it, "org.junit") }) {
+            erros.add("As classes de teste devem começar com a palavra Test (exemplo: TestCar)") // TODO language
+        }
+
         return erros
     }
 
@@ -596,6 +604,13 @@ class SubmissionService(
                 submission.ellapsed = buildReport.elapsedTimeJUnit()
                 submission.teacherTests = buildReport.junitSummaryAsObject()
             }
+        }
+    }
+
+    // fast way of checking if a file contains a string without having to read the whole file into memory
+    private fun containsSearchString(file: File, searchString: String): Boolean {
+        return file.useLines { lines ->
+            lines.any { it.contains(searchString) }
         }
     }
 }
