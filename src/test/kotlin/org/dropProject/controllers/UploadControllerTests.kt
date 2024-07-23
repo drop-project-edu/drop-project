@@ -1627,7 +1627,7 @@ class UploadControllerTests {
     @DirtiesContext
     fun `upload a project with test classes that dont follow the TestXXX convention should show an error`() {
 
-        val submissionId = testsHelper.uploadProject(this.mvc, "projectWith1StudentTest", "testJavaProj", STUDENT_1)
+        val submissionId = testsHelper.uploadProject(this.mvc, "projectWithStudentTestNotValid", "testJavaProj", STUDENT_1)
 
         val reportResult = this.mvc.perform(get("/buildReport/$submissionId"))
             .andExpect(status().isOk())
