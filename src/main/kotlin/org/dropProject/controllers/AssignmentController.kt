@@ -377,6 +377,11 @@ class AssignmentController(
             it.tagsStr = assignmentService.getTagsStr(it)
         }
 
+        if (assignment.gitRepositoryPubKey != null && assignment.gitCurrentHash == null) {
+            // assignment was not properly connected to git, redirect to the setup-git page
+            return "redirect:/assignment/setup-git/${assignment.id}"
+        }
+
         val assignees = assigneeRepository.findByAssignmentIdOrderByAuthorUserId(assignmentId)
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
         val assignmentReports = assignmentReportRepository.findByAssignmentId(assignmentId)
@@ -656,8 +661,9 @@ class AssignmentController(
             assignmentRepository.save(assignment)
         } catch (e: Exception) {
             LOG.info("Error cloning ${gitRepository} - ${e}")
-            model["error"] = "Error cloning ${gitRepository} - ${e.message}"
+            model["error"] = "Error cloning ${gitRepository} - ${e.message}. Are you sure you added the public key to the repository?"
             model["assignment"] = assignment
+            model["reconnect"] = reconnect
             return "setup-git"
         }
 

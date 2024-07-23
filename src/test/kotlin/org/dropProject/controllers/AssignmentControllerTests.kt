@@ -65,6 +65,7 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import org.springframework.validation.BindingResult
 import java.io.File
@@ -300,6 +301,7 @@ class AssignmentControllerTests {
             val result2 = this.mvc.perform(get("/assignment/info/dummyAssignment1"))
                 .andExpect(status().isOk)
                 .andReturn()
+
             @Suppress("UNCHECKED_CAST")
             val report2 = result2.modelAndView!!.modelMap["report"] as List<AssignmentReport>
             assertEquals(7, report2.size)
@@ -868,9 +870,11 @@ class AssignmentControllerTests {
         val submission = submissionRepository.getById(submissionId)
 
         // try to delete the assignment with force = true using someone who hasn't the admin role
-        this.mvc.perform(post("/assignment/delete/testJavaProj")
-            .param("force", "true")
-            .with(user(TEACHER_1)))
+        this.mvc.perform(
+            post("/assignment/delete/testJavaProj")
+                .param("force", "true")
+                .with(user(TEACHER_1))
+        )
             .andExpect(status().isForbidden)
 
         // try to delete the assignment with force = true using someone who has the admin role
@@ -916,12 +920,16 @@ class AssignmentControllerTests {
         assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student1"))
 
         //check if assignment is in Assignee Repository
-        assertTrue("${assignment.id} should be in assignee repository",
-            assigneeRepository.findByAuthorUserId(STUDENT_1.username).isNotEmpty())
+        assertTrue(
+            "${assignment.id} should be in assignee repository",
+            assigneeRepository.findByAuthorUserId(STUDENT_1.username).isNotEmpty()
+        )
 
         //check if assignment is in assignment Repository
-        assertTrue("${assignment.id} should be in assignment repository",
-            assignmentRepository.existsById(assignment.id))
+        assertTrue(
+            "${assignment.id} should be in assignment repository",
+            assignmentRepository.existsById(assignment.id)
+        )
 
         // succeed on deleting the assignment
         this.mvc.perform(
@@ -933,14 +941,20 @@ class AssignmentControllerTests {
             .andExpect(flash().attribute("message", "Assignment was successfully deleted"))
 
         //check if assignment was deleted in Assignee Repository
-        assertFalse("${assignment.id} should have been deleted from assignee repository",
-            assigneeRepository.existsByAssignmentId(assignment.id))
-        assertTrue("${assignment.id} should have been deleted from assignee repository",
-            assigneeRepository.findByAuthorUserId(STUDENT_1.username).isEmpty())
+        assertFalse(
+            "${assignment.id} should have been deleted from assignee repository",
+            assigneeRepository.existsByAssignmentId(assignment.id)
+        )
+        assertTrue(
+            "${assignment.id} should have been deleted from assignee repository",
+            assigneeRepository.findByAuthorUserId(STUDENT_1.username).isEmpty()
+        )
 
         //check if assignment was deleted in assignment Repository
-        assertFalse("${assignment.id} should have been deleted from assignment repository",
-            assignmentRepository.existsById(assignment.id))
+        assertFalse(
+            "${assignment.id} should have been deleted from assignment repository",
+            assignmentRepository.existsById(assignment.id)
+        )
     }
 
     @Test
@@ -1123,8 +1137,8 @@ class AssignmentControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val assignment = mvcResult.modelAndView!!.modelMap["assignment"] as Assignment
-         val tagNames = assignment.tagsStr
-         org.hamcrest.MatcherAssert.assertThat(tagNames, containsInAnyOrder("sample", "test", "simple"))
+        val tagNames = assignment.tagsStr
+        org.hamcrest.MatcherAssert.assertThat(tagNames, containsInAnyOrder("sample", "test", "simple"))
 
         // check available tags
         // it should now return 'sample','test','simple'
@@ -1206,8 +1220,10 @@ class AssignmentControllerTests {
             @Suppress("UNCHECKED_CAST")
             val testMethods = mvcResult.modelAndView!!.modelMap["tests"] as List<AssignmentTestMethod>
             assertEquals(4, testMethods.size)
-            assertThat(testMethods.map { it.testMethod },
-                contains("test_001_FindMax", "test_002_FindMaxAllNegative", "test_003_FindMaxNegativeAndPositive", "test_004_FindMaxWithNull", ))
+            assertThat(
+                testMethods.map { it.testMethod },
+                contains("test_001_FindMax", "test_002_FindMaxAllNegative", "test_003_FindMaxNegativeAndPositive", "test_004_FindMaxWithNull")
+            )
 
         } finally {
 
@@ -1311,7 +1327,8 @@ class AssignmentControllerTests {
 
             val result = this.mvc.perform(
                 get("/assignment/export/dummyAssignment1?includeSubmissions=false")
-                    .with(user(TEACHER_1)))
+                    .with(user(TEACHER_1))
+            )
                 .andExpect(status().isFound)
                 .andReturn()
 
@@ -1321,11 +1338,14 @@ class AssignmentControllerTests {
             val result2 = this.mvc.perform(
                 get(redirectLocation)
                     .with(user(TEACHER_1))
-                    .contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE))
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE)
+            )
                 .andExpect(
                     header().string(
                         "Content-Disposition",
-                        "attachment; filename=dummyAssignment1_${Date().formatJustDate()}.dp"))
+                        "attachment; filename=dummyAssignment1_${Date().formatJustDate()}.dp"
+                    )
+                )
                 .andExpect(status().isOk)
                 .andReturn()
 
@@ -1422,7 +1442,8 @@ class AssignmentControllerTests {
 
         val result = this.mvc.perform(
             get("/assignment/export/testJavaProj?includeSubmissions=true")
-                .with(user(TEACHER_1)))
+                .with(user(TEACHER_1))
+        )
             .andExpect(status().isFound)
             .andReturn()
 
@@ -1432,11 +1453,14 @@ class AssignmentControllerTests {
         val result2 = this.mvc.perform(
             get(redirectLocation)
                 .with(user(TEACHER_1))
-                .contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE))
+                .contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE)
+        )
             .andExpect(
                 header().string(
                     "Content-Disposition",
-                    "attachment; filename=testJavaProj_${Date().formatJustDate()}.dp"))
+                    "attachment; filename=testJavaProj_${Date().formatJustDate()}.dp"
+                )
+            )
             .andExpect(status().isOk)
             .andReturn()
 
@@ -1472,9 +1496,13 @@ class AssignmentControllerTests {
 
         val junitReportFileNames = node.at("/2/junitReports").elements().asSequence().toList().map { it.get("filename").textValue() }
 
-        assertThat(junitReportFileNames,
-            hasItems("TEST-org.dropProject.sampleAssignments.testProj.TestTeacherProject.xml",
-                     "TEST-org.dropProject.sampleAssignments.testProj.TestTeacherHiddenProject.xml"))
+        assertThat(
+            junitReportFileNames,
+            hasItems(
+                "TEST-org.dropProject.sampleAssignments.testProj.TestTeacherProject.xml",
+                "TEST-org.dropProject.sampleAssignments.testProj.TestTeacherHiddenProject.xml"
+            )
+        )
 
         assertEquals("student4", node.at("/3/authors/0/userId").asText())
         assertEquals("student5", node.at("/3/authors/1/userId").asText())
@@ -1510,8 +1538,10 @@ class AssignmentControllerTests {
                 .andExpect(flash().attribute("message", "Imported successfully dummyAssignment1 and all its submissions"))
                 .andExpect(header().string("Location", "/report/dummyAssignment1"))
 
-            val reportResult = this.mvc.perform(get("/report/dummyAssignment1")
-                .with(user(TEACHER_1)))
+            val reportResult = this.mvc.perform(
+                get("/report/dummyAssignment1")
+                    .with(user(TEACHER_1))
+            )
                 .andExpect(status().isOk())
                 .andReturn()
 
@@ -1542,12 +1572,15 @@ class AssignmentControllerTests {
         )
         assignmentRepository.save(assignment01)
 
-        testsHelper.connectToGitRepositoryAndBuildReport(mvc, gitSubmissionRepository, "testJavaProj",
-            "git@github.com:drop-project-edu/sampleJavaSubmission.git", "student1")
+        testsHelper.connectToGitRepositoryAndBuildReport(
+            mvc, gitSubmissionRepository, "testJavaProj",
+            "git@github.com:drop-project-edu/sampleJavaSubmission.git", "student1"
+        )
 
         val result = this.mvc.perform(
             get("/assignment/export/testJavaProj?includeSubmissions=true")
-                .with(user(TEACHER_1)))
+                .with(user(TEACHER_1))
+        )
             .andExpect(status().isFound)
             .andReturn()
 
@@ -1557,11 +1590,14 @@ class AssignmentControllerTests {
         val result2 = this.mvc.perform(
             get(redirectLocation)
                 .with(user(TEACHER_1))
-                .contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE))
+                .contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE)
+        )
             .andExpect(
                 header().string(
                     "Content-Disposition",
-                    "attachment; filename=testJavaProj_${Date().formatJustDate()}.dp"))
+                    "attachment; filename=testJavaProj_${Date().formatJustDate()}.dp"
+                )
+            )
             .andExpect(status().isOk)
             .andReturn()
 
@@ -1609,8 +1645,10 @@ class AssignmentControllerTests {
                 .andExpect(flash().attribute("message", "Imported successfully dummyAssignment1 and all its submissions"))
                 .andExpect(header().string("Location", "/report/dummyAssignment1"))
 
-            val reportResult = this.mvc.perform(get("/report/dummyAssignment1")
-                .with(user(TEACHER_1)))
+            val reportResult = this.mvc.perform(
+                get("/report/dummyAssignment1")
+                    .with(user(TEACHER_1))
+            )
                 .andExpect(status().isOk())
                 .andReturn()
 
@@ -1640,7 +1678,8 @@ class AssignmentControllerTests {
             testsHelper.createAndSetupAssignment(
                 mvc, assignmentRepository, "dummyAssignment", "Dummy Assignment",
                 "org.dummy", "UPLOAD", sampleJavaAssignmentRepo,
-                teacherId = "p1", activateRightAfterCloning = false)
+                teacherId = "p1", activateRightAfterCloning = false
+            )
 
             // remove the private and public keys to mess up the connection with github
             val assignment = assignmentRepository.getById("dummyAssignment")
@@ -1675,12 +1714,12 @@ class AssignmentControllerTests {
                     )
                 )
 
-    } finally {
-        // cleanup assignment files
-        if (File(assignmentsRootLocation, "dummyAssignment").exists()) {
-            File(assignmentsRootLocation, "dummyAssignment").deleteRecursively()
+        } finally {
+            // cleanup assignment files
+            if (File(assignmentsRootLocation, "dummyAssignment").exists()) {
+                File(assignmentsRootLocation, "dummyAssignment").deleteRecursively()
+            }
         }
-    }
 
     }
 
@@ -1715,8 +1754,10 @@ class AssignmentControllerTests {
             @Suppress("UNCHECKED_CAST")
             val testMethods = mvcResult.modelAndView!!.modelMap["tests"] as List<AssignmentTestMethod>
             assertEquals(4, testMethods.size)
-            assertThat(testMethods.map { it.testMethod },
-                contains("test_001_FindMax", "test_002_FindMaxAllNegative", "test_003_FindMaxNegativeAndPositive", "test_004_FindMaxWithNull", ))
+            assertThat(
+                testMethods.map { it.testMethod },
+                contains("test_001_FindMax", "test_002_FindMaxAllNegative", "test_003_FindMaxNegativeAndPositive", "test_004_FindMaxWithNull")
+            )
 
         } finally {
 
@@ -1816,7 +1857,7 @@ class AssignmentControllerTests {
                     .param("submissionMethod", "UPLOAD")
                     .param("language", "JAVA")
                     .param("gitRepositoryUrl", sampleJavaAssignmentRepo)
-                    // minGroupSize and the others no longer exist
+                // minGroupSize and the others no longer exist
             )
                 .andExpect(status().isFound())
                 .andExpect(header().string("Location", "/assignment/info/dummyAssignment7"))
@@ -1837,6 +1878,39 @@ class AssignmentControllerTests {
                 File(assignmentsRootLocation, "dummyAssignment7").deleteRecursively()
             }
         }
+    }
+
+    @Test
+    @WithMockUser("teacher1", roles = ["TEACHER"])
+    @DirtiesContext
+    fun test_29_createNewAssignmentAndTryToConnectWithoutSettingUpAccessKeys() {
+
+        // POST /assignment/new
+        mvc.perform(
+            post("/assignment/new")
+                .param("assignmentId", "test")
+                .param("assignmentName", "test")
+                .param("language", "JAVA")
+                .param("submissionMethod", "UPLOAD")
+                .param("gitRepositoryUrl", "git@github.com:drop-project-edu/random-private-repo.git") // some random private repo
+        )
+            .andExpect(status().isFound())
+            .andExpect(header().string("Location", "/assignment/setup-git/test"))
+
+        // GET /assignment/setup-git/teste
+        mvc.perform(get("/assignment/setup-git/test"))
+            .andExpect(status().isOk)
+
+        // POST /assignment/setup-git/teste?reconnect=false
+        mvc.perform(post("/assignment/setup-git/test?reconnect=false"))
+            .andExpect(status().isOk)
+            .andExpect(view().name("setup-git"))
+            .andExpect(content().string(containsString("Error cloning")));
+
+        // verificar que, como o assignment fica desconetado, não se consegue ir para o info
+        mvc.perform(get("/assignment/info/test"))
+            .andExpect(status().isFound())
+            .andExpect(header().string("Location", "/assignment/setup-git/test"))
     }
 }
     
