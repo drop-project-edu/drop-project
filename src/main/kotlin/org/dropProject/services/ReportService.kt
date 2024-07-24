@@ -144,7 +144,16 @@ class ReportService(
             // check the submission status
             when (submission.getStatus()) {
                 SubmissionStatus.ILLEGAL_ACCESS -> fullBuildReport.error = i18n.getMessage("student.build-report.illegalAccess", null, currentLocale)
-                SubmissionStatus.FAILED -> fullBuildReport.error = i18n.getMessage("student.build-report.failed", null, currentLocale)
+                SubmissionStatus.FAILED -> {
+                    fullBuildReport.error = i18n.getMessage("student.build-report.failed", null, currentLocale)
+
+                    // in this case, it may be useful to show the maven output
+                    submission.buildReport?.let {
+                            buildReportDB ->
+                        fullBuildReport.buildReport = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
+                            mavenizedProjectFolder.absolutePath, assignment, submission)
+                    }
+                }
                 SubmissionStatus.ABORTED_BY_TIMEOUT -> fullBuildReport.error = i18n.getMessage("student.build-report.abortedByTimeout", arrayOf(
                     asyncTimeoutConfigurer.getTimeout()
                 ), currentLocale)

@@ -1,0 +1,23 @@
+[INFO] Scanning for projects...
+[INFO]
+[INFO] ----------------< pt.ulusofona.aed2020:aed-projecto-p1 >----------------
+[INFO] Building aed-projecto-p1 1.0-SNAPSHOT
+[INFO]   from pom_updated.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO]
+[INFO] --- maven-clean-plugin:2.5:clean (default-clean) @ aed-projecto-p1 ---
+[INFO]
+[INFO] --- maven-checkstyle-plugin:3.1.1:check (validate) @ aed-projecto-p1 ---
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  3.410 s
+[INFO] Finished at: 2024-07-24T17:47:48+01:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-checkstyle-plugin:3.1.1:check (validate) on project aed-projecto-p1: Failed during checkstyle configuration: Exception was thrown while processing /srv/drop-project/mavenized-projects/aed-202122-projecto-p1/16-22/1650120665023-src-mavenized-for-rebuild/src/main/java/pt/ulusofona/deisi/aed/deisiflix/Filme.java: MismatchedTokenException occurred while parsing file /srv/drop-project/mavenized-projects/aed-202122-projecto-p1/16-22/1650120665023-src-mavenized-for-rebuild/src/main/java/pt/ulusofona/deisi/aed/deisiflix/Filme.java. expecting EOF, found '}' -> [Help 1]
+[ERROR]
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR]
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException

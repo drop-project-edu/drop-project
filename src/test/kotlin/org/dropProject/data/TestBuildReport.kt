@@ -204,6 +204,19 @@ class TestBuildReport {
     }
 
     @Test
+    fun testCheckstylePluginError() {
+        val mavenOutputLines = resourceLoader.getResource("file:src/test/sampleMavenOutputs/checkstylePluginFails.txt").file.readLines()
+
+        val buildReport = buildReportBuilder.build(mavenOutputLines,
+            "someMavenizedProj",
+            dummyJavaAssignment)
+
+        assertTrue(buildReport.mavenExecutionFailed())
+
+        // TODO: devia ter uma flag "fatalError" quando um plugin rebenta
+    }
+
+    @Test
     fun testKotlinDetektErrors() {
 
         val detektOutputs = arrayOf("kotlinDetektErrors-1.0.0.RC9.2.txt", "kotlinDetektErrors-1.1.1.txt", "kotlinDetektErrors-1.11.0.txt")

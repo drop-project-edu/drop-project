@@ -104,14 +104,22 @@ class BuildWorker(
 
                 if (!buildReport.mavenExecutionFailed()) {
 
-                    submissionReportRepository.save(SubmissionReport(submissionId = submission.id,
-                            reportKey = Indicator.COMPILATION.code, reportValue = if (buildReport.compilationErrors.isEmpty()) "OK" else "NOK"))
+                    submissionReportRepository.save(
+                        SubmissionReport(
+                            submissionId = submission.id,
+                            reportKey = Indicator.COMPILATION.code, reportValue = if (buildReport.compilationErrors.isEmpty()) "OK" else "NOK"
+                        )
+                    )
 
                     if (buildReport.compilationErrors.isEmpty()) {
 
                         if (buildReport.checkstyleValidationActive()) {
-                            submissionReportRepository.save(SubmissionReport(submissionId = submission.id,
-                                    reportKey = Indicator.CHECKSTYLE.code, reportValue = if (buildReport.checkstyleErrors.isEmpty()) "OK" else "NOK"))
+                            submissionReportRepository.save(
+                                SubmissionReport(
+                                    submissionId = submission.id,
+                                    reportKey = Indicator.CHECKSTYLE.code, reportValue = if (buildReport.checkstyleErrors.isEmpty()) "OK" else "NOK"
+                                )
+                            )
                         }
 
 
@@ -121,43 +129,54 @@ class BuildWorker(
 //                        reportKey = "Code Quality (PMD)", reportValue = if (buildReport.PMDerrors().isEmpty()) "OK" else "NOK"))
 
 
-
                         if (assignment.acceptsStudentTests) {
 
                             val junitSummary = buildReport.junitSummaryAsObject(TestType.STUDENT)
                             val indicator =
-                                    if (buildReport.hasJUnitErrors(TestType.STUDENT) == true) {
-                                        "NOK"
-                                    } else if (junitSummary?.numTests == null || junitSummary.numTests < assignment.minStudentTests!!) {
-                                        // student hasn't implemented enough tests
-                                        "Not Enough Tests"
-                                    } else {
-                                        "OK"
-                                    }
+                                if (buildReport.hasJUnitErrors(TestType.STUDENT) == true) {
+                                    "NOK"
+                                } else if (junitSummary?.numTests == null || junitSummary.numTests < assignment.minStudentTests!!) {
+                                    // student hasn't implemented enough tests
+                                    "Not Enough Tests"
+                                } else {
+                                    "OK"
+                                }
 
-                            submissionReportRepository.save(SubmissionReport(submissionId = submission.id,
+                            submissionReportRepository.save(
+                                SubmissionReport(
+                                    submissionId = submission.id,
                                     reportKey = Indicator.STUDENT_UNIT_TESTS.code,
                                     reportValue = indicator,
                                     reportProgress = junitSummary?.progress,
-                                    reportGoal = junitSummary?.numTests))
+                                    reportGoal = junitSummary?.numTests
+                                )
+                            )
                         }
 
                         if (buildReport.hasJUnitErrors(TestType.TEACHER) != null) {
                             val junitSummary = buildReport.junitSummaryAsObject(TestType.TEACHER)
-                            submissionReportRepository.save(SubmissionReport(submissionId = submission.id,
+                            submissionReportRepository.save(
+                                SubmissionReport(
+                                    submissionId = submission.id,
                                     reportKey = Indicator.TEACHER_UNIT_TESTS.code,
                                     reportValue = if (buildReport.hasJUnitErrors(TestType.TEACHER) == true) "NOK" else "OK",
                                     reportProgress = junitSummary?.progress,
-                                    reportGoal = junitSummary?.numTests))
+                                    reportGoal = junitSummary?.numTests
+                                )
+                            )
                         }
 
                         if (buildReport.hasJUnitErrors(TestType.HIDDEN) != null) {
                             val junitSummary = buildReport.junitSummaryAsObject(TestType.HIDDEN)
-                            submissionReportRepository.save(SubmissionReport(submissionId = submission.id,
+                            submissionReportRepository.save(
+                                SubmissionReport(
+                                    submissionId = submission.id,
                                     reportKey = Indicator.HIDDEN_UNIT_TESTS.code,
                                     reportValue = if (buildReport.hasJUnitErrors(TestType.HIDDEN) == true) "NOK" else "OK",
                                     reportProgress = junitSummary?.progress,
-                                    reportGoal = junitSummary?.numTests))
+                                    reportGoal = junitSummary?.numTests
+                                )
+                            )
                         }
                     }
                 }
@@ -231,10 +250,14 @@ class BuildWorker(
 
                 }
 
-                if (!rebuildByTeacher) {
-                    submission.setStatus(SubmissionStatus.VALIDATED, dontUpdateStatusDate = dontChangeStatusDate)
+                if (buildReport.mavenExecutionFailed()) {
+                    submission.setStatus(SubmissionStatus.FAILED, dontUpdateStatusDate = dontChangeStatusDate)
                 } else {
-                    submission.setStatus(SubmissionStatus.VALIDATED_REBUILT, dontUpdateStatusDate = dontChangeStatusDate)
+                    if (!rebuildByTeacher) {
+                        submission.setStatus(SubmissionStatus.VALIDATED, dontUpdateStatusDate = dontChangeStatusDate)
+                    } else {
+                        submission.setStatus(SubmissionStatus.VALIDATED_REBUILT, dontUpdateStatusDate = dontChangeStatusDate)
+                    }
                 }
             }
         }
