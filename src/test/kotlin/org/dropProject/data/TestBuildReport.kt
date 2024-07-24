@@ -19,21 +19,18 @@
  */
 package org.dropProject.data
 
-import org.junit.Before
+import org.dropProject.dao.Assignment
+import org.dropProject.dao.Language
+import org.dropProject.forms.SubmissionMethod
+import org.dropProject.services.BuildReportBuilder
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.io.ResourceLoader
-import org.springframework.test.context.junit4.SpringRunner
-import org.dropProject.dao.Assignment
-import org.dropProject.dao.Language
-import org.dropProject.forms.SubmissionMethod
-import org.dropProject.repository.AssignmentTestMethodRepository
-import org.dropProject.services.BuildReportBuilder
-import org.junit.Assert.*
-import org.junit.Ignore
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.junit4.SpringRunner
 
 
 @RunWith(SpringRunner::class)
@@ -53,11 +50,6 @@ class TestBuildReport {
             packageName = "org.testProj", ownerUserId = "teacher1",
             submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummy",
             language = Language.KOTLIN, gitRepositoryFolder = "testJavaProj")
-
-    @Before
-    fun setupLogging() {
-        System.setProperty("java.util.logging.config.file", ClassLoader.getSystemResource("logging-test.properties").path)
-    }
 
     @Test
     fun testFatalError1() {
