@@ -65,7 +65,8 @@ open class DropProjectSecurityConfig(val apiAuthenticationManager: PersonalToken
      * Returns an array of ant matcher expressions which will be allowed without authentication
      */
     open fun getPublicUrls() = listOf("/public", "/login", "/loginFromDEISI", "/access-denied", "/error", "/h2-console/**",
-        "/api-docs", "/swagger-ui.html", "/swagger-ui/**", "/swagger-resources/**", "/v2/api-docs")
+        "/api-docs", "/swagger-ui.html", "/swagger-ui/**", "/swagger-resources/**", "/v2/api-docs",
+        "/css/**", "/js/**", "/img/**", "/favicon.ico")
 
     override fun configure(http: HttpSecurity) {
         http
@@ -96,10 +97,5 @@ open class DropProjectSecurityConfig(val apiAuthenticationManager: PersonalToken
 
         http.headers().frameOptions().sameOrigin()  // this is needed for h2-console
 
-    }
-
-    override fun configure(web: WebSecurity) {
-        web.ignoring()
-                .antMatchers("/resources/**", "/static/**", "/css/**", "/js/**", "/img/**", "/favicon.ico", "/webjars/**")
     }
 }
