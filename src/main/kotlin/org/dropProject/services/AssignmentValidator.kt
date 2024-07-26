@@ -28,10 +28,15 @@ import org.dropProject.dao.Assignment
 import org.dropProject.dao.Language
 import org.dropProject.dao.TestVisibility
 import org.dropProject.extensions.toEscapedHtml
+import org.jetbrains.kotlin.org.jline.utils.Log
+import org.jetbrains.kotlin.psi.KtClass
+import org.jetbrains.kotlin.psi.KtNamedFunction
+import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Service
 import java.io.File
 import java.io.FileReader
+import java.nio.file.Paths
 
 /**
  * This class performs validation of the assignments created by teachers, in order to make sure that they have the
@@ -44,6 +49,8 @@ import java.io.FileReader
 @Service
 @Scope("prototype")
 class AssignmentValidator {
+
+    val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
     enum class InfoType { INFO, WARNING, ERROR }
 
@@ -83,7 +90,12 @@ class AssignmentValidator {
 
         validateCurrentUserIdSystemVariable(assignmentFolder, model)
         validateUntrimmedStacktrace(model)
-        validateProperTestClasses(assignmentFolder, assignment)
+        try {
+            validateProperTestClasses(assignmentFolder, assignment)
+        } catch (e: Exception) {
+            // since this validaton is fragile (depends on 3rd party libs to parse the source files), just catch eventual exceptions and move on
+            LOG.warn("Non-critical error while validating test classes. Moving on...", e)
+        }
         if (assignment.maxMemoryMb != null) {
             validatePomPreparedForMaxMemory(model)
         }
@@ -276,14 +288,15 @@ class AssignmentValidator {
         } else {
             report.add(Info(InfoType.INFO, "Found ${testClasses.size} test classes"))
 
+            // for each test class, check if all the @Test define a timeout
+            var invalidTestMethods = 0
+            var validTestMethods = 0
+            var mandatoryTestMethods = 0
+            var hasGlobalTimeout = false
+
             if (assignment.language == Language.JAVA) {
                 val builder = JavaProjectBuilder()
 
-                // for each test class, check if all the @Test define a timeout
-                var invalidTestMethods = 0
-                var validTestMethods = 0
-                var mandatoryTestMethods = 0
-                var hasGlobalTimeout = false
                 for (testClass in testClasses) {
                     val testClassSource = builder.addSource(testClass)
                     testClassSource.classes.forEach {
@@ -321,33 +334,61 @@ class AssignmentValidator {
                     }
                 }
 
+            } else if (assignment.language == Language.KOTLIN) {
 
-                if (invalidTestMethods + validTestMethods == 0) {
-                    report.add(Info(InfoType.WARNING, "You haven't defined any test methods.", "Use the @Test(timeout=xxx) annotation to mark test methods."))
+                for (testClass in testClasses) {
+                    val ktCompiler = io.github.detekt.parser.KtCompiler()
+                    val ktFile = ktCompiler.compile(Paths.get("").toAbsolutePath(), testClass.toPath())
+                    ktFile.declarations.filter { it is KtClass }.forEach {
+                        val clazz = it as KtClass
+                        clazz.declarations.filter { it is KtNamedFunction }.forEach {
+                            val function = it as KtNamedFunction
+
+                            if (function.annotationEntries.any { it.shortName?.asString() == "Test" }) {
+                                if (function.annotationEntries.first { it.shortName?.asString() == "Test"  }.text.contains("timeout")) {
+                                    validTestMethods++;
+                                } else {
+                                    invalidTestMethods++;
+                                }
+
+                                testMethods.add(clazz.name + ":" + function.name)
+
+                                assignment.mandatoryTestsSuffix?.let { suffix ->
+                                    if (function.name?.endsWith(suffix) == true) {
+                                        mandatoryTestMethods++
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (invalidTestMethods + validTestMethods == 0) {
+                report.add(Info(InfoType.WARNING, "You haven't defined any test methods.", "Use the @Test(timeout=xxx) annotation to mark test methods."))
+            }
+
+            if (invalidTestMethods > 0) {
+                report.add(Info(InfoType.WARNING, "You haven't defined a timeout for ${invalidTestMethods} test methods.",
+                    "If you don't define a timeout, students submitting projects with infinite loops or wait conditions " +
+                            "will degrade the server. Example: Use @Test(timeout=500) to set a timeout of 500 miliseconds (JUnit 4) or" +
+                            "@Timeout (JUnit 5)."))
+            } else if (validTestMethods > 0) {
+                if (hasGlobalTimeout) {
+                    report.add(Info(InfoType.INFO, "You have defined a global timeout for the test methods."))
+                } else {
+                    report.add(Info(InfoType.INFO, "You have defined ${validTestMethods} test methods with timeout."))
                 }
 
-                if (invalidTestMethods > 0) {
-                    report.add(Info(InfoType.WARNING, "You haven't defined a timeout for ${invalidTestMethods} test methods.",
-                            "If you don't define a timeout, students submitting projects with infinite loops or wait conditions " +
-                                    "will degrade the server. Example: Use @Test(timeout=500) to set a timeout of 500 miliseconds (JUnit 4) or" +
-                                    "@Timeout (JUnit 5)."))
-                } else if (validTestMethods > 0) {
-                    if (hasGlobalTimeout) {
-                        report.add(Info(InfoType.INFO, "You have defined a global timeout for the test methods."))
-                    } else {
-                        report.add(Info(InfoType.INFO, "You have defined ${validTestMethods} test methods with timeout."))
-                    }
+            }
 
-                }
-
-                if (!assignment.mandatoryTestsSuffix.isNullOrEmpty()) {
-                    if (mandatoryTestMethods == 0) {
-                        report.add(Info(InfoType.WARNING, "You haven't defined mandatory tests",
-                                "You have defined a mandatory tests suffix (${assignment.mandatoryTestsSuffix}) but none of the " +
-                                        "test methods end with that suffix."))
-                    } else {
-                        report.add(Info(InfoType.INFO, "You have defined ${mandatoryTestMethods} mandatory test methods"))
-                    }
+            if (!assignment.mandatoryTestsSuffix.isNullOrEmpty()) {
+                if (mandatoryTestMethods == 0) {
+                    report.add(Info(InfoType.WARNING, "You haven't defined mandatory tests",
+                        "You have defined a mandatory tests suffix (${assignment.mandatoryTestsSuffix}) but none of the " +
+                                "test methods end with that suffix."))
+                } else {
+                    report.add(Info(InfoType.INFO, "You have defined ${mandatoryTestMethods} mandatory test methods"))
                 }
             }
         }

@@ -72,6 +72,7 @@ import java.io.File
 import java.util.*
 
 const val sampleJavaAssignmentRepo = "git@github.com:drop-project-edu/sampleJavaAssignment.git"
+const val sampleKotlinAssignmentRepo = "git@github.com:drop-project-edu/sampleKotlinAssignment.git"
 const val sampleJavaAssignmentWithJUnit5Repo = "git@github.com:drop-project-edu/sampleJavaAssignmentWithJunit5.git"
 
 @RunWith(SpringRunner::class)
@@ -289,6 +290,12 @@ class AssignmentControllerTests {
             assertEquals("Found 1 test classes", report[3].message)
             assertEquals("You have defined 4 test methods with timeout.", report[4].message)
             assertEquals("You are using a recent version of checkstyle.", report[5].message)
+
+            @Suppress("UNCHECKED_CAST")
+            val tests = result.modelAndView!!.modelMap["tests"] as List<AssignmentTestMethod>
+            assertEquals(4, tests.size)
+            assertEquals("test_001_FindMax", tests[0].testMethod)
+            assertEquals("test_002_FindMaxAllNegative", tests[1].testMethod)
 
             // change the assignment to have a mandatory tests suffix
             assignment.mandatoryTestsSuffix = "_MANDATORY"
@@ -1911,6 +1918,70 @@ class AssignmentControllerTests {
         mvc.perform(get("/assignment/info/test"))
             .andExpect(status().isFound())
             .andExpect(header().string("Location", "/assignment/setup-git/test"))
+    }
+
+    @Test
+    @WithMockUser("teacher1", roles = ["TEACHER"])
+    @DirtiesContext
+    fun test_30_createNewKotlinAssignmentAndConnectWithGithub() {
+
+        try {
+            val createdAssignment = testsHelper.createAndSetupAssignment(
+                mvc, assignmentRepository, "dummyAssignment1", "Dummy Kotlin Assignment",
+                "org.dummy",
+                "UPLOAD", sampleKotlinAssignmentRepo, language = "KOTLIN"
+            )
+            assertEquals("dummyAssignment1", createdAssignment.id)
+            assertEquals("5626ad3bb03d0b20be122d499bf29ce8a18afbcf", createdAssignment.gitCurrentHash)
+
+            val result = this.mvc.perform(get("/assignment/info/dummyAssignment1"))
+                .andExpect(status().isOk)
+                .andExpect(view().name("assignment-detail"))
+                .andExpect(model().hasNoErrors())
+                .andReturn()
+
+            @Suppress("UNCHECKED_CAST")
+            val assignment = result.modelAndView!!.modelMap["assignment"] as Assignment
+            assertEquals("dummyAssignment1", assignment.id)
+            @Suppress("UNCHECKED_CAST")
+            val report = result.modelAndView!!.modelMap["report"] as List<AssignmentReport>
+            assertEquals(5, report.size)
+            assertEquals("Assignment has a pom.xml", report[0].message)
+            assertEquals("Doesn't use the 'dropProject.currentUserId' system property", report[1].message)
+            assertEquals("POM file is prepared to prevent stacktrace trimming on junit errors", report[2].message)
+            assertEquals("Found 1 test classes", report[3].message)
+            assertEquals("You haven't defined a timeout for 2 test methods.", report[4].message)
+
+            @Suppress("UNCHECKED_CAST")
+            val tests = result.modelAndView!!.modelMap["tests"] as List<AssignmentTestMethod>
+            assertEquals(3, tests.size)
+            assertEquals("testFindMax", tests[0].testMethod)
+            assertEquals("testFindMaxAllNegative", tests[1].testMethod)
+
+            // change the assignment to have a mandatory tests suffix
+            assignment.mandatoryTestsSuffix = "_MANDATORY"
+            assignmentRepository.save(assignment)
+
+            // refresh the assignment to kick the validation process
+            this.mvc.perform(post("/assignment/refresh-git/dummyAssignment1")).andExpect(status().isOk)
+
+            // get information again
+            val result2 = this.mvc.perform(get("/assignment/info/dummyAssignment1"))
+                .andExpect(status().isOk)
+                .andReturn()
+
+            @Suppress("UNCHECKED_CAST")
+            val report2 = result2.modelAndView!!.modelMap["report"] as List<AssignmentReport>
+            assertEquals(6, report2.size)
+            assertEquals("You haven't defined mandatory tests", report2[5].message)
+
+        } finally {
+
+            // cleanup assignment files
+            if (File(assignmentsRootLocation, "dummyAssignment1").exists()) {
+                File(assignmentsRootLocation, "dummyAssignment1").deleteRecursively()
+            }
+        }
     }
 }
     
