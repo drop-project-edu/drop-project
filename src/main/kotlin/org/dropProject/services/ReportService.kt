@@ -108,7 +108,7 @@ class ReportService(
                 throw AccessDeniedException("This submission was deleted")
             }
 
-            fullBuildReport.numSubmissions = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.realName(), submission.assignmentId)
+            fullBuildReport.numSubmissions = submissionRepository.countBySubmitterUserIdAndAssignmentId(submission.submitterUserId, submission.assignmentId)
 
             val assignment = assignmentRepository.findById(submission.assignmentId).orElse(null)
 
