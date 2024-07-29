@@ -104,6 +104,17 @@ data class BuildReport(val mavenOutputLines: List<String>,
     }
 
     fun mavenExecutionFailed() : Boolean {
+
+        // if there were problems with the pom.xml, it is a fatal error
+        if (mavenOutputLines.any { it.startsWith("[WARNING] Some problems were encountered while building the effective model") }) {
+            return true
+        }
+
+        // if there were problems forking the process (e.g., heap space), it is a fatal error
+        if (mavenOutputLines.any { it.contains("There was an error in the forked process") }) {
+            return true
+        }
+
         // if it has a failed goal other than compiler or surefire (junit), it is a fatal error
         if (mavenOutputLines.
                         filter { it.startsWith("[ERROR] Failed to execute goal") }.isNotEmpty()) {
@@ -114,10 +125,7 @@ data class BuildReport(val mavenOutputLines: List<String>,
             }.isEmpty()
         }
 
-        // if there were problems with the pom.xml, it is a fatal error
-        if (mavenOutputLines.any { it.startsWith("[WARNING] Some problems were encountered while building the effective model") }) {
-            return true
-        }
+
 
         return false;
     }

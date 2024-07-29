@@ -475,9 +475,13 @@ class AssignmentController(
             maxMemoryMb = assignment.maxMemoryMb,
             leaderboardType = assignment.leaderboardType,
             minGroupSize = assignment.projectGroupRestrictions?.minGroupSize,
-            maxGroupSize = assignment.projectGroupRestrictions?.maxGroupSize,
-            exceptions = assignment.projectGroupRestrictions?.exceptions,
+            maxGroupSize = assignment.projectGroupRestrictions?.maxGroupSize
         )
+
+        val exceptions: String = assignment.projectGroupRestrictions?.exceptions.orEmpty()
+        if (exceptions.isNotEmpty()) {
+            assignmentForm.exceptions = exceptions.split(",").joinToString(",\n")
+        }
 
         val assignees = assigneeRepository.findByAssignmentIdOrderByAuthorUserId(assignment.id)
         if (!assignees.isEmpty()) {
