@@ -272,4 +272,16 @@ class TestBuildReport {
 
         assertTrue(buildReport.mavenExecutionFailed())
     }
+
+    @Test
+    fun testOutOfMemoryError1() {
+
+        val mavenOutputLines = resourceLoader.getResource("file:src/test/sampleMavenOutputs/outOfMemoryError.txt").file.readLines()
+
+        val buildReport = buildReportBuilder.build(mavenOutputLines,
+            "someMavenizedProj",
+            dummyJavaAssignment)
+
+        assertTrue(buildReport.mavenExecutionFailed())
+    }
 }
