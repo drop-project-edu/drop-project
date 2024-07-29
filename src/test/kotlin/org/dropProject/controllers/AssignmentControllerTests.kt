@@ -1822,7 +1822,7 @@ class AssignmentControllerTests {
                             assignmentTags = "",
                             minGroupSize = 2,
                             maxGroupSize = 2,
-                            exceptions = "student3,student4",
+                            exceptions = "student3,\nstudent4",
                         )
                     )
                 )
