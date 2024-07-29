@@ -6,7 +6,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta http-equiv="refresh" content="15" th:if="${autoRefresh}"/>
     <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" />
-    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"/>
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet"/>
     <link href="//cdn.datatables.net/1.10.19/css/dataTables.bootstrap.min.css" rel="stylesheet"/>
     <link th:href="@{/css/dropzone.css}" rel="stylesheet" />
     <link th:href="@{/css/dropproject.css}" rel="stylesheet" />
@@ -114,6 +114,9 @@
                 Powered by Drop Project
                 (<small th:text="${buildInfo.version}"></small>)
                 <!-- #dates.format(buildInfo.time, 'dd-MM-yyyy') -->
+                <a href="https://github.com/drop-project-edu/drop-project" target="_blank" style="color: grey; margin-left: 5px;">
+                    <i class="fab fa-github"></i>
+                </a>
             </p>
         </div>
 
