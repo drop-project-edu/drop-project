@@ -323,7 +323,7 @@ class UploadController(
         rebuiltSubmission.group = submission.group
 
         val projectFolder = submissionService.getOriginalProjectFolder(rebuiltSubmission)
-        val authors = submissionService.getProjectAuthors(projectFolder)
+        val authors = submissionService.getProjectAuthors(File(projectFolder, "AUTHORS.txt"))
 
         submissionRepository.save(rebuiltSubmission)
         submissionService.buildSubmission(projectFolder, assignment, authors.joinToString(separator = "|"), rebuiltSubmission,
@@ -518,7 +518,7 @@ class UploadController(
                 model["cloned"] = true
 
                 // check that exists an AUTHORS.txt
-                val authors = submissionService.getProjectAuthors(projectFolder)
+                val authors = submissionService.getProjectAuthors(File(projectFolder, "AUTHORS.txt"))
                 LOG.info("[${authors.joinToString(separator = "|")}] Connected DP to ${gitSubmission.gitRepositoryUrl}")
 
                 // check if the principal is one of group elements
