@@ -233,7 +233,7 @@ class SubmissionService(
         val projectFolder: File? = storageService.store(file, assignment.id)
 
         if (projectFolder != null) {
-            val authors = getProjectAuthors(projectFolder)
+            val authors = getProjectAuthors(File(projectFolder, "AUTHORS.txt"))
             LOG.info("[${authors.joinToString(separator = "|")}] Received ${originalFilename}")
 
             // check if the principal is one of group elements
@@ -341,9 +341,9 @@ class SubmissionService(
         return null
     }
 
-    fun getProjectAuthors(projectFolder: File) : List<AuthorDetails> {
+    fun getProjectAuthors(authorsFile: File) : List<AuthorDetails> {
+
         // check for AUTHORS.txt file
-        val authorsFile = File(projectFolder, "AUTHORS.txt")
         if (!authorsFile.existsCaseSensitive()) {
             throw InvalidProjectStructureException("O projecto não contém o ficheiro AUTHORS.txt na raiz")  // TODO language
         }
@@ -359,14 +359,20 @@ class SubmissionService(
         val authorIDs = HashSet<String>()
         try {
             authorsFile.readLines(charset = charset)
+                .filter { line -> line.isNotBlank() }
                 .map { line -> line.split(";") }
                 .forEach { parts -> run {
+
+                    if (parts[0].isBlank()) {
+                        throw InvalidProjectStructureException("O número de aluno tem que estar preenchido para todos os elementos do grupo")
+                    }
+
                     if (parts[1][0].isDigit() || parts[1].split(" ").size <= 1) {
                         throw InvalidProjectStructureException("Cada linha tem que ter o formato NUMERO_ALUNO;NOME_ALUNO. " +
                                 "O nome do aluno deve incluir o primeiro e último nome.")  // TODO language
                     }
 
-                    authors.add(AuthorDetails(parts[1], parts[0].sanitize()))
+                    authors.add(AuthorDetails(parts[1].trim(), parts[0].sanitize()))
                     authorIDs.add(parts[0])
                 } }
 
