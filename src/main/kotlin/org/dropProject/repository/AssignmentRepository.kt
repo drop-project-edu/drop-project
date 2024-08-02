@@ -19,11 +19,8 @@
  */
 package org.dropProject.repository
 
+import org.dropProject.dao.*
 import org.springframework.data.jpa.repository.JpaRepository
-import org.dropProject.dao.Assignment
-import org.dropProject.dao.Author
-import org.dropProject.dao.ProjectGroup
-import org.dropProject.dao.Submission
 import org.springframework.data.jpa.repository.EntityGraph
 
 /**
@@ -32,4 +29,5 @@ import org.springframework.data.jpa.repository.EntityGraph
 interface AssignmentRepository : JpaRepository<Assignment, String> {
     fun findByOwnerUserId(ownerUserId: String): List<Assignment>
     fun findByGitRepositoryFolder(gitRepositoryFolder: String): Assignment?
+    fun findAllByActiveIsAndVisibility(active: Boolean, visibility: AssignmentVisibility): List<Assignment>
 }

@@ -132,7 +132,6 @@ class AssignmentService(
                 assignment.lastSubmissionDate = submissionRepository.findFirstByAssignmentIdOrderBySubmissionDateDesc(assignment.id).submissionDate
             }
             assignment.numUniqueSubmitters = submissionRepository.findUniqueSubmittersByAssignmentId(assignment.id).toInt()
-            assignment.public = !assigneeRepository.existsByAssignmentId(assignment.id)
         }
 
         return filteredAssigments
@@ -330,6 +329,7 @@ class AssignmentService(
         existingAssignment.showLeaderBoard = assignmentForm.leaderboardType != null
         existingAssignment.hiddenTestsVisibility = assignmentForm.hiddenTestsVisibility
         existingAssignment.leaderboardType = assignmentForm.leaderboardType
+        existingAssignment.visibility = assignmentForm.visibility
 
         // remove projectGroupRestrictions if minGroupSize was updated to null
         if (assignmentForm.minGroupSize == null && existingAssignment.projectGroupRestrictions != null) {

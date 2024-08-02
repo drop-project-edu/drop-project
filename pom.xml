@@ -5,7 +5,7 @@
 
 	<groupId>org.dropProject</groupId>
 	<artifactId>drop-project</artifactId>
-	<version>0.9.8</version>
+	<version>0.9.9-beta.1</version>
 	<packaging>jar</packaging>
 
 	<name>DropProject</name>

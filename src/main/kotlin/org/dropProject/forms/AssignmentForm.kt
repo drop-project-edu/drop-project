@@ -19,6 +19,7 @@
  */
 package org.dropProject.forms
 
+import org.dropProject.dao.AssignmentVisibility
 import org.dropProject.dao.Language
 import org.dropProject.dao.LeaderboardType
 import org.dropProject.dao.TestVisibility
@@ -81,6 +82,8 @@ data class AssignmentForm(
 
         var minGroupSize: Int? = null,
         var maxGroupSize: Int? = null,
-        var exceptions: String? = null
+        var exceptions: String? = null,
+
+        var visibility: AssignmentVisibility = AssignmentVisibility.ONLY_BY_LINK
 )
     

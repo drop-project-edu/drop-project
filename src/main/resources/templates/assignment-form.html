@@ -201,12 +201,29 @@
             </div>
         </div>
 
+        <div class="form-group" th:classappend="${#fields.hasErrors('visibility')} ? 'has-error' : ''">
+            <label for="visibility" class="col-sm-3 control-label">Visibility</label>
+            <div class="col-sm-9">
+                <select th:field="*{visibility}" class="form-control" id="visibility">
+                    <option value="PUBLIC" th:selected="${assignmentForm.visibility=='PUBLIC'}">Public</option>
+                    <option value="ONLY_BY_LINK" th:selected="${assignmentForm.visibility=='ONLY_BY_LINK'}">Must have a direct link</option>
+                    <option value="PRIVATE" th:selected="${assignmentForm.visibility=='PRIVATE'}">Private - Open only to authorized submitters (set below)</option>
+                </select>
+                <p class="help-block" th:if="${#fields.hasErrors('visibility')}" th:errors="*{visibility}">Error</p>
+                <p class="help-block" th:if="${!#fields.hasErrors('visibility')}" >
+                    Whether this assignment is accessible to everyone (in the "my assignments" screen), just by direct link or only to
+                    authorized users, set below.
+                </p>
+            </div>
+        </div>
+
         <div class="form-group" th:classappend="${#fields.hasErrors('assignees')} ? 'has-error' : ''">
-            <label for="assignees" class="col-sm-3 control-label">Open to (optional)</label>
+            <label for="assignees" class="col-sm-3 control-label">Authorized submitters</label>
             <div class="col-sm-9" th:classappend="${#fields.hasErrors('assignees')} ? 'has-error' : ''">
                 <textarea th:field="*{assignees}" class="form-control" id="assignees" rows="3" placeholder="a21701234,a21705678" />
                 <p class="help-block" th:if="${#fields.hasErrors('assignees')}" th:errors="*{assignees}">Error</p>
-                <p class="help-block" th:if="${!#fields.hasErrors('assignees')}">Comma separated list of student id's that are allowed to upload submissions (new lines and spaces will be trimmed)</p>
+                <p class="help-block" th:if="${!#fields.hasErrors('assignees')}">This is only valid for assignments whose visibility is 'PRIVATE'.
+                    Comma separated list of student id's that are allowed to upload submissions (new lines and spaces will be trimmed)</p>
             </div>
         </div>
         <div class="form-group" th:classappend="${#fields.hasErrors('acl')} ? 'has-error' : ''">
@@ -218,8 +235,6 @@
                 <p class="help-block" th:if="${!#fields.hasErrors('acl')}" >A comma-separated list of userid's that are allowed to manage this assignment</p>
             </div>
         </div>
-
-
 
         <input name="editMode" type="hidden" value="true" th:if="*{editMode}" />
         <button type="submit" class="btn btn-primary">Save</button>
@@ -234,18 +249,37 @@
 <script th:src="@{/js/typeahead.bundle.js}"></script>
 <script th:inline="javascript">
     /*<![CDATA[*/
-    var tagNames = new Bloodhound({
-        local: [(${allTags})],
-        datumTokenizer: Bloodhound.tokenizers.whitespace,
-        queryTokenizer: Bloodhound.tokenizers.whitespace,
-    });
-    tagNames.initialize();
+    $(document).ready(function() {
+        var tagNames = new Bloodhound({
+            local: [(${allTags})],
+            datumTokenizer: Bloodhound.tokenizers.whitespace,
+            queryTokenizer: Bloodhound.tokenizers.whitespace,
+        });
+        tagNames.initialize();
 
-    $('#assignmentTags').tagsinput({
-        cancelConfirmKeysOnEmpty: false,  // to avoid an extra comma
-        typeaheadjs: {
-            source: tagNames.ttAdapter()
+        $('#assignmentTags').tagsinput({
+            cancelConfirmKeysOnEmpty: false,  // to avoid an extra comma
+            typeaheadjs: {
+                source: tagNames.ttAdapter()
+            }
+        });
+
+        function toggleAssignees() {
+            var visibilityValue = $('#visibility').val();
+            if (visibilityValue === 'PRIVATE') {
+                $('#assignees').prop('disabled', false);
+            } else {
+                $('#assignees').prop('disabled', true).val('');
+            }
         }
+
+        // Initial check on page load
+        toggleAssignees();
+
+        // Check whenever the select value changes
+        $('#visibility').change(function() {
+            toggleAssignees();
+        });
     });
     /*]]>*/
 </script>

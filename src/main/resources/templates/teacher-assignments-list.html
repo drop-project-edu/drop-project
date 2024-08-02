@@ -32,7 +32,7 @@
             </select></th>
             <th>Last submission</th>
             <th th:if="${!archived}">Active?</th>
-            <th th:if="${!archived}">Private?</th>
+            <th th:if="${!archived}">Visibility</th>
             <th>Submissions</th>
             <th>Actions</th>
         </tr>
@@ -59,7 +59,12 @@
                 </form>
             </td>
             <td th:if="${!archived}" class="text-center">
-                <span th:if="${!assignment.public}" class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+                <i th:if="${assignment.visibility == T(org.dropProject.dao.AssignmentVisibility).PUBLIC}" class="fa fa-globe" aria-hidden="true"
+                title="Everyone can see"></i>
+                <i th:if="${assignment.visibility == T(org.dropProject.dao.AssignmentVisibility).ONLY_BY_LINK}" class="fa fa-link" aria-hidden="true"
+                   title="Must have a direct link"></i>
+                <i th:if="${assignment.visibility == T(org.dropProject.dao.AssignmentVisibility).PRIVATE}" class="fa fa-lock" aria-hidden="true"
+                   title="Only authorized users can see"></i>
             </td>
             <td class="text-center">
                 <a class="btn btn-default btn-sm" th:href="@{'/report/' + ${assignment.id}}"
