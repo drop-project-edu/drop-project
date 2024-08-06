@@ -223,9 +223,12 @@ class TeacherAPIControllerTests: APIControllerTests {
                     "dueDate":null,
                     "submissionMethod":"UPLOAD",
                     "language":"JAVA",
-                    "ownerUserId": "teacher1",
                     "gitRepositoryUrl":"git://dummy",
-                    "active":true }
+                    "ownerUserId":"teacher1",
+                    "active":true,
+                    "numSubmissions":4,
+                    "tagsStr":[],
+                    "instructions":null }
                 ]
             """.trimIndent()))
     }
