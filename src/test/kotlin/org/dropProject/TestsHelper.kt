@@ -20,6 +20,7 @@
 package org.dropProject
 
 import org.dropProject.dao.Assignment
+import org.dropProject.dao.AssignmentVisibility
 import org.dropProject.repository.AssignmentRepository
 import org.dropProject.repository.GitSubmissionRepository
 import org.dropProject.repository.SubmissionRepository
@@ -150,6 +151,7 @@ class TestsHelper {
                                  minGroupSize: String? = null,
                                  maxGroupSize: String? = null,
                                  exceptions: String? = null,
+                                 visibility: String = "ONLY_BY_LINK"
                                  ): Assignment {
 
         val user = User(teacherId, "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
@@ -171,6 +173,7 @@ class TestsHelper {
                 .param("minGroupSize", minGroupSize)
                 .param("maxGroupSize", maxGroupSize)
                 .param("exceptions", exceptions)
+                .param("visibility", visibility)
         )
                 .andExpect(MockMvcResultMatchers.status().isFound())
                 .andExpect(MockMvcResultMatchers.header().string("Location", "/assignment/setup-git/${assignmentId}"))

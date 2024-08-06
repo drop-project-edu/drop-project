@@ -62,6 +62,18 @@ enum class LeaderboardType {
 }
 
 /**
+ * Enum representing the types of visibility of each assignment.
+ *  - PUBLIC - everyone sees this assignment;
+ *  - ONLY_BY_LINK - everyone that has the link sees this assignment;
+ *  - PRIVATE - only authorized users see this assignment.
+ */
+enum class AssignmentVisibility {
+    PUBLIC,
+    ONLY_BY_LINK,
+    PRIVATE
+}
+
+/**
  * Represents an Assignment, which is a problem to be solved by a student or group of students.
  *
  * @property id is a String that uniquely identifies the Assignment
@@ -91,7 +103,7 @@ enum class LeaderboardType {
  * @property buildReportId is a Long, representing the Id of the Assignment's [BuildReport]
  * @property numSubmissions is an Int, representing to total number of submissions in the repository
  * @property numSubmitters is an Int, representing the number of different submitters
- * @property public is a Boolean, indicating if the assignment is accessible to everyone or only to registered [Assignee]s
+ * @property visibility is a [AssignmentVisibility]
  * @property lastSubmissionDate is a Date, containing the date of the last submission performed for this Assignment
  * @property tags is a Set of [AssignmentTag].
  */
@@ -150,6 +162,8 @@ data class Assignment(
     @JsonView(JSONViews.StudentAPI::class)
     var active: Boolean = false,
     var archived: Boolean = false,
+    @Enumerated(EnumType.STRING)
+    var visibility: AssignmentVisibility = AssignmentVisibility.ONLY_BY_LINK,
 
     var buildReportId: Long? = null,  // build_report.id
 
@@ -163,9 +177,6 @@ data class Assignment(
 
     @Transient
     var numUniqueSubmitters: Int = 0,
-
-    @Transient
-    var public: Boolean = true,
 
     @Transient
     var lastSubmissionDate: Date? = null,

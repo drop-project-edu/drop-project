@@ -35,6 +35,8 @@ import org.hamcrest.Matchers.hasProperty
 import org.junit.After
 import junit.framework.TestCase.*
 import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.collection.IsCollectionWithSize
+import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -1642,6 +1644,48 @@ class UploadControllerTests {
         @Suppress("UNCHECKED_CAST")
         val structureErrors = reportResult.modelAndView!!.modelMap["structureErrors"] as List<String>
         assertThat(structureErrors, hasItems("As classes de teste devem começar com a palavra Test (exemplo: TestCar)"))
+    }
+
+    @Test
+    @DirtiesContext
+    fun `student home page should show public assignments`() {
+
+        try {// list assigments should return empty
+            this.mvc.perform(get("/").with(user(STUDENT_1)))
+                .andExpect(status().isOk())
+                .andExpect(model().hasNoErrors())
+                .andExpect(model().attribute("assignments", emptyList<Assignment>()))
+
+            // create assignment
+            testsHelper.createAndSetupAssignment(
+                mvc, assignmentRepository, "dummyAssignment4", "Dummy Assignment",
+                "org.dummy",
+                "UPLOAD", sampleJavaAssignmentRepo, visibility = "PUBLIC",
+                teacherId = "p1", activateRightAfterCloning = true
+            )
+
+            // list assignments should return one assignment
+            val mvcResult = this.mvc.perform(get("/").with(user(STUDENT_1)))
+                .andExpect(status().isOk())
+                .andExpect(model().hasNoErrors())
+                .andExpect(model().attribute("assignments", IsCollectionWithSize.hasSize<Assignment>(1)))
+                .andReturn()
+
+            @Suppress("UNCHECKED_CAST")
+            val assignments = mvcResult.modelAndView!!.modelMap["assignments"] as List<Assignment>
+            val assignment = assignments[0]
+
+            Assert.assertEquals("dummyAssignment4", assignment.id)
+            Assert.assertEquals("Dummy Assignment", assignment.name)
+            Assert.assertEquals(true, assignment.active)
+            Assert.assertEquals(AssignmentVisibility.PUBLIC, assignment.visibility)
+
+        } finally {
+            // cleanup assignment files
+            if (File(assignmentsRootLocation, "dummyAssignment4").exists()) {
+                File(assignmentsRootLocation, "dummyAssignment4").deleteRecursively()
+            }
+        }
     }
 
 }

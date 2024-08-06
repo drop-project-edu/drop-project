@@ -178,6 +178,12 @@ class AssignmentController(
                 "Error: Exceptions to group size should only be filled in when you set the min group size")
         }
 
+        if (assignmentForm.visibility == AssignmentVisibility.PRIVATE && assignmentForm.assignees.isNullOrEmpty()) {
+            LOG.warn("Exceptions to group size should only be filled in when you set the min group size")
+            bindingResult.rejectValue("assignees", "assignees.mustBeFilled",
+                "Error: For PRIVATE assignments, you have to fill in the authorized submitters")
+        }
+
         if (bindingResult.hasErrors()) {
             return "assignment-form"
         }
@@ -341,7 +347,8 @@ class AssignmentController(
             gitRepositoryUrl = assignmentForm.gitRepositoryUrl!!, ownerUserId = principal.realName(),
             gitRepositoryFolder = assignmentForm.assignmentId!!, showLeaderBoard = assignmentForm.leaderboardType != null,
             hiddenTestsVisibility = assignmentForm.hiddenTestsVisibility,
-            leaderboardType = assignmentForm.leaderboardType)
+            leaderboardType = assignmentForm.leaderboardType,
+            visibility = assignmentForm.visibility)
 
         // we only need to check minGroupSize since maxGroupSize and exceptions depend on this field
         if (assignmentForm.minGroupSize != null) {
@@ -475,7 +482,8 @@ class AssignmentController(
             maxMemoryMb = assignment.maxMemoryMb,
             leaderboardType = assignment.leaderboardType,
             minGroupSize = assignment.projectGroupRestrictions?.minGroupSize,
-            maxGroupSize = assignment.projectGroupRestrictions?.maxGroupSize
+            maxGroupSize = assignment.projectGroupRestrictions?.maxGroupSize,
+            visibility = assignment.visibility
         )
 
         val exceptions: String = assignment.projectGroupRestrictions?.exceptions.orEmpty()

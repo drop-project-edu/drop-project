@@ -65,7 +65,6 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import org.springframework.validation.BindingResult
 import java.io.File
@@ -255,6 +254,19 @@ class AssignmentControllerTests {
             .andExpect(status().isFound())
             .andExpect(header().string("Location", "/assignment/setup-git/assignmentId"))
 
+        mvc.perform(
+            post("/assignment/new")
+                .param("assignmentId", "assignmentId")
+                .param("assignmentName", "assignmentName")
+                .param("assignmentPackage", "assignmentPackage")
+                .param("language", "JAVA")
+                .param("submissionMethod", "UPLOAD")
+                .param("gitRepositoryUrl", sampleJavaAssignmentRepo)
+                .param("visibility", "PRIVATE")    // <<<< assignees is missing
+        )
+            .andExpect(status().isOk())
+            .andExpect(view().name("assignment-form"))
+            .andExpect(model().attributeHasFieldErrors("assignmentForm", "assignees"))
 
     }
 
@@ -488,6 +500,7 @@ class AssignmentControllerTests {
             assertEquals(sampleJavaAssignmentRepo, assignment.gitRepositoryUrl)
             assertEquals("p1", assignment.ownerUserId)
             assertEquals(false, assignment.active)
+            assertEquals(AssignmentVisibility.ONLY_BY_LINK, assignment.visibility)
 
         } finally {
             // cleanup assignment files
@@ -643,7 +656,8 @@ class AssignmentControllerTests {
                             gitRepositoryUrl = sampleJavaAssignmentRepo,
                             hiddenTestsVisibility = TestVisibility.SHOW_PROGRESS,
                             editMode = true,
-                            assignmentTags = ""
+                            assignmentTags = "",
+                            visibility = AssignmentVisibility.ONLY_BY_LINK
                         )
                     )
                 )
@@ -658,6 +672,7 @@ class AssignmentControllerTests {
                     .param("language", "JAVA")
                     .param("gitRepositoryUrl", sampleJavaAssignmentRepo)
                     .param("leaderboardType", "ELLAPSED")
+                    .param("visibility", "PUBLIC")
             )
                 .andExpect(status().isFound())
                 .andExpect(header().string("Location", "/assignment/info/dummyAssignment8"))
@@ -677,7 +692,8 @@ class AssignmentControllerTests {
                             gitRepositoryUrl = sampleJavaAssignmentRepo,
                             editMode = true,
                             leaderboardType = LeaderboardType.ELLAPSED,
-                            assignmentTags = ""
+                            assignmentTags = "",
+                            visibility = AssignmentVisibility.PUBLIC
                         )
                     )
                 )
@@ -728,7 +744,7 @@ class AssignmentControllerTests {
             id = "testJavaProj", name = "Test Project (for automatic tests)",
             packageName = "org.testProj", ownerUserId = "teacher1",
             submissionMethod = SubmissionMethod.UPLOAD, active = false, gitRepositoryUrl = "git://dummyRepo",
-            gitRepositoryFolder = "testJavaProj", public = false, tagsStr = emptyList()
+            gitRepositoryFolder = "testJavaProj", tagsStr = emptyList()
         )
         assignmentRepository.save(assignment)
         assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student1"))
@@ -759,7 +775,7 @@ class AssignmentControllerTests {
             id = "testJavaProj", name = "Test Project (for automatic tests)",
             packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
             submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
-            gitRepositoryFolder = "testJavaProjForDelete", public = false
+            gitRepositoryFolder = "testJavaProjForDelete"
         )
         assignmentRepository.save(assignment)
         assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student1"))
@@ -810,7 +826,7 @@ class AssignmentControllerTests {
             id = "testJavaProj", name = "Test Project (for automatic tests)",
             packageName = "org.testProj", ownerUserId = "teacher1",
             submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
-            gitRepositoryFolder = "testJavaProjForDelete", public = false
+            gitRepositoryFolder = "testJavaProjForDelete"
         )
         assignmentService.addTagToAssignment(assignment1, "teste")
         assignmentRepository.save(assignment1)
@@ -821,7 +837,7 @@ class AssignmentControllerTests {
             id = "testJavaProj2", name = "Test Project (for automatic tests)",
             packageName = "org.testProj", ownerUserId = "teacher1",
             submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
-            gitRepositoryFolder = "testJavaProjForDelete", public = false
+            gitRepositoryFolder = "testJavaProjForDelete"
         )
         assignmentService.addTagToAssignment(assignment2, "teste")
         assignmentRepository.save(assignment2)
@@ -865,7 +881,7 @@ class AssignmentControllerTests {
             id = "testJavaProj", name = "Test Project (for automatic tests)",
             packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
             submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
-            gitRepositoryFolder = "testJavaProjForDelete", public = false
+            gitRepositoryFolder = "testJavaProjForDelete"
         )
         assignmentRepository.save(assignment)
         assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student1"))
@@ -921,7 +937,7 @@ class AssignmentControllerTests {
             id = "testJavaProj", name = "Test Project (for automatic tests)",
             packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
             submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
-            gitRepositoryFolder = "testJavaProjForDelete", public = false
+            gitRepositoryFolder = "testJavaProjForDelete"
         )
         assignmentRepository.save(assignment)
         assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student1"))

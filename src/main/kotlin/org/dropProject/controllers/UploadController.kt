@@ -128,6 +128,7 @@ class UploadController(
 
         val assignments = ArrayList<Assignment>()
 
+        // add all the assignments for which the principal is authorized
         val assignees = assigneeRepository.findByAuthorUserId(principal.realName())
         for (assignee in assignees) {
             val assignment = assignmentRepository.getById(assignee.assignmentId)
@@ -135,6 +136,14 @@ class UploadController(
                 assignments.add(assignment)
             }
         }
+
+        if (assignments.size == 1) {
+            // redirect to that assignment
+            return "redirect:/upload/${assignments[0].id}"
+        }
+
+        // add all public assignments
+        assignments.addAll(assignmentRepository.findAllByActiveIsAndVisibility(true, AssignmentVisibility.PUBLIC))
 
         if (request.isUserInRole("TEACHER")) {
             val assignmentsIOwn = assignmentRepository.findByOwnerUserId(principal.realName())
@@ -144,11 +153,6 @@ class UploadController(
                     assignments.add(assignmentIOwn)
                 }
             }
-        }
-
-        if (assignments.size == 1) {
-            // redirect to that assignment
-            return "redirect:/upload/${assignments[0].id}"
         }
 
         model["assignments"] = assignments
