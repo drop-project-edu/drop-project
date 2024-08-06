@@ -226,7 +226,7 @@ class TeacherAPIControllerTests: APIControllerTests {
                     "gitRepositoryUrl":"git://dummy",
                     "ownerUserId":"teacher1",
                     "active":true,
-                    "numSubmissions":4,
+                    "numSubmissions":2,
                     "tagsStr":[],
                     "instructions":null }
                 ]
