@@ -20,6 +20,7 @@
 package org.dropProject
 
 import org.dropProject.security.DropProjectSecurityConfig
+import org.dropProject.security.PersonalTokenAuthenticationManager
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -35,7 +36,7 @@ import java.util.logging.Logger
 
 @Profile("oauth2")
 @Configuration
-class OAuth2WebSecurityConfig : DropProjectSecurityConfig() {
+class OAuth2WebSecurityConfig(val manager: PersonalTokenAuthenticationManager) : DropProjectSecurityConfig(manager) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
 

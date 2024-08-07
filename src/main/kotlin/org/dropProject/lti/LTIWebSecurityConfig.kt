@@ -24,6 +24,7 @@ import edu.uoc.elc.spring.lti.security.openid.OIDCFilter
 import edu.uoc.elc.spring.lti.tool.ToolDefinitionBean
 import edu.uoc.elc.spring.lti.tool.registration.RegistrationService
 import org.dropProject.security.DropProjectSecurityConfig
+import org.dropProject.security.PersonalTokenAuthenticationManager
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.ComponentScan
@@ -47,7 +48,8 @@ import org.springframework.security.web.util.matcher.OrRequestMatcher
 @ComponentScan(value = ["edu.uoc.elc.spring.lti.security.mvc", "edu.uoc.elc.spring.lti.tool"])
 class LTIWebSecurityConfig(
     @Qualifier("dpRegistrationService") val registrationService: RegistrationService,
-    val toolDefinitionBean: ToolDefinitionBean): DropProjectSecurityConfig() {
+    val toolDefinitionBean: ToolDefinitionBean,
+    val manager: PersonalTokenAuthenticationManager): DropProjectSecurityConfig(manager) {
 
     protected fun getPreAuthFilter(): LTIProcessingFilter {
         val preAuthFilter = LTIProcessingFilter(registrationService, toolDefinitionBean)
