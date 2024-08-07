@@ -88,15 +88,4 @@
         </plugins>
     </build>
 
-    <pluginRepositories>
-        <pluginRepository>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-            <id>bintray-ozsie-maven</id>
-            <name>bintray-plugins</name>
-            <url>https://dl.bintray.com/ozsie/maven</url>
-        </pluginRepository>
-    </pluginRepositories>
-
 </project>
