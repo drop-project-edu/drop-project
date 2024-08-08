@@ -519,25 +519,36 @@ data class BuildReport(val mavenOutputLines: List<String>,
      */
     private fun translateDetektError(originalError: String) : String {
 
+        // error messages are in this format:
+        // VariableMinLength - [Variable names should be at least 3 characters long.] at Main.kt:24:9
+
+        // use a regex to extract the VariableMinLength and the "at Main.kt:24:9"
+        val regex = Regex("([^\\s]+) - \\[.*?\\] (at .*:\\d+:\\d+)")
+
+        // Replace the matched patterns with the desired format
+        val sanitizedError = regex.replace(originalError) { matchResult ->
+            // Construct the output string using the captured groups
+            "${matchResult.groupValues[1]} ${matchResult.groupValues[2]}"
+        }
 
         // TODO language
-        return originalError
-                .replace("VariableNaming -", "Nome da variável deve começar por letra minúscula. " +
-                        "Caso o nome tenha mais do que uma palavra, as palavras seguintes devem ser capitalizadas (iniciadas por uma maiúscula) -")
-                .replace("FunctionNaming -", "Nome da função deve começar por letra minúscula. " +
-                        "Caso o nome tenha mais do que uma palavra, as palavras seguintes devem ser capitalizadas (iniciadas por uma maiúscula) -")
-                .replace("FunctionParameterNaming -", "Nome do parâmetro de função deve começar por letra minúscula. " +
-                        "Caso o nome tenha mais do que uma palavra, as palavras seguintes devem ser capitalizadas (iniciadas por uma maiúscula) -")
-                .replace("VariableMinLength -", "Nome da variável demasiado pequeno -")
-                .replace("VarCouldBeVal -", "Variável imutável declarada com var -")
-                .replace("MandatoryBracesIfStatements -", "Instrução 'if' sem chaveta -")
-                .replace("ComplexCondition -", "Condição demasiado complexa -")
-                .replace("StringLiteralDuplication -", "String duplicada. Deve ser usada uma constante -")
-                .replace("NestedBlockDepth -", "Demasiados níveis de blocos dentro de blocos -")
-                .replace("UnsafeCallOnNullableType -", "Não é permitido usar o !! pois pode causar crashes -")
-                .replace("MaxLineLength -", "Linha demasiado comprida -")
-                .replace("LongMethod -", "Função com demasiadas linhas de código -")
-                .replace("ForbiddenKeywords -", "Utilização de instruções proibidas -")
+        return sanitizedError
+                .replace("VariableNaming ", "Nome da variável deve começar por letra minúscula. " +
+                        "Caso o nome tenha mais do que uma palavra, as palavras seguintes devem ser capitalizadas (iniciadas por uma maiúscula) ")
+                .replace("FunctionNaming ", "Nome da função deve começar por letra minúscula. " +
+                        "Caso o nome tenha mais do que uma palavra, as palavras seguintes devem ser capitalizadas (iniciadas por uma maiúscula) ")
+                .replace("FunctionParameterNaming ", "Nome do parâmetro de função deve começar por letra minúscula. " +
+                        "Caso o nome tenha mais do que uma palavra, as palavras seguintes devem ser capitalizadas (iniciadas por uma maiúscula) ")
+                .replace("VariableMinLength ", "Nome da variável demasiado pequeno ")
+                .replace("VarCouldBeVal ", "Variável imutável declarada com var ")
+                .replace("MandatoryBracesIfStatements ", "Instrução 'if' sem chaveta ")
+                .replace("ComplexCondition ", "Condição demasiado complexa ")
+                .replace("StringLiteralDuplication ", "String duplicada. Deve ser usada uma constante ")
+                .replace("NestedBlockDepth ", "Demasiados níveis de blocos dentro de blocos ")
+                .replace("UnsafeCallOnNullableType ", "Não é permitido usar o !! pois pode causar crashes ")
+                .replace("MaxLineLength ", "Linha demasiado comprida ")
+                .replace("LongMethod ", "Função com demasiadas linhas de código ")
+                .replace("ForbiddenKeywords ", "Utilização de instruções proibidas ")
                 .replace(escapeSequenceRegex, "")  // remove extra escape characters used for coloring
     }
 }

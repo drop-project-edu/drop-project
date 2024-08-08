@@ -17,7 +17,6 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.sampleKotlinAssignment
 
 fun main(args: Array<String>) {
     println("Introduza o primeiro número")

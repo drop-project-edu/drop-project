@@ -64,23 +64,21 @@
             <plugin>
                 <groupId>com.github.ozsie</groupId>
                 <artifactId>detekt-maven-plugin</artifactId>
-                <version>1.11.0</version>
-                <configuration>
-                    <config>detekt-config.yml</config>
-                </configuration>
+                <version>1.23.5</version>
                 <executions>
                     <execution>
                         <phase>process-classes</phase> <!-- checkstyle should run after compile -->
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
+                        <goals><goal>check</goal></goals>
+                        <configuration>
+                            <config>detekt-config.yml</config>
+                        </configuration>
                     </execution>
                 </executions>
                 <dependencies>
                     <dependency>
                         <groupId>io.gitlab.arturbosch.detekt</groupId>
                         <artifactId>detekt-formatting</artifactId>
-                        <version>1.11.0</version>
+                        <version>1.23.5</version>
                         <scope>runtime</scope>
                     </dependency>
                 </dependencies>
