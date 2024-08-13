@@ -30,7 +30,7 @@ fun String.sanitize(): String {
 
     var sanitized = ""
     for (c in this) {
-        if (c.isLetterOrDigit() || c == '_') {
+        if (c.isLetterOrDigit() || c == '_' || c == '-') {
             sanitized += c
         }
     }
