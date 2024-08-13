@@ -213,6 +213,8 @@ data class Assignment(
         return "$id - $name"
     }
 
+
+
     fun linkToGithub(): String? {
         if (gitRepositoryPrivKey == null) {
             return null
@@ -225,5 +227,18 @@ data class Assignment(
         val repositoryName = hostAndPath[1]
 
         return "https://$host/$username/$repositoryName"
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Assignment
+
+        return id == other.id
+    }
+
+    override fun hashCode(): Int {
+        return id.hashCode()
     }
 }

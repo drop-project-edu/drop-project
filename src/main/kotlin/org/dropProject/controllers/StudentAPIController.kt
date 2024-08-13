@@ -66,18 +66,11 @@ class StudentAPIController(
                   response = Assignment::class, responseContainer = "List", ignoreJsonView = false)
     fun getCurrentAssignments(principal: Principal, request: HttpServletRequest): ResponseEntity<List<Assignment>> {
 
-        val authorizedAssignments = assigneeRepository.findByAuthorUserId(principal.realName())
-        var result = authorizedAssignments.map {
-            assignmentRepository.getById(it.assignmentId)
-        }.filter {
-            it.active
-        }.map { it.copy(instructions = assignmentTeacherFiles.getInstructions(it)) }
+        val assignments = assignmentService.getMyAssignments(principal, archived = false)
+            .filter { if (request.isUserInRole("TEACHER")) true else it.active }
+            .map { it.copy(instructions = assignmentTeacherFiles.getInstructions(it)) }
 
-        if (request.isUserInRole("TEACHER")) {
-            val assignments = assignmentService.getMyAssignments(principal, archived = false)
-            result = result + assignments
-        }
-        return ResponseEntity.ok(result)
+        return ResponseEntity.ok(assignments)
     }
 
     @RequestMapping(value = ["/submissions/new"], method = [(RequestMethod.POST)], produces = [MediaType.APPLICATION_JSON_VALUE])

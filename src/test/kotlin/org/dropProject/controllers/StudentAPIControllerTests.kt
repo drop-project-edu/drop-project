@@ -22,6 +22,7 @@ package org.dropProject.controllers
 import org.dropProject.TestsHelper
 import org.dropProject.dao.Assignee
 import org.dropProject.dao.Assignment
+import org.dropProject.dao.AssignmentVisibility
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.AssigneeRepository
 import org.dropProject.repository.AssignmentRepository
@@ -86,6 +87,12 @@ class StudentAPIControllerTests: APIControllerTests {
         assignmentRepository.save(assignmentWithInstructions)
         assigneeRepository.save(Assignee(assignmentId = "sampleJavaProject", authorUserId = "student1"))
 
+        val publicAssignment = Assignment(id = "testJavaProjPublic", name = "Test Project (for automatic tests)",
+            packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
+            submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummy",
+            gitRepositoryFolder = "sampleJavaProject", visibility = AssignmentVisibility.PUBLIC)
+        assignmentRepository.save(publicAssignment)
+
     }
 
     @Test
@@ -120,23 +127,69 @@ class StudentAPIControllerTests: APIControllerTests {
             .andExpect(status().isOk)
             .andExpect(content().json("""
                 [
-                   {"id":"testJavaProj",
-                    "name":"Test Project (for automatic tests)",
-                    "packageName":"org.dropProject.sampleAssignments.testProj",
-                    "dueDate":null,
-                    "submissionMethod":"UPLOAD",
-                    "language":"JAVA",
-                    "active":true },
-                    {"id":"sampleJavaProject",
-                    "name":"Test Project (for automatic tests)",
-                    "packageName":"org.dropProject.samples.sampleJavaAssignment",
-                    "dueDate":null,
-                    "submissionMethod":"GIT",
-                    "language":"JAVA",
-                    "active":true }
+                    {
+                        "id": "sampleJavaProject",
+                        "name": "Test Project (for automatic tests)",
+                        "packageName": "org.dropProject.samples.sampleJavaAssignment",
+                        "dueDate": null,
+                        "submissionMethod": "GIT",
+                        "language": "JAVA",
+                        "active": true
+                    },
+                    {
+                        "id": "testJavaProj",
+                        "name": "Test Project (for automatic tests)",
+                        "packageName": "org.dropProject.sampleAssignments.testProj",
+                        "dueDate": null,
+                        "submissionMethod": "UPLOAD",
+                        "language": "JAVA",
+                        "active": true
+                    },
+                    {
+                        "id": "testJavaProjPublic",
+                        "name": "Test Project (for automatic tests)",
+                        "packageName": "org.dropProject.sampleAssignments.testProj",
+                        "dueDate": null,
+                        "submissionMethod": "UPLOAD",
+                        "language": "JAVA",
+                        "active": true
+                    }
                 ]
             """.trimIndent()))
             .andExpect(jsonPath("$[0].instructions.format", `is`("HTML")))
+            .andExpect(jsonPath("$[1].instructions.format", nullValue()))  // this assignment doesn't have instructions
+            .andExpect(jsonPath("$[2].instructions.format", `is`("HTML")))
+            .andExpect(jsonPath("$[0].instructions.body", stringContainsInOrder("<h2>Sample Java Assignment</h2>")))
+
+        // println(result.getResponse().getContentAsString());
+    }
+
+    @Test
+    @DirtiesContext
+    fun `try to get current assignments with student2`() {
+
+        val token = generateToken("student2", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")), mvc)
+
+        this.mvc.perform(
+            get("/api/student/assignments/current")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("authorization", testsHelper.header("student2", token)))
+            .andExpect(status().isOk)
+            .andExpect(content().json("""
+                [
+                    {
+                        "id": "testJavaProjPublic",
+                        "name": "Test Project (for automatic tests)",
+                        "packageName": "org.dropProject.sampleAssignments.testProj",
+                        "dueDate": null,
+                        "submissionMethod": "UPLOAD",
+                        "language": "JAVA",
+                        "active": true
+                    }
+                ]
+            """.trimIndent()))
+            .andExpect(jsonPath("$[0].instructions.format", `is`("HTML")))
+            .andExpect(jsonPath("$[0].instructions.body", stringContainsInOrder("<h2>Sample Java Assignment</h2>")))
 
         // println(result.getResponse().getContentAsString());
     }

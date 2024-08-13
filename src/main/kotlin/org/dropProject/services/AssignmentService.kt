@@ -50,6 +50,7 @@ import java.util.*
 import javax.servlet.http.HttpServletRequest
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
+import kotlin.collections.HashSet
 import kotlin.collections.LinkedHashMap
 
 data class AssignmentImportResult(val type: String, val message: String, val redirectUrl: String)
@@ -96,8 +97,8 @@ class AssignmentService(
     val gitSubmissionsRootLocation: String = "submissions/git"
 
     /**
-     * Returns the [Assignment]s that a certain user can access. The returned assignments will be the ones
-     * that are owned by the user and also the ones that the user has been given access to.
+     * Returns the [Assignment]s that a certain user can access. The returned assignments will be all the public ones,
+     * the one that are owned by the user and also the ones that the user has been given access to.
      * @param principal is a [Principal], representing the user whose assignments shall be retrieved.
      * @param archived is a Boolean. If true, only archived Assignment(s) will be returned. Otherwise, only
      * non-archived Assignment(s) will be returned.
@@ -109,21 +110,23 @@ class AssignmentService(
         condition = "#archived==true")
     fun getMyAssignments(principal: Principal, archived: Boolean): List<Assignment> {
         val assignmentsOwns = assignmentRepository.findByOwnerUserId(principal.realName())
+        val assignmentsPublic = assignmentRepository.findAllByVisibility(AssignmentVisibility.PUBLIC)
 
-        val assignmentsACL = assignmentACLRepository.findByUserId(principal.realName())
-        val assignmentsAuthorized = ArrayList<Assignment>()
-        for (assignmentACL in assignmentsACL) {
-            val assignment = assignmentRepository.findByIdOrNull(assignmentACL.assignmentId)
-            if (assignment != null) {
-                assignmentsAuthorized.add(assignment)
-            }
+        val assignmentsACL = assignmentACLRepository.findByUserId(principal.realName()).mapNotNull {
+            assignmentRepository.findByIdOrNull(it.assignmentId)
         }
 
-        val assignments = ArrayList<Assignment>()
-        assignments.addAll(assignmentsOwns)
-        assignments.addAll(assignmentsAuthorized)
+        val assignmentsAssignee = assigneeRepository.findByAuthorUserId(principal.realName()).mapNotNull {
+            assignmentRepository.findByIdOrNull(it.assignmentId)
+        }
 
-        val filteredAssigments = assignments.filter { it.archived == archived }
+        val assignments = HashSet<Assignment>()  // use HashSet to remove duplicates
+        assignments.addAll(assignmentsOwns)
+        assignments.addAll(assignmentsPublic)
+        assignments.addAll(assignmentsACL)
+        assignments.addAll(assignmentsAssignee)
+
+        val filteredAssigments = assignments.filter { it.archived == archived }.sortedBy { it.id }
 
         for (assignment in filteredAssigments) {
             assignment.tagsStr = getTagsStr(assignment)
