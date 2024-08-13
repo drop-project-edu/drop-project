@@ -92,6 +92,13 @@ class UploadKotlinControllerTests {
                 gitRepositoryUrl = "git://dummyRepo",
                 gitRepositoryFolder = "testKotlinProj")
         assignmentRepository.save(assignment01)
+
+        val assignment02 = Assignment(id = "testKotlinProj2", name = "Test Project (for automatic tests)",
+            packageName = "org.dropproject.samples.samplekotlinassignment", ownerUserId = "teacher1",
+            submissionMethod = SubmissionMethod.UPLOAD, active = true, language = Language.KOTLIN,
+            gitRepositoryUrl = "git://dummyRepo",
+            gitRepositoryFolder = "testKotlinProj2")
+        assignmentRepository.save(assignment02)
     }
 
     @After
@@ -186,6 +193,52 @@ class UploadKotlinControllerTests {
         assert(buildResult.hasJUnitErrors() == false)
         assertNotNull(buildResult.elapsedTimeJUnit())
         assert(buildResult.elapsedTimeJUnit()!! > 0.toBigDecimal())
+
+    }
+
+    @Test
+    @DirtiesContext
+    fun submitProjectAndCheckREADME() {
+
+        val submissionId = testsHelper.uploadProject(this.mvc,"projectKotlinOK", "testKotlinProj2", STUDENT_1)
+
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId")
+            .with(user(STUDENT_1)))
+            .andExpect(status().isOk())
+            .andReturn()
+
+        @Suppress("UNCHECKED_CAST")
+        val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
+        assertEquals("Summary should be 4 lines", 4, summary.size)
+        assertEquals("projectStructure should be OK (key)", Indicator.PROJECT_STRUCTURE, summary.get(0).indicator)
+        assertEquals("projectStructure should be OK (value)", "OK", summary.get(0).reportValue)
+        assertEquals("compilation should be OK (key)", Indicator.COMPILATION, summary[1].indicator)
+        assertEquals("compilation should be OK (value)", "OK", summary[1].reportValue)
+        assertEquals("checkstyle should be OK (key)", Indicator.CHECKSTYLE, summary[2].indicator)
+        assertEquals("checkstyle should be OK (value)", "OK", summary[2].reportValue)
+        assertEquals("junit should be OK (key)", Indicator.TEACHER_UNIT_TESTS, summary[3].indicator)
+        assertEquals("junit should be OK (value)", "OK", summary[3].reportValue)
+
+        @Suppress("UNCHECKED_CAST")
+        val structureErrors = reportResult.modelAndView!!.modelMap["structureErrors"] as List<String>
+        assert(structureErrors.isEmpty())
+
+        val buildResult = reportResult.modelAndView!!.modelMap["buildReport"] as BuildReport
+        assert(buildResult.compilationErrors.isEmpty())
+        assert(buildResult.checkstyleErrors.isEmpty())
+        assert(buildResult.PMDerrors().isEmpty())
+        assert(buildResult.hasJUnitErrors() == false)
+        assertNotNull(buildResult.elapsedTimeJUnit())
+        assert(buildResult.elapsedTimeJUnit()!! > 0.toBigDecimal())
+
+        val readmeHTML = reportResult.modelAndView!!.modelMap["readmeHTML"] as String
+        assertEquals("""
+            <hr/>
+            <h1>README example</h1>
+            <p>Some text...</p>
+            <hr/>
+            
+            """.trimIndent(), readmeHTML)
 
     }
 
