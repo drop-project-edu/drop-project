@@ -326,7 +326,7 @@ class ReportControllerTests {
         val downloadedFile = File("result.zip")
         FileUtils.writeByteArrayToFile(downloadedFile, downloadedFileContent)
         val downloadedFileAsZipObject = ZipFile(downloadedFile)
-        assertEquals(41, downloadedFileAsZipObject.fileHeaders.size)
+        assertEquals(45, downloadedFileAsZipObject.fileHeaders.size)
         downloadedFile.delete()
 
     }

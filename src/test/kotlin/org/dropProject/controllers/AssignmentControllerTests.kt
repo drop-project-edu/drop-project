@@ -1948,7 +1948,7 @@ class AssignmentControllerTests {
                 "UPLOAD", sampleKotlinAssignmentRepo, language = "KOTLIN"
             )
             assertEquals("dummyAssignment1", createdAssignment.id)
-            assertEquals("1d968bfde86de002080d418d7e40aacd74a698a0", createdAssignment.gitCurrentHash)
+            assertEquals("bcb7cd5bcd81e87043bc8763a36570c398cdc7ec", createdAssignment.gitCurrentHash)
 
             val result = this.mvc.perform(get("/assignment/info/dummyAssignment1"))
                 .andExpect(status().isOk)
