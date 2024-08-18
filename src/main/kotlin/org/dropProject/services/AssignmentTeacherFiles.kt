@@ -22,6 +22,11 @@ package org.dropProject.services
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonView
 import org.apache.commons.io.FileUtils
+import org.commonmark.ext.autolink.AutolinkExtension
+import org.commonmark.node.AbstractVisitor
+import org.commonmark.node.Link
+import org.commonmark.parser.Parser
+import org.commonmark.renderer.html.HtmlRenderer
 import org.dropProject.dao.*
 import org.dropProject.data.JSONViews
 import org.dropProject.repository.AssignmentTestMethodRepository
@@ -35,8 +40,10 @@ import java.security.Principal
 import java.util.*
 
 enum class AssignmentInstructionsFormat {
-    HTML
+    HTML,
+    MD
 }
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class AssignmentInstructions(
     @JsonView(JSONViews.StudentAPI::class)
@@ -44,6 +51,26 @@ data class AssignmentInstructions(
     @JsonView(JSONViews.StudentAPI::class)
     var body: String? = null
 )
+
+/**
+ * Transforms relative links into absolute links, during the rendering of markdown documents
+ */
+class RelativeToAbsoluteLinkVisitor(private val baseUrl: String) : AbstractVisitor() {
+
+    override fun visit(link: Link) {
+        val destination = link.destination
+
+        // Check if the link is relative
+        if (!destination.startsWith("http://") && !destination.startsWith("https://")) {
+            // Convert the relative link to an absolute one
+            link.destination = baseUrl + destination
+        }
+
+        // Proceed with the default behavior for this node
+        visitChildren(link)
+    }
+}
+
 /**
  * Provides functionality related with an Assignment's Teacher Files (for example, checking if the Teacher's submission
  * compiles, passes the CheckStyle, and so on).
@@ -70,10 +97,31 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
         val instructions = AssignmentInstructions()
         val files = File("${assignmentsRootLocation}/${assignment.gitRepositoryFolder}").listFiles { _, name -> name.startsWith("instructions")}
         if (files != null && files.isNotEmpty()) {
-            val fragment = files[0]
-            val extension = fragment.name.substringAfterLast(".","")
-            instructions.format = AssignmentInstructionsFormat.valueOf(extension.uppercase())
-            instructions.body = fragment.readText()
+            val fragment = files.firstOrNull { it.extension.uppercase() == "MD" } ?: files[0]
+            val extension = fragment.extension.uppercase()
+            instructions.format = AssignmentInstructionsFormat.valueOf(extension)
+            if (extension == "MD") {
+                val extensions = listOf(AutolinkExtension.create())
+                val parser = Parser.builder().extensions(extensions).build();
+                val document = parser.parse(fragment.readText());
+
+                // Create the visitor with the base URL for converting relative links
+                val visitor = RelativeToAbsoluteLinkVisitor("public/${assignment.id}/")
+
+                // Apply the visitor to the document
+                document.accept(visitor)
+
+                val renderer = HtmlRenderer.builder().extensions(extensions).build();
+                instructions.body = """
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            ${renderer.render(document)}
+                        </div>
+                    </div>
+                    """.trimIndent()
+            } else {
+                instructions.body = fragment.readText()
+            }
         }
         return instructions
     }
