@@ -49,10 +49,13 @@ import org.dropProject.repository.*
 import org.dropProject.services.*
 import org.slf4j.LoggerFactory
 import org.springframework.context.MessageSource
+import org.springframework.core.io.FileSystemResource
+import org.springframework.http.MediaType
 import org.springframework.security.core.Authentication
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.Executor
 import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
 
 /**
  * UploadController is an MVC controller class to handle requests related with the upload of submissions.
@@ -79,6 +82,9 @@ class UploadController(
         val projectGroupService: ProjectGroupService,
         val i18n: MessageSource
         ) {
+
+    @Value("\${assignments.rootLocation}")
+    val assignmentsRootLocation: String = ""
 
     @Value("\${storage.rootLocation}/git")
     val gitSubmissionsRootLocation : String = "submissions/git"
@@ -755,6 +761,46 @@ class UploadController(
         LOG.info("[${principal.realName()}] deleted submission $submissionId")
 
         return "redirect:/report/${assignment.id}"
+    }
+
+    /**
+     * Controller that handles the download of a specific assignment asset. The asset MUST be located in the
+     * assignments' repo, within the "public" folder
+     * @param assignmentId is a String, representing the [Assignment] containing the asset
+     * @param assetName is a String with the complete filename (including extensions) representing the asset to download
+     * @param request is a [HttpServletRequest]
+     * @param response is a [HttpServletResponse]
+     * @return A [FileSystemResource] containing the file
+     */
+    @RequestMapping(
+        value = ["/upload/{assignmentId}/public/{assetName}"],
+        method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE]
+    )
+    @ResponseBody
+    fun downloadAsset(
+        @PathVariable assignmentId: String,
+        @PathVariable assetName: String,
+        request: HttpServletRequest, response: HttpServletResponse
+    ): FileSystemResource {
+
+        assignmentRepository.findById(assignmentId).orElse(null) ?: throw IllegalArgumentException("assignment $assignmentId is not registered")
+
+        val assignmentFolder = File(assignmentsRootLocation, assignmentId)
+        if (assignmentFolder.exists()) {
+            val assignmentPublicFolder = File(assignmentFolder, "public")
+            if (assignmentPublicFolder.exists() && assignmentPublicFolder.isDirectory) {
+                val assetFile = File(assignmentPublicFolder, assetName)
+                if (assetFile.exists() && assetFile.isFile) {
+                    if (assetFile.extension == "zip") {
+                        response.setHeader("Content-Disposition", "attachment; filename=${assetName}")
+                    }
+                    return FileSystemResource(assetFile)
+                }
+            }
+
+        }
+
+        throw ResourceNotFoundException()
     }
 
     @ExceptionHandler(StorageException::class)
