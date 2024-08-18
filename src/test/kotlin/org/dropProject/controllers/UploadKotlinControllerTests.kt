@@ -49,6 +49,7 @@ import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.view
 import java.io.File
 
 @RunWith(SpringRunner::class)
@@ -237,6 +238,48 @@ class UploadKotlinControllerTests {
             <h1>README example</h1>
             <p>Some text...</p>
             <hr/>
+            
+            """.trimIndent(), readmeHTML)
+
+    }
+
+    @Test
+    @DirtiesContext
+    fun getUploadPageAndCheckInstructions() {
+
+        // the assignment testKotlinProj2 has both an instructions.html and an instructions.md. It should render the latter
+        val reportResult = this.mvc.perform(get("/upload/testKotlinProj2")
+            .with(user(STUDENT_1)))
+            .andExpect(status().isOk)
+            .andExpect(view().name("student-upload-form"))
+            .andReturn()
+
+        val readmeHTML = reportResult.modelAndView!!.modelMap["instructionsFragment"] as String
+        assertEquals("""
+            <h1>Sample Kotlin Assignment</h1>
+            <p>This is just a very simple Kotlin assignment just to experiment with Drop Project.</p>
+            <p>The source of this assignment is available on <a href="https://github.com/drop-project-edu/sampleKotlinAssignment">https://github.com/drop-project-edu/sampleKotlinAssignment</a></p>
+            <h2>Instructions</h2>
+            <ul>
+            <li>
+            <p>Create a Kotlin project in your IDE with the structure depicted at the end of this page.
+            In particular, you must create a package <code>org.dropproject.samples.samplekotlinassignment</code> and
+            create a <code>Main.kt</code> in that package.</p>
+            </li>
+            <li>
+            <p>Within your <code>Main.kt</code> file, implement a top-level function to calculate the
+            maximum value on an array of integers. This function must have the following signature:</p>
+            <p><code>findMax(numbers: Array&lt;Int&gt;): Int</code></p>
+            </li>
+            <li>
+            <p>Create a zip file of your project and drop it on the area above these instructions.
+            In a few seconds, Drop Project will give you a report with some metrics about your project.
+            If you don't feel like coding this stuff, you can grab a pre-built submission
+            <a href="https://github.com/drop-project-edu/sampleKotlinAssignment/raw/master/sampleKotlinSubmission.zip">here</a>.</p>
+            </li>
+            </ul>
+            <h2>Additional information</h2>
+            <p>Check this <a href="public/testKotlinProj2/file.txt">file</a> for additional information</p>
             
             """.trimIndent(), readmeHTML)
 
