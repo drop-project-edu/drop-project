@@ -145,14 +145,14 @@
 
 		<!-- for parsing markdown file -->
 		<dependency>
-			<groupId>com.atlassian.commonmark</groupId>
+			<groupId>org.commonmark</groupId>
 			<artifactId>commonmark</artifactId>
-			<version>0.14.0</version>
+			<version>0.22.0</version>
 		</dependency>
 		<dependency>
-			<groupId>com.atlassian.commonmark</groupId>
+			<groupId>org.commonmark</groupId>
 			<artifactId>commonmark-ext-autolink</artifactId>
-			<version>0.14.0</version>
+			<version>0.22.0</version>
 		</dependency>
 
 		<!-- for oauth authentication -->
