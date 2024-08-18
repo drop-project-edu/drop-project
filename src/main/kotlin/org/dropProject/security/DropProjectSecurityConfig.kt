@@ -78,7 +78,7 @@ open class DropProjectSecurityConfig(val apiAuthenticationManager: PersonalToken
                 *getPublicUrls().toTypedArray()
             ).permitAll()
             .antMatchers(
-                "/", "/upload", "/upload/*", "/buildReport/*", "/student/**",
+                "/", "/upload", "/upload/**", "/buildReport/*", "/student/**",
                 "/git-submission/refresh-git/*", "/git-submission/generate-report/*", "/mySubmissions",
                 "/leaderboard/*",
                 "/personalToken", "/api/student/**"

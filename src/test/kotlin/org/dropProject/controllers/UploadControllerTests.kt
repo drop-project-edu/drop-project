@@ -19,6 +19,7 @@
  */
 package org.dropProject.controllers
 
+import junit.framework.TestCase.*
 import org.dropProject.TestsHelper
 import org.dropProject.dao.*
 import org.dropProject.data.BuildReport
@@ -30,13 +31,13 @@ import org.dropProject.services.ZipService
 import org.dropProject.storage.StorageService
 import org.hamcrest.CoreMatchers
 import org.hamcrest.CoreMatchers.*
+import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers
 import org.hamcrest.Matchers.hasProperty
-import org.junit.After
-import junit.framework.TestCase.*
-import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.collection.IsCollectionWithSize
+import org.junit.After
 import org.junit.Assert
+import org.junit.Assert.assertArrayEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -59,7 +60,6 @@ import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import java.io.File
 import java.nio.file.Files
@@ -187,9 +187,6 @@ class UploadControllerTests {
     @Test
     @DirtiesContext
     fun getUploadPage() {
-
-        val assignment = assignmentRepository.getById("testJavaProj")
-        assignmentRepository.save(assignment)
 
         this.mvc.perform(get("/upload/testJavaProj")
                 .with(user(STUDENT_1)))
@@ -1686,6 +1683,22 @@ class UploadControllerTests {
                 File(assignmentsRootLocation, "dummyAssignment4").deleteRecursively()
             }
         }
+    }
+
+    @Test
+    fun `download public asset`() {
+        val result = this.mvc.perform(get("/upload/testJavaProj/public/test.txt")
+            .with(user(STUDENT_1)))
+            .andExpect(status().isOk)
+            .andReturn()
+
+        val downloadedFileContent = result.response.contentAsByteArray
+        assertArrayEquals("1".toByteArray(), downloadedFileContent)
+
+        // inexistent file
+        this.mvc.perform(get("/upload/testJavaProj/public/test2.txt")
+            .with(user(STUDENT_1)))
+            .andExpect(status().isNotFound)
     }
 
 }

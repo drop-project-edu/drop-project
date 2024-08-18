@@ -821,6 +821,12 @@ class UploadController(
         return ResponseEntity("{\"error\": \"${e.message}\"}", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    @ExceptionHandler(ResourceNotFoundException::class)
+    fun handleError(e: ResourceNotFoundException): ResponseEntity<String> {
+        LOG.error(e.message)
+        return ResponseEntity("Asset not found", HttpStatus.NOT_FOUND);
+    }
+
     @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Inexistent assignment")
     class AssignmentNotFoundException(assignmentId: String) : Exception("Inexistent assignment ${assignmentId}") {
         val LOG = LoggerFactory.getLogger(this.javaClass.name)
