@@ -261,8 +261,6 @@ class UploadKotlinControllerTests {
         val readmeHTML = reportResult.modelAndView!!.modelMap["instructionsFragment"] as String
         assertEquals(
             normalizeString("""
-            <div class="panel panel-default">
-               <div class="panel-body">
                     <h1>Sample Kotlin Assignment</h1>
                     <p>This is just a very simple Kotlin assignment just to experiment with Drop Project.</p>
                     <p>The source of this assignment is available on <a href="https://github.com/drop-project-edu/sampleKotlinAssignment">https://github.com/drop-project-edu/sampleKotlinAssignment</a></p>
@@ -288,8 +286,6 @@ class UploadKotlinControllerTests {
                     <h2>Additional information</h2>
                     <p>Check this <a href="public/testKotlinProj2/file.txt">file</a> for additional information</p>
                     
-               </div>
-            </div>
             """.trimIndent()), normalizeString(readmeHTML))
 
     }

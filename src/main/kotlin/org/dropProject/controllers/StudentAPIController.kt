@@ -68,7 +68,15 @@ class StudentAPIController(
 
         val assignments = assignmentService.getMyAssignments(principal, archived = false)
             .filter { if (request.isUserInRole("TEACHER")) true else it.active }
-            .map { it.copy(instructions = assignmentTeacherFiles.getInstructions(it)) }
+            .map {
+                val instructions = assignmentTeacherFiles.getInstructions(it)
+                if (instructions.format == AssignmentInstructionsFormat.MD) {
+                    // when called through the API, always use HTML
+                    // TODO change this when the plugin is capable of rendering markdown
+                    instructions.format = AssignmentInstructionsFormat.HTML
+                }
+                it.copy(instructions = instructions)
+            }
 
         return ResponseEntity.ok(assignments)
     }

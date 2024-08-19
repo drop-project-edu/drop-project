@@ -30,9 +30,12 @@
         <span class="label label-warning col-sm-1" th:if="${!assignment.active}">Inactive</span>
     </div>
 
-    <p th:if="${isTeacher}">
-        <a class="btn btn-default" th:href="@{'/assignment/info/' + ${assignment.id}}">Show assignment info <small>(only
+    <p>
+        <a class="btn btn-default" style="margin-right: 15px;" th:if="${isTeacher}" th:href="@{'/assignment/info/' + ${assignment.id}}">Show assignment info <small>(only
             visible for teachers)</small></a>
+        <a th:if="${uploadSubmission != null}" class="btn btn-default btn-md"
+           th:href="@{'/buildReport/' + ${uploadSubmission.id}}"
+           th:text="#{student.upload.form.visualize-report-btn}">Visualizar último relatório</a>
     </p>
 
     <small th:if="${assignment?.dueDate != null}">Deadline: <span
@@ -57,23 +60,19 @@
         <p class="text-right small" style="padding-top: 4px" th:if="${coolOffEnd == null}">
             <span th:text="#{student.upload.form.intellij-plugin}">Também pode submeter diretamente a partir do IntelliJ</span> <strong> <a href="https://www.youtube.com/watch?v=fkqXJ04pUjs&t=4s">[+info]</a></strong>
         </p>
-        
-        <a th:if="${uploadSubmission != null}" class="btn btn-default btn-md"
-           th:href="@{'/buildReport/' + ${uploadSubmission.id}}"
-           th:text="#{student.upload.form.visualize-report-btn}">Visualizar último relatório</a>
 
         <br/>
 
-        <div class="panel panel-default" th:if="${isTeacher and assignment?.cooloffPeriod != null}">
+        <div class="panel panel-default mb-3" th:if="${isTeacher and assignment?.cooloffPeriod != null}">
             <div class="panel-body">
                 <img width="16" th:src="@{/img/info.png}"/> Cool-off turned on for students. Teachers are not affected
                 by this.
             </div>
         </div>
 
-        <br/>
-
-        <div th:utext="${instructionsFragment}"></div>
+        <div class="panel panel-default">
+            <div class="panel-body" th:utext="${instructionsFragment}"></div>
+        </div>
 
         <div class="alert alert-info">
             <span th:text="#{student.upload.form.structure1}">O ficheiro tem que ser um zip com a seguinte estrutura:</span>

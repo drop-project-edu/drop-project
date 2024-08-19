@@ -103,7 +103,9 @@
         <br/>
         <br/>
 
-        <div th:utext="${instructionsFragment}"></div>
+        <div class="panel panel-default">
+            <div class="panel-body" th:utext="${instructionsFragment}"></div>
+        </div>
 
         <div class="alert alert-info">
             <span th:text="#{student.git.form.structure1}">O repositório tem que ter a seguinte estrutura:</span>

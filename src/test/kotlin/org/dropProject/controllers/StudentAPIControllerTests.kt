@@ -23,6 +23,7 @@ import org.dropProject.TestsHelper
 import org.dropProject.dao.Assignee
 import org.dropProject.dao.Assignment
 import org.dropProject.dao.AssignmentVisibility
+import org.dropProject.dao.Language
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.AssigneeRepository
 import org.dropProject.repository.AssignmentRepository
@@ -160,8 +161,6 @@ class StudentAPIControllerTests: APIControllerTests {
             .andExpect(jsonPath("$[1].instructions.format", nullValue()))  // this assignment doesn't have instructions
             .andExpect(jsonPath("$[2].instructions.format", `is`("HTML")))
             .andExpect(jsonPath("$[0].instructions.body", stringContainsInOrder("<h2>Sample Java Assignment</h2>")))
-
-        // println(result.getResponse().getContentAsString());
     }
 
     @Test
@@ -282,6 +281,52 @@ class StudentAPIControllerTests: APIControllerTests {
                 .header("authorization", testsHelper.header("student1", token)))
             .andExpect(jsonPath("$.assignment").doesNotExist())
             .andExpect(jsonPath("$.errorCode", `is`(404)))
+    }
+
+    @Test
+    @DirtiesContext
+    fun `try to get current assignments with student2 including one with instructions_md`() {
+
+        val assignment = Assignment(id = "testKotlinProj2", name = "Test Project (for automatic tests)",
+            packageName = "org.dropproject.samples.samplekotlinassignment", ownerUserId = "teacher1",
+            submissionMethod = SubmissionMethod.UPLOAD, active = true, language = Language.KOTLIN,
+            gitRepositoryUrl = "git://dummyRepo", gitRepositoryFolder = "testKotlinProj2",
+            visibility = AssignmentVisibility.PUBLIC)
+        assignmentRepository.save(assignment)
+
+        val token = generateToken("student2", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")), mvc)
+
+        val result = this.mvc.perform(
+            get("/api/student/assignments/current")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("authorization", testsHelper.header("student2", token)))
+            .andExpect(status().isOk)
+            .andExpect(content().json("""
+                [
+                    {
+                        "id": "testJavaProjPublic",
+                        "name": "Test Project (for automatic tests)",
+                        "packageName": "org.dropProject.sampleAssignments.testProj",
+                        "dueDate": null,
+                        "submissionMethod": "UPLOAD",
+                        "language": "JAVA",
+                        "active": true
+                    },
+                    {
+                        "id": "testKotlinProj2",
+                        "name": "Test Project (for automatic tests)",
+                        "packageName": "org.dropproject.samples.samplekotlinassignment",
+                        "language": "KOTLIN"
+                    }
+                ]
+            """.trimIndent()))
+            .andExpect(jsonPath("$[0].instructions.format", `is`("HTML")))
+            .andExpect(jsonPath("$[0].instructions.body", stringContainsInOrder("<h2>Sample Java Assignment</h2>")))
+            .andExpect(jsonPath("$[1].instructions.format", `is`("HTML")))
+            .andExpect(jsonPath("$[1].instructions.body", stringContainsInOrder("<h1>Sample Kotlin Assignment</h1>")))
+            .andReturn()
+
+//         println(result.getResponse().getContentAsString());
     }
 
 }

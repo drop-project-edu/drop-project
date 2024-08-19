@@ -112,13 +112,7 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
                 document.accept(visitor)
 
                 val renderer = HtmlRenderer.builder().extensions(extensions).build();
-                instructions.body = """
-                    <div class="panel panel-default">
-                        <div class="panel-body">
-                            ${renderer.render(document)}
-                        </div>
-                    </div>
-                    """.trimIndent()
+                instructions.body = renderer.render(document)
             } else {
                 instructions.body = fragment.readText()
             }
