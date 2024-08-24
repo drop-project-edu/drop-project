@@ -90,7 +90,7 @@ class MavenInvoker {
         }
 
         if (securityManagerEnabled) {
-            dpArgLine += " -Djava.security.manager=org.dropProject.security.SandboxSecurityManager"
+            dpArgLine += " -Djava.security.manager=org.dropproject.security.SandboxSecurityManager"
             dpArgLine += " -DdropProject.maven.repository=${File(mavenRepository).absolutePath}"
             // uncomment this to diagnose problems within our custom security manager (SandboxSecurityManager)
 //            dpArgLine += " -DdropProject.securityManager.debug=true"
@@ -164,8 +164,8 @@ class MavenInvoker {
         if (securityManagerEnabled) {
             val securityManagerDependency = Dependency()
             securityManagerDependency.artifactId = "drop-project-security-manager"
-            securityManagerDependency.groupId = "pt.ulusofona.deisi"
-            securityManagerDependency.version = "0.1.3"
+            securityManagerDependency.groupId = "org.dropproject"
+            securityManagerDependency.version = "0.2.2"
             securityManagerDependency.scope = "test"
             model.dependencies.add(securityManagerDependency)
         }
