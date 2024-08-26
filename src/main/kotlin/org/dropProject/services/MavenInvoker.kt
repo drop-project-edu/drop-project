@@ -165,7 +165,7 @@ class MavenInvoker {
             val securityManagerDependency = Dependency()
             securityManagerDependency.artifactId = "drop-project-security-manager"
             securityManagerDependency.groupId = "org.dropproject"
-            securityManagerDependency.version = "0.2.2"
+            securityManagerDependency.version = "0.2.3"
             securityManagerDependency.scope = "test"
             model.dependencies.add(securityManagerDependency)
         }
