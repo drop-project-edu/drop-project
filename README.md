@@ -119,12 +119,26 @@ The test coverage report will be available in the following folder:
 
     target/site/jacoco/index.html
     
-## API (experimental)
+## API
 
-Some services are accessible through an API, protected by personal tokens. Still work in progress...
+Some services are accessible through an API, protected by personal tokens.
 
-Documentation: [http://localhost:8080/api-docs](http://localhost:8080/api-docs)
+Documentation: [https://playground.dropproject.org/dp/swagger-ui/](https://playground.dropproject.org/dp/swagger-ui/)
+
+## Plugin
+
+There is a [plugin for Intellij](https://plugins.jetbrains.com/plugin/25078-drop-project) that allows students to submit their projects directly from the IDE.
+
+## Playground
+
+You can experiment with Drop Project on a public cloud instance. 
+You'll have to authenticate using your github credentials. 
+By default, you'll be assigned the student role. 
+If you wish to experiment with the teacher role, send me an email and I'll be happy to assign you that role.
+
+[Playground](https://playground.dropproject.org/)
 
 ## Citation
 
 * Cipriano, B.P., Fachada, N. & Alves, P. (2022). Drop Project: An automatic assessment tool for programming assignments. *SoftwareX*, 18. 101079. <https://doi.org/10.1016/j.softx.2022.101079>
+* Cipriano, B.P., Baltazar, B., Fachada, N., Vourvopoulos, A., & Alves, P. (2024). Bridging the Gap between Project-Oriented and Exercise-Oriented Automatic Assessment Tools. *Computers*, 13(7), 162. <https://www.mdpi.com/2073-431X/13/7/162>
