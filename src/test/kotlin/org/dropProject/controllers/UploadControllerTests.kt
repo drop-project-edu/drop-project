@@ -1686,6 +1686,50 @@ class UploadControllerTests {
     }
 
     @Test
+    @DirtiesContext
+    fun `teacher home page should show his own assignments and public assignments`() {
+
+        val teacher = User("p1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
+
+        try {// list assigments should return empty
+            this.mvc.perform(get("/").with(user(teacher)))
+                .andExpect(status().isOk())
+                .andExpect(model().hasNoErrors())
+                .andExpect(model().attribute("assignments", emptyList<Assignment>()))
+
+            // create assignment
+            testsHelper.createAndSetupAssignment(
+                mvc, assignmentRepository, "dummyAssignment4", "Dummy Assignment",
+                "org.dummy",
+                "UPLOAD", sampleJavaAssignmentRepo, visibility = "PUBLIC",
+                teacherId = "p1", activateRightAfterCloning = true
+            )
+
+            // list assignments should return one assignment
+            val mvcResult = this.mvc.perform(get("/").with(user(teacher)))
+                .andExpect(status().isOk())
+                .andExpect(model().hasNoErrors())
+                .andExpect(model().attribute("assignments", IsCollectionWithSize.hasSize<Assignment>(1)))
+                .andReturn()
+
+            @Suppress("UNCHECKED_CAST")
+            val assignments = mvcResult.modelAndView!!.modelMap["assignments"] as List<Assignment>
+            val assignment = assignments[0]
+
+            Assert.assertEquals("dummyAssignment4", assignment.id)
+            Assert.assertEquals("Dummy Assignment", assignment.name)
+            Assert.assertEquals(true, assignment.active)
+            Assert.assertEquals(AssignmentVisibility.PUBLIC, assignment.visibility)
+
+        } finally {
+            // cleanup assignment files
+            if (File(assignmentsRootLocation, "dummyAssignment4").exists()) {
+                File(assignmentsRootLocation, "dummyAssignment4").deleteRecursively()
+            }
+        }
+    }
+
+    @Test
     fun `download public asset`() {
         val result = this.mvc.perform(get("/upload/testJavaProj/public/test.txt")
             .with(user(STUDENT_1)))

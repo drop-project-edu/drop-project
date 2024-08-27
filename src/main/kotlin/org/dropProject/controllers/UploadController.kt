@@ -56,6 +56,7 @@ import java.time.format.DateTimeFormatter
 import java.util.concurrent.Executor
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
+import kotlin.collections.HashSet
 
 /**
  * UploadController is an MVC controller class to handle requests related with the upload of submissions.
@@ -132,7 +133,7 @@ class UploadController(
     @RequestMapping(value = ["/"], method = [(RequestMethod.GET)])
     fun getUploadForm(model: ModelMap, principal: Principal, request: HttpServletRequest): String {
 
-        val assignments = ArrayList<Assignment>()
+        val assignments = HashSet<Assignment>()
 
         // add all the assignments for which the principal is authorized
         val assignees = assigneeRepository.findByAuthorUserId(principal.realName())
@@ -145,23 +146,20 @@ class UploadController(
 
         if (assignments.size == 1) {
             // redirect to that assignment
-            return "redirect:/upload/${assignments[0].id}"
+            val firstAssignment = assignments.first()
+            return "redirect:/upload/${firstAssignment.id}"
         }
 
         // add all public assignments
         assignments.addAll(assignmentRepository.findAllByActiveIsAndVisibility(true, AssignmentVisibility.PUBLIC))
 
         if (request.isUserInRole("TEACHER")) {
-            val assignmentsIOwn = assignmentRepository.findByOwnerUserId(principal.realName())
-
-            for (assignmentIOwn in assignmentsIOwn) {
-                if (!assignmentIOwn.archived) {
-                    assignments.add(assignmentIOwn)
-                }
-            }
+            assignments.addAll(assignmentRepository.findByOwnerUserId(principal.realName()))
         }
 
-        model["assignments"] = assignments
+        val filteredAssigments = assignments.filter { !it.archived }.sortedBy { it.id }
+
+        model["assignments"] = filteredAssigments
         model["isTeacher"] = request.isUserInRole("TEACHER")
 
         return "assignments-list"
