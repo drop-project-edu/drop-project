@@ -88,17 +88,15 @@
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown2" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <span class="glyphicon glyphicon-user"></span> <span th:text="${username}"></span><span class="caret"></span>
                         </a>
-                        <ul class="dropdown-menu" th:if="${numSubmissions != null}">
-                            <li>
-                                <a th:href="@{/mySubmissions/(assignmentId=${assignment?.id})}">Submissions <span class="badge" th:text="${numSubmissions}"></span></a>
-                            </li>
-                        </ul>
                         <ul class="dropdown-menu">
                             <li>
                                 <a th:href="@{/logout}">Logout</a>
                             </li>
                             <li>
                                 <a th:href="@{/personalToken}">Access tokens</a>
+                            </li>
+                            <li>
+                                <a th:href="@{/mySubmissions}">My history</a>
                             </li>
                         </ul>
                     </li>

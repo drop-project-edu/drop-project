@@ -542,33 +542,23 @@ class ReportController(
     }
 
     /**
-     * Controller that handles requests for the submissions of the current user in a certain [Assigment].
-     * @param assignmentId is a String identifying the relevant assignment
+     * Controller that handles requests for the submissions of the current user.
      * @param model is a [ModelMap] that will be populated with information to use in a View
      * @param principal is a [Principal] representing the user making the request. This is the user whose submissions
      * will be returned.
-     * @param request is an [HttpServletRequest]
      * @return A String with the name of the relevant View
      */
     @RequestMapping(value = ["/mySubmissions"], method = [(RequestMethod.GET)])
-    fun getMySubmissions(@RequestParam("assignmentId") assignmentId: String, model: ModelMap,
-                         principal: Principal, request: HttpServletRequest): String {
+    fun getMySubmissions(model: ModelMap,
+                         principal: Principal): String {
 
-        val assignment = assignmentRepository.findById(assignmentId).orElse(null)
+        model["studentHistory"] = studentService.getStudentHistory(principal.realName(), principal)
 
-        model["assignment"] = assignment
-        model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.realName(), assignment.id)
+        if (model["studentHistory"] == null) {
+            model["message"] = "Student with id ${principal.realName()} does not exist"
+        }
 
-        // TODO this is similar to getSubmissions: refactor
-        val submissions = submissionRepository
-                .findBySubmitterUserIdAndAssignmentId(principal.realName(), assignmentId)
-                .filter { it.getStatus() != SubmissionStatus.DELETED }
-
-        submissionService.fillIndicatorsFor(submissions)
-
-        model["submissions"] = submissions
-
-        return "submissions"
+        return "student-history";
     }
 
     /**
