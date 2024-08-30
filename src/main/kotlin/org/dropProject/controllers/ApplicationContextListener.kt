@@ -132,6 +132,10 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
             createAndPopulateSampleJavaAssignment()
             createAndPopulateSampleKotlinAssignment()
         }
+
+        LOG.info("Updating assignment metrics")
+        updateAssignmentMetrics()
+        LOG.info("Finished updating assignment metrics")
     }
 
     private fun createAndPopulateSampleJavaAssignment() {
@@ -321,6 +325,25 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
                 xmlReport = (resourceLoader.getResource("classpath:/initialData/${submissionName}JUnitXml.txt")as ClassPathResource).getContent()))
 
         return submission.id
+    }
+
+    /**
+     * Updates assignment metrics for all the assignments. This is a very slow operation!
+     */
+    private fun updateAssignmentMetrics() {
+
+        val allAssignments = assignmentRepository.findAll()
+
+        for ((idx, assignment) in allAssignments.withIndex()) {
+            LOG.info("Updating metrics for assignment ${assignment.id} (${idx+1} / ${allAssignments.size})")
+            assignment.numSubmissions = submissionRepository.countByAssignmentIdAndStatusNot(assignment.id, SubmissionStatus.DELETED.code).toInt()
+            if (assignment.numSubmissions > 0) {
+                    assignment.lastSubmissionDate =
+                        submissionRepository.findFirstByAssignmentIdOrderBySubmissionDateDesc(assignment.id).submissionDate
+            }
+            assignment.numUniqueSubmitters = submissionRepository.findUniqueSubmittersByAssignmentId(assignment.id).toInt()
+            assignmentRepository.save(assignment)
+        }
     }
 
 }

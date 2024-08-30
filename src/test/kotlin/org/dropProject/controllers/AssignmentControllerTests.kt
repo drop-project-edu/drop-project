@@ -116,6 +116,7 @@ class AssignmentControllerTests {
     val uploadSubmissionsRootLocation: String = "submissions/upload"
 
     val TEACHER_1 = User("teacher1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
+    val STUDENT_1 = User("student1", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
 
     @Test
     @WithMockUser("teacher1", roles = ["TEACHER"])
@@ -500,6 +501,9 @@ class AssignmentControllerTests {
             assertEquals(sampleJavaAssignmentRepo, assignment.gitRepositoryUrl)
             assertEquals("p1", assignment.ownerUserId)
             assertEquals(false, assignment.active)
+            assertEquals(0, assignment.numSubmissions)
+            assertEquals(0, assignment.numUniqueSubmitters)
+            assertNull(assignment.lastSubmissionDate)
             assertEquals(AssignmentVisibility.ONLY_BY_LINK, assignment.visibility)
 
         } finally {
@@ -1996,6 +2000,57 @@ class AssignmentControllerTests {
             // cleanup assignment files
             if (File(assignmentsRootLocation, "dummyAssignment1").exists()) {
                 File(assignmentsRootLocation, "dummyAssignment1").deleteRecursively()
+            }
+        }
+    }
+
+    @Test
+    @DirtiesContext
+    fun test_31_listAssignmentsAfterSomeSubmissions() {
+
+        try {
+
+            // create assignment
+            testsHelper.createAndSetupAssignment(
+                mvc, assignmentRepository, "dummyAssignment4", "Dummy Assignment",
+                "org.dummy",
+                "UPLOAD", sampleJavaAssignmentRepo,
+                teacherId = TEACHER_1.username, activateRightAfterCloning = true
+            )
+
+            testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "dummyAssignment4", STUDENT_1)
+            val lastSubmissionId = testsHelper.uploadProject(this.mvc, "projectCheckstyleErrors", "dummyAssignment4", STUDENT_1)
+
+            // list assignments should return one assignment
+            val mvcResult = this.mvc.perform(
+                get("/assignment/my")
+                    .with(user(TEACHER_1))
+            )
+                .andExpect(status().isOk())
+                .andExpect(model().hasNoErrors())
+                .andExpect(model().attribute("assignments", hasSize<Assignment>(1)))
+                .andReturn()
+
+            @Suppress("UNCHECKED_CAST")
+            val assignments = mvcResult.modelAndView!!.modelMap["assignments"] as List<Assignment>
+            val assignment = assignments[0]
+
+            assertEquals("dummyAssignment4", assignment.id)
+            assertEquals("Dummy Assignment", assignment.name)
+            assertEquals("org.dummy", assignment.packageName)
+            assertEquals(SubmissionMethod.UPLOAD, assignment.submissionMethod)
+            assertEquals(sampleJavaAssignmentRepo, assignment.gitRepositoryUrl)
+            assertEquals(TEACHER_1.username, assignment.ownerUserId)
+            assertEquals(true, assignment.active)
+            assertEquals(2, assignment.numSubmissions)
+            assertEquals(1, assignment.numUniqueSubmitters)
+            assertEquals(submissionRepository.getReferenceById(lastSubmissionId.toLong()).submissionDate, assignment.lastSubmissionDate)
+            assertEquals(AssignmentVisibility.ONLY_BY_LINK, assignment.visibility)
+
+        } finally {
+            // cleanup assignment files
+            if (File(assignmentsRootLocation, "dummyAssignment4").exists()) {
+                File(assignmentsRootLocation, "dummyAssignment4").deleteRecursively()
             }
         }
     }

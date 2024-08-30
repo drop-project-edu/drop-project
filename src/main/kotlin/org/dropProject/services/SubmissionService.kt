@@ -274,7 +274,7 @@ class SubmissionService(
                 submissionMode = submissionMode
             )
             submission.group = group
-            submissionRepository.save(submission)
+            saveSubmissionAndUpdateAssignmentMetrics(submission)
 
             buildSubmission(
                 projectFolder,
@@ -618,5 +618,32 @@ class SubmissionService(
         return file.useLines { lines ->
             lines.any { it.contains(searchString) }
         }
+    }
+
+    /**
+     * This method should be used instead of submissionRepository.save(submission) because it not only
+     * saves the submission but also updates metrics in the assignment
+     */
+    fun saveSubmissionAndUpdateAssignmentMetrics(submission: Submission): Submission {
+
+        val isNewSubmission = submission.id == 0L
+
+        val savedSubmission = submissionRepository.save(submission)
+
+        // only update assignment metrics if it is a new submission of if it was deleted
+        if (isNewSubmission || submission.getStatus() != SubmissionStatus.DELETED) {
+            val assignment = assignmentRepository.getReferenceById(submission.assignmentId)
+
+            if (submission.getStatus() != SubmissionStatus.DELETED) {
+                assignment.numSubmissions++
+            } else {
+                assignment.numSubmissions--
+            }
+            assignment.lastSubmissionDate = savedSubmission.submissionDate
+            assignment.numUniqueSubmitters = submissionRepository.findUniqueSubmittersByAssignmentId(assignment.id).toInt()
+            assignmentRepository.save(assignment)
+        }
+
+        return savedSubmission
     }
 }

@@ -298,7 +298,7 @@ class UploadController(
         }
 
         submission.setStatus(SubmissionStatus.REBUILDING, dontUpdateStatusDate = true)
-        submissionRepository.save(submission)
+        submissionService.saveSubmissionAndUpdateAssignmentMetrics(submission)
 
         buildWorker.checkProject(mavenizedProjectFolder, authors.joinToString(separator = "|"), submission,
                 dontChangeStatusDate = true,
@@ -333,7 +333,7 @@ class UploadController(
         val projectFolder = submissionService.getOriginalProjectFolder(rebuiltSubmission)
         val authors = submissionService.getProjectAuthors(File(projectFolder, "AUTHORS.txt"))
 
-        submissionRepository.save(rebuiltSubmission)
+        submissionService.saveSubmissionAndUpdateAssignmentMetrics(rebuiltSubmission)
         submissionService.buildSubmission(projectFolder, assignment, authors.joinToString(separator = "|"), rebuiltSubmission,
                 asyncExecutor, teacherRebuild = true, principal = principal)
 
@@ -676,7 +676,7 @@ class UploadController(
                 status = SubmissionStatus.SUBMITTED.code, statusDate = Date(), assignmentId = assignment.id,
                 assignmentGitHash = assignment.gitCurrentHash, submitterUserId = principal.realName())
         submission.group = gitSubmission.group
-        submissionRepository.save(submission)
+        submissionService.saveSubmissionAndUpdateAssignmentMetrics(submission)
 
         // if it's a git submission, and there isn't already this info, set the git hash associated with this submission
         if (submissionGitInfoRepository.getBySubmissionId(submission.id) == null) {
@@ -754,7 +754,7 @@ class UploadController(
         }
 
         submission.setStatus(SubmissionStatus.DELETED)
-        submissionRepository.save(submission)
+        submissionService.saveSubmissionAndUpdateAssignmentMetrics(submission)
 
         LOG.info("[${principal.realName()}] deleted submission $submissionId")
 

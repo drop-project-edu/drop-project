@@ -48,10 +48,6 @@ import java.nio.file.Files
 import java.security.Principal
 import java.util.*
 import javax.servlet.http.HttpServletRequest
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
-import kotlin.collections.HashSet
-import kotlin.collections.LinkedHashMap
 
 data class AssignmentImportResult(val type: String, val message: String, val redirectUrl: String)
 
@@ -130,11 +126,6 @@ class AssignmentService(
 
         for (assignment in filteredAssigments) {
             assignment.tagsStr = getTagsStr(assignment)
-            assignment.numSubmissions = submissionRepository.countByAssignmentIdAndStatusNot(assignment.id, SubmissionStatus.DELETED.code).toInt()
-            if (assignment.numSubmissions > 0) {
-                assignment.lastSubmissionDate = submissionRepository.findFirstByAssignmentIdOrderBySubmissionDateDesc(assignment.id).submissionDate
-            }
-            assignment.numUniqueSubmitters = submissionRepository.findUniqueSubmittersByAssignmentId(assignment.id).toInt()
         }
 
         return filteredAssigments
@@ -630,6 +621,16 @@ class AssignmentService(
                 jacocoReportRepository.save(JacocoReport(submissionId = submission.id, fileName = r.filename,
                     csvReport = r.csvReport))
             }
+
+            // update assignment metrics
+            val assignment = assignmentRepository.getReferenceById(assignmentId)
+            assignment.numSubmissions = submissionRepository.countByAssignmentIdAndStatusNot(assignment.id, SubmissionStatus.DELETED.code).toInt()
+            if (assignment.numSubmissions > 0) {
+                assignment.lastSubmissionDate =
+                    submissionRepository.findFirstByAssignmentIdOrderBySubmissionDateDesc(assignment.id).submissionDate
+            }
+            assignment.numUniqueSubmitters = submissionRepository.findUniqueSubmittersByAssignmentId(assignment.id).toInt()
+            assignmentRepository.save(assignment)
 
             LOG.info("Imported submission $submission.id ($index/${submissions.size})")
         }

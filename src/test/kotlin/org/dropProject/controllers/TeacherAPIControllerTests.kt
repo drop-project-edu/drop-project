@@ -24,6 +24,7 @@ import org.dropProject.dao.*
 import org.dropProject.extensions.getContent
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.*
+import org.dropProject.services.SubmissionService
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -87,6 +88,9 @@ class TeacherAPIControllerTests: APIControllerTests {
     @Autowired
     lateinit var testsHelper: TestsHelper
 
+    @Autowired
+    lateinit var submissionService: SubmissionService
+
     fun uploadStudentSubmission(submissionId: String, author: Author, submissionDate: String, submissionName: String,
                                         teacherTestsIndicator: String, teacherTestsProgress: Int,
                                         teacherTestsGoal: Int) : Long {
@@ -99,7 +103,7 @@ class TeacherAPIControllerTests: APIControllerTests {
             assignmentGitHash = null,
             submitterUserId = author.userId, submissionMode = SubmissionMode.UPLOAD)
 
-        submissionRepository.save(submission)
+        submissionService.saveSubmissionAndUpdateAssignmentMetrics(submission)
 
         val groups = projectGroupRepository.getGroupsForAuthor(author.userId)
         lateinit var group : ProjectGroup
@@ -315,7 +319,7 @@ class TeacherAPIControllerTests: APIControllerTests {
                                "gitRepositoryUrl":"git://dummy",
                                "ownerUserId":"teacher1",
                                "active":true,
-                               "numSubmissions":0,
+                               "numSubmissions":2,
                                "instructions":null },
                  "submission":{"id":1,
                                "submissionDate":"2019-01-01T10:34:00.000+00:00",
@@ -445,7 +449,7 @@ class TeacherAPIControllerTests: APIControllerTests {
                                     "gitRepositoryUrl": "git://dummy",
                                     "ownerUserId": "teacher1",
                                     "active": true,
-                                    "numSubmissions": 0,
+                                    "numSubmissions": 2,
                                     "instructions": null
                                 },
                                 "sortedSubmissions": [

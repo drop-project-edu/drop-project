@@ -172,13 +172,10 @@ data class Assignment(
     var assignmentTestMethods: MutableList<AssignmentTestMethod> = mutableListOf(),
 
     @JsonView(JSONViews.TeacherAPI::class)
-    @Transient
     var numSubmissions: Int = 0,
 
-    @Transient
     var numUniqueSubmitters: Int = 0,
 
-    @Transient
     var lastSubmissionDate: Date? = null,
 
     @Transient
