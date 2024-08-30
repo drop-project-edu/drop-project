@@ -66,6 +66,7 @@ class ReportController(
     val submissionRepository: SubmissionRepository,
     val gitSubmissionRepository: GitSubmissionRepository,
     val submissionReportRepository: SubmissionReportRepository,
+    val authorRepository: AuthorRepository,
     val assignmentTeacherFiles: AssignmentTeacherFiles,
     val buildReportBuilder: BuildReportBuilder,
     val gitClient: GitClient,
@@ -609,6 +610,7 @@ class ReportController(
                         submission.teacherTests = buildReport.junitSummaryAsObject(TestType.TEACHER)
                         submission.hiddenTests = buildReport.junitSummaryAsObject(TestType.HIDDEN)
             }
+            submission.submitterName = authorRepository.findByUserId(submission.submitterUserId)?.last()?.name
         }
 
         model["group"] = group

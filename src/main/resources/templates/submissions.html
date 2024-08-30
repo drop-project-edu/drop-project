@@ -8,7 +8,7 @@
 
 <div th:replace="layout/layout :: header"></div>
 
-<div class="container" style="max-width: 760px">
+<div class="container" style="max-width: 900px; margin-bottom: 65px">
 
     <h1 th:unless="${group}"  class="page-header" th:text="${username} + ' submissions'"></h1>
     <h1 th:if="${group}"  class="page-header" th:text="${group.authorsNameStr()} + ' submissions'"></h1>
@@ -57,6 +57,7 @@
         <thead>
         <tr>
             <th>Submission Date</th>
+            <th>Submitter</th>
             <th>Status</th>
             <th>Labels</th>
             <th class="text-center">Indicators</th>
@@ -67,6 +68,7 @@
         <tbody>
         <tr th:each="submission : ${submissions}">
             <td th:text="${#dates.format(submission.submissionDate, 'dd/MMM HH:mm:ss')}"></td>
+            <td th:text="${submission.submitterShortName()}" th:title="${submission.getSubmitterUserId()}"></td>
             <td th:text="${submission.getStatus().description}"></td>
             <td>
                 <span th:if="${submission.overdue}" class="label label-danger">Overdue</span>

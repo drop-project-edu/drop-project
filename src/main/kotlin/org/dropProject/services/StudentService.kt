@@ -74,6 +74,7 @@ class StudentService(
         submissionService.fillIndicatorsFor(submissions)
 
         for (submission in submissions) {
+            submission.submitterName = authorRepository.findByUserId(submission.submitterUserId)?.last()?.name
             val assignmentAndGroup = Pair(submission.assignmentId, submission.group.id)
             val assignment = assignmentRepository.findById(submission.assignmentId).get()
 

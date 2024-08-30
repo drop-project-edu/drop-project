@@ -1082,12 +1082,40 @@ class ReportControllerTests {
         assertEquals("sampleJavaProject", studentHistory.history[1].assignment.id)
         assertEquals(1, studentHistory.history[1].submissions.size)
         assertEquals(3, studentHistory.history[1].submissions[0].id)
-        
+        assertEquals("student1", studentHistory.history[1].submissions[0].submitterUserId)
+        assertEquals("Student 1", studentHistory.history[1].submissions[0].submitterShortName())
+
         // test sorted history
         val sortedHistory = studentHistory.getHistorySortedByDateDesc()
         assertEquals("sampleJavaProject", sortedHistory[0].assignment.id)
         assertEquals("testJavaProj", sortedHistory[1].assignment.id)
 
+    }
+
+    @Test
+    @DirtiesContext
+    fun testSubmissionsReport() {
+
+        testsHelper.uploadProject(
+            this.mvc, "projectInvalidStructure1", "testJavaProj", STUDENT_1,
+            listOf(Pair("student1", "Student 1"))
+        )
+        testsHelper.uploadProject(
+            this.mvc, "projectOK", "testJavaProj", STUDENT_1,
+            listOf(Pair("student1", "Student 1"))
+        )
+
+        val reportResult = this.mvc.perform(get("/submissions/?assignmentId=testJavaProj&groupId=1")
+            .with(user(TEACHER_1)))
+            .andExpect(status().isOk())
+            .andReturn()
+
+        @Suppress("UNCHECKED_CAST")
+        val submissions = reportResult.modelAndView!!.modelMap["submissions"] as List<Submission>
+        assertEquals(2, submissions.size)
+        for (submission in submissions) {
+            assertEquals("Student 1", submission.submitterShortName())
+        }
     }
 
     @Test

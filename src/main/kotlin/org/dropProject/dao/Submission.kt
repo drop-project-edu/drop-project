@@ -107,6 +107,9 @@ data class Submission(
         @Column(nullable = false)
         val submitterUserId: String,
 
+        @Transient
+        var submitterName: String? = null,
+
         @Column(nullable = false)
         @JsonView(JSONViews.StudentAPI::class)
         private var status: String,  // should be accessed through getStatus() and setStatus()
@@ -185,6 +188,17 @@ data class Submission(
         }
     }
 
+    fun submitterShortName(): String {
+        if (submitterName != null) {
+            if (submitterName!!.length > 12) {
+                return submitterName!!.split(" ")[0]
+            } else {
+                return submitterName!!
+            }
+        }
+
+        return ""
+    }
 
     companion object {
         fun relativeUploadFolder(assignmentId: String, submissionDate: Date) = "$assignmentId/${SimpleDateFormat("w-yy").format(submissionDate)}"
