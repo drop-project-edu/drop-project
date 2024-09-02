@@ -219,16 +219,20 @@ class ReportControllerTests {
 
         val mySubmissionsResult = this.mvc.perform(
             get("/mySubmissions")
-                .param("assignmentId", defaultAssignmentId)
                 .with(user(STUDENT_1))
         )
             .andExpect(status().isOk)
             .andReturn()
 
         @Suppress("UNCHECKED_CAST")
-        val submissions = mySubmissionsResult.modelAndView!!.modelMap["submissions"] as List<Submission>
+        val studentHistory = mySubmissionsResult.modelAndView!!.modelMap["studentHistory"] as StudentHistory
 
-        assertEquals("there should exist only one submission", 1, submissions.size)
+        assertEquals(STUDENT_1.username, studentHistory.author.userId)
+        assertEquals(1, studentHistory.history.size)
+
+        assertEquals(defaultAssignmentId, studentHistory.history[0].assignment.id)
+        assertEquals(1, studentHistory.history[0].submissions.size)
+        assertEquals(1, studentHistory.history[0].submissions[0].id)
     }
 
     @Test

@@ -51,7 +51,12 @@ class StudentService(
     val assignmentACLRepository: AssignmentACLRepository,
     val submissionService: SubmissionService
 ) {
-    fun getStudentHistory(studentId: String, principal: Principal): StudentHistory? {
+    /**
+     * @param teacherPrincipal if the request is made by a student, this parameter is null. otherwise, it
+     * is the principal associated with the session. This is to prevent teachers from seeing submissions
+     * to assignments that they don't have access
+     */
+    fun getStudentHistory(studentId: String, teacherPrincipal: Principal? = null): StudentHistory? {
         val authorGroups = authorRepository.findByUserId(studentId)
 
         if (authorGroups.isNullOrEmpty()) {
@@ -80,10 +85,11 @@ class StudentService(
 
             if (!assignmentsMap.containsKey(assignmentAndGroup)) {
 
-                val acl = assignmentACLRepository.findByAssignmentId(submission.assignmentId)
-
-                if (principal.realName() != assignment.ownerUserId && acl.find { it.userId == principal.realName() } == null) {
-                    continue
+                if (teacherPrincipal != null) {
+                    val acl = assignmentACLRepository.findByAssignmentId(submission.assignmentId)
+                    if (teacherPrincipal.realName() != assignment.ownerUserId && acl.find { it.userId == teacherPrincipal.realName() } == null) {
+                        continue
+                    }
                 }
 
                 assignmentsMap[assignmentAndGroup] = assignment

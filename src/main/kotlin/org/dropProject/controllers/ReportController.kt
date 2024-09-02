@@ -552,7 +552,7 @@ class ReportController(
     fun getMySubmissions(model: ModelMap,
                          principal: Principal): String {
 
-        model["studentHistory"] = studentService.getStudentHistory(principal.realName(), principal)
+        model["studentHistory"] = studentService.getStudentHistory(principal.realName())
 
         if (model["studentHistory"] == null) {
             model["message"] = "Student with id ${principal.realName()} does not exist"
@@ -793,8 +793,6 @@ class ReportController(
         return ResponseEntity(studentService.getStudentList(q), HttpStatus.OK)
     }
 
-    // For now, this will list assignments even if the teacher making the request
-    // does not have access to those assignments
     @RequestMapping(value = ["/studentHistory"], method = [(RequestMethod.GET)])
     fun getStudentHistory(@RequestParam("id") studentId: String, model: ModelMap,
                        principal: Principal, request: HttpServletRequest): String {
