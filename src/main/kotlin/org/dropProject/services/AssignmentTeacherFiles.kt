@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonView
 import org.apache.commons.io.FileUtils
 import org.commonmark.ext.autolink.AutolinkExtension
 import org.commonmark.node.AbstractVisitor
+import org.commonmark.node.Image
 import org.commonmark.node.Link
 import org.commonmark.parser.Parser
 import org.commonmark.renderer.html.HtmlRenderer
@@ -55,7 +56,20 @@ data class AssignmentInstructions(
 /**
  * Transforms relative links into absolute links, during the rendering of markdown documents
  */
-class RelativeToAbsoluteLinkVisitor(private val baseUrl: String) : AbstractVisitor() {
+class RelativeToAbsoluteLinkVisitor(private val baseUrlForLinks: String,
+                                    private val baseUrlForImages: String) : AbstractVisitor() {
+
+    override fun visit(image: Image) {
+        val destination = image.destination
+
+        // Check if the link is relative
+        if (!destination.startsWith("http://") && !destination.startsWith("https://")) {
+            // Convert the relative link to an absolute one
+            image.destination = baseUrlForImages + destination
+        }
+
+        super.visit(image)
+    }
 
     override fun visit(link: Link) {
         val destination = link.destination
@@ -63,7 +77,7 @@ class RelativeToAbsoluteLinkVisitor(private val baseUrl: String) : AbstractVisit
         // Check if the link is relative
         if (!destination.startsWith("http://") && !destination.startsWith("https://")) {
             // Convert the relative link to an absolute one
-            link.destination = baseUrl + destination
+            link.destination = baseUrlForLinks + destination
         }
 
         // Proceed with the default behavior for this node
@@ -106,7 +120,7 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
                 val document = parser.parse(fragment.readText());
 
                 // Create the visitor with the base URL for converting relative links
-                val visitor = RelativeToAbsoluteLinkVisitor("public/${assignment.id}/")
+                val visitor = RelativeToAbsoluteLinkVisitor("public/${assignment.id}/", "${assignment.id}/")
 
                 // Apply the visitor to the document
                 document.accept(visitor)

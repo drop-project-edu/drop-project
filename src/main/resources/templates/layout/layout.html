@@ -90,13 +90,16 @@
                         </a>
                         <ul class="dropdown-menu">
                             <li>
-                                <a th:href="@{/logout}">Logout</a>
+                                <a th:href="@{/personalToken}" th:text="#{menu.access-tokens}">Access tokens</a>
                             </li>
                             <li>
-                                <a th:href="@{/personalToken}">Access tokens</a>
+                                <a th:href="@{/mySubmissions}" th:text="#{menu.my-history}">My history</a>
                             </li>
+                            <div class="divider"></div>
                             <li>
-                                <a th:href="@{/mySubmissions}">My history</a>
+                                <a th:href="@{/logout}">
+                                    <span class="glyphicon glyphicon-log-out"></span> <span th:text="#{menu.logout}">Logout</span>
+                                </a>
                             </li>
                         </ul>
                     </li>

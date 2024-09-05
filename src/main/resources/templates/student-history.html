@@ -12,7 +12,7 @@
         <div class="alert alert-info" th:text="${message}"/>
     </div>
 
-    <h1 class="page-header">Student History</h1>
+    <h1 class="page-header" th:text="#{history.title}">Student History</h1>
     <h6><span th:text="${studentHistory.author.userId}"></span> | <span th:text="${studentHistory.author.name}"></span></h6>
 
     <table>
