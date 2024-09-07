@@ -249,37 +249,35 @@
 <script th:src="@{/js/typeahead.bundle.js}"></script>
 <script th:inline="javascript">
     /*<![CDATA[*/
-    $(document).ready(function() {
-        var tagNames = new Bloodhound({
-            local: [(${allTags})],
-            datumTokenizer: Bloodhound.tokenizers.whitespace,
-            queryTokenizer: Bloodhound.tokenizers.whitespace,
-        });
-        tagNames.initialize();
+    var tagNames = new Bloodhound({
+        local: [(${allTags})],
+        datumTokenizer: Bloodhound.tokenizers.whitespace,
+        queryTokenizer: Bloodhound.tokenizers.whitespace,
+    });
+    tagNames.initialize();
 
-        $('#assignmentTags').tagsinput({
-            cancelConfirmKeysOnEmpty: false,  // to avoid an extra comma
-            typeaheadjs: {
-                source: tagNames.ttAdapter()
-            }
-        });
-
-        function toggleAssignees() {
-            var visibilityValue = $('#visibility').val();
-            if (visibilityValue === 'PRIVATE') {
-                $('#assignees').prop('disabled', false);
-            } else {
-                $('#assignees').prop('disabled', true).val('');
-            }
+    $('#assignmentTags').tagsinput({
+        cancelConfirmKeysOnEmpty: false,  // to avoid an extra comma
+        typeaheadjs: {
+            source: tagNames.ttAdapter()
         }
+    });
 
-        // Initial check on page load
+    function toggleAssignees() {
+        var visibilityValue = $('#visibility').val();
+        if (visibilityValue === 'PRIVATE') {
+            $('#assignees').prop('disabled', false);
+        } else {
+            $('#assignees').prop('disabled', true).val('');
+        }
+    }
+
+    // Initial check on page load
+    toggleAssignees();
+
+    // Check whenever the select value changes
+    $('#visibility').change(function() {
         toggleAssignees();
-
-        // Check whenever the select value changes
-        $('#visibility').change(function() {
-            toggleAssignees();
-        });
     });
     /*]]>*/
 </script>

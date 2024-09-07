@@ -112,17 +112,14 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-confirmation2@2.4.2/bootstrap-confirmation.min.js"></script>
 <script>
+    // clicking on a tab changes the url
     $(document).ready(function() {
-
-        // clicking on a tab changes the url
-        $(document).ready(function() {
-            $('#myTab a').click(function(e) {
-                e.preventDefault();
-                var url = $(this).attr("href");
-                location.href = url;
-            });
+        $('#myTab a').click(function(e) {
+            e.preventDefault();
+            var url = $(this).attr("href");
+            location.href = url;
         });
-    } );
+    });
 </script>
 
 </body>

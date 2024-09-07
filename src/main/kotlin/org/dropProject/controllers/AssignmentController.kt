@@ -130,10 +130,16 @@ class AssignmentController(
     @Transactional  // because of assignment.tags
     fun createOrEditAssignment(@Valid @ModelAttribute("assignmentForm") assignmentForm: AssignmentForm,
                                bindingResult: BindingResult,
+                               model: ModelMap,
                                redirectAttributes: RedirectAttributes,
                                principal: Principal): String {
 
         var mustSetupGitConnection = false
+
+        // add all the tags to the model, in case we have an error and have to return the same page
+        model["allTags"] = assignmentTagRepository.findAll()
+            .map { "'" + it.name + "'" }
+            .joinToString(separator = ",", prefix = "[", postfix = "]")
 
         if (assignmentForm.acceptsStudentTests &&
             (assignmentForm.minStudentTests == null || assignmentForm.minStudentTests!! < 1)) {
