@@ -28,5 +28,7 @@ import org.springframework.transaction.annotation.Transactional
  */
 interface AssignmentTagsRepository : JpaRepository<AssignmentTags, AssignmentTagsCompositeKey> {
     fun findByAssignmentId(assignmentId: String) : List<AssignmentTags>
+    fun findByTagId(tagId: Long) : List<AssignmentTags>
+    fun removeAllByTagId(tagId: Long): Int
     fun countAssignmentTagsByTagId(tagId: Long): Long
 }

@@ -20,19 +20,20 @@
 package org.dropProject.controllers
 
 import org.dropProject.AsyncTimeoutConfigurer
+import org.dropProject.dao.AssignmentTag
 import org.dropProject.dao.SubmissionStatus
 import org.dropProject.forms.AdminDashboardForm
+import org.dropProject.repository.AssignmentTagRepository
+import org.dropProject.repository.AssignmentTagsRepository
 import org.dropProject.repository.SubmissionRepository
 import org.dropProject.services.MavenInvoker
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Controller
 import org.springframework.ui.ModelMap
 import org.springframework.validation.BindingResult
-import org.springframework.web.bind.annotation.ModelAttribute
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestMethod
+import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.mvc.support.RedirectAttributes
+import javax.transaction.Transactional
 import javax.validation.Valid
 
 /**
@@ -43,6 +44,8 @@ import javax.validation.Valid
 @RequestMapping("/admin")
 class AdminController(val mavenInvoker: MavenInvoker,
                       val submissionRepository: SubmissionRepository,
+                      val assignmentTagRepository: AssignmentTagRepository,
+                      val assignmentTagsRepository: AssignmentTagsRepository,
                       val asyncTimeoutConfigurer: AsyncTimeoutConfigurer) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
@@ -109,5 +112,32 @@ class AdminController(val mavenInvoker: MavenInvoker,
 
         redirectAttributes.addFlashAttribute("message", "Aborted submission ${submissionId}")
         return "redirect:/admin/showPending"
+    }
+
+    // Method to display all tags and their usage count
+    @GetMapping("/tags")
+    fun showTags(model: ModelMap): String {
+        val tagsWithUsage: List<Pair<AssignmentTag,Long>> = assignmentTagRepository.findAll().map { tag ->
+            val usageCount = assignmentTagsRepository.countAssignmentTagsByTagId(tag.id) // Assuming 'assignments' is a list of associated entities
+            Pair(tag, usageCount)
+        }
+
+        model["tagsWithUsage"] = tagsWithUsage
+        return "admin-tags"
+    }
+
+    // Method to delete a tag and all its associations
+    @PostMapping("/deleteTag")
+    @Transactional
+    fun deleteTag(@RequestParam("tagId") tagId: Long, redirectAttributes: RedirectAttributes): String {
+        val tag = assignmentTagRepository.findById(tagId)
+        if (tag.isPresent) {
+            assignmentTagsRepository.removeAllByTagId(tag.get().id)
+            assignmentTagRepository.delete(tag.get())
+            redirectAttributes.addFlashAttribute("message", "Tag deleted successfully.")
+        } else {
+            redirectAttributes.addFlashAttribute("error", "Tag not found.")
+        }
+        return "redirect:/admin/tags"
     }
 }
