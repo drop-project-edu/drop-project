@@ -55,7 +55,14 @@
             <td th:if="${assignment.lastSubmissionDate == null}">-</td>
             <td th:if="${!archived}" class="text-center" th:data-order="${assignment.active}">
                 <form th:action="@{'/assignment/toggle-status/' + ${assignment.id}}" method="post" style="display: inline;">
-                    <input type="checkbox" th:checked="${assignment.active}" onChange="this.form.submit()"/>
+                    <input type="checkbox" th:attr="data-assignment-id=${assignment.id}" th:checked="${assignment.active}"
+                           onChange="
+                            if (this.checked) {
+                               $('#assignmentIdPlaceholder').text(this.getAttribute('data-assignment-id'));
+                               $('#waitModal').modal('show');
+                           }
+                           this.form.submit();
+                           "/>
                 </form>
             </td>
             <td th:if="${!archived}" class="text-center">
@@ -95,6 +102,23 @@
     <a th:if="${!archived}" th:href="@{/assignment/new}" class="btn btn-primary">Create Assignment</a>
     <a th:if="${!archived}" th:href="@{/assignment/import}" class="btn btn-default"><span class="glyphicon glyphicon-import"></span> Import Assignment</a>
 
+</div>
+
+<div id="waitModal" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #007bff; color: white;">
+                <h5 class="modal-title">Assignment Activation</h5>
+<!--                <button type="button" class="close" data-dismiss="modal" aria-label="Close">-->
+<!--                    <span aria-hidden="true">&times;</span>-->
+<!--                </button>-->
+            </div>
+            <div class="modal-body">
+                <p>Activating assignment: <strong><span id="assignmentIdPlaceholder"></span></strong></p>
+                <p>Please wait... <i class="fas fa-sync fa-spin"></i></p>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div th:replace="layout/layout :: footer"></div>
