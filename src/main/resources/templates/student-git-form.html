@@ -89,7 +89,7 @@
             </table>
 
             <button type="button" id="refreshBtn" class="btn btn-primary has-spinner" th:disabled="${coolOffEnd != null}">
-                <span class="spinner"><i class="fa fa-refresh fa-spin"></i></span>
+                <span class="spinner"><i class="fas fa-sync fa-spin"></i></span>
                 <span th:text="#{student.git.form.update-btn}">Atualizar</span>
             </button>
             <button th:if="${gitSubmission.lastSubmissionId == null}" type="button" id="generateReportBtn"
