@@ -114,6 +114,7 @@
         <div class="container">
             <p class="navbar-text pull-left">Feedback: <a th:href="'mailto:' + ${adminEmail}" th:text="${adminEmail}">pedro.alves@ulusofona.pt</a></p>
             <p class="navbar-text" th:if="${embeddedDB}" style="color:red"><strong>WARNING: Using in-memory database. All data will be lost on restart!!!</strong></p>
+            <p class="navbar-text" th:if="${!#strings.isEmpty(footerMessage)}" style="color:red" th:text="${footerMessage}">Footer message</p>
             <p class="navbar-text pull-right">
                 Powered by Drop Project
                 (<small th:text="${buildInfo.version}"></small>)

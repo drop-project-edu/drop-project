@@ -37,6 +37,9 @@ class GlobalControllerAdvice {
     @Value("\${dropProject.admin.email}")
     val adminEmailProperty: String = ""
 
+    @Value("\${dropProject.footer.message:}")
+    val footerMessage: String = ""
+
     @Autowired
     lateinit var buildProperties: BuildProperties
 
@@ -73,6 +76,11 @@ class GlobalControllerAdvice {
     @ModelAttribute("embeddedDB")
     fun isUsingEmbeddedDB() : Boolean {
         return dataSource!!.driverClassName == "org.h2.Driver"
+    }
+
+    @ModelAttribute("footerMessage")
+    fun footerMessage() : String {
+        return footerMessage
     }
 
     @ModelAttribute("demoMode")
