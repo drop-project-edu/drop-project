@@ -332,7 +332,7 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
      */
     private fun updateAssignmentMetrics() {
 
-        val allAssignments = assignmentRepository.findAll()
+        val allAssignments = assignmentRepository.findAllByNumSubmissions(0)
 
         for ((idx, assignment) in allAssignments.withIndex()) {
             LOG.info("Updating metrics for assignment ${assignment.id} (${idx+1} / ${allAssignments.size})")

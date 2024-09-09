@@ -31,4 +31,5 @@ interface AssignmentRepository : JpaRepository<Assignment, String> {
     fun findByGitRepositoryFolder(gitRepositoryFolder: String): Assignment?
     fun findAllByActiveIsAndVisibility(active: Boolean, visibility: AssignmentVisibility): List<Assignment>
     fun findAllByVisibility(visibility: AssignmentVisibility): List<Assignment>
+    fun findAllByNumSubmissions(numSubmissions: Int): List<Assignment>
 }
