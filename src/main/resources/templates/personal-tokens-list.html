@@ -30,7 +30,7 @@
                 <h4><i class="glyphicon glyphicon-lock"></i> Token: <span
                         id="token" th:text="${token.personalToken}">abcdef</span>
                 </h4>
-                <small th:text="${'Expires on ' + token.expirationDate }">Expires on xxxx</small>
+                <small th:text="${'Expires on ' + token.expirationDate }">Expires on xxxx</small> <span class="label label-danger" th:if="${token.isExpired()}">Expired</span>
             </td>
         </tr>
         </tbody>

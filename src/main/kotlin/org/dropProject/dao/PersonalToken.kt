@@ -63,3 +63,8 @@ data class PersonalToken(
     @Column(nullable = false)
     var profiles: String
 )
+{
+    fun isExpired(): Boolean {
+        return Date().after(expirationDate)
+    }
+}
