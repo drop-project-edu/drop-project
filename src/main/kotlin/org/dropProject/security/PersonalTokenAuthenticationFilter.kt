@@ -22,15 +22,30 @@ package org.dropProject.security
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.BadCredentialsException
+import org.springframework.security.authentication.CredentialsExpiredException
 import org.springframework.security.core.Authentication
+import org.springframework.security.core.AuthenticationException
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter
+import org.springframework.security.web.authentication.AuthenticationFailureHandler
 import java.nio.charset.StandardCharsets
 import java.util.*
+import javax.servlet.ServletException
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
+
 const val AUTH_HEADER_PARAMETER_AUTHORIZATION = "authorization"
+
+class PersonalTokenAuthenticationFailureHandler : AuthenticationFailureHandler {
+
+    override fun onAuthenticationFailure(request: HttpServletRequest?, response: HttpServletResponse, exception: AuthenticationException) {
+        // Set the response status and write custom error message
+        response.status = HttpServletResponse.SC_UNAUTHORIZED
+        response.contentType = "application/json"
+        response.writer.write(("{\"error\": \"Token Authentication failed\", \"message\": \"" + exception.message) + "\"}")
+    }
+}
 
 class PersonalTokenAuthenticationFilter(
     defaultFilterProcessesUrl: String,
@@ -40,6 +55,7 @@ class PersonalTokenAuthenticationFilter(
 
     init {
         setContinueChainBeforeSuccessfulAuthentication(true)
+        setAuthenticationFailureHandler(PersonalTokenAuthenticationFailureHandler())
     }
 
     override fun attemptAuthentication(request: HttpServletRequest, response: HttpServletResponse): Authentication {
@@ -56,7 +72,11 @@ class PersonalTokenAuthenticationFilter(
         val credentials = String(credDecoded, StandardCharsets.UTF_8)
 
         val token = PersonalToken(credentials, authenticationDetailsSource.buildDetails(request))
-        val authentication = authenticationManager.authenticate(token)
+        val authentication = try {
+            authenticationManager.authenticate(token)
+        } catch (e: CredentialsExpiredException) {
+            throw BadCredentialsException(e.message)
+        }
         if (!authentication.isAuthenticated) {
             throw BadCredentialsException("Invalid personal token")
         }
