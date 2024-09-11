@@ -127,6 +127,10 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
 
                 val renderer = HtmlRenderer.builder().extensions(extensions).build();
                 instructions.body = renderer.render(document)
+
+                // TODO: While the plugin is not able to render markdown, let's just return html
+                instructions.format = AssignmentInstructionsFormat.HTML
+
             } else {
                 instructions.body = fragment.readText()
             }
