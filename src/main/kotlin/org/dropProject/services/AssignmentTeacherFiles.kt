@@ -23,10 +23,16 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonView
 import org.apache.commons.io.FileUtils
 import org.commonmark.ext.autolink.AutolinkExtension
+import org.commonmark.ext.gfm.tables.TableBlock
+import org.commonmark.ext.gfm.tables.TablesExtension
 import org.commonmark.node.AbstractVisitor
 import org.commonmark.node.Image
 import org.commonmark.node.Link
+import org.commonmark.node.Node
 import org.commonmark.parser.Parser
+import org.commonmark.renderer.html.AttributeProvider
+import org.commonmark.renderer.html.AttributeProviderContext
+import org.commonmark.renderer.html.AttributeProviderFactory
 import org.commonmark.renderer.html.HtmlRenderer
 import org.dropProject.dao.*
 import org.dropProject.data.JSONViews
@@ -115,7 +121,7 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
             val extension = fragment.extension.uppercase()
             instructions.format = AssignmentInstructionsFormat.valueOf(extension)
             if (extension == "MD") {
-                val extensions = listOf(AutolinkExtension.create())
+                val extensions = listOf(AutolinkExtension.create(), TablesExtension.create())
                 val parser = Parser.builder().extensions(extensions).build();
                 val document = parser.parse(fragment.readText());
 
@@ -125,7 +131,17 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
                 // Apply the visitor to the document
                 document.accept(visitor)
 
-                val renderer = HtmlRenderer.builder().extensions(extensions).build();
+                val renderer = HtmlRenderer.builder()
+                    .extensions(extensions)
+                    // custom attribute provider to add 'table' class to tables rendered by commonmark
+                    .attributeProviderFactory { _ ->
+                        AttributeProvider { node, tagName, attributes ->
+                            if (node is TableBlock) {
+                                attributes["class"] = "table table-bordered"
+                            }
+                        }
+                    }
+                    .build();
                 instructions.body = renderer.render(document)
 
                 // TODO: While the plugin is not able to render markdown, let's just return html

@@ -154,6 +154,11 @@
 			<artifactId>commonmark-ext-autolink</artifactId>
 			<version>0.22.0</version>
 		</dependency>
+		<dependency>
+			<groupId>org.commonmark</groupId>
+			<artifactId>commonmark-ext-gfm-tables</artifactId>
+			<version>0.22.0</version>
+		</dependency>
 
 		<!-- for oauth authentication -->
 		<dependency>
