@@ -48,7 +48,7 @@
                               data-content="&lt;img src='../img/github-clone-ssh.png' width='250'/&gt;"></span>
                     </label>
                     <input tabindex="1" name="gitRepositoryUrl" type="text" class="form-control" id="gitRepositoryUrl"
-                           placeholder="git@github.com:someuser/cs1Assigment1.git" maxlength="90" th:value="${gitRepositoryUrl}" />
+                           placeholder="git@github.com:someuser/cs1Assigment1.git" maxlength="120" th:value="${gitRepositoryUrl}" />
                     <p class="help-block" th:if="${gitRepoErrorMsg}" th:text="${gitRepoErrorMsg}"></p>
                 </div>
                 <input type="hidden" name="assignmentId" th:value="${assignment.id}"/>
