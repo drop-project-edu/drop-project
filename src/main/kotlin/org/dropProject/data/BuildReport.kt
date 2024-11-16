@@ -290,7 +290,7 @@ data class BuildReport(val mavenOutputLines: List<String>,
             }
             Language.KOTLIN -> {
                 for (mavenOutputLine in mavenOutputLines) {
-                    if (mavenOutputLine.startsWith("[INFO] --- detekt-maven-plugin")) {
+                    if (mavenOutputLine.startsWith("[INFO] --- detekt")) {
                         return true
                     }
                 }

@@ -1291,6 +1291,61 @@ class UploadControllerTests {
 
     @Test
     @DirtiesContext
+    fun uploadProjectWithStudentTestsUsingJUnit5() {
+
+        val assignment = Assignment(id = "testJavaProjJUnit5",
+            name = "Test Project",
+            packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
+            submissionMethod = SubmissionMethod.UPLOAD, active = true,
+            acceptsStudentTests = true,    // <<< this is very important for this test
+            minStudentTests = 1,
+            gitRepositoryUrl = "git://dummy",
+            gitRepositoryFolder = "testJavaProjJUnit5")
+        assignmentRepository.save(assignment)
+
+        val submissionId = testsHelper.uploadProject(this.mvc, "projectWith2StudentTestsUsingBeforeClass", assignment.id, STUDENT_1)
+
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId")
+            .with(user(STUDENT_1)))
+            .andExpect(status().isOk())
+            .andReturn()
+
+        @Suppress("UNCHECKED_CAST")
+        val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
+        assertEquals("Summary should be 6 lines", 6, summary.size)
+        assertEquals("projectStructure should be OK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
+        assertEquals("projectStructure should be OK (value)", "OK", summary[0].reportValue)
+        assertEquals("compilation should be OK (key)", Indicator.COMPILATION, summary[1].indicator)
+        assertEquals("compilation should be OK (value)", "OK", summary[1].reportValue)
+        assertEquals("checkstyle should be OK (key)", Indicator.CHECKSTYLE, summary[2].indicator)
+        assertEquals("checkstyle should be OK (value)", "OK", summary[2].reportValue)
+        assertEquals("student tests should be OK (key)", Indicator.STUDENT_UNIT_TESTS, summary[3].indicator)
+        assertEquals("student tests should be OK (value)", "OK", summary[3].reportValue)
+        assertEquals("student tests should pass 2 tests", 2, summary[3].reportProgress)
+        assertEquals("student tests should have total 2 tests", 2, summary[3].reportGoal)
+        assertEquals("teacher tests should be OK (key)", Indicator.TEACHER_UNIT_TESTS, summary[4].indicator)
+        assertEquals("teacher tests should be OK (value)", "OK", summary[4].reportValue)
+        assertEquals("teacher tests should pass 2 tests", 2, summary[4].reportProgress)
+        assertEquals("teacher tests should have total 2 tests", 2, summary[4].reportGoal)
+
+        @Suppress("UNCHECKED_CAST")
+        val structureErrors = reportResult.modelAndView!!.modelMap["structureErrors"] as List<String>
+        assert(structureErrors.isEmpty())
+
+        val buildResult = reportResult.modelAndView!!.modelMap["buildReport"] as BuildReport
+        assert(buildResult.compilationErrors.isEmpty())
+        assert(buildResult.checkstyleErrors.isEmpty())
+        assert(buildResult.PMDerrors().isEmpty())
+
+        assert(buildResult.hasJUnitErrors(TestType.TEACHER) == false)
+        assertTrue(buildResult.junitSummaryTeacher!!.startsWith("Tests run: 2, Failures: 0, Errors: 0"))
+
+        assert(buildResult.hasJUnitErrors(TestType.STUDENT) == false)
+        assertTrue(buildResult.junitSummaryStudent!!.startsWith("Tests run: 2, Failures: 0, Errors: 0"))
+    }
+
+    @Test
+    @DirtiesContext
     fun uploadProjectWithStudentTestsForAssignmentThatDoesntRequireStudentTests() {
 
         val assignment = Assignment(id = "testJavaProjWithCoverage",    // <<< this is very important for this test
