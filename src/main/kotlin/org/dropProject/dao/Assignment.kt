@@ -23,7 +23,6 @@ import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonView
-import org.apache.commons.lang.mutable.Mutable
 import org.dropProject.data.JSONViews
 import org.dropProject.extensions.format
 import org.dropProject.forms.SubmissionMethod

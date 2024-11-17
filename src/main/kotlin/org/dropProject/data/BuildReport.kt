@@ -250,7 +250,7 @@ data class BuildReport(val mavenOutputLines: List<String>,
                 var startIdx = -1;
                 var endIdx = -1;
                 for ((idx, mavenOutputLine) in mavenOutputLines.withIndex()) {
-                    if (mavenOutputLine.startsWith("[INFO] --- detekt-maven-plugin")) {
+                    if (mavenOutputLine.startsWith("[INFO] --- detekt")) {
                         startIdx = idx + 1
                     }
                     // depending on the detekt-maven-plugin version, the output is different
