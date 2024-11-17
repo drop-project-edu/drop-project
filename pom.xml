@@ -92,15 +92,9 @@
 
 		<!-- to detect file encodings -->
 		<dependency>
-			<groupId>org.apache.any23</groupId>
-			<artifactId>apache-any23-encoding</artifactId>
-			<version>2.2</version>
-			<exclusions>
-				<exclusion>
-					<groupId>com.tdunning</groupId>
-					<artifactId>json</artifactId>
-				</exclusion>
-			</exclusions>
+			<groupId>com.github.albfernandez</groupId>
+			<artifactId>juniversalchardet</artifactId>
+			<version>2.4.0</version>
 		</dependency>
 
 		<!-- git client -->
@@ -190,9 +184,9 @@
 			<version>1.1.1</version>
 		</dependency>
 		<dependency>
-			<groupId>org.ehcache</groupId>
+			<groupId>net.sf.ehcache</groupId>
 			<artifactId>ehcache</artifactId>
-			<version>3.8.1</version>
+			<version>2.10.9.2</version>
 		</dependency>
 
 		<!-- json processing -->

@@ -19,7 +19,6 @@
  */
 package org.dropProject.services
 
-import org.apache.any23.encoding.TikaEncodingDetector
 import org.apache.commons.io.FileUtils
 import org.dropProject.Constants
 import org.dropProject.controllers.InvalidProjectGroupException
@@ -27,7 +26,6 @@ import org.dropProject.controllers.InvalidProjectStructureException
 import org.dropProject.controllers.UploadController
 import org.dropProject.dao.*
 import org.dropProject.data.AuthorDetails
-import org.springframework.stereotype.Service
 import org.dropProject.data.SubmissionInfo
 import org.dropProject.data.SubmissionResult
 import org.dropProject.data.TestType
@@ -38,6 +36,7 @@ import org.dropProject.forms.SubmissionMethod
 import org.dropProject.forms.UploadForm
 import org.dropProject.repository.*
 import org.dropProject.storage.StorageService
+import org.mozilla.universalchardet.UniversalDetector
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.MessageSource
@@ -45,12 +44,12 @@ import org.springframework.http.ResponseEntity
 import org.springframework.scheduling.annotation.EnableAsync
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
 import org.springframework.security.access.AccessDeniedException
+import org.springframework.stereotype.Service
 import org.springframework.validation.BindingResult
 import org.springframework.web.multipart.MultipartFile
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
-import java.lang.IllegalStateException
 import java.nio.charset.Charset
 import java.nio.charset.UnsupportedCharsetException
 import java.nio.file.Paths
@@ -62,6 +61,7 @@ import java.time.temporal.ChronoUnit
 import java.util.*
 import java.util.concurrent.Executor
 import javax.servlet.http.HttpServletRequest
+
 
 /**
  * Contains functionality related with Submissions (for example, get submissions from the database).
@@ -402,12 +402,26 @@ class SubmissionService(
 
     @Throws(IOException::class)
     private fun guessCharset(inputStream: InputStream): Charset {
-        try {
-            return Charset.forName(TikaEncodingDetector().guessEncoding(inputStream))
-        } catch (e: UnsupportedCharsetException) {
-            LOG.warn("Unsupported Charset: ${e.charsetName}. Falling back to default")
-            return Charset.defaultCharset()
+
+        val buf = ByteArray(4096)
+        val detector = UniversalDetector(null)
+
+        var nread: Int
+        while ((inputStream.read(buf).also { nread = it }) > 0 && !detector.isDone) {
+            detector.handleData(buf, 0, nread)
         }
+        detector.dataEnd()
+
+        if (detector.detectedCharset != null) {
+            try {
+                return Charset.forName(detector.detectedCharset)
+            } catch (e: UnsupportedCharsetException) {
+                LOG.warn("Unsupported Charset: ${e.charsetName}. Falling back to default")
+                return Charset.defaultCharset()
+            }
+        }
+
+        return Charset.defaultCharset()
     }
 
     /**
