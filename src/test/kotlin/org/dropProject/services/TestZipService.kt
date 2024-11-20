@@ -46,10 +46,8 @@ class TestZipService {
         fileToZip.writeText("This is a unit test of the Drop Project... project.")
         val zippedFile = zipper.createZipFromFolder(zippedFilename, subDirectory)
 
-        assert(zippedFile.isValidZipFile())
-
         // second, test the unzipping process
-        val fileToUnzip = File(temDirectory, zippedFile.file.name)
+        val fileToUnzip = File(temDirectory, zippedFile.name)
         val unzippedFolder = zipper.unzip(fileToUnzip.toPath(), "file-to-zip-" + zipCreationTime + ".txt")
         val files = unzippedFolder.listFiles()
 

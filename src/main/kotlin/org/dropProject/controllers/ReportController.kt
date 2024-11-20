@@ -218,11 +218,11 @@ class ReportController(
             val zipFilename = submission.group.authorsIdStr().replace(",", "_") + "_mavenized"
             val zipFile = zipService.createZipFromFolder(zipFilename, projectFolder)
 
-            LOG.info("Created ${zipFile.file.absolutePath}")
+            LOG.info("Created ${zipFile.absolutePath}")
 
             response.setHeader("Content-Disposition", "attachment; filename=${zipFilename}.zip")
 
-            return FileSystemResource(zipFile.file)
+            return FileSystemResource(zipFile)
 
         } else {
             throw ResourceNotFoundException()
@@ -357,11 +357,11 @@ class ReportController(
             val zipFilename = tempFolder.name
             val zipFile = zipService.createZipFromFolder(zipFilename, tempFolder)
 
-            LOG.info("Created ${zipFile.file.absolutePath} with ${submissionInfoList.size} projects from ${assignmentId}")
+            LOG.info("Created ${zipFile.absolutePath} with ${submissionInfoList.size} projects from ${assignmentId}")
 
             response.setHeader("Content-Disposition", "attachment; filename=${assignmentId}_last_submissions.zip")
 
-            return FileSystemResource(zipFile.file)
+            return FileSystemResource(zipFile)
         } finally {
             tempFolder.delete()
         }
@@ -454,11 +454,11 @@ class ReportController(
             val zipFilename = tempFolder.name
             val zipFile = zipService.createZipFromFolder(zipFilename, tempFolder)
 
-            LOG.info("Created ${zipFile.file.absolutePath} with ${submissionInfoList.size} projects from ${assignmentId}")
+            LOG.info("Created ${zipFile.absolutePath} with ${submissionInfoList.size} projects from ${assignmentId}")
 
             response.setHeader("Content-Disposition", "attachment; filename=${assignmentId}_last_mavenized_submissions.zip")
 
-            return FileSystemResource(zipFile.file)
+            return FileSystemResource(zipFile)
         } finally {
             tempFolder.delete()
         }

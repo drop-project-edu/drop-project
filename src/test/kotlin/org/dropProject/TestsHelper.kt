@@ -319,7 +319,7 @@ class TestsHelper {
 
 
         val zipFile = zipService.createZipFromFolder("test", projectFolder)
-        zipFile.file.deleteOnExit()
+        zipFile.deleteOnExit()
 
         if (authors != null) {
             // restore original AUTHORS.txt
@@ -327,7 +327,7 @@ class TestsHelper {
             authorsBackupFile.delete()
         }
 
-        val multipartFile = MockMultipartFile("file", zipFile.file.name, "application/zip", zipFile.file.readBytes())
+        val multipartFile = MockMultipartFile("file", zipFile.name, "application/zip", zipFile.readBytes())
 
         return multipartFile
     }

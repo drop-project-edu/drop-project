@@ -449,10 +449,10 @@ class AssignmentService(
             exportOriginalSubmissionFilesTo(assignment, originalSubmissionsFolder)
 
             val zipFile = zipService.createZipFromFolder(tempFolder.name, tempFolder)
-            LOG.info("Created ${zipFile.file.absolutePath} with submissions from ${assignment.id}")
+            LOG.info("Created ${zipFile.absolutePath} with submissions from ${assignment.id}")
 
             // put the result in the pending tasks so that the others can check it later
-            pendingTasks.put(taskId, Pair(fileName, zipFile.file))
+            pendingTasks.put(taskId, Pair(fileName, zipFile))
         } finally {
             tempFolder.delete()
         }

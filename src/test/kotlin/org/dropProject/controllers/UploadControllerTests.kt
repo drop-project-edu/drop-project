@@ -886,9 +886,9 @@ class UploadControllerTests {
             writer.close()
 
             val zipFile = zipService.createZipFromFolder("test", projectRoot)
-            zipFile.file.deleteOnExit()
+            zipFile.deleteOnExit()
 
-            val multipartFile = MockMultipartFile("file", zipFile.file.name, "application/zip", zipFile.file.readBytes())
+            val multipartFile = MockMultipartFile("file", zipFile.name, "application/zip", zipFile.readBytes())
 
             this.mvc.perform(multipart("/upload")
                     .file(multipartFile)

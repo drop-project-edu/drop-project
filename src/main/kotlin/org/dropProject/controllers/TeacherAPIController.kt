@@ -148,11 +148,11 @@ class TeacherAPIController(
             val zipFilename = submission.group.authorsIdStr().replace(",", "_") + "_mavenized"
             val zipFile = zipService.createZipFromFolder(zipFilename, projectFolder)
 
-            LOG.info("Created ${zipFile.file.absolutePath}")
+            LOG.info("Created ${zipFile.absolutePath}")
 
             response.setHeader("Content-Disposition", "attachment; filename=${zipFilename}.zip")
 
-            return FileSystemResource(zipFile.file)
+            return FileSystemResource(zipFile)
 
         } else {
             throw ResourceNotFoundException()

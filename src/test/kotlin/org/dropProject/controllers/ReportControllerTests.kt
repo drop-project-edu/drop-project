@@ -259,7 +259,7 @@ class ReportControllerTests {
 
         val originalZipFile =
             zipService.createZipFromFolder("original", resourceLoader.getResource("file:src/test/sampleProjects/projectCompilationErrors").file)
-        originalZipFile.file.deleteOnExit()
+        originalZipFile.deleteOnExit()
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", defaultAssignmentId, STUDENT_1)
 
@@ -276,7 +276,7 @@ class ReportControllerTests {
             .andReturn()
 
         val downloadedFileContent = result.response.contentAsByteArray
-        assertArrayEquals(Files.readAllBytes(originalZipFile.file.toPath()), downloadedFileContent)
+        assertArrayEquals(Files.readAllBytes(originalZipFile.toPath()), downloadedFileContent)
 
     }
 

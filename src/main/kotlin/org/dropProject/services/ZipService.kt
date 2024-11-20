@@ -19,15 +19,17 @@
  */
 package org.dropProject.services
 
-import net.lingala.zip4j.ZipFile
-import net.lingala.zip4j.exception.ZipException
-import net.lingala.zip4j.model.ZipParameters
-import net.lingala.zip4j.model.enums.CompressionLevel
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream
 import org.dropProject.repository.*
 import org.dropProject.storage.StorageException
 import org.springframework.stereotype.Service
 import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.nio.file.Files
 import java.nio.file.Path
+
 
 /**
  * Utility to create ZIP files based on folder contents.
@@ -43,17 +45,49 @@ class ZipService {
      *
      * @return a [ZipFile]
      */
-    fun createZipFromFolder(zipFilename: String, projectFolder: File): ZipFile {
+    fun createZipFromFolder(zipFilename: String, projectFolder: File): File {
         val zFile = File.createTempFile(zipFilename, ".zip")
         if (zFile.exists()) {
             zFile.delete();
         }
-        val zipFile = ZipFile(zFile)
-        val zipParameters = ZipParameters()
-        zipParameters.isIncludeRootFolder = false
-        zipParameters.compressionLevel = CompressionLevel.ULTRA
-        zipFile.addFolder(projectFolder, zipParameters)
-        return zipFile
+//        val zipFile = ZipFile(zFile)
+//        val zipParameters = ZipParameters()
+//        zipParameters.isIncludeRootFolder = false
+//        zipParameters.compressionLevel = CompressionLevel.ULTRA
+//        zipFile.addFolder(projectFolder, zipParameters)
+//        return zipFile
+
+        ZipArchiveOutputStream(FileOutputStream(zFile)).use { zipOut ->
+            zipOut.setLevel(9) // Set maximum compression level
+
+            // Add the folder contents to the ZIP
+            addFolderToZip(projectFolder, projectFolder, zipOut)
+        }
+
+        return zFile
+    }
+
+    private fun addFolderToZip(baseFolder: File, currentFolder: File, zipOut: ZipArchiveOutputStream) {
+        val files = currentFolder.listFiles() ?: return
+        for (file in files) {
+            val entryName = baseFolder.toPath().relativize(file.toPath()).toString().replace("\\", "/") // Normalize path for ZIP format
+
+            if (file.isDirectory) {
+                // Add directory entry (required to preserve folder structure)
+                val dirEntry = ZipArchiveEntry(file, "$entryName/")
+                zipOut.putArchiveEntry(dirEntry)
+                zipOut.closeArchiveEntry()
+
+                // Recursively add subdirectories and files
+                addFolderToZip(baseFolder, file, zipOut)
+            } else {
+                // Add file entry
+                val fileEntry = ZipArchiveEntry(file, entryName)
+                zipOut.putArchiveEntry(fileEntry)
+                Files.copy(file.toPath(), zipOut)
+                zipOut.closeArchiveEntry()
+            }
+        }
     }
 
     /**
@@ -67,12 +101,33 @@ class ZipService {
     fun unzip(file: Path, originalFilename: String?): File {
         val destinationFileFile = file.toFile()
         val destinationFolder = File(destinationFileFile.parent, destinationFileFile.nameWithoutExtension)
-        try {
-            val zipFile = ZipFile(destinationFileFile)
-            zipFile.extractAll(destinationFolder.absolutePath)
-        } catch (e: ZipException) {
-            throw StorageException("Failed to unzip ${originalFilename}", e)
+
+        org.apache.commons.compress.archivers.zip.ZipFile(destinationFileFile).use { zipFile ->
+            zipFile.entries.iterator().forEachRemaining { entry ->
+                try {
+                    val outFile = File(destinationFolder, entry.getName())
+                    if (entry.isDirectory()) {
+                        outFile.mkdirs()
+                        outFile.setWritable(true) // Set directory writable
+                    } else {
+                        // Ensure parent directories exist
+                        File(outFile.parent).mkdirs()
+                        zipFile.getInputStream(entry).use { inputStream ->
+                            Files.newOutputStream(outFile.toPath()).use { outputStream ->
+                                val buffer = ByteArray(1024)
+                                var len: Int
+                                while ((inputStream.read(buffer).also { len = it }) > 0) {
+                                    outputStream.write(buffer, 0, len)
+                                }
+                            }
+                        }
+                    }
+                } catch (e: IOException) {
+                    throw StorageException("Failed to unzip ${originalFilename}", e)
+                }
+            }
         }
+
         return destinationFolder
     }
 
