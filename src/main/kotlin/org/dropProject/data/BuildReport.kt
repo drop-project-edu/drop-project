@@ -147,7 +147,7 @@ data class BuildReport(val mavenOutputLines: List<String>,
                     if (assignment.language == Language.JAVA)
                         "\\[ERROR\\] COMPILATION ERROR :.*".toRegex()
                     else
-                        "\\[INFO\\] --- kotlin-maven-plugin:\\d+\\.\\d+\\.\\d+:compile.*".toRegex()
+                        "\\[INFO\\] --- kotlin(-maven-plugin)?:\\d+\\.\\d+\\.\\d+:compile.*".toRegex()
 
             var startIdx = -1;
             var endIdx = -1;

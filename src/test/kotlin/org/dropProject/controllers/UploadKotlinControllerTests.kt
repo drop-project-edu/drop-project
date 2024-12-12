@@ -199,6 +199,26 @@ class UploadKotlinControllerTests {
 
     @Test
     @DirtiesContext
+    fun submitProjectCompilationError() {
+
+        val submissionId = testsHelper.uploadProject(this.mvc,"projectKotlinCompilationError", "testKotlinProj", STUDENT_1)
+
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId")
+            .with(user(STUDENT_1)))
+            .andExpect(status().isOk())
+            .andReturn()
+
+        @Suppress("UNCHECKED_CAST")
+        val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
+        assertEquals("Summary should be 4 lines", 2, summary.size)
+        assertEquals("projectStructure should be OK (key)", Indicator.PROJECT_STRUCTURE, summary.get(0).indicator)
+        assertEquals("projectStructure should be OK (value)", "OK", summary.get(0).reportValue)
+        assertEquals("compilation should be OK (key)", Indicator.COMPILATION, summary[1].indicator)
+        assertEquals("compilation should be NOK (value)", "NOK", summary[1].reportValue)
+    }
+
+    @Test
+    @DirtiesContext
     fun submitProjectAndCheckREADME() {
 
         val submissionId = testsHelper.uploadProject(this.mvc,"projectKotlinOK", "testKotlinProj2", STUDENT_1)

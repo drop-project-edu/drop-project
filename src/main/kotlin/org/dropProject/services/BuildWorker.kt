@@ -181,7 +181,6 @@ class BuildWorker(
                     }
                 }
 
-
                 val buildReportDB = buildReportRepository.save(org.dropProject.dao.BuildReport(
                         buildReport = buildReport.mavenOutput()))
                 submission.buildReport = buildReportDB
@@ -254,7 +253,16 @@ class BuildWorker(
                     submission.setStatus(SubmissionStatus.FAILED, dontUpdateStatusDate = dontChangeStatusDate)
                 } else {
                     if (!rebuildByTeacher) {
-                        submission.setStatus(SubmissionStatus.VALIDATED, dontUpdateStatusDate = dontChangeStatusDate)
+
+                        // check if it resulted in a build report with compilation OK but no tests. This shouldn't happen
+                        // but in case it happens, it's preferable to return an internal error than to show a confusing report
+                        val submissionReportItems = submissionReportRepository.findBySubmissionId(submissionId = submission.id)
+                        if (submissionReportItems.any { it.reportKey == Indicator.COMPILATION.code && it.reportValue == "OK" } &&
+                            submissionReportItems.none { it.reportKey == Indicator.TEACHER_UNIT_TESTS.code }) {
+                            submission.setStatus(SubmissionStatus.FAILED, dontUpdateStatusDate = dontChangeStatusDate)
+                        } else {
+                            submission.setStatus(SubmissionStatus.VALIDATED, dontUpdateStatusDate = dontChangeStatusDate)
+                        }
                     } else {
                         submission.setStatus(SubmissionStatus.VALIDATED_REBUILT, dontUpdateStatusDate = dontChangeStatusDate)
                     }

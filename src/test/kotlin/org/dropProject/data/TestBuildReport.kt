@@ -163,6 +163,21 @@ class TestBuildReport {
     }
 
     @Test
+    fun testKotlinCompilerError2() {
+
+        val mavenOutputLines = resourceLoader.getResource("file:src/test/sampleMavenOutputs/kotlinCompilerError2.txt").file.readLines()
+
+        val buildReport = buildReportBuilder.build(mavenOutputLines,
+            "/srv/drop-project/mavenized-projects/fp-2425-projeto-p1/47-24/1732286495167-projeto_parte1-mavenized",
+            dummyKotlinAssignment)
+
+        assertTrue(!buildReport.mavenExecutionFailed())
+        assertEquals(1, buildReport.compilationErrors.size)
+        assertEquals(0, buildReport.checkstyleErrors.size)
+        assertEquals("Main.kt: (122, 2) Expecting '}'", buildReport.compilationErrors[0])
+    }
+
+    @Test
     fun testKotlinJunitErrors1() {
 
         val mavenOutputLines = resourceLoader.getResource("file:src/test/sampleMavenOutputs/kotlinJunitErrors1.txt").file.readLines()

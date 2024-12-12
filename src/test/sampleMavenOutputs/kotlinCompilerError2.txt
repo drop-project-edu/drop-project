@@ -1,0 +1,32 @@
+[INFO] Scanning for projects...
+[INFO]
+[INFO] -------------------< pt.ulusofona.fp:fp-projeto-p1 >--------------------
+[INFO] Building fp-projeto-p1 1.0-SNAPSHOT
+[INFO]   from pom_updated.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO]
+[INFO] --- clean:3.2.0:clean (default-clean) @ fp-projeto-p1 ---
+[INFO]
+[INFO] --- resources:3.3.1:resources (default-resources) @ fp-projeto-p1 ---
+[INFO] skip non existing resourceDirectory /srv/drop-project/mavenized-projects/fp-2425-projeto-p1/47-24/1732286495167-projeto_parte1-mavenized/src/main/resources
+[INFO]
+[INFO] --- compiler:3.1:compile (default-compile) @ fp-projeto-p1 ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO]
+[INFO] --- kotlin:1.9.25:compile (compile) @ fp-projeto-p1 ---
+[ERROR] /srv/drop-project/mavenized-projects/fp-2425-projeto-p1/47-24/1732286495167-projeto_parte1-mavenized/src/main/kotlin/Main.kt: (122, 2) Expecting '}'
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  8.377 s
+[INFO] Finished at: 2024-11-22T14:41:46Z
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.jetbrains.kotlin:kotlin-maven-plugin:1.9.25:compile (compile) on project fp-projeto-p1: Compilation failure
+[ERROR] /srv/drop-project/mavenized-projects/fp-2425-projeto-p1/47-24/1732286495167-projeto_parte1-mavenized/src/main/kotlin/Main.kt:[122,2] Expecting '}'
+[ERROR] -> [Help 1]
+[ERROR]
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR]
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
