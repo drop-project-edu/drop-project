@@ -24,7 +24,6 @@ import org.springframework.aop.interceptor.SimpleAsyncUncaughtExceptionHandler
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
-import org.springframework.core.task.SimpleAsyncTaskExecutor
 import org.springframework.core.task.SyncTaskExecutor
 import org.springframework.scheduling.annotation.AsyncConfigurer
 import org.springframework.scheduling.annotation.EnableAsync
@@ -33,7 +32,7 @@ import java.util.concurrent.Executor
 @Configuration
 @EnableAsync
 @Profile("test")
-class AsyncTestConfig : AsyncConfigurer, AsyncTimeoutConfigurer {
+class AsyncTestConfig : AsyncConfigurer, org.dropProject.AsyncConfigurer {
 
     override fun getAsyncUncaughtExceptionHandler(): AsyncUncaughtExceptionHandler {
         return SimpleAsyncUncaughtExceptionHandler()
@@ -49,6 +48,14 @@ class AsyncTestConfig : AsyncConfigurer, AsyncTimeoutConfigurer {
     }
 
     override fun setTimeout(timeout: Int) {
+        // ignored
+    }
+
+    override fun getThreadPoolSize(): Int {
+        return 1
+    }
+
+    override fun setThreadPoolSize(numThreads: Int) {
         // ignored
     }
 }

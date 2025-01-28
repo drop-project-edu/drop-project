@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,7 +19,7 @@
  */
 package org.dropProject.controllers
 
-import org.dropProject.AsyncTimeoutConfigurer
+import org.dropProject.AsyncConfigurer
 import org.dropProject.dao.AssignmentTag
 import org.dropProject.dao.SubmissionStatus
 import org.dropProject.forms.AdminDashboardForm
@@ -46,7 +46,7 @@ class AdminController(val mavenInvoker: MavenInvoker,
                       val submissionRepository: SubmissionRepository,
                       val assignmentTagRepository: AssignmentTagRepository,
                       val assignmentTagsRepository: AssignmentTagsRepository,
-                      val asyncTimeoutConfigurer: AsyncTimeoutConfigurer) {
+                      val asyncConfigurer: AsyncConfigurer) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
@@ -57,7 +57,10 @@ class AdminController(val mavenInvoker: MavenInvoker,
      */
     @RequestMapping(value = ["/dashboard"], method = [(RequestMethod.GET)])
     fun showDashboard(model: ModelMap): String {
-        model["adminDashboardForm"] = AdminDashboardForm(showMavenOutput = mavenInvoker.showMavenOutput, asyncTimeout = asyncTimeoutConfigurer.getTimeout())
+        model["adminDashboardForm"] = AdminDashboardForm(
+            showMavenOutput = mavenInvoker.showMavenOutput,
+            asyncTimeout = asyncConfigurer.getTimeout(),
+            threadPoolSize = asyncConfigurer.getThreadPoolSize())
         return "admin-dashboard"
     }
 
@@ -76,7 +79,8 @@ class AdminController(val mavenInvoker: MavenInvoker,
         }
 
         mavenInvoker.showMavenOutput = adminDashboardForm.showMavenOutput
-        asyncTimeoutConfigurer.setTimeout(adminDashboardForm.asyncTimeout)
+        asyncConfigurer.setTimeout(adminDashboardForm.asyncTimeout)
+        asyncConfigurer.setThreadPoolSize(adminDashboardForm.threadPoolSize)
 
         redirectAttributes.addFlashAttribute("message", "Operation was successful")
         return "redirect:/admin/dashboard"

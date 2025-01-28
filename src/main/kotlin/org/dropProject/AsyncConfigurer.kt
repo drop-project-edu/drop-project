@@ -20,8 +20,11 @@
 package org.dropProject
 
 
-interface AsyncTimeoutConfigurer {
+interface AsyncConfigurer {
 
     fun getTimeout(): Int
     fun setTimeout(timeout: Int)
+
+    fun getThreadPoolSize(): Int
+    fun setThreadPoolSize(numThreads: Int)
 }

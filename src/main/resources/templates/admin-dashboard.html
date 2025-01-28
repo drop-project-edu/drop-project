@@ -39,6 +39,14 @@
                 <p class="help-block" th:if="${!#fields.hasErrors('asyncTimeout')}">Timeout of async tasks (e.g., maven execution) in seconds</p>
             </div>
         </div>
+        <div class="form-group" th:classappend="${#fields.hasErrors('threadPoolSize')} ? 'has-error' : ''">
+            <label for="threadPoolSize" class="col-sm-3 control-label">Thread Pool Size</label>
+            <div class="col-sm-9">
+                <input type="text" th:field="*{threadPoolSize}" class="form-control" id="threadPoolSize"/>
+                <p class="help-block" th:if="${#fields.hasErrors('threadPoolSize')}" th:errors="*{threadPoolSize}">Error</p>
+                <p class="help-block" th:if="${!#fields.hasErrors('threadPoolSize')}">Max allowed threads to process submissions</p>
+            </div>
+        </div>
         <button type="submit" class="btn btn-primary">Save</button>
     </form>
 

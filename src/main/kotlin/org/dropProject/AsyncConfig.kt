@@ -35,7 +35,7 @@ import java.util.concurrent.Executor
 @EnableAsync
 @EnableScheduling
 @Profile("!test")
-class AsyncConfig : AsyncConfigurer, AsyncTimeoutConfigurer {
+class AsyncConfig : AsyncConfigurer, org.dropProject.AsyncConfigurer {
 
     @Value("\${dropProject.async.timeout}")
     var asyncTimeout: Int = 180
@@ -43,6 +43,13 @@ class AsyncConfig : AsyncConfigurer, AsyncTimeoutConfigurer {
             field = value
             scheduler.timeout = value * 1000L
             LOG.info("Changed async execution timeout to $value seconds")
+        }
+
+    var asyncThreadPoolSize: Int = 1
+        set(value) {
+            field = value
+            scheduler.poolSize = value
+            LOG.info("Changed thread pool size to $value threads")
         }
 
     val LOG = LoggerFactory.getLogger("AsyncConfig")
@@ -72,5 +79,13 @@ class AsyncConfig : AsyncConfigurer, AsyncTimeoutConfigurer {
 
     override fun setTimeout(timeout: Int) {
         asyncTimeout = timeout
+    }
+
+    override fun getThreadPoolSize(): Int {
+        return asyncThreadPoolSize
+    }
+
+    override fun setThreadPoolSize(numThreads: Int) {
+        asyncThreadPoolSize = numThreads
     }
 }

@@ -25,5 +25,6 @@ package org.dropProject.forms
  */
 data class AdminDashboardForm(
     val showMavenOutput: Boolean,
-    val asyncTimeout: Int
+    val asyncTimeout: Int,
+    val threadPoolSize: Int
 )

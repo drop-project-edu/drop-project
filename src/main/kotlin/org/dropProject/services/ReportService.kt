@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonView
 import org.commonmark.ext.autolink.AutolinkExtension
 import org.commonmark.parser.Parser
 import org.commonmark.renderer.html.HtmlRenderer
-import org.dropProject.AsyncTimeoutConfigurer
+import org.dropProject.AsyncConfigurer
 import org.dropProject.dao.*
 import org.dropProject.data.AuthorDetails
 import org.dropProject.data.JSONViews
@@ -62,7 +62,7 @@ class FullBuildReport(
     var authors: ArrayList<AuthorDetails>? = null,
     @JsonView(JSONViews.StudentAPI::class)
     var buildReport: org.dropProject.data.BuildReport? = null
-) 
+)
 
 /**
  * Contains functionality related with reports
@@ -79,7 +79,7 @@ class ReportService(
     val buildReportBuilder: BuildReportBuilder,
     val i18n: MessageSource,
     val gitClient: GitClient,
-    val asyncTimeoutConfigurer: AsyncTimeoutConfigurer
+    val asyncConfigurer: AsyncConfigurer
 ) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
@@ -91,7 +91,7 @@ class ReportService(
                     request: HttpServletRequest): FullBuildReport {
 
         val fullBuildReport = FullBuildReport()
-        
+
         val submission = submissionRepository.findById(submissionId).orElse(null)
 
         if (submission != null) {
@@ -132,13 +132,13 @@ class ReportService(
                 val readmeContent = File(mavenizedProjectFolder, "README.txt").readText()
                 fullBuildReport.readmeHtml = "<pre>$readmeContent</pre>"
             } else if (File(mavenizedProjectFolder, "README.md").exists()) {
-                    val readmeContent = File(mavenizedProjectFolder, "README.md").readText()
-                    val parser = Parser.builder()
-                        .extensions(listOf(AutolinkExtension.create()))
-                        .build()
-                    val document = parser.parse(readmeContent)
-                    val renderer = HtmlRenderer.builder().build()
-                    fullBuildReport.readmeHtml = "<hr/>\n" + renderer.render(document) + "<hr/>\n"
+                val readmeContent = File(mavenizedProjectFolder, "README.md").readText()
+                val parser = Parser.builder()
+                    .extensions(listOf(AutolinkExtension.create()))
+                    .build()
+                val document = parser.parse(readmeContent)
+                val renderer = HtmlRenderer.builder().build()
+                fullBuildReport.readmeHtml = "<hr/>\n" + renderer.render(document) + "<hr/>\n"
             }
 
             // check the submission status
@@ -155,7 +155,7 @@ class ReportService(
                     }
                 }
                 SubmissionStatus.ABORTED_BY_TIMEOUT -> fullBuildReport.error = i18n.getMessage("student.build-report.abortedByTimeout", arrayOf(
-                    asyncTimeoutConfigurer.getTimeout()
+                    asyncConfigurer.getTimeout()
                 ), currentLocale)
                 SubmissionStatus.TOO_MUCH_OUTPUT -> fullBuildReport.error = i18n.getMessage("student.build-report.tooMuchOutput", null, currentLocale)
                 SubmissionStatus.DELETED -> fullBuildReport.error = i18n.getMessage("student.build-report.deleted", null, currentLocale)
@@ -189,6 +189,6 @@ class ReportService(
         }
 
         return fullBuildReport
-        
+
     }
 }
