@@ -64,7 +64,7 @@ open class DropProjectSecurityConfig(val apiAuthenticationManager: PersonalToken
     /**
      * Returns an array of ant matcher expressions which will be allowed without authentication
      */
-    open fun getPublicUrls() = listOf("/public", "/login", "/loginFromDEISI", "/access-denied", "/error", "/h2-console/**",
+    open fun getPublicUrls() = listOf("/upload/**/public/**", "/login", "/loginFromDEISI", "/access-denied", "/error", "/h2-console/**",
         "/api-docs", "/swagger-ui.html", "/swagger-ui/**", "/swagger-resources/**", "/v2/api-docs",
         "/css/**", "/js/**", "/img/**", "/favicon.ico")
 
