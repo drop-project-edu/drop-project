@@ -91,7 +91,8 @@ class AdminControllerTests {
     fun test_01_changeMavenOutput() {
         this.mvc.perform(post("/admin/dashboard")
                 .param("showMavenOutput", "true")
-                .param("asyncTimeout", "30"))
+                .param("asyncTimeout", "30")
+                .param("threadPoolSize", "1"))
                 .andExpect(status().isFound)
                 .andExpect(header().string("Location", "/admin/dashboard"))
     }
