@@ -33,6 +33,7 @@ import org.dropProject.repository.AssigneeRepository
 import org.dropProject.repository.AssignmentRepository
 import org.dropProject.services.*
 import org.slf4j.LoggerFactory
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.validation.BindingResult
@@ -40,15 +41,16 @@ import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import java.security.Principal
 import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
 import javax.validation.Valid
 
 
 @RestController
 @RequestMapping("/api/student")
 @Api(authorizations = [Authorization(value="basicAuth")],
-     value="Student API",
-     description = "All endpoints must be authenticated using a personal token, sent with the standard \"basic auth\" header.<br/>" +
-             "Using curl, it's as simple as including <pre>-u user:token</pre>")
+    value="Student API",
+    description = "All endpoints must be authenticated using a personal token, sent with the standard \"basic auth\" header.<br/>" +
+            "Using curl, it's as simple as including <pre>-u user:token</pre>")
 class StudentAPIController(
     val assignmentRepository: AssignmentRepository,
     val assigneeRepository: AssigneeRepository,
@@ -63,7 +65,7 @@ class StudentAPIController(
     @GetMapping(value = ["/assignments/current"], produces = [MediaType.APPLICATION_JSON_VALUE])
     @JsonView(JSONViews.StudentAPI::class)  // to publish only certain fields of the Assignment
     @ApiOperation(value = "Get all the current assignments assigned or associated with the person identified by the \"basic auth\" header",
-                  response = Assignment::class, responseContainer = "List", ignoreJsonView = false)
+        response = Assignment::class, responseContainer = "List", ignoreJsonView = false)
     fun getCurrentAssignments(principal: Principal, request: HttpServletRequest): ResponseEntity<List<Assignment>> {
 
         val assignments = assignmentService.getMyAssignments(principal, archived = false)
@@ -100,18 +102,25 @@ class StudentAPIController(
     @JsonView(JSONViews.StudentAPI::class)  // to publish only certain fields of the Assignment
     @ApiOperation(value = "Get the build report associated with this submission")
     fun getBuildReport(@PathVariable submissionId: Long, principal: Principal,
-                       request: HttpServletRequest): ResponseEntity<FullBuildReport> {
+                       request: HttpServletRequest,
+                       response: HttpServletResponse): ResponseEntity<FullBuildReport> {
 
         val report = reportService.buildReport(submissionId, principal, request)
 
         // remove results from hidden tests
         report.summary?.removeIf { it.reportKey == Indicator.HIDDEN_UNIT_TESTS.code}
 
-        return if (report.error != null) {
-            ResponseEntity.internalServerError().body(report)
-        } else {
-            ResponseEntity.ok().body(report)
+        return when {
+            report.autoRefresh == true -> {
+                // force a response since this http code messes up spring security, redirecting to login page
+                response.status = HttpServletResponse.SC_ACCEPTED
+                response.flushBuffer()
+                ResponseEntity.status(HttpStatus.ACCEPTED).build()  // this line is not doing anything...
+            }
+            report.error != null -> ResponseEntity.internalServerError().body(report)
+            else -> ResponseEntity.ok().body(report)
         }
+
     }
 
     @RequestMapping(value = ["/assignments/{assignmentID}"], method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_JSON_VALUE])
