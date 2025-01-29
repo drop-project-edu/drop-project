@@ -114,6 +114,12 @@ class StudentAPIController(
             report.autoRefresh == true -> {
                 // force a response since this http code messes up spring security, redirecting to login page
                 response.status = HttpServletResponse.SC_ACCEPTED
+                response.contentType = MediaType.APPLICATION_JSON_VALUE
+                response.writer.write("""
+                    {
+                        "error": "${report.error}"
+                    }
+                """.trimIndent())
                 response.flushBuffer()
                 ResponseEntity.status(HttpStatus.ACCEPTED).build()  // this line is not doing anything...
             }
