@@ -105,12 +105,12 @@ class ReportController(
      */
     @RequestMapping(value = ["/signalledSubmissions/{assignmentId}"], method = [(RequestMethod.GET)])
     fun getSignaledGroupsOrSubmissions(@PathVariable assignmentId: String, model: ModelMap,
-    principal: Principal, request: HttpServletRequest): String {
+                                       principal: Principal, request: HttpServletRequest): String {
         model["assignmentId"] = assignmentId
 
         assignmentService.getAllSubmissionsForAssignment(assignmentId, principal, model, request,
-                includeTestDetails = true,
-                mode = "signalledSubmissions")
+            includeTestDetails = true,
+            mode = "signalledSubmissions")
 
         return "signalled-submissions"
     }
@@ -144,12 +144,12 @@ class ReportController(
      */
     @RequestMapping(value = ["/testMatrix/{assignmentId}"], method = [(RequestMethod.GET)])
     fun getTestMatrix(@PathVariable assignmentId: String, model: ModelMap,
-                  principal: Principal, request: HttpServletRequest): String {
+                      principal: Principal, request: HttpServletRequest): String {
         model["assignmentId"] = assignmentId
 
         assignmentService.getAllSubmissionsForAssignment(assignmentId, principal, model, request,
-                includeTestDetails = true,
-                mode = "testMatrix")
+            includeTestDetails = true,
+            mode = "testMatrix")
 
         return "test-matrix"
     }
@@ -198,7 +198,7 @@ class ReportController(
      * @return A [FileSystemResource] containing a [ZipFile]
      */
     @RequestMapping(value = ["/downloadMavenProject/{submissionId}"],
-            method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
+        method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
     @ResponseBody
     fun downloadMavenProject(@PathVariable submissionId: Long, principal: Principal,
                              request: HttpServletRequest, response: HttpServletResponse): FileSystemResource {
@@ -212,7 +212,7 @@ class ReportController(
             }
 
             val projectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
-                    wasRebuilt = submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
+                wasRebuilt = submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
             LOG.info("[${principal.realName()}] downloaded ${projectFolder.name}")
 
             val zipFilename = submission.group.authorsIdStr().replace(",", "_") + "_mavenized"
@@ -239,7 +239,7 @@ class ReportController(
      * @return A [FileSystemResource] containing a [ZipFile]
      */
     @RequestMapping(value = ["/downloadOriginalProject/{submissionId}"],
-            method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
+        method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
     @ResponseBody
     fun downloadOriginalProject(@PathVariable submissionId: Long, principal: Principal,
                                 request: HttpServletRequest, response: HttpServletResponse): FileSystemResource {
@@ -267,9 +267,9 @@ class ReportController(
                 return FileSystemResource(projectFile)
             } else {  // submission by git
                 val gitSubmissionId = submission.gitSubmissionId ?:
-                    throw IllegalArgumentException("Git submission without gitSubmissionId")
+                throw IllegalArgumentException("Git submission without gitSubmissionId")
                 val gitSubmission = gitSubmissionRepository.findById(gitSubmissionId).orElse(null)
-                        ?: throw IllegalArgumentException("git submission ${gitSubmissionId} is not registered")
+                    ?: throw IllegalArgumentException("git submission ${gitSubmissionId} is not registered")
                 val repositoryFolder = File(gitSubmissionsRootLocation, gitSubmission.getFolderRelativeToStorageRoot())
 
                 val zipFilename = submission.group.authorsIdStr().replace(",", "_")
@@ -305,13 +305,13 @@ class ReportController(
      * @return A [FileSystemResource] containing a [ZipFile]
      */
     @RequestMapping(value = ["/downloadOriginalAll/{assignmentId}"],
-            method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
+        method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
     @ResponseBody
     fun downloadOriginalAll(@PathVariable assignmentId: String, principal: Principal,
                             response: HttpServletResponse): FileSystemResource {
 
         val assignment = assignmentRepository.findById(assignmentId).orElse(null)
-                ?: throw IllegalArgumentException("assignment ${assignmentId} is not registered")
+            ?: throw IllegalArgumentException("assignment ${assignmentId} is not registered")
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
         if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
@@ -333,7 +333,7 @@ class ReportController(
                 val submission = submissionInfo.lastSubmission
 
                 val originalProjectFolder = storageService.retrieveProjectFolder(submission)
-                        ?: throw IllegalArgumentException("projectFolder for ${submission.submissionId} doesn't exist")
+                    ?: throw IllegalArgumentException("projectFolder for ${submission.submissionId} doesn't exist")
 
                 var hadToUnzip = false
                 if (!originalProjectFolder.exists()) {
@@ -377,13 +377,13 @@ class ReportController(
      * @return A [FileSystemResource] containing a [ZipFile]
      */
     @RequestMapping(value = ["/downloadMavenizedAll/{assignmentId}"],
-            method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
+        method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
     @ResponseBody
     fun downloadMavenizedAll(@PathVariable assignmentId: String, principal: Principal,
                              response: HttpServletResponse): FileSystemResource {
 
         val assignment = assignmentRepository.findById(assignmentId).orElse(null)
-                ?: throw IllegalArgumentException("assignment ${assignmentId} is not registered")
+            ?: throw IllegalArgumentException("assignment ${assignmentId} is not registered")
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
         if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
@@ -400,7 +400,7 @@ class ReportController(
 
                 val submission = submissionInfo.lastSubmission
                 val originalProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
-                        wasRebuilt = submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
+                    wasRebuilt = submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
 
                 if (!originalProjectFolder.exists()) {
                     LOG.warn("${originalProjectFolder.absolutePath} doesn't exist. " +
@@ -422,19 +422,19 @@ class ReportController(
                     val pomFile = File(projectFolder, "pom.xml")
                     var firstArtifactIdLineFound = false
                     pomFile
-                            .readLines()
-                            .forEach {
-                                newPomFileContent.add(
-                                        if (!firstArtifactIdLineFound && it.contains("<artifactId>")) {
-                                            val projectGroupStr = submissionInfo.projectGroup.authorsIdStr("_")
-                                            modulesList.add(projectGroupStr)
-                                            firstArtifactIdLineFound = true
-                                            "    <artifactId>${assignmentId}-${projectGroupStr}</artifactId>"
-                                        } else {
-                                            it
-                                        }
-                                )
-                            }
+                        .readLines()
+                        .forEach {
+                            newPomFileContent.add(
+                                if (!firstArtifactIdLineFound && it.contains("<artifactId>")) {
+                                    val projectGroupStr = submissionInfo.projectGroup.authorsIdStr("_")
+                                    modulesList.add(projectGroupStr)
+                                    firstArtifactIdLineFound = true
+                                    "    <artifactId>${assignmentId}-${projectGroupStr}</artifactId>"
+                                } else {
+                                    it
+                                }
+                            )
+                        }
 
                     Files.write(pomFile.toPath(), newPomFileContent)
                 }
@@ -523,7 +523,7 @@ class ReportController(
         method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
     @ResponseBody
     fun downloadPlagiarismMatchReport(@PathVariable assignmentId: String, principal: Principal,
-                                  response: HttpServletResponse): FileSystemResource {
+                                      response: HttpServletResponse): FileSystemResource {
 
         val assignment = assignmentRepository.findById(assignmentId).orElse(null)
             ?: throw IllegalArgumentException("assignment ${assignmentId} is not registered")
@@ -584,21 +584,21 @@ class ReportController(
         model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.realName(), assignment.id)
 
         val submissions = submissionRepository
-                .findByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(group, assignmentId)
-                .filter { it.getStatus() != SubmissionStatus.DELETED }
+            .findByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(group, assignmentId)
+            .filter { it.getStatus() != SubmissionStatus.DELETED }
         for (submission in submissions) {
             val reportElements = submissionReportRepository.findBySubmissionId(submission.id)
             submission.reportElements = reportElements
             submission.overdue = assignment.overdue(submission)
             submission.buildReport?.let {
                     buildReportDB ->
-                        val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
-                                submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
-                        val buildReport = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
-                                mavenizedProjectFolder.absolutePath, assignment, submission)
-                        submission.ellapsed = buildReport.elapsedTimeJUnit()
-                        submission.teacherTests = buildReport.junitSummaryAsObject(TestType.TEACHER)
-                        submission.hiddenTests = buildReport.junitSummaryAsObject(TestType.HIDDEN)
+                val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
+                    submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
+                val buildReport = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
+                    mavenizedProjectFolder.absolutePath, assignment, submission)
+                submission.ellapsed = buildReport.elapsedTimeJUnit()
+                submission.teacherTests = buildReport.junitSummaryAsObject(TestType.TEACHER)
+                submission.hiddenTests = buildReport.junitSummaryAsObject(TestType.HIDDEN)
             }
             submission.submitterName = authorRepository.findByUserId(submission.submitterUserId)?.last()?.name
         }
@@ -640,26 +640,26 @@ class ReportController(
         var resultCSV = ""
 
         val submissions = submissionRepository.findByAssignmentIdAndMarkedAsFinal(assignmentId, true)
-                .filter { it.getStatus() != SubmissionStatus.DELETED }
+            .filter { it.getStatus() != SubmissionStatus.DELETED }
         for (submission in submissions) {
             val reportElements = submissionReportRepository.findBySubmissionId(submission.id)
             submission.reportElements = reportElements
             submission.overdue = assignment.overdue(submission)
             submission.buildReport?.let {
-                buildReportDB ->
-                    val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
-                            submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
-                    val buildReport = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
-                            mavenizedProjectFolder.absolutePath, assignment, submission)
-                    submission.ellapsed = buildReport.elapsedTimeJUnit()
-                    if (assignment.acceptsStudentTests) {
-                        submission.studentTests = buildReport.junitSummaryAsObject(TestType.STUDENT)
-                    }
-                    submission.teacherTests = buildReport.junitSummaryAsObject(TestType.TEACHER)
-                    submission.hiddenTests = buildReport.junitSummaryAsObject(TestType.HIDDEN)
-                    if (assignment.calculateStudentTestsCoverage && buildReport.jacocoResults.isNotEmpty()) {
-                        submission.coverage = buildReport.jacocoResults[0].lineCoveragePercent
-                    }
+                    buildReportDB ->
+                val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
+                    submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
+                val buildReport = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
+                    mavenizedProjectFolder.absolutePath, assignment, submission)
+                submission.ellapsed = buildReport.elapsedTimeJUnit()
+                if (assignment.acceptsStudentTests) {
+                    submission.studentTests = buildReport.junitSummaryAsObject(TestType.STUDENT)
+                }
+                submission.teacherTests = buildReport.junitSummaryAsObject(TestType.TEACHER)
+                submission.hiddenTests = buildReport.junitSummaryAsObject(TestType.HIDDEN)
+                if (assignment.calculateStudentTestsCoverage && buildReport.jacocoResults.isNotEmpty()) {
+                    submission.coverage = buildReport.jacocoResults[0].lineCoveragePercent
+                }
             }
         }
 
@@ -758,23 +758,23 @@ class ReportController(
         val submissionInfoList = submissionService.getSubmissionsList(assignment)
 
         val comparator: Comparator<Submission> =
-                when (assignment.leaderboardType ?: LeaderboardType.TESTS_OK) {
-                    LeaderboardType.TESTS_OK -> compareBy({ -it.teacherTests!!.progress }, { it.statusDate.time })
-                    LeaderboardType.ELLAPSED -> compareBy({ -it.teacherTests!!.progress }, { it.ellapsed }, { it.statusDate.time })
-                    LeaderboardType.COVERAGE -> compareBy({ -it.teacherTests!!.progress }, { -(it.coverage ?: 0) }, { it.statusDate.time })
-                }
+            when (assignment.leaderboardType ?: LeaderboardType.TESTS_OK) {
+                LeaderboardType.TESTS_OK -> compareBy({ -it.teacherTests!!.progress }, { it.statusDate.time })
+                LeaderboardType.ELLAPSED -> compareBy({ -it.teacherTests!!.progress }, { it.ellapsed }, { it.statusDate.time })
+                LeaderboardType.COVERAGE -> compareBy({ -it.teacherTests!!.progress }, { -(it.coverage ?: 0) }, { it.statusDate.time })
+            }
 
         val sortedList =
-                submissionInfoList
-                        .map { it.lastSubmission }
-                        .filter { it.getStatus() in listOf(SubmissionStatus.VALIDATED, SubmissionStatus.VALIDATED_REBUILT) }
-                        .filter { it.teacherTests?.progress ?: 0 > 0 }
-                        // compare by progress descending and ellapsed ascending
-                        .sortedWith( comparator )
-                        .map {
-                            it.reportElements = it.reportElements?.filter { it.indicator == Indicator.TEACHER_UNIT_TESTS }
-                            it  // just return itself
-                        }
+            submissionInfoList
+                .map { it.lastSubmission }
+                .filter { it.getStatus() in listOf(SubmissionStatus.VALIDATED, SubmissionStatus.VALIDATED_REBUILT) }
+                .filter { it.teacherTests?.progress ?: 0 > 0 }
+                // compare by progress descending and ellapsed ascending
+                .sortedWith( comparator )
+                .map {
+                    it.reportElements = it.reportElements?.filter { it.indicator == Indicator.TEACHER_UNIT_TESTS }
+                    it  // just return itself
+                }
 
         model["assignment"] = assignment
         model["submissions"] = sortedList
@@ -795,7 +795,7 @@ class ReportController(
 
     @RequestMapping(value = ["/studentHistory"], method = [(RequestMethod.GET)])
     fun getStudentHistory(@RequestParam("id") studentId: String, model: ModelMap,
-                       principal: Principal, request: HttpServletRequest): String {
+                          principal: Principal, request: HttpServletRequest): String {
 
         model["studentHistory"] = studentService.getStudentHistory(studentId, principal)
 
@@ -804,6 +804,56 @@ class ReportController(
         }
 
         return "student-history";
+    }
+
+    /**
+     * Controller that handles requests for assets included in the submission such as image files
+     */
+    @RequestMapping(
+        value = ["/buildReport/{submissionId}/{asset}"],
+        method = [(RequestMethod.GET)],
+        produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE]
+    )
+    @ResponseBody
+    fun downloadSubmissionAsset(
+        @PathVariable submissionId: Long,
+        @PathVariable asset: String,
+        principal: Principal,
+        request: HttpServletRequest,
+        response: HttpServletResponse
+    ): FileSystemResource {
+
+        val submission = submissionRepository.findById(submissionId).orElse(null)
+
+        if (submission != null) {
+
+            // check that principal belongs to the group that made this submission
+            if (!request.isUserInRole("TEACHER")) {
+                val groupElements = submission.group.authors
+                if (groupElements.filter { it.userId == principal.realName() }.isEmpty()) {
+                    throw AccessDeniedException("${principal.realName()} is not allowed to download this asset")
+                }
+            }
+
+            if (submission.getStatus() == SubmissionStatus.DELETED) {
+                throw AccessDeniedException("This submission was deleted")
+            }
+
+            val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(
+                submission,
+                submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT
+            )
+
+            // remove an eventual "?xxx=yyy" suffix from the asset name
+            val sanitizedAssetName = asset.split("?")[0]
+
+            val assetFile = File(mavenizedProjectFolder, sanitizedAssetName)
+            if (assetFile.exists()) {
+                return FileSystemResource(assetFile)
+            }
+        }
+
+        throw ResourceNotFoundException()
     }
 
     @RequestMapping(value = ["/migrate/{idx1}/{idx2}"], method = [(RequestMethod.GET)])
@@ -865,4 +915,10 @@ class ReportController(
 //
 //    }
 
+
+    @ExceptionHandler(ResourceNotFoundException::class)
+    fun handleError(e: ResourceNotFoundException): ResponseEntity<String> {
+        LOG.error(e.message)
+        return ResponseEntity("Asset not found", HttpStatus.NOT_FOUND);
+    }
 }

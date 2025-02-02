@@ -133,19 +133,19 @@ class SubmissionService(
                     val reportElements = submissionReportRepository.findBySubmissionId(lastSubmission.id)
                     lastSubmission.reportElements = reportElements
 
-                val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(lastSubmission,
-                    lastSubmission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
-                val buildReport = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
-                    mavenizedProjectFolder.absolutePath, assignment, lastSubmission)
-                lastSubmission.ellapsed = buildReport.elapsedTimeJUnit()
-                lastSubmission.teacherTests = buildReport.junitSummaryAsObject(TestType.TEACHER)
-                lastSubmission.hiddenTests = buildReport.junitSummaryAsObject(TestType.HIDDEN)
-                if (buildReport.jacocoResults.isNotEmpty()) {
-                    lastSubmission.coverage = buildReport.jacocoResults[0].lineCoveragePercent
-                }
+                    val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(lastSubmission,
+                        lastSubmission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
+                    val buildReport = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
+                        mavenizedProjectFolder.absolutePath, assignment, lastSubmission)
+                    lastSubmission.ellapsed = buildReport.elapsedTimeJUnit()
+                    lastSubmission.teacherTests = buildReport.junitSummaryAsObject(TestType.TEACHER)
+                    lastSubmission.hiddenTests = buildReport.junitSummaryAsObject(TestType.HIDDEN)
+                    if (buildReport.jacocoResults.isNotEmpty()) {
+                        lastSubmission.coverage = buildReport.jacocoResults[0].lineCoveragePercent
+                    }
 
-                lastSubmission.testResults = buildReport.testResults()
-            }
+                    lastSubmission.testResults = buildReport.testResults()
+                }
             }
 
             submissionInfoList.add(SubmissionInfo(group, lastSubmission, sortedSubmissionList))
@@ -550,6 +550,12 @@ class SubmissionService(
         } else if (File(projectFolder, "README.txt").exists()) {
             FileUtils.copyFile(File(projectFolder, "README.txt"), File(mavenizedProjectFolder, "README.txt"))
         }
+
+        // if the students have images in the root folder, copy them as well
+        projectFolder.
+        listFiles { file -> file.extension in listOf("png", "jpg", "jpeg", "gif") }
+            ?.forEach { FileUtils.copyFile(it, File(mavenizedProjectFolder, it.name))
+            }
 
         if (submission.gitSubmissionId == null && deleteOriginalProjectFolder) {  // don't delete git submissions
             FileUtils.deleteDirectory(projectFolder)  // TODO: This seems duplicate with the lines below...

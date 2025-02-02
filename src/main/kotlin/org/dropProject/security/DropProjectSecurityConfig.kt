@@ -78,7 +78,7 @@ open class DropProjectSecurityConfig(val apiAuthenticationManager: PersonalToken
                 *getPublicUrls().toTypedArray()
             ).permitAll()
             .antMatchers(
-                "/", "/upload", "/upload/**", "/buildReport/*", "/student/**",
+                "/", "/upload", "/upload/**", "/buildReport/**", "/student/**",
                 "/git-submission/refresh-git/*", "/git-submission/generate-report/*", "/mySubmissions",
                 "/leaderboard/*",
                 "/personalToken", "/api/student/**"
@@ -92,7 +92,7 @@ open class DropProjectSecurityConfig(val apiAuthenticationManager: PersonalToken
 
         if (apiAuthenticationManager != null) {
             http.addFilterBefore(PersonalTokenAuthenticationFilter("/api/**", apiAuthenticationManager),
-                    LogoutFilter::class.java)
+                LogoutFilter::class.java)
         }
 
         http.headers().frameOptions().sameOrigin()  // this is needed for h2-console

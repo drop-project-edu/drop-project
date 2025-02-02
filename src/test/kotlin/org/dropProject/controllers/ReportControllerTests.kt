@@ -1248,4 +1248,24 @@ class ReportControllerTests {
 
     }
 
+    @Test
+    @DirtiesContext
+    fun `download submission asset`() {
+
+        val submissionId = testsHelper.uploadProject(this.mvc, "projectWithREADME", defaultAssignmentId, STUDENT_1)
+
+        val result = this.mvc.perform(get("/buildReport/$submissionId/cross_red_icon.png")
+            .with(user(STUDENT_1)))
+            .andExpect(status().isOk)
+            .andReturn()
+
+        val downloadedFileContent = result.response.contentAsByteArray
+        assertEquals(199, downloadedFileContent.size)
+
+        // inexistent file
+        this.mvc.perform(get("/buildReport/$submissionId/other.png")
+            .with(user(STUDENT_1)))
+            .andExpect(status().isNotFound)
+    }
+
 }

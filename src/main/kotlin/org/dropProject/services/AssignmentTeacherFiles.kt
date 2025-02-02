@@ -60,38 +60,6 @@ data class AssignmentInstructions(
 )
 
 /**
- * Transforms relative links into absolute links, during the rendering of markdown documents
- */
-class RelativeToAbsoluteLinkVisitor(private val baseUrlForLinks: String,
-                                    private val baseUrlForImages: String) : AbstractVisitor() {
-
-    override fun visit(image: Image) {
-        val destination = image.destination
-
-        // Check if the link is relative
-        if (!destination.startsWith("http://") && !destination.startsWith("https://")) {
-            // Convert the relative link to an absolute one
-            image.destination = baseUrlForImages + destination
-        }
-
-        super.visit(image)
-    }
-
-    override fun visit(link: Link) {
-        val destination = link.destination
-
-        // Check if the link is relative
-        if (!destination.startsWith("http://") && !destination.startsWith("https://")) {
-            // Convert the relative link to an absolute one
-            link.destination = baseUrlForLinks + destination
-        }
-
-        // Proceed with the default behavior for this node
-        visitChildren(link)
-    }
-}
-
-/**
  * Provides functionality related with an Assignment's Teacher Files (for example, checking if the Teacher's submission
  * compiles, passes the CheckStyle, and so on).
  */
@@ -100,7 +68,8 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
                              val buildReportRepository: BuildReportRepository,
                              val assignmentTestMethodRepository: AssignmentTestMethodRepository,
                              val applicationContext: ApplicationContext,
-                             val i18n: MessageSource
+                             val i18n: MessageSource,
+                             val markdownRenderer: MarkdownRenderer,
 ) {
 
     @Value("\${assignments.rootLocation}")
@@ -121,28 +90,9 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
             val extension = fragment.extension.uppercase()
             instructions.format = AssignmentInstructionsFormat.valueOf(extension)
             if (extension == "MD") {
-                val extensions = listOf(AutolinkExtension.create(), TablesExtension.create())
-                val parser = Parser.builder().extensions(extensions).build();
-                val document = parser.parse(fragment.readText());
-
-                // Create the visitor with the base URL for converting relative links
-                val visitor = RelativeToAbsoluteLinkVisitor("public/${assignment.id}/", "${assignment.id}/")
-
-                // Apply the visitor to the document
-                document.accept(visitor)
-
-                val renderer = HtmlRenderer.builder()
-                    .extensions(extensions)
-                    // custom attribute provider to add 'table' class to tables rendered by commonmark
-                    .attributeProviderFactory { _ ->
-                        AttributeProvider { node, tagName, attributes ->
-                            if (node is TableBlock) {
-                                attributes["class"] = "table table-bordered"
-                            }
-                        }
-                    }
-                    .build();
-                instructions.body = renderer.render(document)
+                instructions.body = markdownRenderer.render(fragment.readText(),
+                    "public/${assignment.id}/",
+                    "${assignment.id}/")
 
                 // TODO: While the plugin is not able to render markdown, let's just return html
                 instructions.format = AssignmentInstructionsFormat.HTML
@@ -219,7 +169,7 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
         val buildReport = buildWorker.checkAssignment(assignmentFolder, assignment, principal?.name)
         if (buildReport == null) {
             report.add(AssignmentValidator.Info(AssignmentValidator.InfoType.ERROR,
-                    "Assignment checking (run tests) was aborted by timeout! Why is it taking so long to run?"))
+                "Assignment checking (run tests) was aborted by timeout! Why is it taking so long to run?"))
             return report
         }
 
@@ -232,25 +182,25 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
         for (testMethod in assignmentValidator.testMethods) {
             val parts = testMethod.split(":")
             assignmentTestMethodRepository.save(AssignmentTestMethod(assignment = assignment,
-                                                                     testClass = parts[0], testMethod = parts[1]))
+                testClass = parts[0], testMethod = parts[1]))
         }
 
         if (!buildReport.compilationErrors.isEmpty()) {
             report.add(AssignmentValidator.Info(AssignmentValidator.InfoType.ERROR,
-                                        "Assignment has compilation errors."))
+                "Assignment has compilation errors."))
             return report
         }
 
         if (!buildReport.checkstyleErrors.isEmpty()) {
             report.add(AssignmentValidator.Info(AssignmentValidator.InfoType.ERROR,
-             "Assignment has checkstyle errors."))
+                "Assignment has checkstyle errors."))
             return report
         }
 
         if (buildReport.hasJUnitErrors() == true) {
             report.add(AssignmentValidator.Info(AssignmentValidator.InfoType.ERROR,
-             "Assignment is failing some JUnit tests. Please fix this!",
-                    "<pre>${buildReport.junitErrorsTeacher}</pre>"))
+                "Assignment is failing some JUnit tests. Please fix this!",
+                "<pre>${buildReport.junitErrorsTeacher}</pre>"))
             return report
         }
 
@@ -259,13 +209,13 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
 
     fun getProjectFolderAsFile(submission: Submission, wasRebuilt: Boolean) : File {
         val projectFolder =
-                if (submission.submissionId != null) submission.submissionId
-                else submission.gitSubmissionId!!.toString()
+            if (submission.submissionId != null) submission.submissionId
+            else submission.gitSubmissionId!!.toString()
 
         val suffix = if (wasRebuilt) "-mavenized-for-rebuild" else "-mavenized"
 
         val destinationPartialFolder = File(mavenizedProjectsRootLocation,
-                Submission.relativeUploadFolder(submission.assignmentId, submission.submissionDate))
+            Submission.relativeUploadFolder(submission.assignmentId, submission.submissionDate))
         destinationPartialFolder.mkdirs()
 
         return File(destinationPartialFolder, projectFolder + suffix)
