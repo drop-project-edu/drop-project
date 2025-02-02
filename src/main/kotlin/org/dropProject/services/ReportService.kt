@@ -79,7 +79,8 @@ class ReportService(
     val buildReportBuilder: BuildReportBuilder,
     val i18n: MessageSource,
     val gitClient: GitClient,
-    val asyncConfigurer: AsyncConfigurer
+    val asyncConfigurer: AsyncConfigurer,
+    val markdownRenderer: MarkdownRenderer,
 ) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
@@ -132,13 +133,12 @@ class ReportService(
                 val readmeContent = File(mavenizedProjectFolder, "README.txt").readText()
                 fullBuildReport.readmeHtml = "<pre>$readmeContent</pre>"
             } else if (File(mavenizedProjectFolder, "README.md").exists()) {
+
                 val readmeContent = File(mavenizedProjectFolder, "README.md").readText()
-                val parser = Parser.builder()
-                    .extensions(listOf(AutolinkExtension.create()))
-                    .build()
-                val document = parser.parse(readmeContent)
-                val renderer = HtmlRenderer.builder().build()
-                fullBuildReport.readmeHtml = "<hr/>\n" + renderer.render(document) + "<hr/>\n"
+                val htmlContent = markdownRenderer.render(readmeContent,
+                    "${submissionId}/",
+                    "${submissionId}/")
+                fullBuildReport.readmeHtml = "<hr/>\n$htmlContent<hr/>\n"
             }
 
             // check the submission status
