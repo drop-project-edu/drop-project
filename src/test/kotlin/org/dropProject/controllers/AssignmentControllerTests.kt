@@ -283,7 +283,7 @@ class AssignmentControllerTests {
                 "UPLOAD", sampleJavaAssignmentRepo
             )
             assertEquals("dummyAssignment1", createdAssignment.id)
-            assertEquals("f3c3cf4f18decadba6b7ae35d740eb8b6a277b89", createdAssignment.gitCurrentHash)
+            assertEquals("88e3327370242da0c3ae99e6bfdd5ac22148e213", createdAssignment.gitCurrentHash)
 
             val result = this.mvc.perform(get("/assignment/info/dummyAssignment1"))
                 .andExpect(status().isOk)
