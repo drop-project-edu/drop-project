@@ -34,6 +34,8 @@ import org.dropProject.forms.AssignmentForm
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.*
 import org.dropProject.services.AssignmentService
+import org.dropProject.services.GitClient
+import org.dropProject.services.ScheduledTasks
 import org.hamcrest.CoreMatchers.containsString
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers
@@ -108,6 +110,9 @@ class AssignmentControllerTests {
 
     @Autowired
     lateinit var testsHelper: TestsHelper
+
+    @Autowired
+    lateinit var scheduledTasks: ScheduledTasks
 
     @Value("\${assignments.rootLocation}")
     val assignmentsRootLocation: String = ""
@@ -283,7 +288,7 @@ class AssignmentControllerTests {
                 "UPLOAD", sampleJavaAssignmentRepo
             )
             assertEquals("dummyAssignment1", createdAssignment.id)
-            assertEquals("f3c3cf4f18decadba6b7ae35d740eb8b6a277b89", createdAssignment.gitCurrentHash)
+            assertEquals("88e3327370242da0c3ae99e6bfdd5ac22148e213", createdAssignment.gitCurrentHash)
 
             val result = this.mvc.perform(get("/assignment/info/dummyAssignment1"))
                 .andExpect(status().isOk)
@@ -2051,6 +2056,33 @@ class AssignmentControllerTests {
             // cleanup assignment files
             if (File(assignmentsRootLocation, "dummyAssignment4").exists()) {
                 File(assignmentsRootLocation, "dummyAssignment4").deleteRecursively()
+            }
+        }
+    }
+
+    @Test
+    @WithMockUser("teacher1", roles = ["TEACHER"])
+    @DirtiesContext
+    fun test_32_refreshSSHKeysForAllAssignments() {
+
+//        println(GitClient().computeSshFingerprint(TestsHelper.sampleJavaAssignmentPublicKey))
+        println(GitClient().computeSshFingerprint(ApplicationContextListener.sampleJavaAssignmentPublicKey))
+
+        try {
+            val createdAssignment = testsHelper.createAndSetupAssignment(
+                mvc, assignmentRepository, "dummyAssignment1", "Dummy Assignment",
+                "org.dummy",
+                "UPLOAD", sampleJavaAssignmentRepo
+            )
+            assertEquals("dummyAssignment1", createdAssignment.id)
+            assertEquals("88e3327370242da0c3ae99e6bfdd5ac22148e213", createdAssignment.gitCurrentHash)
+
+            assertEquals(1, scheduledTasks.refreshSSHKeysForAllAssignments())
+
+        } finally {
+            // cleanup assignment files
+            if (File(assignmentsRootLocation, "dummyAssignment1").exists()) {
+                File(assignmentsRootLocation, "dummyAssignment1").deleteRecursively()
             }
         }
     }

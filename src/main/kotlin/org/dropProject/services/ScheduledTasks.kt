@@ -22,8 +22,11 @@ package org.dropProject.services
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import org.dropProject.dao.SubmissionStatus
+import org.dropProject.repository.AssignmentRepository
 import org.dropProject.repository.SubmissionRepository
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
+import java.io.File
 import java.util.*
 import java.util.logging.Logger
 
@@ -33,11 +36,17 @@ import java.util.logging.Logger
  */
 @Component
 class ScheduledTasks(
-        val submissionRepository: SubmissionRepository
+        val submissionRepository: SubmissionRepository,
+        val assignmentRepository: AssignmentRepository,
+        val gitClient: GitClient,
 ) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
+    @Value("\${assignments.rootLocation}")
+    val assignmentsRootLocation: String = ""
+
+    // run every 100 minutes
     @Scheduled(fixedRate = 6_000_000)
     fun cleanExpiredSubmissions() {
 
@@ -52,5 +61,32 @@ class ScheduledTasks(
             expiredSubmission.setStatus(SubmissionStatus.ABORTED_BY_TIMEOUT)
             submissionRepository.save(expiredSubmission)
         }
+    }
+
+    /**
+     * Refreshes the SSH keys for all assignments. This is useful to prevent GitHub from deleting unused SSH keys.
+     *
+     * @return the number of assignments for which the SSH keys were refreshed
+     */
+    // run every 7 days
+    @Scheduled(fixedRate = 604_800_000)
+    fun refreshSSHKeysForAllAssignments(): Int {
+
+        LOG.info("Refreshing (Github) SSH keys for all assignments")
+
+        val assignments = assignmentRepository.findAll()
+        var refreshedKeys = 0
+        for (assignment in assignments) {
+            try {
+                gitClient.fetch(File(assignmentsRootLocation, assignment.gitRepositoryFolder),
+                    assignment.gitRepositoryPrivKey!!.toByteArray())
+                LOG.info("Refreshed (Github) SSH key for assignment ${assignment.id}")
+                refreshedKeys++
+            } catch (e: Exception) {
+                LOG.warn("Error refreshing (Github) SSH keys for assignment ${assignment.id}: ${e.message}")
+            }
+        }
+
+        return refreshedKeys
     }
 }

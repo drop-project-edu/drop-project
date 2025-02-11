@@ -62,40 +62,44 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
                                  val assignmentTeacherFiles: AssignmentTeacherFiles) : ApplicationListener<ContextRefreshedEvent> {
 
     companion object {
-        const val sampleJavaAssignmentPrivateKey = "-----BEGIN RSA PRIVATE KEY-----\n" +
-                "MIIEogIBAAKCAQEAlw5XmMJOjiMGylXnfWTKVH2sAHs7KuQHUxnlisWI0EHmB2Bf\n" +
-                "hp1xt32ulxhhdTdNPMkGMQjsEH79tDl9+c1DO22tCaOq2VA6olB2/vaeBCOaWm8J\n" +
-                "u1z4xu6OKASgYMK9SMoLXqFKE1m2gE8QLi3jzH9x1X6Pk2rFSywnpWGtWfqNKlPl\n" +
-                "brEhetf6Ztn/1k3jrRoMFCSVw8IPhJJfhSnPwu8PzLvUg5b4u/lVE3Jieq+QiKKi\n" +
-                "aFV4jalxqD3QHpJT4mpAbCHRa/tCsCblGEOeQYloI8OW1LpYOpWkwDPzTEseuCF6\n" +
-                "fJ/YVg2iiKnsO7OnuvfoCzN4em/NhZWnLqSVKQIDAQABAoIBAFdG+CHREuZZIpFB\n" +
-                "tTDkTWsn+XuFuBf+DKVdLx1RKM17ZdcZPdhfm9azDW9LrPO28i+Ozr8CMrMNTLUX\n" +
-                "CsyMZq4tnm8VW5+YFWi3KSoDgCVQFNzvjyXsf+kg6I4Crk959TfbVVplwpEPorzb\n" +
-                "8bNc3GPJtxHtwDMi27+lUXrixvBXR53V0LdpTGA8BmxTzlnTi/889/bhi7yWSx87\n" +
-                "hinB+a0Zo7/FKoSWVLflUbF99/xIk34GPpeDBVnaUkiK6WrTVVK011Om8o0Krfyb\n" +
-                "lj2Io+wH91JSYXg7JqbQbwdwfqHboK12JkOTsDUVnsy1lHdc6cmiJzEzSkS5QjSw\n" +
-                "4I8gDaECgYEA5owYoZL5tqBxGw2ryXtS4ap21Uj7xJ+eXE2gCkBd94P3kaRC0Xco\n" +
-                "KUzbyvemeEU1pUEo3ksv/uQz1TtbGe3MLVLw4XDPuXl7oielqF7BoXA8pzWKiICO\n" +
-                "PCaeMjT6UrlI3QBCtRs8QGc+MxnIdr8x0jS3EISqZhmwWjAX+u7Cg90CgYEAp7ua\n" +
-                "j1b6JZKkKQ0KSA6uHPCGoqCjV+hf9AaXABbIOY1M+BkGbg7ttoayRvuolkspJNlf\n" +
-                "efNolucbBFg+cN5GbUNtyHHtoODRW1XwFGIBS35tmfXFEjSOHr3vs2Sm4R90Fub5\n" +
-                "GVYgRaZufOXvCjqAA7I5pJhMm5stRz25/ymb970CgYAdJSbT/j2dTcker2rBLNr8\n" +
-                "dk1Rh0l0wO0HJDUQNrTqXn+EpOxhiJvGJNZAYXBlEfLHMmaVO5IUugqncTqCG6LN\n" +
-                "NAgJp/ZKr0Xm6PYzQ89ctlCknsslmILircsf87yViqDgd3D3bjr+tU6SrTa/dEo7\n" +
-                "Fbjy2KKmB6dYr23Ipjhm7QKBgBJe/9y3QAqhdw1v+jJOOU++IGDrizhzoR7PIfbG\n" +
-                "iAOVsFp0Ezo2tF6Lfjc8FQjxDn6UuFpZCJmOkmz1ZVFjZv9MpVeQ8t/t/8ArN3Jk\n" +
-                "EZQ9Mq/sNTt7Oh2v2/MgEQ8TLNndTmcyAbLfObbAUGAkbCT7fkjCzZE1e84Tuq1x\n" +
-                "1z1ZAoGAJQMeLuX145SFlRR+XCvFp2hAaK2gI/IU81G9LgJu1EMFp6sBiFtw+4ak\n" +
-                "bHocX1drNS/7RIB/BeLxwmwBGM8QkO0EOlrEpNCBvLJsTJb7ES2lU27h2RO36mJW\n" +
-                "f0gaNCy09YGQejiDUeWBNcPBxn2eQtDvhFpdJlvroO8LWVn2jmg=\n" +
-                "-----END RSA PRIVATE KEY-----"
+        val sampleJavaAssignmentPrivateKey = """
+            -----BEGIN RSA PRIVATE KEY-----
+            MIIEowIBAAKCAQEAs3TOBSiW0ug1ikAtI16HeuNeHBKsXjdKhoVVw2bRjZwzyp0z
+            Yn8TzI9TVjIXsKPpm0thVaftd2bznWfSBBTtKOXiww7yre1PyPzeSGtBRm+2Nh/H
+            BaLayyEAOouMLNFs57k+fPAGPcIp8Wexsa0vXsZ7LW67tT842Cb7yiJjdWhVOQrn
+            horfOJWi159fBWuzCmrWNJzHfVJPR1QmYcmJ+yabD8Zpi/H3XeHg0j2I45gLnego
+            ZLH53Ecidm/yZ665mQE6qFA280w4sC2MMUlOGA90RzaSF/1d89vyqNKQhvvcc3q1
+            scV/Cqn1ghSPJUsrloIuuktFN4Wpc60TLlrsRwIDAQABAoIBAA1nssII46dSiDlR
+            DO4g8A7acBu5u114VN1SlXL4ubuRyP6gGogHhROZOzjrmgBsZhVfHqC24BK0worm
+            B/adF5AgB/3ZHoCmgvi5BuOy+1fHHX3Shtvha+WTjABTjz+Dz1ZJ7KSJi3XOjLKH
+            M+tZS/oQ6n+cz3G9DMJ8uv9A7VwGNIUnT5zDFigt65v+ul70/SxyU4N8KMR9G5HE
+            TQIe7/4Lsfe7cUWp9mLxVOTG/Ha56u5rEN7vWUwn1t/rLOCy8CY9rCZ3TIT+vjbl
+            imoNq86B1PGfNjiIJldhWPhwZc7AaKAtJ7YDy+FLFgsEgMX9VBewSm43WSCPatta
+            cExq1HECgYEAxk/DOOhJgXtrizVy3CQZKR90bmglUSYrAz9FPh3oxrRu6Zlh630x
+            HKljedpCVBbybjYLDD/QsYNA0o+MRmOH+W9hFhXHmalWnHOyxMXJ8AwkgiegLwr8
+            CigH+pBf31MwVl+/mNOrA5yrFaQrefhlTmB+JVIxL9pWoPdIKJpKbbECgYEA56jj
+            3f3jgS37e/Y+RY6aMwlYP2LaIDTNt1fWfrdKklS45S8YiWZOOcCdQ3tzs+Lgq+ZB
+            f0qZDc47afuK3PFcmBjL6vA4FYVnGeOKyl6aVOmAdC2lZziz411m0MGYq4wAeguV
+            rUqwdrf3ON0tDF1KKFrjbQY4msSd5gK+03jxn3cCgYA/2byknP3Vx9Q3jSz/Pkwv
+            lmYZikTBnQVqVTvJJT4mhD/VzMHfXX6rmMpjmGeUxZKm85WZCw75qKX9ZaSnoTJN
+            mJPs1XRfwEsXspTTkE9Vj8NNeM61dtbxujPfdA66TAGbPdblsPk1/4KCREqPSe/s
+            TVswTwdxPd54k0XTdOIT8QKBgQDSrywF0gidjIdCFxJNSkL9FYuXojyEu+E31H/0
+            IJiGetzpOqrTEyMjrQSZweXZfQYd8DwzG1IVVzF70tRY2n3+qdaTJcOr9vZseh/Y
+            qq8reG1lu7nJJa2co26FfvxtT9eDJ5QJ1XqljeweYDC/JPzztK1Pky/ZueVssaSB
+            SWZeQwKBgBx9G3mJ1mLkSpnX+ig5Cqil7zLyNJpLqjMt82ftqK/UbtNGAg4yxsDW
+            3a+wZiW/dwSmnUdfWs1SlO5H5tPOxLbW7/4OO8v7pUaAG/W/oK3HK1MgeKAFX4Wv
+            v3h9YHdvBHkGlTtQPQlt0p1ic8AsLeGmZxnBr0pfLW9JbNrAUwsi
+            -----END RSA PRIVATE KEY-----
+        """.trimIndent()
 
-        const val sampleJavaAssignmentPublicKey = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCXDl" +
-                "eYwk6OIwbKVed9ZMpUfawAezsq5AdTGeWKxYjQQeYHYF+GnXG3fa6XGGF1N008yQYxCOwQ" +
-                "fv20OX35zUM7ba0Jo6rZUDqiUHb+9p4EI5pabwm7XPjG7o4oBKBgwr1IygteoUoTWbaATx" +
-                "AuLePMf3HVfo+TasVLLCelYa1Z+o0qU+VusSF61/pm2f/WTeOtGgwUJJXDwg+Ekl+FKc/C" +
-                "7w/Mu9SDlvi7+VUTcmJ6r5CIoqJoVXiNqXGoPdAeklPiakBsIdFr+0KwJuUYQ55BiWgjw5" +
-                "bUulg6laTAM/NMSx64IXp8n9hWDaKIqew7s6e69+gLM3h6b82FlacupJUp"
+        val sampleJavaAssignmentPublicKey = """
+            ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCzdM4FKJbS6DWKQC0jXod6414cEq
+            xeN0qGhVXDZtGNnDPKnTNifxPMj1NWMhewo+mbS2FVp+13ZvOdZ9IEFO0o5eLDDvKt
+            7U/I/N5Ia0FGb7Y2H8cFotrLIQA6i4ws0WznuT588AY9winxZ7GxrS9exnstbru1Pz
+            jYJvvKImN1aFU5CueGit84laLXn18Fa7MKatY0nMd9Uk9HVCZhyYn7JpsPxmmL8fdd
+            4eDSPYjjmAud6ChksfncRyJ2b/JnrrmZATqoUDbzTDiwLYwxSU4YD3RHNpIX/V3z2/
+            Ko0pCG+9xzerWxxX8KqfWCFI8lSyuWgi66S0U3halzrRMuWuxH
+        """.trimIndent()
     }
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)

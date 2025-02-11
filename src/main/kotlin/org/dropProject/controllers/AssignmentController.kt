@@ -420,8 +420,10 @@ class AssignmentController(
             // get git info
             val git = Git.open(File(assignmentsRootLocation, assignment.gitRepositoryFolder))
             val lastCommitInfo = gitClient.getLastCommitInfo(git)
+            val sshKeyFingerprint = gitClient.computeSshFingerprint(assignment.gitRepositoryPubKey!!)
 
             model["lastCommitInfoStr"] = if (lastCommitInfo != null) lastCommitInfo.toString() else "No commits"
+            model["sshKeyFingerprint"] = sshKeyFingerprint
         }
 
         model["isAdmin"] = request.isUserInRole("DROP_PROJECT_ADMIN")

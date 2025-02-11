@@ -43,6 +43,7 @@ import org.dropProject.dao.formatter
 import org.eclipse.jgit.patch.HunkHeader
 import org.eclipse.jgit.util.io.DisabledOutputStream
 import org.slf4j.LoggerFactory
+import java.security.MessageDigest
 import java.util.logging.Logger
 
 /**
@@ -173,6 +174,24 @@ class GitClient {
     }
 
     /**
+     * Executes a git fetch from the Git repository identified by [localRepository].
+     * This can be used to refresh the ssh key, since github removes ssh keys that are not used for more than a year.
+     *
+     * @return a [Git]
+     */
+    fun fetch(localRepository: File, privateKey: ByteArray) : Git {
+
+        val git = Git.open(localRepository)
+
+        git
+            .fetch()
+            .setTransportConfigCallback(MyTransportConfigCallback(privateKey))
+            .call();
+
+        return git
+    }
+
+    /**
      * Generates a pair of public/private keys.
      *
      * @return a Pair with two ByteArray
@@ -229,6 +248,25 @@ class GitClient {
         val username = matchResult.groupValues[1]
         val reponame = matchResult.groupValues[2]
         return username to reponame
+    }
+
+    fun computeSshFingerprint(publicKeyContent: String): String {
+        // Remove newlines
+        val keyContent = publicKeyContent.replace("\n", "")
+
+        // Extract base64 part of the key (ignoring 'ssh-rsa' or 'ssh-ed25519' prefix)
+        val parts = keyContent.split(" ")
+        if (parts.size < 2) {
+            throw IllegalArgumentException("Invalid SSH public key format.")
+        }
+        val keyBytes = Base64.getDecoder().decode(parts[1])
+
+        // Compute SHA-256 hash
+        val sha256 = MessageDigest.getInstance("SHA-256")
+        val hash = sha256.digest(keyBytes)
+
+        // Encode in Base64 for GitHub-style fingerprint
+        return "SHA256:" + Base64.getEncoder().encodeToString(hash)
     }
 
     /**
