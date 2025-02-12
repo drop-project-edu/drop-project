@@ -84,12 +84,16 @@
                         <span th:each="tag: ${assignment.tagsStr}" th:text="${tag}" class="label label-info" />
                     </div>
                 </div>
-                <div class="form-group" >
+                <div class="form-group" style="margin-bottom: 0;">
                     <label class="col-sm-3 control-label">Connected to:</label>
                     <a th:if="${assignment.gitRepositoryPrivKey != null}" class="col-sm-9 read-row"
                         th:text="${assignment.gitRepositoryUrl}"
                         th:href="${assignment.linkToGithub()}">link to github</a>
                     <div th:if="${assignment.gitRepositoryPrivKey == null}" class="col-sm-9 read-row alert alert-warning">This assignment is not yet connected to a git repository!</div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label" >SSH Key Fingerprint:</label>
+                    <span class="col-sm-9 read-row" th:text="${sshKeyFingerprint}">Fingerprint</span>
                 </div>
                 <div class="form-group" th:if="${lastCommitInfoStr != null}">
                     <label class="col-sm-3 control-label">Last commit:</label>
