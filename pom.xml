@@ -292,6 +292,11 @@
 			<version>1.70</version>
 		</dependency>
 
+		<dependency>
+			<groupId>org.kohsuke</groupId>
+			<artifactId>github-api</artifactId>
+			<version>1.326</version>
+		</dependency>
 
 		<dependency>
 			<groupId>com.h2database</groupId>

@@ -34,6 +34,7 @@ import org.dropProject.forms.AssignmentForm
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.*
 import org.eclipse.jgit.api.Git
+import org.kohsuke.github.GitHub
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.annotation.Cacheable
@@ -91,6 +92,9 @@ class AssignmentService(
 
     @Value("\${storage.rootLocation}/git")
     val gitSubmissionsRootLocation: String = "submissions/git"
+
+    @Value("\${github.token:no-token}")
+    val githubToken: String = ""
 
     /**
      * Returns the [Assignment]s that a certain user can access. The returned assignments will be all the public ones,
@@ -661,17 +665,33 @@ class AssignmentService(
 
         val gitRepository = newAssignment.gitRepositoryUrl
         try {
-            val directory = File(assignmentsRootLocation, newAssignment.gitRepositoryFolder)
-            gitClient.clone(gitRepository, directory, newAssignment.gitRepositoryPrivKey!!.toByteArray())
-            LOG.info("[${newAssignment.id}] Successfuly cloned ${gitRepository} to ${directory}")
-
-            // update hash
-            val git = Git.open(File(assignmentsRootLocation, newAssignment.gitRepositoryFolder))
-            newAssignment.gitCurrentHash = gitClient.getLastCommitInfo(git)?.sha1
-
+            cloneAssignment(newAssignment, gitRepository)
         } catch (e: Exception) {
-            LOG.info("Error cloning ${gitRepository} - ${e}")
-            return Pair(newAssignment.id, "Error cloning ${gitRepository} - ${e.message}")
+
+            if (githubToken != "no-token") {  // "no-token" is the default value
+                LOG.info(
+                    "Error cloning ${gitRepository} - ${e}. Maybe the SSH key was removed. Let's try setting the key" +
+                            "using github API"
+                )
+
+                val github = GitHub.connectUsingOAuth(githubToken)
+                val (username, reponame) = gitClient.getGitRepoInfo(newAssignment.gitRepositoryUrl)
+                val repository = github.getRepository("$username/$reponame")
+                val key = repository.addDeployKey("Drop Project (import)", newAssignment.gitRepositoryPubKey, true)
+                LOG.info("Deploy Key Added: ${key.id}")
+
+                // let's try to clone again
+                try {
+                    cloneAssignment(newAssignment, gitRepository)
+                } catch (e: Exception) {
+                    LOG.info("Error cloning (after setting key) ${gitRepository} - ${e}")
+                    return Pair(newAssignment.id, "Error cloning ${gitRepository} - ${e.message}")
+                }
+
+            } else {
+                LOG.info("Error cloning ${gitRepository} - ${e}")
+                return Pair(newAssignment.id, "Error cloning ${gitRepository} - ${e.message}")
+            }
         }
 
         assignmentRepository.save(newAssignment)
@@ -691,6 +711,16 @@ class AssignmentService(
         }
 
         return Pair(newAssignment.id, null)
+    }
+
+    private fun cloneAssignment(newAssignment: Assignment, gitRepository: String) {
+        val directory = File(assignmentsRootLocation, newAssignment.gitRepositoryFolder)
+        gitClient.clone(gitRepository, directory, newAssignment.gitRepositoryPrivKey!!.toByteArray())
+        LOG.info("[${newAssignment.id}] Successfuly cloned ${gitRepository} to ${directory}")
+
+        // update hash
+        val git = Git.open(File(assignmentsRootLocation, newAssignment.gitRepositoryFolder))
+        newAssignment.gitCurrentHash = gitClient.getLastCommitInfo(git)?.sha1
     }
 
     fun importGitSubmissionsFromImportedFile(mapper: ObjectMapper,
