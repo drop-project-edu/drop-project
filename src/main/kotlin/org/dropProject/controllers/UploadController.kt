@@ -783,13 +783,18 @@ class UploadController(
 
         assignmentRepository.findById(assignmentId).orElse(null) ?: throw IllegalArgumentException("assignment $assignmentId is not registered")
 
+        // make sure assetName is a valid filename
+        if (assetName.contains("..") || assetName.contains("/") || assetName.contains("\\")) {
+            throw IllegalArgumentException("Invalid asset name")
+        }
+
         val assignmentFolder = File(assignmentsRootLocation, assignmentId)
         if (assignmentFolder.exists()) {
             val assignmentPublicFolder = File(assignmentFolder, "public")
             if (assignmentPublicFolder.exists() && assignmentPublicFolder.isDirectory) {
                 val assetFile = File(assignmentPublicFolder, assetName)
                 if (assetFile.exists() && assetFile.isFile) {
-                    if (assetFile.extension == "zip") {
+                    if (assetFile.extension !in arrayOf("png","jpg","jpeg")) {
                         response.setHeader("Content-Disposition", "attachment; filename=${assetName}")
                     }
                     return FileSystemResource(assetFile)

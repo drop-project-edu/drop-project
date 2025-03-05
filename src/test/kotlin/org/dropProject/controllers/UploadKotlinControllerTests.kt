@@ -304,7 +304,7 @@ class UploadKotlinControllerTests {
                     </li>
                     </ul>
                     <h2>Additional information</h2>
-                    <p>Check this <a href="public/testKotlinProj2/file.txt">file</a> for additional information</p>
+                    <p>Check this <a href="testKotlinProj2/public/file.txt">file</a> for additional information</p>
                     
             """.trimIndent()), normalizeString(readmeHTML))
 

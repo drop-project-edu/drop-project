@@ -24,4 +24,4 @@ If you don't feel like coding this stuff, you can grab a pre-built submission
 
 ## Additional information
 
-Check this [file](file.txt) for additional information
+Check this [file](public/file.txt) for additional information

@@ -91,7 +91,7 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
             instructions.format = AssignmentInstructionsFormat.valueOf(extension)
             if (extension == "MD") {
                 instructions.body = markdownRenderer.render(fragment.readText(),
-                    "public/${assignment.id}/",
+                    "${assignment.id}/",
                     "${assignment.id}/")
 
                 // TODO: While the plugin is not able to render markdown, let's just return html
