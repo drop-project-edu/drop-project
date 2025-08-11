@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 
-<head th:replace="layout/layout :: head (pageTitle='Drop Project - Leaderboard')">
+<head th:replace="~{layout/layout :: head (pageTitle='Drop Project - Leaderboard')}">
 </head>
 
 <body>
 
-<div th:replace="layout/layout :: header"></div>
+<div th:replace="~{layout/layout :: header}"></div>
 
 <!--/*@thymesVar id="assignment" type="org.dropProject.dao.Assignment"*/-->
 <!--/*@thymesVar id="submissions" type="java.util.ArrayList<org.dropProject.dao.Submission>"*/-->
@@ -84,7 +84,7 @@
     </table>
 </div>
 
-<div th:replace="layout/layout :: footer"></div>
+<div th:replace="~{layout/layout :: footer}"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-confirmation2@2.4.2/bootstrap-confirmation.min.js"></script>
 <script>

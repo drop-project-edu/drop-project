@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 
-<head th:replace="layout/layout :: head (pageTitle='Drop Project - Test Matrix')">
+<head th:replace="~{layout/layout :: head (pageTitle='Drop Project - Test Matrix')}">
 </head>
 
 <body>
 
-<div th:replace="layout/layout :: header"></div>
+<div th:replace="~{layout/layout :: header}"></div>
 
 <!-- override popover default size because of "mark all as final" explanation -->
 <style>
@@ -71,7 +71,7 @@
                     <td class="text-center"><a class="btn btn-default btn-sm" th:href="@{/submissions/(assignmentId=${submissionInfo.lastSubmission.assignmentId},groupId=${submissionInfo.projectGroup.id})}"
                                                th:text="${submissionInfo.allSubmissions.size()}"></a></td>
                     <td class="text-center" th:text="${#dates.format(submissionInfo.lastSubmission.submissionDate, 'dd/MMM HH:mm:ss')}"
-                        th:data-order="${submissionInfo.lastSubmission.submissionDate.time}"></td>
+                        th:data-order="${submissionInfo.lastSubmission.getSubmissionDateAsTimestamp()}"></td>
 
                     <td class="text-nowrap">
                         <table class="fixed-width" th:style="${'width: ' + (tests.size() * 20) + 'px'}">
@@ -98,7 +98,7 @@
 
 </div>
 
-<div th:replace="layout/layout :: footer"></div>
+<div th:replace="~{layout/layout :: footer}"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-confirmation2@2.4.2/bootstrap-confirmation.min.js"></script>
 <script>

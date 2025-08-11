@@ -5,7 +5,7 @@
 
 	<groupId>org.dropProject</groupId>
 	<artifactId>drop-project</artifactId>
-	<version>0.9.9-beta.2</version>
+	<version>1.0.0-beta.1</version>
 	<packaging>jar</packaging>
 
 	<name>DropProject</name>
@@ -18,7 +18,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.7.18</version>
+		<version>3.0.0</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
@@ -27,7 +27,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>17</java.version>
-		<kotlin.version>1.9.22</kotlin.version>
+		<kotlin.version>2.1.21</kotlin.version>
 		<start-class>org.dropProject.DropProjectApplication</start-class>
 		<license.licenseName>apache_v2</license.licenseName>
 		<orchid.version>0.21.0</orchid.version>
@@ -62,11 +62,7 @@
 			<groupId>org.jetbrains.kotlin</groupId>
 			<artifactId>kotlin-reflect</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate-java8</artifactId>
-			<version>${hibernate.version}</version>
-		</dependency>
+		
 		<dependency>
 			<groupId>net.lingala.zip4j</groupId>
 			<artifactId>zip4j</artifactId>
@@ -124,7 +120,7 @@
 		<!-- spring security for thymeleaf -->
 		<dependency>
 			<groupId>org.thymeleaf.extras</groupId>
-			<artifactId>thymeleaf-extras-springsecurity5</artifactId>
+			<artifactId>thymeleaf-extras-springsecurity6</artifactId>
 			<!--			<version>2.1.3.RELEASE</version>-->
 		</dependency>
 
@@ -178,20 +174,14 @@
 			<version>1.23.6</version>
 		</dependency>
 
-		<!-- caching -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-cache</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>javax.cache</groupId>
-			<artifactId>cache-api</artifactId>
-			<version>1.1.1</version>
-		</dependency>
-		<dependency>
-			<groupId>net.sf.ehcache</groupId>
+			<groupId>org.ehcache</groupId>
 			<artifactId>ehcache</artifactId>
-			<version>2.10.9.2</version>
+			<version>3.10.8</version>
 		</dependency>
 
 		<!-- json processing -->
@@ -201,22 +191,13 @@
 			<version>2.12.2</version>
 		</dependency>
 
-		<!-- swagger for api documentation -->
+				<!-- swagger for api documentation -->
 		<dependency>
-			<groupId>io.springfox</groupId>
-			<artifactId>springfox-swagger2</artifactId>
-			<version>3.0.0</version>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>2.3.0</version>
 		</dependency>
-		<dependency>
-			<groupId>io.springfox</groupId>
-			<artifactId>springfox-boot-starter</artifactId>
-			<version>3.0.0</version>
-		</dependency>
-		<dependency>
-			<groupId>io.springfox</groupId>
-			<artifactId>springfox-swagger-ui</artifactId>
-			<version>3.0.0</version>
-		</dependency>
+		
 
 		<!-- plagiarism checker -->
 		<dependency>
@@ -242,7 +223,7 @@
 
 		<!-- LTI (in particular, moodle) support -->
 		<dependency>
-			<groupId>pt.ulusofona.deisi</groupId>
+			<groupId>org.dropproject</groupId>
 			<artifactId>spring-boot-lti-advantage-for-dp</artifactId>
 			<version>1.0.1</version>
 			<exclusions>
@@ -320,7 +301,6 @@
 		<dependency>
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-test</artifactId>
-			<version>4.0.0.RELEASE</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -337,14 +317,24 @@
 		</dependency>
 
 
-		<!-- this is necessary to build a war file that is both
-		      executable and deployable into an external container -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-tomcat</artifactId>
-			<scope>provided</scope>
 		</dependency>
 	</dependencies>
+
+	<profiles>
+		<profile>
+			<id>build-war</id>
+			<dependencies>
+				<dependency>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-tomcat</artifactId>
+					<scope>provided</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+	</profiles>
 
 	<pluginRepositories>
 		<pluginRepository>

@@ -19,7 +19,7 @@
  */
 package org.dropProject.dao
 
-import javax.persistence.*
+import jakarta.persistence.*
 
 /**
  * Represents an [Assignment]'s JUnit test method/function.

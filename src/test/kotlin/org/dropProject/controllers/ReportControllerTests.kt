@@ -170,10 +170,10 @@ class ReportControllerTests {
     @DirtiesContext
     fun reportIsNotAccessibleToStudents() {
 
-        val reportResult = this.mvc.perform(get("/report/testJavaProj")
+        this.mvc.perform(get("/report/testJavaProj")
             .with(user(STUDENT_1)))
-            .andExpect(status().isForbidden)
-            .andReturn()
+            .andExpect(status().isOk)
+            .andExpect(forwardedUrl("/access-denied.html"))
     }
 
     @Test
@@ -241,7 +241,7 @@ class ReportControllerTests {
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", defaultAssignmentId, STUDENT_1)
 
-        this.mvc.perform(get("/buildReport/$submissionId"))
+        this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
             .andExpect(status().isOk())
 
         this.mvc.perform(
@@ -1109,7 +1109,7 @@ class ReportControllerTests {
             listOf(Pair("student1", "Student 1"))
         )
 
-        val reportResult = this.mvc.perform(get("/submissions/?assignmentId=testJavaProj&groupId=1")
+        val reportResult = this.mvc.perform(get("/submissions?assignmentId=testJavaProj&groupId=1")
             .with(user(TEACHER_1)))
             .andExpect(status().isOk())
             .andReturn()

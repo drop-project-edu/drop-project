@@ -19,7 +19,7 @@
  */
 package org.dropProject.dao
 
-import javax.persistence.*
+import jakarta.persistence.*
 
 /**
  * Represents specific git information for submissions. This is different from the class [GitSubmission]

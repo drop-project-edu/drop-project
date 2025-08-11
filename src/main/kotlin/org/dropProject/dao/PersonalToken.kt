@@ -21,7 +21,7 @@ package org.dropProject.dao
 
 import org.dropProject.services.AssignmentValidator
 import java.util.*
-import javax.persistence.*
+import jakarta.persistence.*
 
 /**
  * Enum that represents the status of a personal token.

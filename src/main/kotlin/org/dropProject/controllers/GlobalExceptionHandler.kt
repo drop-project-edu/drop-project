@@ -30,7 +30,7 @@ import org.springframework.web.multipart.MultipartException
 import org.springframework.web.servlet.mvc.support.RedirectAttributes
 import java.util.logging.Level
 import java.util.logging.Logger
-import javax.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletRequest
 
 
 @ControllerAdvice

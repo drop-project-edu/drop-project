@@ -19,7 +19,7 @@
  */
 package org.dropProject.dao
 
-import javax.persistence.*
+import jakarta.persistence.*
 
 /**
  * Represents a persisted Jacoco report. The Jacoco report contains the result of calculating the code

@@ -36,6 +36,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.core.userdetails.User
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.provisioning.InMemoryUserDetailsManager
+import org.springframework.security.web.SecurityFilterChain
 import org.springframework.stereotype.Component
 import java.util.*
 import java.util.logging.Logger
@@ -51,17 +52,21 @@ class InMemoryUserDetailsManagerFactory {
     @Value("\${dp.config.location:}")
     val configLocationFolder: String = ""
 
+    @Bean
     fun inMemoryUserDetailsManager(): InMemoryUserDetailsManager {
 
         LOG.info("Using inMemoryAuthentication")
 
         val usersList = mutableListOf<UserDetails>()
 
-        val loadFromConfig = configLocationFolder.isNotEmpty() && resourceLoader.getResource("file:${configLocationFolder}/users.csv").exists()
+        val loadFromConfig =
+            configLocationFolder.isNotEmpty() && resourceLoader.getResource("file:${configLocationFolder}/users.csv")
+                .exists()
         val loadFromRoot = resourceLoader.getResource("classpath:users.csv").exists()
 
         if (loadFromConfig || loadFromRoot) {
-            val filenameAsResource = if (loadFromConfig) "file:${configLocationFolder}/users.csv" else "classpath:users.csv"
+            val filenameAsResource =
+                if (loadFromConfig) "file:${configLocationFolder}/users.csv" else "classpath:users.csv"
             LOG.info("Found ${filenameAsResource}. Will load user details from there.")
 
             val usersFile = resourceLoader.getResource(filenameAsResource).inputStream.bufferedReader()
@@ -81,7 +86,9 @@ class InMemoryUserDetailsManagerFactory {
 
             usersList.add(User.withUsername("student1").password("{noop}123").roles("STUDENT").build())
             usersList.add(User.withUsername("teacher1").password("{noop}123").roles("TEACHER").build())
-            usersList.add(User.withUsername("admin").password("{noop}123").roles("TEACHER", "DROP_PROJECT_ADMIN").build())
+            usersList.add(
+                User.withUsername("admin").password("{noop}123").roles("TEACHER", "DROP_PROJECT_ADMIN").build()
+            )
         }
 
         return InMemoryUserDetailsManager(usersList)
@@ -91,27 +98,22 @@ class InMemoryUserDetailsManagerFactory {
 
 @Profile("!deisi & !oauth2 & !lti")
 @Configuration
-@EnableWebSecurity
-@Order(1)
-class SimpleLoginWebSecurityConfig(val manager: PersonalTokenAuthenticationManager,
-                                   val inMemoryUserDetailsManagerFactory: InMemoryUserDetailsManagerFactory) : DropProjectSecurityConfig(manager) {
+class SimpleLoginWebSecurityConfig(val manager: PersonalTokenAuthenticationManager) :
+    DropProjectSecurityConfig(manager) {
 
-    override fun configure(http: HttpSecurity) {
-
-        super.configure(http)
-
+    @Bean
+    fun filterChain(http: HttpSecurity): SecurityFilterChain {
+        configure(http)
         http
-                .csrf().disable().httpBasic()
-                .and().formLogin()
-                .loginPage("/login")
-                .permitAll()
-                .and().logout()
-                .permitAll()
+            .csrf().disable().httpBasic()
+            .and().formLogin()
+            .loginPage("/login")
+            .permitAll()
+            .and().logout()
+            .permitAll()
+
+        return http.build()
     }
 
-    @Autowired
-    fun configureGlobal(auth: AuthenticationManagerBuilder) {
-        auth.userDetailsService(inMemoryUserDetailsManagerFactory.inMemoryUserDetailsManager())
-    }
 
 }

@@ -30,7 +30,7 @@ import org.dropProject.forms.UploadForm
 import org.dropProject.storage.StorageException
 import org.dropProject.storage.StorageService
 import java.io.File
-import javax.validation.Valid
+import jakarta.validation.Valid
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.ResponseEntity
 import org.dropProject.data.AuthorDetails
@@ -54,8 +54,8 @@ import org.springframework.http.MediaType
 import org.springframework.security.core.Authentication
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.Executor
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
 import kotlin.collections.HashSet
 
 /**

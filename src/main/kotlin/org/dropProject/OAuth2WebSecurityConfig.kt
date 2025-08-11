@@ -24,6 +24,7 @@ import org.dropProject.security.PersonalTokenAuthenticationManager
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 import org.springframework.core.io.ResourceLoader
@@ -32,6 +33,7 @@ import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper
 import org.springframework.security.oauth2.core.user.OAuth2UserAuthority
+import org.springframework.security.web.SecurityFilterChain
 import java.util.logging.Logger
 
 @Profile("oauth2")
@@ -49,11 +51,14 @@ class OAuth2WebSecurityConfig(val manager: PersonalTokenAuthenticationManager) :
     var idKey: String? = null
     val idValues = mutableMapOf<String, Array<String>>()  // idValue to roles list. e.g. "palves" -> ["ROLE_TEACHER,ROLE_ADMIN"]
 
-    override fun configure(http: HttpSecurity) {
-        super.configure(http)
+    @Bean
+    fun filterChain(http: HttpSecurity): SecurityFilterChain {
+        configure(http)
         http.oauth2Login()
                 .userInfoEndpoint()
                 .userAuthoritiesMapper(userAuthoritiesMapper())  // assign roles to users
+
+        return http.build()
     }
 
     /**
@@ -66,6 +71,7 @@ class OAuth2WebSecurityConfig(val manager: PersonalTokenAuthenticationManager) :
      * Where "login" is the name of the attribute associated with the user through the user info endpoint
      * (see drop-project.properties)
      */
+    @Bean
     fun userAuthoritiesMapper(): GrantedAuthoritiesMapper {
 
         val loadFromConfig = configLocationFolder.isNotEmpty() && resourceLoader.getResource("file:${configLocationFolder}/oauth-roles.csv").exists()

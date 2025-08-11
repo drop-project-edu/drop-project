@@ -33,8 +33,8 @@ import org.springframework.ui.ModelMap
 import org.springframework.validation.BindingResult
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.mvc.support.RedirectAttributes
-import javax.transaction.Transactional
-import javax.validation.Valid
+import org.springframework.transaction.annotation.Transactional
+import jakarta.validation.Valid
 
 /**
  * AdminController contains MVC controller functions that handle requests related with DP's administration

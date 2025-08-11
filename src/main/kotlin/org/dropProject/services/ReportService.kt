@@ -21,9 +21,6 @@ package org.dropProject.services
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonView
-import org.commonmark.ext.autolink.AutolinkExtension
-import org.commonmark.parser.Parser
-import org.commonmark.renderer.html.HtmlRenderer
 import org.dropProject.AsyncConfigurer
 import org.dropProject.dao.*
 import org.dropProject.data.AuthorDetails
@@ -38,7 +35,7 @@ import org.springframework.stereotype.Service
 import java.io.File
 import java.security.Principal
 import java.util.*
-import javax.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletRequest
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)  // exclude nulls fields and empty lists from serialization
 class FullBuildReport(
@@ -54,7 +51,7 @@ class FullBuildReport(
     var readmeHtml: String? = null,
     @JsonView(JSONViews.StudentAPI::class)
     var error: String? = null,
-    var autoRefresh: Boolean? = null,
+    var isValidating: Boolean? = null,
     @JsonView(JSONViews.StudentAPI::class)
     var summary: MutableList<SubmissionReport>? = null,
     @JsonView(JSONViews.StudentAPI::class)
@@ -161,7 +158,7 @@ class ReportService(
                 SubmissionStatus.DELETED -> fullBuildReport.error = i18n.getMessage("student.build-report.deleted", null, currentLocale)
                 SubmissionStatus.SUBMITTED, SubmissionStatus.SUBMITTED_FOR_REBUILD, SubmissionStatus.REBUILDING -> {
                     fullBuildReport.error = i18n.getMessage("student.build-report.submitted", null, currentLocale)
-                    fullBuildReport.autoRefresh = true
+                    fullBuildReport.isValidating = true
                 }
                 SubmissionStatus.VALIDATED, SubmissionStatus.VALIDATED_REBUILT -> {
                     val submissionReport = submissionReportRepository.findBySubmissionId(submission.id)

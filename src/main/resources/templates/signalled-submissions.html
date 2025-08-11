@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 
-<head th:replace="layout/layout :: head (pageTitle='Drop Project - Signalled Students')">
+<head th:replace="~{layout/layout :: head (pageTitle='Drop Project - Signalled Students')}">
 </head>
 
 <body>
 
-<div th:replace="layout/layout :: header"></div>
+<div th:replace="~{layout/layout :: header}"></div>
 
 <!--/*@thymesVar id="submissions" type="java.util.ArrayList<org.dropProject.data.SubmissionInfo>"*/-->
 <div class="container" style="max-width: 900px; margin-bottom: 65px">
@@ -108,7 +108,7 @@
 
 </div>
 
-<div th:replace="layout/layout :: footer"></div>
+<div th:replace="~{layout/layout :: footer}"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-confirmation2@2.4.2/bootstrap-confirmation.min.js"></script>
 <script>

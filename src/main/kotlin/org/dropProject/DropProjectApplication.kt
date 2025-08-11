@@ -19,7 +19,6 @@
  */
 package org.dropProject
 
-import net.sf.ehcache.config.CacheConfiguration
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -27,10 +26,12 @@ import org.springframework.boot.builder.SpringApplicationBuilder
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer
 import org.springframework.cache.CacheManager
 import org.springframework.cache.annotation.EnableCaching
-import org.springframework.cache.ehcache.EhCacheCacheManager
+import org.springframework.cache.jcache.JCacheCacheManager
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.PropertySource
 import org.springframework.scheduling.annotation.EnableScheduling
+import javax.cache.Caching
+import javax.cache.configuration.MutableConfiguration
 
 
 @SpringBootApplication
@@ -41,10 +42,13 @@ class DropProjectApplication : SpringBootServletInitializer() {
 
     @Bean
     fun cacheManager(): CacheManager {
-        val archivedAssignmentsCacheConfig = CacheConfiguration(Constants.CACHE_ARCHIVED_ASSIGNMENTS_KEY, 10)
-        val generalConfig = net.sf.ehcache.config.Configuration()
-        generalConfig.addCache(archivedAssignmentsCacheConfig)
-        return EhCacheCacheManager(net.sf.ehcache.CacheManager.newInstance(generalConfig))
+        val cachingProvider = Caching.getCachingProvider()
+        val cacheManager = cachingProvider.cacheManager
+        val cacheConfiguration = MutableConfiguration<Any, Any>()
+        if (cacheManager.getCache<Any, Any>(Constants.CACHE_ARCHIVED_ASSIGNMENTS_KEY) == null) {
+            cacheManager.createCache(Constants.CACHE_ARCHIVED_ASSIGNMENTS_KEY, cacheConfiguration)
+        }
+        return JCacheCacheManager(cacheManager)
     }
 
     override fun configure(application: SpringApplicationBuilder): SpringApplicationBuilder {
@@ -62,13 +66,3 @@ class DropProjectApplication : SpringBootServletInitializer() {
         }
     }
 }
-
-
-//fun main(args: Array<String>) {
-//    System.setProperty("spring.config.name", "drop-project")
-//    SpringApplication.run(DropProjectApplication::class.java, *args)
-//}
-
-
-
-

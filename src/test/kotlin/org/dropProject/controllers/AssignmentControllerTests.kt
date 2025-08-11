@@ -1425,7 +1425,7 @@ class AssignmentControllerTests {
                 MockMultipartFile("file", "export-only-assignment.dp", "application/zip", fileContent)
 
             mvc.perform(
-                MockMvcRequestBuilders.fileUpload("/assignment/import")
+                MockMvcRequestBuilders.multipart("/assignment/import")
                     .file(multipartFile)
                     .with(user(TEACHER_1))
             )
@@ -1435,7 +1435,7 @@ class AssignmentControllerTests {
 
 
             // let's check if it was well imported
-            val mvcResult = this.mvc.perform(get("/assignment/info/dummyAssignment1"))
+            val mvcResult = this.mvc.perform(get("/assignment/info/dummyAssignment1").with(user(TEACHER_1)))
                 .andExpect(status().isOk)
                 .andReturn()
 
@@ -1562,7 +1562,7 @@ class AssignmentControllerTests {
                 MockMultipartFile("file", "export-assignment-and-submissions.dp", "application/zip", fileContent)
 
             mvc.perform(
-                MockMvcRequestBuilders.fileUpload("/assignment/import")
+                MockMvcRequestBuilders.multipart("/assignment/import")
                     .file(multipartFile)
                     .with(user(TEACHER_1))
             )
@@ -1669,7 +1669,7 @@ class AssignmentControllerTests {
                 MockMultipartFile("file", "export-assignment-and-git-submissions.dp", "application/zip", fileContent)
 
             mvc.perform(
-                MockMvcRequestBuilders.fileUpload("/assignment/import")
+                MockMvcRequestBuilders.multipart("/assignment/import")
                     .file(multipartFile)
                     .with(user(TEACHER_1))
             )
@@ -1710,7 +1710,7 @@ class AssignmentControllerTests {
             testsHelper.createAndSetupAssignment(
                 mvc, assignmentRepository, "dummyAssignment", "Dummy Assignment",
                 "org.dummy", "UPLOAD", sampleJavaAssignmentRepo,
-                teacherId = "p1", activateRightAfterCloning = false
+                teacherId = "teacher1", activateRightAfterCloning = false
             )
 
             // remove the private and public keys to mess up the connection with github
@@ -1720,14 +1720,14 @@ class AssignmentControllerTests {
             assignmentRepository.save(assignment)
 
             // test git refresh - it should fail
-            val contentString = this.mvc.perform(post("/assignment/refresh-git/dummyAssignment"))
+            val contentString = this.mvc.perform(post("/assignment/refresh-git/dummyAssignment").with(user(TEACHER_1)))
                 .andExpect(status().isInternalServerError)
                 .andReturn().response.contentAsString
             val contentJSON = JSONObject(contentString)
             assertEquals("Error pulling from git@github.com:drop-project-edu/sampleJavaAssignment.git", contentJSON.getString("error"))
 
             // reconnect assignment (step 1) - open page with the newly generated key
-            this.mvc.perform(get("/assignment/setup-git/dummyAssignment?reconnect=true"))
+            this.mvc.perform(get("/assignment/setup-git/dummyAssignment?reconnect=true").with(user(TEACHER_1)))
                 .andExpect(status().isOk)
 
             // now force the keys to be equal to the ones previously created in github
@@ -1736,7 +1736,7 @@ class AssignmentControllerTests {
             assignmentRepository.save(assignment)
 
             // reconnect assignment (step 2) - open page with the newly generated key
-            this.mvc.perform(post("/assignment/setup-git/dummyAssignment?reconnect=true"))
+            this.mvc.perform(post("/assignment/setup-git/dummyAssignment?reconnect=true").with(user(TEACHER_1)))
                 .andExpect(status().isFound)
                 .andExpect(header().string("Location", "/assignment/info/dummyAssignment"))
                 .andExpect(

@@ -29,7 +29,7 @@ import org.springframework.security.provisioning.UserDetailsManager
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ModelAttribute
 import java.security.Principal
-import javax.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletRequest
 
 @ControllerAdvice
 class GlobalControllerAdvice {

@@ -25,9 +25,9 @@ import org.dropProject.dao.LeaderboardType
 import org.dropProject.dao.TestVisibility
 import org.springframework.format.annotation.DateTimeFormat
 import java.time.LocalDateTime
-import javax.validation.constraints.Min
-import javax.validation.constraints.NotEmpty
-import javax.validation.constraints.NotNull
+import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.NotEmpty
+import jakarta.validation.constraints.NotNull
 
 /**
  * Enum that represents the submission methods that are available in DP.

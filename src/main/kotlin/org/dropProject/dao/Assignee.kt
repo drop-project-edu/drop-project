@@ -19,7 +19,7 @@
  */
 package org.dropProject.dao
 
-import javax.persistence.*
+import jakarta.persistence.*
 
 /**
  * Represents an Assignee of an [Assignment]. Some assignments are private in the sense that they can only be accessed

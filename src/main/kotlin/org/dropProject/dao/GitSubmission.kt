@@ -22,7 +22,7 @@ package org.dropProject.dao
 import org.dropProject.services.GitClient
 import java.text.SimpleDateFormat
 import java.util.*
-import javax.persistence.*
+import jakarta.persistence.*
 
 /**
  * Represents a [GitSubmission] which is a [Submission] performed by connecting to a GitHub repository and pulling

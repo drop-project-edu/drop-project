@@ -248,7 +248,7 @@ class TestsHelper {
         Assert.assertTrue(updatedGitSubmission.connected)
 
         /*** GET /upload/ ***/
-        mvc.perform(MockMvcRequestBuilders.get("/upload/${assignmentId}"))
+        mvc.perform(MockMvcRequestBuilders.get("/upload/${assignmentId}").with(user(student)))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.view().name("student-git-form"))
                 .andExpect(MockMvcResultMatchers.model().attribute("gitSubmission", updatedGitSubmission))

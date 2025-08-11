@@ -20,7 +20,9 @@
 package org.dropProject.controllers
 
 import com.fasterxml.jackson.annotation.JsonView
-import io.swagger.annotations.*
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.dropProject.dao.*
 import org.dropProject.data.AssignmentLatestSubmissionsResponse
 import org.dropProject.data.JSONViews
@@ -39,15 +41,13 @@ import org.springframework.ui.ModelMap
 import org.springframework.web.bind.annotation.*
 import java.nio.file.Files
 import java.security.Principal
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
 
 
 @RestController
 @RequestMapping("/api/teacher")
-@Api(
-    authorizations = [Authorization(value = "basicAuth")],
-    value = "Teacher API",
+@Tag(name = "Teacher API",
     description = "All endpoints must be authenticated using a personal token associated with the TEACHER role, " +
             "sent with the standard \"basic auth\" header.<br/>" +
             "Using curl, it's as simple as including <pre>-u user:token</pre>"
@@ -72,9 +72,8 @@ class TeacherAPIController(
 
     @GetMapping(value = ["/assignments/current"], produces = [MediaType.APPLICATION_JSON_VALUE])
     @JsonView(JSONViews.TeacherAPI::class)
-    @ApiOperation(
-        value = "Get all the current assignments created or visible to the person identified by the \"basic auth\" header",
-        response = Assignment::class, responseContainer = "List", ignoreJsonView = false
+    @Operation(
+        summary = "Get all the current assignments created or visible to the person identified by the \"basic auth\" header"
     )
     fun getCurrentAssignments(principal: Principal): ResponseEntity<List<Assignment>> {
         val assignments = assignmentService.getMyAssignments(principal, archived = false)
@@ -89,9 +88,8 @@ class TeacherAPIController(
     @Suppress("UNCHECKED_CAST")
     @GetMapping(value = ["/assignments/{assignmentId}/submissions"], produces = [MediaType.APPLICATION_JSON_VALUE])
     @JsonView(JSONViews.TeacherAPI::class)
-    @ApiOperation(
-        value = "Get the latest submissions by each group for the assignment identified by the assignmentID variable",
-        response = SubmissionInfo::class, responseContainer = "List", ignoreJsonView = false
+    @Operation(
+        summary = "Get the latest submissions by each group for the assignment identified by the assignmentID variable",
     )
     fun getAssignmentLatestSubmissions(@PathVariable assignmentId: String, model: ModelMap,
                                       principal: Principal, request: HttpServletRequest): ResponseEntity<List<AssignmentLatestSubmissionsResponse>> {
@@ -106,10 +104,7 @@ class TeacherAPIController(
 
     @GetMapping(value = ["/assignments/{assignmentId}/submissions/{groupId}"])
     @JsonView(JSONViews.TeacherAPI::class)
-    @ApiOperation(
-        value = "",
-        response = Submission::class, responseContainer = "List", ignoreJsonView = false
-    )
+    @Operation(summary = "")
     fun getGroupAssignmentSubmissions(@PathVariable assignmentId: String, @PathVariable groupId: Long, model: ModelMap,
                                       principal: Principal, request: HttpServletRequest): ResponseEntity<List<Submission>> {
 
@@ -124,7 +119,7 @@ class TeacherAPIController(
 
     @GetMapping(value = ["/download/{submissionId}"], produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
     @JsonView(JSONViews.TeacherAPI::class)
-    @ApiOperation(value = "Download the mavenized zip file for this submission")
+    @Operation(summary = "Download the mavenized zip file for this submission")
     fun downloadProject(@PathVariable submissionId: Long, principal: Principal,
                         request: HttpServletRequest, response: HttpServletResponse): FileSystemResource {
 
@@ -161,7 +156,7 @@ class TeacherAPIController(
 
     @GetMapping(value = ["/submissions/{submissionId}"], produces = [MediaType.APPLICATION_JSON_VALUE])
     @JsonView(JSONViews.TeacherAPI::class)
-    @ApiOperation(value = "Get the build report associated with this submission")
+    @Operation(summary = "Get the build report associated with this submission")
     fun getBuildReport(@PathVariable submissionId: Long, principal: Principal,
                        request: HttpServletRequest): ResponseEntity<FullBuildReport> {
 
@@ -176,7 +171,7 @@ class TeacherAPIController(
 
     @GetMapping(value = ["/studentHistory/{studentId}"], produces = [MediaType.APPLICATION_JSON_VALUE])
     @JsonView(JSONViews.TeacherAPI::class)
-    @ApiOperation(value = "Get the student's student history")
+    @Operation(summary = "Get the student's student history")
     fun getStudentHistory(@PathVariable studentId: String,
                           principal: Principal, request: HttpServletRequest): ResponseEntity<StudentHistory> {
 
@@ -186,14 +181,14 @@ class TeacherAPIController(
 
     @GetMapping(value = ["/studentSearch/{query}"], produces = [MediaType.APPLICATION_JSON_VALUE])
     @JsonView(JSONViews.TeacherAPI::class)
-    @ApiOperation(value = "Get all students that match the query value")
+    @Operation(summary = "Get all students that match the query value")
     fun searchStudents(@PathVariable("query") query: String): ResponseEntity<List<StudentListResponse>> {
 
         return ResponseEntity(studentService.getStudentList(query), HttpStatus.OK)
     }
 
     @GetMapping(value = ["/submissions/{submissionId}/markAsFinal"])
-    @ApiOperation(value = "Mark the submission as final")
+    @Operation(summary = "Mark the submission as final")
     fun markAsFinal(@PathVariable submissionId: Long, principal: Principal): Boolean {
         val submission = submissionRepository.findById(submissionId).orElse(null) ?: return false
         val assignment = assignmentRepository.findById(submission.assignmentId).orElse(null) ?: return false
@@ -212,7 +207,7 @@ class TeacherAPIController(
 
     @GetMapping(value = ["/assignmentSearch/{query}"], produces = [MediaType.APPLICATION_JSON_VALUE])
     @JsonView(JSONViews.TeacherAPI::class)
-    @ApiOperation(value = "Get all assignments that match the query value")
+    @Operation(summary = "Get all assignments that match the query value")
     fun searchAssignments(@PathVariable("query") query: String, principal: Principal): ResponseEntity<List<StudentListResponse>> {
         val result = assignmentRepository.findAll()
             .filter {

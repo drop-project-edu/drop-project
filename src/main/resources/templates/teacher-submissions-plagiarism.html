@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 
-<head th:replace="layout/layout :: head (pageTitle='Drop Project - Plagiarism Report')">
+<head th:replace="~{layout/layout :: head (pageTitle='Drop Project - Plagiarism Report')}">
 </head>
 
 <body>
 
-<div th:replace="layout/layout :: header"></div>
+<div th:replace="~{layout/layout :: header}"></div>
 
 <!--/*@thymesVar id="assignment" type="org.dropProject.dao.Assignment"*/-->
 <!--/*@thymesVar id="comparisons" type="java.util.List<org.dropProject.services.PlagiarismComparison>"*/-->
@@ -68,7 +68,7 @@
 
 </div>
 
-<div th:replace="layout/layout :: footer"></div>
+<div th:replace="~{layout/layout :: footer}"></div>
 
 </body>
 </html>

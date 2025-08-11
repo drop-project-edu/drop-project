@@ -20,7 +20,7 @@
 package org.dropProject.dao
 
 import java.io.Serializable
-import javax.persistence.*
+import jakarta.persistence.*
 
 @Embeddable
 data class AssignmentTagsCompositeKey(

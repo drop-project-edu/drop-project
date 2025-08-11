@@ -48,7 +48,7 @@ import java.io.File
 import java.nio.file.Files
 import java.security.Principal
 import java.util.*
-import javax.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletRequest
 
 data class AssignmentImportResult(val type: String, val message: String, val redirectUrl: String)
 

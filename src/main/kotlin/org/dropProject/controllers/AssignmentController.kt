@@ -21,6 +21,7 @@ package org.dropProject.controllers
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import jakarta.persistence.EntityNotFoundException
 import org.apache.commons.io.FileUtils
 import org.dropProject.Constants.CACHE_ARCHIVED_ASSIGNMENTS_KEY
 import org.dropProject.PendingTaskError
@@ -54,9 +55,9 @@ import java.nio.file.StandardCopyOption
 import java.security.Principal
 import java.time.ZoneId
 import java.util.*
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
-import javax.validation.Valid
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
+import jakarta.validation.Valid
 
 /**
  * AssignmentController contains MVC controller functions that handle requests related with [Assignment]s
@@ -258,9 +259,11 @@ class AssignmentController(
             val assignmentId = assignmentForm.assignmentId ?:
             throw IllegalArgumentException("Trying to update an assignment without id")
 
-            val existingAssignment = assignmentRepository.getById(assignmentId).also {
-                it.tagsStr = assignmentService.getTagsStr(it)
-            }
+            val existingAssignment = assignmentRepository.findById(assignmentId)
+                .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
+                .also {
+                    it.tagsStr = assignmentService.getTagsStr(it)
+                }
 
             if (existingAssignment.gitRepositoryUrl != assignmentForm.gitRepositoryUrl) {
                 LOG.warn("[${assignmentId}] Git repository cannot be changed")

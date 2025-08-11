@@ -209,7 +209,7 @@ class GitSubmissionControllerTests {
                 "git@github.com:drop-project-edu/sampleJavaSubmission.git", "student1")
 
         /*** GET /buildReport ***/
-        val reportResult = this.mvc.perform(get("/buildReport/1"))
+        val reportResult = this.mvc.perform(get("/buildReport/1").with(user(STUDENT_1)))
                 .andExpect(status().isOk)
                 .andExpect(model().attribute("gitRepository", "https://github.com/drop-project-edu/sampleJavaSubmission"))
                 .andExpect(model().attribute("gitRepositoryWithHash", "https://github.com/drop-project-edu/sampleJavaSubmission/tree/88d14eac0debdc0baf8e3592d4744ce4979f3fd8"))
@@ -232,7 +232,7 @@ class GitSubmissionControllerTests {
                 .andExpect(header().string("Location", "/buildReport/2"))
 
         /*** GET /submissions/1 ***/
-        this.mvc.perform(get("/submissions/?assignmentId=${defaultAssignmentId}&groupId=1")
+        this.mvc.perform(get("/submissions?assignmentId=${defaultAssignmentId}&groupId=1")
                 .with(user(TEACHER_1)))
                 .andExpect(status().isOk())
 

@@ -27,16 +27,15 @@ import org.dropProject.security.DropProjectSecurityConfig
 import org.dropProject.security.PersonalTokenAuthenticationManager
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
-import org.springframework.core.io.ResourceLoader
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder
+import org.springframework.core.annotation.Order
+import org.springframework.security.authentication.AuthenticationManager
+import org.springframework.security.authentication.ProviderManager
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
-import org.springframework.security.core.GrantedAuthority
-import org.springframework.security.core.authority.SimpleGrantedAuthority
-import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper
-import org.springframework.security.oauth2.core.user.OAuth2UserAuthority
+import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken
 import org.springframework.security.web.csrf.CsrfFilter
@@ -49,13 +48,22 @@ import org.springframework.security.web.util.matcher.OrRequestMatcher
 class LTIWebSecurityConfig(
     @Qualifier("dpRegistrationService") val registrationService: RegistrationService,
     val toolDefinitionBean: ToolDefinitionBean,
-    val manager: PersonalTokenAuthenticationManager): DropProjectSecurityConfig(manager) {
+    val manager: PersonalTokenAuthenticationManager,
+    val ltiAuthenticationUserDetailsService: LTIAuthenticationUserDetailsService<PreAuthenticatedAuthenticationToken>
+) : DropProjectSecurityConfig(manager) {
 
-    protected fun getPreAuthFilter(): LTIProcessingFilter {
+    @Bean
+    @Order(1)
+    fun ltiFilterChain(http: HttpSecurity, @Qualifier("ltiAuthenticationManager") authManager: AuthenticationManager): SecurityFilterChain {
+        configure(http)
         val preAuthFilter = LTIProcessingFilter(registrationService, toolDefinitionBean)
         preAuthFilter.setCheckForPrincipalChanges(true)
-        preAuthFilter.setAuthenticationManager(authenticationManager())
-        return preAuthFilter
+        preAuthFilter.setAuthenticationManager(authManager)
+
+        http.addFilterBefore(preAuthFilter, CsrfFilter::class.java)
+            .addFilterAfter(oidcFilter(), preAuthFilter.javaClass)
+
+        return http.build()
     }
 
     private val OIDC_LAUNCH_URL = "/oidclaunch"
@@ -71,19 +79,11 @@ class LTIWebSecurityConfig(
         return result
     }
 
-    override fun configure(http: HttpSecurity) {
-        super.configure(http)
-        val preAuthFilter = getPreAuthFilter()
-        http.addFilterBefore(preAuthFilter, CsrfFilter::class.java)
-            .addFilterAfter(oidcFilter(), preAuthFilter.javaClass)
-    }
-
-    @Autowired
-    fun configureGlobal(auth: AuthenticationManagerBuilder,
-                        ltiAuthenticationUserDetailsService: LTIAuthenticationUserDetailsService<PreAuthenticatedAuthenticationToken>) {
+    @Bean
+    fun ltiAuthenticationManager(ltiAuthenticationUserDetailsService: LTIAuthenticationUserDetailsService<PreAuthenticatedAuthenticationToken>): AuthenticationManager {
         val authenticationProvider = PreAuthenticatedAuthenticationProvider()
         authenticationProvider.setPreAuthenticatedUserDetailsService(ltiAuthenticationUserDetailsService)
-        auth.authenticationProvider(authenticationProvider)
+        return ProviderManager(authenticationProvider)
     }
 
     private fun oidcFilter(): OIDCFilter {
@@ -95,7 +95,4 @@ class LTIWebSecurityConfig(
         )
         return oidcFilter
     }
-
-
-
 }

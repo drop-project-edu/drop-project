@@ -22,7 +22,7 @@ package org.dropProject.dao
 import com.fasterxml.jackson.annotation.JsonView
 import org.dropProject.data.JSONViews
 import java.util.HashSet
-import javax.persistence.*
+import jakarta.persistence.*
 
 /**
  * Represents a set of [Author]s (for example, students) that interact with Drop Project as a group.

@@ -8,7 +8,7 @@
 
 <body>
 <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.2/css/bootstrap-select.css">
-<div th:replace="layout/layout :: header"></div>
+<div th:replace="~{layout/layout :: header}"></div>
 
 <div class="container" style="max-width: 900px">
 
@@ -47,10 +47,10 @@
 
             <td th:if="${!archived and assignment.lastSubmissionDate != null}" th:text="${#dates.format(assignment.lastSubmissionDate, 'dd/MMM HH:mm')}"
                 th:title="${#dates.format(assignment.lastSubmissionDate, 'dd/MM/yy HH:mm')}"
-                th:data-order="${assignment.lastSubmissionDate.time}" class="text-center"></td>
+                th:data-order="${assignment.getLastSubmissionDateAsTimestamp()}" class="text-center"></td>
 
             </td><td th:if="${archived and assignment.lastSubmissionDate != null}" th:text="${#dates.format(assignment.lastSubmissionDate, 'dd/MM/yy')}"
-                     th:data-order="${assignment.lastSubmissionDate.time}" class="text-center"></td>
+                     th:data-order="${assignment.getLastSubmissionDateAsTimestamp()}" class="text-center"></td>
 
             <td th:if="${assignment.lastSubmissionDate == null}">-</td>
             <td th:if="${!archived}" class="text-center" th:data-order="${assignment.active}">
@@ -121,7 +121,7 @@
     </div>
 </div>
 
-<div th:replace="layout/layout :: footer"></div>
+<div th:replace="~{layout/layout :: footer}"></div>
 
 <script src="//cdn.jsdelivr.net/npm/bootstrap-confirmation2@2.4.2/bootstrap-confirmation.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.2/js/bootstrap-select.js"></script>

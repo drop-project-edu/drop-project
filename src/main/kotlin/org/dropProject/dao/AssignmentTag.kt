@@ -19,7 +19,7 @@
  */
 package org.dropProject.dao
 
-import javax.persistence.*
+import jakarta.persistence.*
 
 /**
  * Represents a "tag" used to categorize [Assignment]s. It is mostly used for filtering purposes. It might take any

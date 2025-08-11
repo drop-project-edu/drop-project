@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 
-<head th:replace="layout/layout :: head (pageTitle='Drop Project - Git submission')">
+<head th:replace="~{layout/layout :: head (pageTitle='Drop Project - Git submission')}">
 </head>
 
 <body>
 
-<div th:replace="layout/layout :: header"></div>
+<div th:replace="~{layout/layout :: header}"></div>
 
 <!--/*@thymesVar id="assignment" type="org.dropProject.dao.Assignment"*/-->
 <!--/*@thymesVar id="gitSubmission" type="org.dropProject.dao.GitSubmission"*/-->
@@ -118,7 +118,7 @@
 
 </div>
 
-<div th:replace="layout/layout :: footer"></div>
+<div th:replace="~{layout/layout :: footer}"></div>
 
 <script>
     $(function () {

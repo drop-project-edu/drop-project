@@ -51,8 +51,8 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.security.Principal
 import java.util.*
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
 
 /**
  * ReportController contains MVC controller functions to handle requests related with submission reports
@@ -179,7 +179,7 @@ class ReportController(
         model["gitRepositoryWithHash"] = buildReport.gitRepositoryWithHash
         model["readmeHTML"] = buildReport.readmeHtml
         model["error"] = buildReport.error
-        model["autoRefresh"] = buildReport.autoRefresh
+        model["autoRefresh"] = buildReport.isValidating
         model["summary"] = buildReport.summary
         model["structureErrors"] = buildReport.structureErrors
         model["authors"] = buildReport.authors

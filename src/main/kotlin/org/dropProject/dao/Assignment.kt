@@ -28,7 +28,7 @@ import org.dropProject.extensions.format
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.services.AssignmentInstructions
 import java.util.*
-import javax.persistence.*
+import jakarta.persistence.*
 
 val formatter = "dd MMM HH:mm"
 
@@ -209,7 +209,9 @@ data class Assignment(
         return "$id - $name"
     }
 
-
+    fun getLastSubmissionDateAsTimestamp(): Long {
+        return lastSubmissionDate?.time ?: 0
+    }
 
     fun linkToGithub(): String? {
         if (gitRepositoryPrivKey == null) {

@@ -21,7 +21,7 @@ package org.dropProject.dao
 
 import com.fasterxml.jackson.annotation.JsonView
 import org.dropProject.data.JSONViews
-import javax.persistence.*
+import jakarta.persistence.*
 import kotlin.jvm.Transient
 
 /**

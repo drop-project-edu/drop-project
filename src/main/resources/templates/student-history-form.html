@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <html lang="en">
-<head th:replace="layout/layout :: head (pageTitle='Drop Project - Student History / Tracker 3000')">
+<head th:replace="~{layout/layout :: head (pageTitle='Drop Project - Student History / Tracker 3000')}">
 </head>
 <body>
 
-<div th:replace="layout/layout :: header"></div>
+<div th:replace="~{layout/layout :: header}"></div>
 
 <div class="container" style="max-width: 900px; margin-bottom: 65px">
     <div th:if="${message}">
@@ -32,7 +32,7 @@
 
 </div>
 
-<div th:replace="layout/layout :: footer"></div>
+<div th:replace="~{layout/layout :: footer}"></div>
 <script src="https://cdn.jsdelivr.net/gh/xcash/bootstrap-autocomplete@v2.3.5/dist/latest/bootstrap-autocomplete.min.js"></script>
 <script>
     $(document).ready(function() {

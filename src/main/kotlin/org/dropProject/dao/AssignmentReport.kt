@@ -20,7 +20,7 @@
 package org.dropProject.dao
 
 import org.dropProject.services.AssignmentValidator
-import javax.persistence.*
+import jakarta.persistence.*
 
 /**
  * Represents a report of information that was generated during an [Assignment]'s validation. This information will be

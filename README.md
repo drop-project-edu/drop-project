@@ -123,7 +123,7 @@ The test coverage report will be available in the following folder:
 
 Some services are accessible through an API, protected by personal tokens.
 
-Documentation: [https://playground.dropproject.org/dp/swagger-ui/](https://playground.dropproject.org/dp/swagger-ui/)
+Documentation: [https://playground.dropproject.org/dp/swagger-ui.html](https://playground.dropproject.org/dp/swagger-ui.html)
 
 ## Plugin
 

@@ -19,41 +19,35 @@
  */
 package org.dropProject
 
+import io.swagger.v3.oas.models.Components
+import io.swagger.v3.oas.models.OpenAPI
+import io.swagger.v3.oas.models.info.Info
+import io.swagger.v3.oas.models.security.SecurityRequirement
+import io.swagger.v3.oas.models.security.SecurityScheme
+import org.springdoc.core.models.GroupedOpenApi
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import springfox.documentation.builders.PathSelectors
-import springfox.documentation.builders.RequestHandlerSelectors
-import springfox.documentation.service.ApiInfo
-import springfox.documentation.service.BasicAuth
-import springfox.documentation.service.Contact
-import springfox.documentation.spi.DocumentationType
-import springfox.documentation.spring.web.plugins.Docket
-import springfox.documentation.swagger2.annotations.EnableSwagger2
-import java.security.Principal
-import javax.servlet.ServletContext
 
 /**
  * Configuration of Swagger, responsible for generating the API documentation
- * accessible on <HOST_URL>/swagger-ui/
+ * accessible on <HOST_URL>/swagger-ui.html
  */
 @Configuration
-@EnableSwagger2
 class SwaggerConfig {
 
     @Bean
-    fun api(servletContext: ServletContext): Docket {
-        return Docket(DocumentationType.SWAGGER_2)
-            .select()
-            .apis(RequestHandlerSelectors.any())
-            .paths(PathSelectors.ant("${servletContext.contextPath}/api/**"))
-            .build()
-            .apiInfo(metadata())
-            .securitySchemes(listOf(BasicAuth("basicAuth")))
-            .ignoredParameterTypes(Principal::class.java)
+    fun customOpenAPI(): OpenAPI {
+        return OpenAPI()
+            .components(Components().addSecuritySchemes("basicScheme", SecurityScheme().type(SecurityScheme.Type.HTTP).scheme("basic")))
+            .info(Info().title("Drop Project API").version("1").description("All endpoints of the Drop Project API"))
+            .addSecurityItem(SecurityRequirement().addList("basicScheme"))
     }
 
-    fun metadata() = ApiInfo("Drop Project API", "All endpoints of the Drop Project API", "1", "#",
-        Contact("Pedro Alves", "https://github.com/drop-project-edu/drop-project", "pedro.alves@ulusofona.pt"),
-        "Apache 2.0", "http://www.apache.org/licenses/LICENSE-2.0",
-        emptyList())
+    @Bean
+    fun studentAndTeacherApi(): GroupedOpenApi {
+        return GroupedOpenApi.builder()
+            .group("student-teacher-public")
+            .pathsToMatch("/api/student/**", "/api/teacher/**")
+            .build()
+    }
 }

@@ -27,7 +27,7 @@ import org.dropProject.services.JUnitMethodResult
 import java.math.BigDecimal
 import java.text.SimpleDateFormat
 import java.util.*
-import javax.persistence.*
+import jakarta.persistence.*
 
 /**
  * Enum represening the possible statuses that a Submission can be in.
@@ -186,6 +186,10 @@ data class Submission(
         if (!dontUpdateStatusDate) {
             this.statusDate = Date()
         }
+    }
+
+    fun getSubmissionDateAsTimestamp(): Long {
+        return submissionDate.time
     }
 
     fun submitterShortName(): String {
