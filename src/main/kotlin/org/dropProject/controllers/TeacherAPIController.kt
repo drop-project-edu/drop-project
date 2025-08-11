@@ -77,11 +77,6 @@ class TeacherAPIController(
     )
     fun getCurrentAssignments(principal: Principal): ResponseEntity<List<Assignment>> {
         val assignments = assignmentService.getMyAssignments(principal, archived = false)
-
-        assignments.forEach {
-            it.tagsStr = assignmentService.getTagsStr(it)
-        }
-
         return ResponseEntity.ok(assignments)
     }
 
@@ -215,10 +210,9 @@ class TeacherAPIController(
                 !(principal.realName() != it.ownerUserId && acl.find { a -> a.userId == principal.realName() } == null)
             }
             .filter {
-                it.tagsStr = assignmentService.getTagsStr(it)
-                it.name.lowercase().contains(query.lowercase())
-                        || it.id.lowercase().contains(query.lowercase())
-                        || it.tagsStr?.map { t -> t.lowercase() }?.contains(query.lowercase()) == true
+                (it.name.lowercase().contains(query.lowercase())
+                        || it.id.lowercase().contains(query.lowercase()))
+                        || it.tagsStr.map { t -> t.lowercase() }.contains(query.lowercase())
             }
             .distinctBy { it.id }
             .map { StudentListResponse(it.id, it.name) }

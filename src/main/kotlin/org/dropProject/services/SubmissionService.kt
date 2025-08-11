@@ -19,6 +19,7 @@
  */
 package org.dropProject.services
 
+import jakarta.persistence.EntityNotFoundException
 import org.apache.commons.io.FileUtils
 import org.dropProject.Constants
 import org.dropProject.controllers.InvalidProjectGroupException
@@ -246,9 +247,9 @@ class SubmissionService(
             if (assignment.projectGroupRestrictions != null) {
                 val restrictions = assignment.projectGroupRestrictions!!
                 if (authors.size !in restrictions.minGroupSize .. (restrictions.maxGroupSize ?: 50) &&
-                    restrictions.exceptionsAsList()?.contains(principal.realName()) != true) {
+                    !restrictions.exceptionsAsList().contains(principal.realName())) {
                     throw InvalidProjectGroupException(i18n.getMessage("student.submit.invalidGroup",
-                        arrayOf(restrictions.minGroupSize, restrictions.maxGroupSize ?: ""), currentLocale))
+                        arrayOf(restrictions.minGroupSize, restrictions.maxGroupSize ?: 50), currentLocale))
                 }
             }
 
@@ -618,7 +619,8 @@ class SubmissionService(
 
     fun fillIndicatorsFor(submissions: List<Submission>) {
         for (submission in submissions) {
-            val assignment = assignmentRepository.getById(submission.assignmentId)
+            val assignment = assignmentRepository.findById(submission.assignmentId)
+                .orElseThrow { EntityNotFoundException("Assignment ${submission.assignmentId} not found") }
             submission.reportElements = submissionReportRepository.findBySubmissionId(submission.id)
             submission.overdue = assignment.overdue(submission)
             submission.buildReport?.let {

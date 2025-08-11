@@ -27,7 +27,6 @@ import org.dropProject.dao.SubmissionStatus
 import org.dropProject.forms.SubmissionMethod
 import org.dropProject.repository.AssignmentRepository
 import org.dropProject.repository.AssignmentTagRepository
-import org.dropProject.repository.AssignmentTagsRepository
 import org.dropProject.repository.SubmissionRepository
 import org.dropProject.services.AssignmentService
 import org.junit.Assert.assertEquals
@@ -70,9 +69,6 @@ class AdminControllerTests {
 
     @Autowired
     lateinit var assignmentTagRepository : AssignmentTagRepository
-
-    @Autowired
-    lateinit var assignmentTagsRepository : AssignmentTagsRepository
 
     @Autowired
     lateinit var assignmentService : AssignmentService
@@ -186,7 +182,5 @@ class AdminControllerTests {
         // Verify that the tag was deleted
         assertEquals(1, assignmentTagRepository.count()) // Only one tag should remain
         assertEquals("tag1", assignmentTagRepository.findAll()[0].name)
-        assertEquals(1, assignmentTagsRepository.count())
-
     }
 }

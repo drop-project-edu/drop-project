@@ -753,7 +753,7 @@ class AssignmentControllerTests {
             id = "testJavaProj", name = "Test Project (for automatic tests)",
             packageName = "org.testProj", ownerUserId = "teacher1",
             submissionMethod = SubmissionMethod.UPLOAD, active = false, gitRepositoryUrl = "git://dummyRepo",
-            gitRepositoryFolder = "testJavaProj", tagsStr = emptyList()
+            gitRepositoryFolder = "testJavaProj"
         )
         assignmentRepository.save(assignment)
         assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student1"))

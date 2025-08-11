@@ -41,4 +41,16 @@ data class AssignmentTestMethod(
 
         val testClass: String,
         val testMethod: String
-)
+) {
+        override fun equals(other: Any?): Boolean {
+                if (this === other) return true
+                if (javaClass != other?.javaClass) return false
+
+                other as AssignmentTestMethod
+
+                return id == other.id
+        }
+
+        override fun hashCode() = id.hashCode()
+
+}

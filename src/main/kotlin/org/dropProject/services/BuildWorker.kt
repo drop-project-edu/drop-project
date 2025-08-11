@@ -19,6 +19,7 @@
  */
 package org.dropProject.services
 
+import jakarta.persistence.EntityNotFoundException
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -272,7 +273,8 @@ class BuildWorker(
 
         submission.gitSubmissionId?.let {
             gitSubmissionId ->
-                val gitSubmission = gitSubmissionRepository.getById(gitSubmissionId)
+                val gitSubmission = gitSubmissionRepository.findById(gitSubmissionId)
+                    .orElseThrow { EntityNotFoundException("GitSubmission ${gitSubmissionId} not found") }
                 gitSubmission.lastSubmissionId = submission.id
         }
 

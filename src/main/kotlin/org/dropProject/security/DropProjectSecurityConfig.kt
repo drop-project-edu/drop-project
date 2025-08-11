@@ -64,7 +64,7 @@ open class DropProjectSecurityConfig(val apiAuthenticationManager: PersonalToken
             // disable csrf in case someone needs to access "/" by POST (e.g. Moodle lti)
             // and for all API calls
             .csrf().ignoringRequestMatchers("/", "/api/**").and()
-            .authorizeRequests()
+            .authorizeHttpRequests()
             .requestMatchers(
                 *getPublicUrls().toTypedArray()
             ).permitAll()

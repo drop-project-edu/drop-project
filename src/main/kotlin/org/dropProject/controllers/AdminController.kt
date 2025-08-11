@@ -24,7 +24,6 @@ import org.dropProject.dao.AssignmentTag
 import org.dropProject.dao.SubmissionStatus
 import org.dropProject.forms.AdminDashboardForm
 import org.dropProject.repository.AssignmentTagRepository
-import org.dropProject.repository.AssignmentTagsRepository
 import org.dropProject.repository.SubmissionRepository
 import org.dropProject.services.MavenInvoker
 import org.slf4j.LoggerFactory
@@ -35,6 +34,7 @@ import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.mvc.support.RedirectAttributes
 import org.springframework.transaction.annotation.Transactional
 import jakarta.validation.Valid
+import org.dropProject.repository.AssignmentRepository
 
 /**
  * AdminController contains MVC controller functions that handle requests related with DP's administration
@@ -44,8 +44,8 @@ import jakarta.validation.Valid
 @RequestMapping("/admin")
 class AdminController(val mavenInvoker: MavenInvoker,
                       val submissionRepository: SubmissionRepository,
+                      val assignmentRepository: AssignmentRepository,
                       val assignmentTagRepository: AssignmentTagRepository,
-                      val assignmentTagsRepository: AssignmentTagsRepository,
                       val asyncConfigurer: AsyncConfigurer) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
@@ -122,7 +122,7 @@ class AdminController(val mavenInvoker: MavenInvoker,
     @GetMapping("/tags")
     fun showTags(model: ModelMap): String {
         val tagsWithUsage: List<Pair<AssignmentTag,Long>> = assignmentTagRepository.findAll().map { tag ->
-            val usageCount = assignmentTagsRepository.countAssignmentTagsByTagId(tag.id) // Assuming 'assignments' is a list of associated entities
+            val usageCount = assignmentRepository.countByTags_Id(tag.id)
             Pair(tag, usageCount)
         }
 
@@ -134,14 +134,24 @@ class AdminController(val mavenInvoker: MavenInvoker,
     @PostMapping("/deleteTag")
     @Transactional
     fun deleteTag(@RequestParam("tagId") tagId: Long, redirectAttributes: RedirectAttributes): String {
-        val tag = assignmentTagRepository.findById(tagId)
-        if (tag.isPresent) {
-            assignmentTagsRepository.removeAllByTagId(tag.get().id)
-            assignmentTagRepository.delete(tag.get())
-            redirectAttributes.addFlashAttribute("message", "Tag deleted successfully.")
-        } else {
+        val tag = assignmentTagRepository.findById(tagId).orElse(null)
+        if (tag == null) {
             redirectAttributes.addFlashAttribute("error", "Tag not found.")
+            return "redirect:/admin/tags"
         }
+
+        // Unlink from all assignments to avoid FK violations on join table
+        // Because we are in a transaction, accessing the lazy collection is safe
+        val affected = mutableListOf<String>()
+        for (assignment in tag.assignments.toList()) { // copy to avoid concurrent modification
+            assignment.tags.remove(tag)
+            affected += assignment.id
+        }
+
+        // Now delete the tag itself
+        assignmentTagRepository.delete(tag)
+
+        redirectAttributes.addFlashAttribute("message", "Tag deleted successfully.")
         return "redirect:/admin/tags"
     }
 }

@@ -180,9 +180,13 @@ data class Assignment(
     @Transient
     var authorizedStudentIds: List<String>? = null,
 
-    @JsonView(JSONViews.TeacherAPI::class)
-    @Transient
-    var tagsStr: List<String>? = null,
+    @ManyToMany(fetch = FetchType.LAZY, cascade = [])
+    @JoinTable(
+        name = "AssignmentTags",
+        joinColumns = [JoinColumn(name = "assignmentId", referencedColumnName = "id")],
+        inverseJoinColumns = [JoinColumn(name = "tagId", referencedColumnName = "id")]
+    )
+    var tags: MutableSet<AssignmentTag> = mutableSetOf(),
 
     @JsonView(JSONViews.StudentAPI::class)
     @Transient
@@ -192,6 +196,11 @@ data class Assignment(
     @JoinColumn(name = "project_group_restrictions_id")
     var projectGroupRestrictions: ProjectGroupRestrictions? = null,
 ) {
+
+    @get:JsonView(JSONViews.TeacherAPI::class)
+    @get:Transient
+    val tagsStr: List<String>
+        get() = tags.map { it.name }
 
     fun dueDateFormatted(): String? {
         return dueDate?.format(formatter)

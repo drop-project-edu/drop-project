@@ -19,6 +19,7 @@
  */
 package org.dropProject.services
 
+import jakarta.persistence.EntityNotFoundException
 import org.dropProject.dao.Assignment
 import org.dropProject.dao.Author
 import org.dropProject.dao.ProjectGroup
@@ -48,7 +49,8 @@ class ProjectGroupService(val projectGroupRepository: ProjectGroupRepository,
      fun searchExistingProjectGroupOrCreateNew(authors: List<AuthorDetails>): ProjectGroup {
         val groups = projectGroupRepository.getGroupsForAuthor(authors.first().number)
         for (group in groups) {
-            val groupWithAuthors = projectGroupRepository.getById(group.id) // need this to fetch all the authors of this group
+            val groupWithAuthors = projectGroupRepository.findById(group.id) // need this to fetch all the authors of this group
+                .orElseThrow { EntityNotFoundException("ProjectGroup ${group.id} not found") }
             if (groupWithAuthors.authors.size == authors.size &&
                 groupWithAuthors.authors.map { it.userId }.containsAll(authors.map { it.number })) {
                 // it's the same group

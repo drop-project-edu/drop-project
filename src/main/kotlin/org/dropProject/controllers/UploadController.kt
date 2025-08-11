@@ -20,6 +20,7 @@
 package org.dropProject.controllers
 
 import edu.uoc.elc.lti.tool.Tool
+import jakarta.persistence.EntityNotFoundException
 import org.springframework.stereotype.Controller
 import org.springframework.ui.ModelMap
 import org.springframework.validation.BindingResult
@@ -138,7 +139,8 @@ class UploadController(
         // add all the assignments for which the principal is authorized
         val assignees = assigneeRepository.findByAuthorUserId(principal.realName())
         for (assignee in assignees) {
-            val assignment = assignmentRepository.getById(assignee.assignmentId)
+            val assignment = assignmentRepository.findById(assignee.assignmentId)
+                .orElseThrow { EntityNotFoundException("Assignment ${assignee.assignmentId} not found") }
             if (assignment.active == true) {
                 assignments.add(assignment)
             }
@@ -151,10 +153,10 @@ class UploadController(
         }
 
         // add all public assignments
-        assignments.addAll(assignmentRepository.findAllByActiveIsAndVisibility(true, AssignmentVisibility.PUBLIC))
+        assignments.addAll(assignmentRepository.findAllByVisibilityAndActiveTrue(AssignmentVisibility.PUBLIC))
 
         if (request.isUserInRole("TEACHER")) {
-            assignments.addAll(assignmentRepository.findByOwnerUserId(principal.realName()))
+            assignments.addAll(assignmentRepository.findAllByOwnerUserId(principal.realName()))
         }
 
         val filteredAssigments = assignments.filter { !it.archived }.sortedBy { it.id }
@@ -316,7 +318,8 @@ class UploadController(
 
         val submission = submissionRepository.findById(submissionId).orElse(null) ?: throw SubmissionNotFoundException(submissionId)
 
-        val assignment = assignmentRepository.getById(submission.assignmentId)
+        val assignment = assignmentRepository.findById(submission.assignmentId)
+            .orElseThrow { EntityNotFoundException("Assignment ${submission.assignmentId} not found") }
 
         // create another submission that is a clone of this one, to preserve the original submission
         val rebuiltSubmission = Submission(submissionId = submission.submissionId,
@@ -425,7 +428,8 @@ class UploadController(
                                                  model: ModelMap, principal: Principal,
                                                  request: HttpServletRequest): String {
 
-        val assignment = assignmentRepository.getById(assignmentId)
+        val assignment = assignmentRepository.findById(assignmentId)
+            .orElseThrow { EntityNotFoundException("Assignment ${assignmentId} not found") }
 
         if (!request.isUserInRole("TEACHER")) {
 
@@ -499,8 +503,11 @@ class UploadController(
     fun connectSubmissionToGitRepository(@PathVariable gitSubmissionId: String, redirectAttributes: RedirectAttributes,
                                          model: ModelMap, principal: Principal): String {
 
-        val gitSubmission = gitSubmissionRepository.getById(gitSubmissionId.toLong())
-        val assignment = assignmentRepository.getById(gitSubmission.assignmentId)
+        val gitSubmission = gitSubmissionRepository.findById(gitSubmissionId.toLong())
+            .orElseThrow { EntityNotFoundException("GitSubmission ${gitSubmissionId} not found") }
+
+        val assignment = assignmentRepository.findById(gitSubmission.assignmentId)
+            .orElseThrow { EntityNotFoundException("Assignment ${gitSubmission.assignmentId} not found") }
 
         if (!gitSubmission.connected) {
 
@@ -710,8 +717,12 @@ class UploadController(
 
         LOG.info("[${principal.realName()}] Reset git connection")
 
-        val gitSubmission = gitSubmissionRepository.getById(gitSubmissionId.toLong())
-        val assignment = assignmentRepository.getById(gitSubmission.assignmentId)
+        val gitSubmission = gitSubmissionRepository.findById(gitSubmissionId.toLong())
+            .orElseThrow { EntityNotFoundException("GitSubmission ${gitSubmissionId} not found") }
+
+        val assignment = assignmentRepository.findById(gitSubmission.assignmentId)
+            .orElseThrow { EntityNotFoundException("Assignment ${gitSubmission.assignmentId} not found") }
+
         val repositoryUrl = gitSubmission.gitRepositoryUrl
 
         if (!principal.realName().equals(gitSubmission.submitterUserId)) {

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 
-<head th:if="${!archived}" th:replace="layout/layout :: head (pageTitle='Drop Project - My assignments')">
+<head th:if="${!archived}" th:replace="~{layout/layout :: head (pageTitle='Drop Project - My assignments')}">
 </head>
-<head th:if="${archived}" th:replace="layout/layout :: head (pageTitle='Drop Project - My archived assignments')">
+<head th:if="${archived}" th:replace="~{layout/layout :: head (pageTitle='Drop Project - My archived assignments')}">
 </head>
 
 <body>

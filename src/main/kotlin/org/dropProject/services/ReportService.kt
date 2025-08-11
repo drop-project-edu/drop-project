@@ -21,6 +21,7 @@ package org.dropProject.services
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonView
+import jakarta.persistence.EntityNotFoundException
 import org.dropProject.AsyncConfigurer
 import org.dropProject.dao.*
 import org.dropProject.data.AuthorDetails
@@ -114,7 +115,8 @@ class ReportService(
             fullBuildReport.submission = submission
             submission.gitSubmissionId?.let {
                     gitSubmissionId ->
-                val gitSubmission = gitSubmissionRepository.getById(gitSubmissionId)
+                val gitSubmission = gitSubmissionRepository.findById(gitSubmissionId)
+                    .orElseThrow { EntityNotFoundException("GitSubmission ${gitSubmissionId} not found") }
                 val submissionGitInfo = submissionGitInfoRepository.getBySubmissionId(submissionId)
                 fullBuildReport.gitSubmission = gitSubmission
                 fullBuildReport.gitRepository = gitClient.convertSSHGithubURLtoHttpURL(gitSubmission.gitRepositoryUrl)

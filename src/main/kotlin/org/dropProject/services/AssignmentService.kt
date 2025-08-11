@@ -22,6 +22,8 @@ package org.dropProject.services
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import jakarta.persistence.EntityNotFoundException
+import jakarta.servlet.http.HttpServletRequest
 import org.apache.commons.io.FileUtils
 import org.dropProject.Constants
 import org.dropProject.PendingTasks
@@ -48,7 +50,6 @@ import java.io.File
 import java.nio.file.Files
 import java.security.Principal
 import java.util.*
-import jakarta.servlet.http.HttpServletRequest
 
 data class AssignmentImportResult(val type: String, val message: String, val redirectUrl: String)
 
@@ -67,7 +68,6 @@ class AssignmentService(
     val assignmentTestMethodRepository: AssignmentTestMethodRepository,
     val submissionReportRepository: SubmissionReportRepository,
     val assignmentTagRepository: AssignmentTagRepository,
-    val assignmentTagsRepository: AssignmentTagsRepository,
     val buildReportRepository: BuildReportRepository,
     val jUnitReportRepository: JUnitReportRepository,
     val jacocoReportRepository: JacocoReportRepository,
@@ -109,15 +109,15 @@ class AssignmentService(
         key = "#principal.name",
         condition = "#archived==true")
     fun getMyAssignments(principal: Principal, archived: Boolean): List<Assignment> {
-        val assignmentsOwns = assignmentRepository.findByOwnerUserId(principal.realName())
+        val assignmentsOwns = assignmentRepository.findAllByOwnerUserId(principal.realName())
         val assignmentsPublic = assignmentRepository.findAllByVisibility(AssignmentVisibility.PUBLIC)
 
         val assignmentsACL = assignmentACLRepository.findByUserId(principal.realName()).mapNotNull {
-            assignmentRepository.findByIdOrNull(it.assignmentId)
+            assignmentRepository.findById(it.assignmentId).orElse(null)
         }
 
         val assignmentsAssignee = assigneeRepository.findByAuthorUserId(principal.realName()).mapNotNull {
-            assignmentRepository.findByIdOrNull(it.assignmentId)
+            assignmentRepository.findById(it.assignmentId).orElse(null)
         }
 
         val assignments = HashSet<Assignment>()  // use HashSet to remove duplicates
@@ -127,11 +127,6 @@ class AssignmentService(
         assignments.addAll(assignmentsAssignee)
 
         val filteredAssigments = assignments.filter { it.archived == archived }.sortedBy { it.id }
-
-        for (assignment in filteredAssigments) {
-            assignment.tagsStr = getTagsStr(assignment)
-        }
-
         return filteredAssigments
     }
 
@@ -151,7 +146,9 @@ class AssignmentService(
     fun getAllSubmissionsForAssignment(assignmentId: String, principal: Principal, model: ModelMap,
                                        request: HttpServletRequest, includeTestDetails: Boolean = false,
                                        mode: String) {
-        val assignment = assignmentRepository.findById(assignmentId).get()
+        val assignment = assignmentRepository.findById(assignmentId)
+            .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
+
         model["assignment"] = assignment
 
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
@@ -536,7 +533,8 @@ class AssignmentService(
 
             // import all the original submission files
             if (originalSubmissionsFolder.exists()) {
-                val assignment = assignmentRepository.getById(assignmentId)
+                val assignment = assignmentRepository.findById(assignmentId)
+                    .orElseThrow { EntityNotFoundException("Assignment ${assignmentId} not found") }
                 when (assignment.submissionMethod) {
                     SubmissionMethod.UPLOAD -> FileUtils.copyDirectory(originalSubmissionsFolder, File(uploadSubmissionsRootLocation))
                     SubmissionMethod.GIT -> FileUtils.copyDirectory(originalSubmissionsFolder, File(gitSubmissionsRootLocation))
@@ -771,30 +769,10 @@ class AssignmentService(
         if (assignmentTag == null) {
             assignmentTag = AssignmentTag(name = tagName.trim().lowercase(Locale.getDefault()))
             assignmentTagRepository.save(assignmentTag)
-        } else {
-            if (assignmentTagsRepository.existsById(AssignmentTagsCompositeKey(assignment.id, assignmentTag.id))) {
-                return  // already exists, nothing to do here
-            }
         }
-
-        assignmentTagsRepository.save(AssignmentTags(assignment.id, assignmentTag.id))
-    }
-
-    /**
-     * Returns all the tags of the given assignment in a list of string
-     */
-    fun getTagsStr(assignment: Assignment) : List<String> {
-        val tagsStr = mutableListOf<String>()
-
-        val assignmentTagsAssociationList = assignmentTagsRepository.findByAssignmentId(assignment.id)
-        assignmentTagsAssociationList.forEach {
-            val assignmentTag = assignmentTagRepository.findByIdOrNull(it.tagId)
-            if (assignmentTag != null) {
-                tagsStr.add(assignmentTag.name)
-            }
-        }
-
-        return tagsStr
+        // attach via ManyToMany; Set prevents duplicates
+        assignment.tags.add(assignmentTag)
+        assignmentRepository.save(assignment)
     }
 
     /**
@@ -804,17 +782,19 @@ class AssignmentService(
      * and removes them from the global tags table
      */
     fun clearAllTags(assignment: Assignment, clearOrphans: Boolean = false) {
-        val assignmentTagsList = assignmentTagsRepository.findByAssignmentId(assignment.id)
-        val assignmentTagsIds = assignmentTagsList.map { it.tagId }
-        assignmentTagsRepository.deleteAll(assignmentTagsList)
+        // keep previous tag ids if we might remove orphans later
+        val previousTagIds: List<Long> = if (clearOrphans) assignment.tags.map { it.id } else emptyList()
 
-        if (clearOrphans) {
-            assignmentTagsIds.forEach {
-                if (assignmentTagsRepository.countAssignmentTagsByTagId(it) == 0L) {
-                    assignmentTagRepository.deleteById(it)
-                }
+        // Clear via the relationship; Hibernate will delete join rows
+        assignment.tags.clear()
+        assignmentRepository.save(assignment)
+
+        previousTagIds.forEach { tagId ->
+            if (assignmentRepository.countByTags_Id(tagId) == 0L) {
+                assignmentTagRepository.deleteById(tagId)
             }
         }
+
     }
 
     /**

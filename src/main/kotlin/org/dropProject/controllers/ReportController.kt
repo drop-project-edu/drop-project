@@ -19,6 +19,7 @@
  */
 package org.dropProject.controllers
 
+import jakarta.persistence.EntityNotFoundException
 import net.lingala.zip4j.ZipFile
 import net.lingala.zip4j.model.ZipParameters
 import net.lingala.zip4j.model.enums.CompressionLevel
@@ -606,9 +607,10 @@ class ReportController(
         model["group"] = group
         model["submissions"] = submissions
 
-        if (assignment.submissionMethod == SubmissionMethod.GIT && !submissions.isEmpty()) {
+        if (assignment.submissionMethod == SubmissionMethod.GIT && submissions.isNotEmpty()) {
             submissions[0].gitSubmissionId?.let { gitSubmissionId ->
-                val gitSubmission = gitSubmissionRepository.getById(gitSubmissionId)
+                val gitSubmission = gitSubmissionRepository.findById(gitSubmissionId)
+                    .orElseThrow { EntityNotFoundException("GitSubmission $gitSubmissionId not found") }
 
                 val repositoryFolder = File(gitSubmissionsRootLocation, gitSubmission.getFolderRelativeToStorageRoot())
                 val history = gitClient.getHistory(repositoryFolder)

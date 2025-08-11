@@ -261,9 +261,6 @@ class AssignmentController(
 
             val existingAssignment = assignmentRepository.findById(assignmentId)
                 .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
-                .also {
-                    it.tagsStr = assignmentService.getTagsStr(it)
-                }
 
             if (existingAssignment.gitRepositoryUrl != assignmentForm.gitRepositoryUrl) {
                 LOG.warn("[${assignmentId}] Git repository cannot be changed")
@@ -389,9 +386,8 @@ class AssignmentController(
     @Transactional(readOnly = true)  // because of assignment.tags forced loading
     fun getAssignmentDetail(@PathVariable assignmentId: String, model: ModelMap, principal: Principal, request: HttpServletRequest): String {
 
-        val assignment = assignmentRepository.getById(assignmentId).also {
-            it.tagsStr = assignmentService.getTagsStr(it)
-        }
+        val assignment = assignmentRepository.findById(assignmentId)
+            .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
 
         if (assignment.gitRepositoryPubKey != null && assignment.gitCurrentHash == null) {
             // assignment was not properly connected to git, redirect to the setup-git page
@@ -447,9 +443,8 @@ class AssignmentController(
     @Transactional(readOnly = true)  // because of assignment.tags
     fun getEditAssignmentForm(@PathVariable assignmentId: String, model: ModelMap, principal: Principal): String {
 
-        val assignment = assignmentRepository.getById(assignmentId).also {
-            it.tagsStr = assignmentService.getTagsStr(it)
-        }
+        val assignment = assignmentRepository.findById(assignmentId)
+            .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
 
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
@@ -528,9 +523,8 @@ class AssignmentController(
                                        principal: Principal): ResponseEntity<String> {
 
         // check that it exists
-        val assignment = assignmentRepository.getById(assignmentId).also {
-            it.tagsStr = assignmentService.getTagsStr(it)
-        }
+        val assignment = assignmentRepository.findById(assignmentId)
+            .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
 
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
@@ -599,9 +593,8 @@ class AssignmentController(
                                        @RequestParam(name = "reconnect", required = false) reconnect: Boolean = false,
                                        model: ModelMap, principal: Principal): String {
 
-        val assignment = assignmentRepository.getById(assignmentId).also {
-            it.tagsStr = assignmentService.getTagsStr(it)
-        }
+        val assignment = assignmentRepository.findById(assignmentId)
+            .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
 
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
@@ -650,9 +643,8 @@ class AssignmentController(
                                          redirectAttributes: RedirectAttributes,
                                          model: ModelMap, principal: Principal): String {
 
-        val assignment = assignmentRepository.getById(assignmentId).also {
-            it.tagsStr = assignmentService.getTagsStr(it)
-        }
+        val assignment = assignmentRepository.findById(assignmentId)
+            .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
 
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
@@ -763,9 +755,8 @@ class AssignmentController(
                          principal: Principal,
                          request: HttpServletRequest): String {
 
-        val assignment = assignmentRepository.getById(assignmentId).also {
-            it.tagsStr = assignmentService.getTagsStr(it)
-        }
+        val assignment = assignmentRepository.findById(assignmentId)
+            .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
 
         if (forceDelete && !request.isUserInRole("DROP_PROJECT_ADMIN")) {
             throw IllegalAccessException("Assignment can only be force-deleted by an admin")
@@ -868,9 +859,8 @@ class AssignmentController(
     fun toggleAssignmentStatus(@PathVariable assignmentId: String, redirectAttributes: RedirectAttributes,
                                principal: Principal): String {
 
-        val assignment = assignmentRepository.getById(assignmentId).also {
-            it.tagsStr = assignmentService.getTagsStr(it)
-        }
+        val assignment = assignmentRepository.findById(assignmentId)
+            .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
 
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
@@ -924,9 +914,8 @@ class AssignmentController(
                           principal: Principal): String {
 
         // check that it exists
-        val assignment = assignmentRepository.getById(assignmentId).also {
-            it.tagsStr = assignmentService.getTagsStr(it)
-        }
+        val assignment = assignmentRepository.findById(assignmentId)
+            .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
 
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
@@ -958,9 +947,8 @@ class AssignmentController(
                                   redirectAttributes: RedirectAttributes,
                                   principal: Principal): String {
 
-        val assignment = assignmentRepository.getById(assignmentId).also {
-            it.tagsStr = assignmentService.getTagsStr(it)
-        }
+        val assignment = assignmentRepository.findById(assignmentId)
+            .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
 
         val acl = assignmentACLRepository.findByAssignmentId(assignment.id)
 

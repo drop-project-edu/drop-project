@@ -102,31 +102,34 @@ class ZipService {
         val destinationFileFile = file.toFile()
         val destinationFolder = File(destinationFileFile.parent, destinationFileFile.nameWithoutExtension)
 
-        org.apache.commons.compress.archivers.zip.ZipFile(destinationFileFile).use { zipFile ->
-            zipFile.entries.iterator().forEachRemaining { entry ->
-                try {
-                    val outFile = File(destinationFolder, entry.getName())
-                    if (entry.isDirectory()) {
-                        outFile.mkdirs()
-                        outFile.setWritable(true) // Set directory writable
-                    } else {
-                        // Ensure parent directories exist
-                        File(outFile.parent).mkdirs()
-                        zipFile.getInputStream(entry).use { inputStream ->
-                            Files.newOutputStream(outFile.toPath()).use { outputStream ->
-                                val buffer = ByteArray(1024)
-                                var len: Int
-                                while ((inputStream.read(buffer).also { len = it }) > 0) {
-                                    outputStream.write(buffer, 0, len)
-                                }
+        val zipFile = org.apache.commons.compress.archivers.zip.ZipFile.builder()
+            .setFile(destinationFileFile)
+            .get()
+
+        zipFile.entries.iterator().forEachRemaining { entry ->
+            try {
+                val outFile = File(destinationFolder, entry.getName())
+                if (entry.isDirectory) {
+                    outFile.mkdirs()
+                    outFile.setWritable(true) // Set directory writable
+                } else {
+                    // Ensure parent directories exist
+                    File(outFile.parent).mkdirs()
+                    zipFile.getInputStream(entry).use { inputStream ->
+                        Files.newOutputStream(outFile.toPath()).use { outputStream ->
+                            val buffer = ByteArray(1024)
+                            var len: Int
+                            while ((inputStream.read(buffer).also { len = it }) > 0) {
+                                outputStream.write(buffer, 0, len)
                             }
                         }
                     }
-                } catch (e: IOException) {
-                    throw StorageException("Failed to unzip ${originalFilename}", e)
                 }
+            } catch (e: IOException) {
+                throw StorageException("Failed to unzip ${originalFilename}", e)
             }
         }
+
 
         return destinationFolder
     }

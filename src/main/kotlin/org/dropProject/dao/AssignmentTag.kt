@@ -19,6 +19,7 @@
  */
 package org.dropProject.dao
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import jakarta.persistence.*
 
 /**
@@ -39,5 +40,13 @@ data class AssignmentTag(
     val name: String,  // tag name
 
     @Transient
-    var selected: Boolean = false  // used for the filter in the assignments' list
-)
+    var selected: Boolean = false,  // used for the filter in the assignments' list
+
+    @ManyToMany(mappedBy = "tags")
+    @JsonIgnore // avoid recursion in APIs
+    var assignments: MutableSet<Assignment> = mutableSetOf()
+) {
+    override fun equals(other: Any?) = other is AssignmentTag && id == other.id
+    override fun hashCode() = id.hashCode()
+    override fun toString(): String = "AssignmentTag(id=$id, name=$name)"
+}
