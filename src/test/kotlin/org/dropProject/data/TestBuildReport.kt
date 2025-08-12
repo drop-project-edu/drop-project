@@ -28,19 +28,24 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.core.io.ResourceLoader
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 
 
 @RunWith(SpringRunner::class)
+@SpringBootTest
+@TestPropertySource(locations=["classpath:drop-project-test.properties"])
 @ActiveProfiles("test")
 class TestBuildReport {
 
     @Autowired
     lateinit var resourceLoader: ResourceLoader
 
-    val buildReportBuilder = BuildReportBuilder()
+    @Autowired
+    lateinit var buildReportBuilder: BuildReportBuilder
 
     private val dummyJavaAssignment = Assignment(id = "testJavaProj", name = "Test Project (for automatic tests)",
             packageName = "org.testProj", ownerUserId = "teacher1",
