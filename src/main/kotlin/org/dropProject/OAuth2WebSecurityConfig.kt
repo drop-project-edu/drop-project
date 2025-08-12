@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.core.io.ResourceLoader
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.core.GrantedAuthority
@@ -38,6 +39,7 @@ import java.util.logging.Logger
 
 @Profile("oauth2")
 @Configuration
+@EnableMethodSecurity(prePostEnabled = true)
 class OAuth2WebSecurityConfig(val manager: PersonalTokenAuthenticationManager) : DropProjectSecurityConfig(manager) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)

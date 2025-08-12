@@ -63,30 +63,34 @@ open class DropProjectSecurityConfig(val apiAuthenticationManager: PersonalToken
         http
             // disable csrf in case someone needs to access "/" by POST (e.g. Moodle lti)
             // and for all API calls
-            .csrf().ignoringRequestMatchers("/", "/api/**").and()
-            .authorizeHttpRequests()
-            .requestMatchers(
-                *getPublicUrls().toTypedArray()
-            ).permitAll()
-            .requestMatchers(
-                "/", "/upload", "/upload/**", "/buildReport/**", "/student/**",
-                "/git-submission/refresh-git/*", "/git-submission/generate-report/*", "/mySubmissions",
-                "/leaderboard/*",
-                "/personalToken", "/api/student/**"
-            )
-            .hasAnyRole("STUDENT", "TEACHER", "DROP_PROJECT_ADMIN")
-            .requestMatchers("/cleanup/*", "/admin/**").hasRole("DROP_PROJECT_ADMIN")
-            .anyRequest().hasAnyRole("TEACHER", "DROP_PROJECT_ADMIN")
-            .and()
-            .exceptionHandling()
-            .accessDeniedHandler(APIAccessDeniedHandler("/access-denied.html"))
+            .csrf { 
+                it.ignoringRequestMatchers("/", "/api/**") 
+            }
+            .authorizeHttpRequests { authz ->
+                authz
+                    .requestMatchers(*getPublicUrls().toTypedArray()).permitAll()
+                    .requestMatchers(
+                        "/", "/upload", "/upload/**", "/buildReport/**", "/student/**",
+                        "/git-submission/refresh-git/*", "/git-submission/generate-report/*", "/mySubmissions",
+                        "/leaderboard/*",
+                        "/personalToken", "/api/student/**"
+                    )
+                    .hasAnyRole("STUDENT", "TEACHER", "DROP_PROJECT_ADMIN")
+                    .requestMatchers("/cleanup/*", "/admin/**").hasRole("DROP_PROJECT_ADMIN")
+                    .anyRequest().hasAnyRole("TEACHER", "DROP_PROJECT_ADMIN")
+            }
+            .exceptionHandling { 
+                it.accessDeniedHandler(APIAccessDeniedHandler("/access-denied.html"))
+            }
 
         if (apiAuthenticationManager != null) {
             http.addFilterBefore(PersonalTokenAuthenticationFilter("/api/**", apiAuthenticationManager),
                 LogoutFilter::class.java)
         }
 
-        http.headers().frameOptions().sameOrigin()  // this is needed for h2-console
+        http.headers { 
+            it.frameOptions { frameOptions -> frameOptions.sameOrigin() }  // this is needed for h2-console
+        }
 
         return http
     }

@@ -33,6 +33,7 @@ import org.springframework.core.io.ResourceLoader
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.core.userdetails.User
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.provisioning.InMemoryUserDetailsManager
@@ -98,6 +99,7 @@ class InMemoryUserDetailsManagerFactory {
 
 @Profile("!deisi & !oauth2 & !lti")
 @Configuration
+@EnableMethodSecurity(prePostEnabled = true)
 class SimpleLoginWebSecurityConfig(val manager: PersonalTokenAuthenticationManager) :
     DropProjectSecurityConfig(manager) {
 
@@ -105,12 +107,12 @@ class SimpleLoginWebSecurityConfig(val manager: PersonalTokenAuthenticationManag
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
         configure(http)
         http
-            .csrf().disable().httpBasic()
-            .and().formLogin()
-            .loginPage("/login")
-            .permitAll()
-            .and().logout()
-            .permitAll()
+            .csrf { it.disable() }
+            .httpBasic { }
+            .formLogin { 
+                it.loginPage("/login").permitAll() 
+            }
+            .logout { it.permitAll() }
 
         return http.build()
     }
