@@ -40,12 +40,10 @@ import java.util.logging.Logger
 @Profile("oauth2")
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true)
-class OAuth2WebSecurityConfig(val manager: PersonalTokenAuthenticationManager) : DropProjectSecurityConfig(manager) {
+class OAuth2WebSecurityConfig(val resourceLoader: ResourceLoader,
+                              val manager: PersonalTokenAuthenticationManager) : DropProjectSecurityConfig(manager) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
-
-    @Autowired
-    lateinit var resourceLoader: ResourceLoader
 
     @Value("\${dp.config.location:}")
     val configLocationFolder: String = ""

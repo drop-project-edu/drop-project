@@ -32,22 +32,17 @@ import java.security.Principal
 import jakarta.servlet.http.HttpServletRequest
 
 @ControllerAdvice
-class GlobalControllerAdvice {
+class GlobalControllerAdvice(
+    val buildProperties: BuildProperties,
+    private val dataSource: HikariDataSource,
+    private val userDetailsManager: UserDetailsManager
+) {
 
     @Value("\${dropProject.admin.email}")
     val adminEmailProperty: String = ""
 
     @Value("\${dropProject.footer.message:}")
     val footerMessage: String = ""
-
-    @Autowired
-    lateinit var buildProperties: BuildProperties
-
-    @Autowired
-    private val dataSource: HikariDataSource? = null
-
-    @Autowired
-    private val userDetailsManager: UserDetailsManager? = null
 
     @ModelAttribute("username")
     fun getUsername(principal: Principal?) : String {

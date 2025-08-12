@@ -43,12 +43,11 @@ import java.util.*
 import java.util.logging.Logger
 
 @Component
-class InMemoryUserDetailsManagerFactory {
+class InMemoryUserDetailsManagerFactory(
+    val resourceLoader: ResourceLoader
+) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
-
-    @Autowired
-    lateinit var resourceLoader: ResourceLoader
 
     @Value("\${dp.config.location:}")
     val configLocationFolder: String = ""

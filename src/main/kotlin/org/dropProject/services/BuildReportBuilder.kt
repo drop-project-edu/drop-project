@@ -38,21 +38,14 @@ import java.util.logging.Logger
  * This class contains functions that perform the creation of [BuildReport]s for both [Assignment]s and [Submission]s.
  */
 @Service
-class BuildReportBuilder {
+class BuildReportBuilder(
+    val junitResultsParser: JunitResultsParser,
+    val jacocoResultsParser: JacocoResultsParser,
+    val jUnitReportRepository: JUnitReportRepository,
+    val jacocoReportRepository: JacocoReportRepository
+) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
-
-    @Autowired
-    lateinit var junitResultsParser: JunitResultsParser
-
-    @Autowired
-    lateinit var jacocoResultsParser: JacocoResultsParser
-
-    @Autowired
-    lateinit var jUnitReportRepository: JUnitReportRepository
-
-    @Autowired
-    lateinit var jacocoReportRepository: JacocoReportRepository
 
     /**
      * Builds a BuildReport
