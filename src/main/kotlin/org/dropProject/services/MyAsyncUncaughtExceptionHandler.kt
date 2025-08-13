@@ -19,8 +19,8 @@
  */
 package org.dropProject.services
 
-import org.dropProject.PendingTaskError
-import org.dropProject.PendingTasks
+import org.dropProject.config.PendingTaskError
+import org.dropProject.config.PendingTasks
 import org.springframework.aop.interceptor.SimpleAsyncUncaughtExceptionHandler
 import org.springframework.stereotype.Service
 import org.dropProject.dao.Submission

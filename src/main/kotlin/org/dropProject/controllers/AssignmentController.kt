@@ -24,8 +24,8 @@ import com.fasterxml.jackson.module.kotlin.KotlinModule
 import jakarta.persistence.EntityNotFoundException
 import org.apache.commons.io.FileUtils
 import org.dropProject.Constants.CACHE_ARCHIVED_ASSIGNMENTS_KEY
-import org.dropProject.PendingTaskError
-import org.dropProject.PendingTasks
+import org.dropProject.config.PendingTaskError
+import org.dropProject.config.PendingTasks
 import org.dropProject.dao.*
 import org.dropProject.data.*
 import org.dropProject.extensions.realName

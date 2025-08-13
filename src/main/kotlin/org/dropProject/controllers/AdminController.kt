@@ -19,7 +19,7 @@
  */
 package org.dropProject.controllers
 
-import org.dropProject.AsyncConfigurer
+import org.dropProject.config.AsyncConfigurer
 import org.dropProject.dao.AssignmentTag
 import org.dropProject.dao.SubmissionStatus
 import org.dropProject.forms.AdminDashboardForm

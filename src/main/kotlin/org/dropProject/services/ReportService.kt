@@ -22,7 +22,7 @@ package org.dropProject.services
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonView
 import jakarta.persistence.EntityNotFoundException
-import org.dropProject.AsyncConfigurer
+import org.dropProject.config.AsyncConfigurer
 import org.dropProject.dao.*
 import org.dropProject.data.AuthorDetails
 import org.dropProject.data.JSONViews

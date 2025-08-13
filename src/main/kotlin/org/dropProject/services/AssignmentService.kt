@@ -26,7 +26,7 @@ import jakarta.persistence.EntityNotFoundException
 import jakarta.servlet.http.HttpServletRequest
 import org.apache.commons.io.FileUtils
 import org.dropProject.Constants
-import org.dropProject.PendingTasks
+import org.dropProject.config.PendingTasks
 import org.dropProject.dao.*
 import org.dropProject.dao.BuildReport
 import org.dropProject.data.*
