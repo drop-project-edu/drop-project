@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
+    <!-- Suppress logback internal debug messages -->
+    <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
 
     <property name="LOGS" value="./logs" />
 
     <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
-        <layout class="ch.qos.logback.classic.PatternLayout">
-            <Pattern>
-                [%highlight(%-5level)] [%blue(%d{yy-MM-dd HH:mm:ss})] %yellow(%30.30logger{0}) : %msg%n%throwable
-            </Pattern>
-        </layout>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>[%highlight(%-5level)] [%blue(%d{yy-MM-dd HH:mm:ss})] %yellow(%30.30logger{0}) : %msg%n%throwable</pattern>
+        </encoder>
     </appender>
 
 <!--    <appender name="RollingFile"  class="ch.qos.logback.core.rolling.RollingFileAppender">-->
@@ -31,6 +31,10 @@
 <!--        <appender-ref ref="RollingFile" />-->
         <appender-ref ref="Console" />
     </root>
+
+    <!-- Suppress noisy loggers -->
+    <logger name="org.apache.http" level="WARN" />
+    <logger name="httpclient.wire" level="WARN" />
 
     <!-- LOG "com.baeldung*" at TRACE level -->
 <!--    <logger name="com.baeldung" level="trace" additivity="false">-->

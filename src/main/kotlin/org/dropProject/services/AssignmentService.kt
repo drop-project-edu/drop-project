@@ -436,7 +436,7 @@ class AssignmentService(
         val originalSubmissionsFolder = File(tempFolder, EXPORTED_ORIGINAL_SUBMISSIONS_FOLDER)
         originalSubmissionsFolder.mkdirs()
 
-        val mapper = ObjectMapper().registerModule(KotlinModule())
+        val mapper = ObjectMapper().registerModule(KotlinModule.Builder().build())
 
         try {
             mapper.writeValue(assignmentJsonFile, assignment)

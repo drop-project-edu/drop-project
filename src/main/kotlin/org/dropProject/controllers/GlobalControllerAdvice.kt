@@ -80,7 +80,7 @@ class GlobalControllerAdvice(
 
     @ModelAttribute("demoMode")
     fun isDemoMode() : Boolean {
-        if (userDetailsManager != null && userDetailsManager is InMemoryUserDetailsManager) {
+        if (userDetailsManager is InMemoryUserDetailsManager) {
             return userDetailsManager.userExists("student1") ||
                     userDetailsManager.userExists("teacher1")
         } else {

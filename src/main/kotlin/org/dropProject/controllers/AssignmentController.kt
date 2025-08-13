@@ -1094,7 +1094,7 @@ class AssignmentController(
             return "redirect:/assignment/import"
         }
 
-        val mapper = ObjectMapper().registerModule(KotlinModule())
+        val mapper = ObjectMapper().registerModule(KotlinModule.Builder().build())
 
         val result = assignmentService.importAssignment(mapper, assignmentJSONFile, submissionsJSONFile,
             gitSubmissionsJSONFile, originalSubmissionsFolder, principal)
