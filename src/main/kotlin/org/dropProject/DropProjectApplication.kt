@@ -30,6 +30,7 @@ import org.springframework.cache.jcache.JCacheCacheManager
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.PropertySource
 import org.springframework.scheduling.annotation.EnableScheduling
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import javax.cache.Caching
 import javax.cache.configuration.MutableConfiguration
 
@@ -37,6 +38,7 @@ import javax.cache.configuration.MutableConfiguration
 @SpringBootApplication
 @EnableScheduling
 @EnableCaching
+@EnableMethodSecurity
 @PropertySource("classpath:drop-project.properties")
 class DropProjectApplication : SpringBootServletInitializer() {
 

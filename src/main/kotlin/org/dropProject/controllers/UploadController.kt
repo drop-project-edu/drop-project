@@ -42,6 +42,7 @@ import org.springframework.scheduling.annotation.EnableAsync
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.RefNotAdvertisedException
 import org.springframework.security.access.AccessDeniedException
+import org.springframework.security.access.prepost.PreAuthorize
 import org.dropProject.dao.*
 import org.dropProject.data.SubmissionResult
 import org.dropProject.extensions.realName
@@ -82,7 +83,8 @@ class UploadController(
         val submissionService: SubmissionService,
         val zipService: ZipService,
         val projectGroupService: ProjectGroupService,
-        val i18n: MessageSource
+        val i18n: MessageSource,
+        val authorizationService: AuthorizationService
         ) {
 
     @Value("\${assignments.rootLocation}")
@@ -132,7 +134,7 @@ class UploadController(
      * @return A String identifying the relevant View
      */
     @RequestMapping(value = ["/"], method = [(RequestMethod.GET)])
-    fun getUploadForm(model: ModelMap, principal: Principal, request: HttpServletRequest): String {
+    fun can (model: ModelMap, principal: Principal, request: HttpServletRequest): String {
 
         val assignments = HashSet<Assignment>()
 
@@ -179,29 +181,12 @@ class UploadController(
      * @return A String identifying the relevant View
      */
     @RequestMapping(value = ["/upload/{assignmentId}"], method = [(RequestMethod.GET)])
+    @PreAuthorize("@authorizationService.canAccessAssignment(#assignmentId, authentication.name, hasRole('TEACHER'))")
     fun getUploadForm(model: ModelMap, principal: Principal,
                       @PathVariable("assignmentId") assignmentId: String,
                       request: HttpServletRequest): String {
 
         val assignment = assignmentRepository.findById(assignmentId).orElse(null) ?: throw AssignmentNotFoundException(assignmentId)
-
-        if (!request.isUserInRole("TEACHER")) {
-
-            if (!assignment.active) {
-                throw org.springframework.security.access.AccessDeniedException("Submissions are not open to this assignment")
-            }
-
-            assignmentService.checkAssignees(assignmentId, principal.realName())
-
-        } else {
-
-            if (!assignment.active) {
-                val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
-                if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
-                    throw IllegalAccessError("Assignments can only be accessed by their owner or authorized teachers")
-                }
-            }
-        }
 
         model["assignment"] = assignment
         model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.realName(), assignment.id)
@@ -392,23 +377,6 @@ class UploadController(
         }
     }
 
-    // TODO: This should remove non-final submissions for groups where there is already a submission marked as final
-    // removes all files related to non-final submissions
-    @RequestMapping(value = ["/cleanup/{assignmentId}"], method = [(RequestMethod.POST)])
-    fun cleanup(@PathVariable assignmentId: String, request: HttpServletRequest) : String {
-
-        if (!request.isUserInRole("DROP_PROJECT_ADMIN")) {
-            throw IllegalAccessError("Assignment can only be cleaned-up by admin")
-        }
-
-        LOG.info("Removing all non-final submission files related to ${assignmentId}")
-
-        val nonFinalSubmissions = submissionRepository.findByAssignmentIdAndMarkedAsFinal(assignmentId, false)
-        submissionService.deleteMavenizedFolderFor(nonFinalSubmissions)
-
-        // TODO: Should show a toast saying how many files were deleted
-        return "redirect:/report/${assignmentId}";
-    }
 
     /**
      * Controller that handles requests for connecting a student's GitHub repository with an [Assignment] available in DP.
@@ -423,6 +391,7 @@ class UploadController(
      * @return A String identifying the relevant View
      */
     @RequestMapping(value = ["/student/setup-git"], method = [(RequestMethod.POST)])
+    @PreAuthorize("@authorizationService.canAccessAssignment(#assignmentId, authentication.name, hasRole('TEACHER'))")
     fun setupStudentSubmissionUsingGitRepository(@RequestParam("assignmentId") assignmentId: String,
                                                  @RequestParam("gitRepositoryUrl") gitRepositoryUrl: String?,
                                                  model: ModelMap, principal: Principal,
@@ -430,15 +399,6 @@ class UploadController(
 
         val assignment = assignmentRepository.findById(assignmentId)
             .orElseThrow { EntityNotFoundException("Assignment ${assignmentId} not found") }
-
-        if (!request.isUserInRole("TEACHER")) {
-
-            if (!assignment.active) {
-                throw AccessDeniedException("Submissions are not open to this assignment")
-            }
-
-            assignmentService.checkAssignees(assignmentId, principal.realName())
-        }
 
         model["assignment"] = assignment
         model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.realName(), assignment.id)
@@ -637,6 +597,7 @@ class UploadController(
      * @return a ResponseEntity<String>
      */
     @RequestMapping(value = ["/git-submission/generate-report/{gitSubmissionId}"], method = [(RequestMethod.POST)])
+    @PreAuthorize("@authorizationService.canAccessAssignmentByGitSubmissionId(#gitSubmissionId, authentication.name, hasRole('TEACHER'))")
     fun upload(@PathVariable gitSubmissionId: String,
                principal: Principal,
                request: HttpServletRequest): ResponseEntity<String> {
@@ -644,17 +605,6 @@ class UploadController(
         val gitSubmission = gitSubmissionRepository.findById(gitSubmissionId.toLong()).orElse(null) ?:
         throw IllegalArgumentException("git submission ${gitSubmissionId} is not registered")
         val assignment = assignmentRepository.findById(gitSubmission.assignmentId).orElse(null)
-
-        // TODO: Validate assignment due date
-
-        if (!request.isUserInRole("TEACHER")) {
-
-            if (!assignment.active) {
-                throw org.springframework.security.access.AccessDeniedException("Submissions are not open to this assignment")
-            }
-
-            assignmentService.checkAssignees(assignment.id, principal.realName())
-        }
 
         if (assignment.cooloffPeriod != null && !request.isUserInRole("TEACHER")) {
             val lastSubmission = submissionService.getLastSubmission(principal, assignment.id)

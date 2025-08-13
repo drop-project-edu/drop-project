@@ -76,7 +76,7 @@ open class DropProjectSecurityConfig(val apiAuthenticationManager: PersonalToken
                         "/personalToken", "/api/student/**"
                     )
                     .hasAnyRole("STUDENT", "TEACHER", "DROP_PROJECT_ADMIN")
-                    .requestMatchers("/cleanup/*", "/admin/**").hasRole("DROP_PROJECT_ADMIN")
+                    .requestMatchers("/admin/**").hasRole("DROP_PROJECT_ADMIN")
                     .anyRequest().hasAnyRole("TEACHER", "DROP_PROJECT_ADMIN")
             }
             .exceptionHandling { 

@@ -93,7 +93,7 @@
             </div>
 
             <div class="btn-group" role="group" th:if="${isAdmin}">
-                <form class="inline btn-group" method="post" th:action="@{'/cleanup/' + ${assignment.id}}" >
+                <form class="inline btn-group" method="post" th:action="@{'/admin/cleanup/' + ${assignment.id}}" >
                     <input type="submit" value="Cleanup" class="btn btn-default" title="Remove non-final files" />
                 </form>
             </div>

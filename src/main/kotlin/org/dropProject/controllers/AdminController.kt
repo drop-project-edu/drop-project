@@ -26,6 +26,7 @@ import org.dropProject.forms.AdminDashboardForm
 import org.dropProject.repository.AssignmentTagRepository
 import org.dropProject.repository.SubmissionRepository
 import org.dropProject.services.MavenInvoker
+import org.dropProject.services.SubmissionService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Controller
 import org.springframework.ui.ModelMap
@@ -46,7 +47,8 @@ class AdminController(val mavenInvoker: MavenInvoker,
                       val submissionRepository: SubmissionRepository,
                       val assignmentRepository: AssignmentRepository,
                       val assignmentTagRepository: AssignmentTagRepository,
-                      val asyncConfigurer: AsyncConfigurer) {
+                      val asyncConfigurer: AsyncConfigurer,
+                      val submissionService: SubmissionService) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
@@ -153,5 +155,25 @@ class AdminController(val mavenInvoker: MavenInvoker,
 
         redirectAttributes.addFlashAttribute("message", "Tag deleted successfully.")
         return "redirect:/admin/tags"
+    }
+
+    /**
+     * Controller that handles requests for cleaning up non-final submission files.
+     * Removes all files related to non-final submissions for a given assignment.
+     * 
+     * TODO: This should remove non-final submissions for groups where there is already a submission marked as final
+     * 
+     * @param assignmentId is a String, identifying the assignment to cleanup
+     * @return A String identifying the relevant View
+     */
+    @PostMapping("/cleanup/{assignmentId}")
+    fun cleanup(@PathVariable assignmentId: String): String {
+        LOG.info("Removing all non-final submission files related to ${assignmentId}")
+
+        val nonFinalSubmissions = submissionRepository.findByAssignmentIdAndMarkedAsFinal(assignmentId, false)
+        submissionService.deleteMavenizedFolderFor(nonFinalSubmissions)
+
+        // TODO: Should show a toast saying how many files were deleted
+        return "redirect:/report/${assignmentId}"
     }
 }

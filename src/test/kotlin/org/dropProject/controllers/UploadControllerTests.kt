@@ -1076,7 +1076,7 @@ class UploadControllerTests {
         val admin = User("admin", "", mutableListOf(SimpleGrantedAuthority("ROLE_DROP_PROJECT_ADMIN")))
 
         // cleanup all non-final - should delete the mavenized folder of submission 1
-        this.mvc.perform(post("/cleanup/testJavaProj")
+        this.mvc.perform(post("/admin/cleanup/testJavaProj")
                 .with(user(admin)))
                 .andExpect(redirectedUrl("/report/testJavaProj"))
                 .andExpect(status().isFound())
