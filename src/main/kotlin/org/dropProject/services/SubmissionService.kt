@@ -39,6 +39,7 @@ import org.dropProject.repository.*
 import org.dropProject.storage.StorageService
 import org.mozilla.universalchardet.UniversalDetector
 import org.slf4j.LoggerFactory
+import org.dropProject.config.DropProjectProperties
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.MessageSource
 import org.springframework.http.ResponseEntity
@@ -83,6 +84,7 @@ class SubmissionService(
     val asyncExecutor: Executor,
     val zipService: ZipService,
     val assignmentRepository: AssignmentRepository,
+    val dropProjectProperties: DropProjectProperties
 ) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
@@ -92,12 +94,6 @@ class SubmissionService(
 
     @Value("\${spring.web.locale}")
     val currentLocale : Locale = Locale.getDefault()
-
-    @Value("\${storage.rootLocation}/upload")
-    val uploadSubmissionsRootLocation: String = "submissions/upload"
-
-    @Value("\${storage.rootLocation}/git")
-    val gitSubmissionsRootLocation: String = "submissions/git"
 
     /**
      * Returns all the SubmissionInfo objects related with [assignment].
@@ -609,7 +605,7 @@ class SubmissionService(
                 val gitSubmission = gitSubmissionRepository.findById(gitSubmissionId).orElse(null) ?:
                 throw UploadController.SubmissionNotFoundException(submission.gitSubmissionId!!)
 
-                File(gitSubmissionsRootLocation, gitSubmission.getFolderRelativeToStorageRoot())
+                File(dropProjectProperties.storage.gitLocation, gitSubmission.getFolderRelativeToStorageRoot())
 
             } else {
                 throw IllegalStateException("submission ${submission.id} has both submissionId and gitSubmissionId equal to null")

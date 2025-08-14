@@ -27,7 +27,7 @@ import org.apache.maven.shared.invoker.DefaultInvoker
 import org.dropProject.Constants
 import org.dropProject.data.MavenResult
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
+import org.dropProject.config.DropProjectProperties
 import org.springframework.stereotype.Service
 import java.io.File
 import java.io.FileReader
@@ -38,15 +38,11 @@ import java.util.*
  * Utility to perform Maven related tasks.
  */
 @Service
-class MavenInvoker {
+class MavenInvoker(
+    val dropProjectProperties: DropProjectProperties
+) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
-
-    @Value("\${dropProject.maven.home}")
-    val mavenHome : String = ""
-
-    @Value("\${dropProject.maven.repository}")
-    val mavenRepository : String = ""
 
     var securityManagerEnabled = true
 
@@ -67,10 +63,10 @@ class MavenInvoker {
      */
     fun run(mavenizedProjectFolder: File, principalName: String?, maxMemoryMb: Int?) : MavenResult {
 
-        if (!File(mavenRepository).exists()) {
-            val success = File(mavenRepository).mkdirs()
+        if (!File(dropProjectProperties.maven.repository).exists()) {
+            val success = File(dropProjectProperties.maven.repository).mkdirs()
             if (!success) {
-                LOG.error("Couldn't create the maven repository folder: $mavenRepository")
+                LOG.error("Couldn't create the maven repository folder: ${dropProjectProperties.maven.repository}")
             }
         }
 
@@ -91,7 +87,7 @@ class MavenInvoker {
 
         if (securityManagerEnabled) {
             dpArgLine += " -Djava.security.manager=org.dropproject.security.SandboxSecurityManager"
-            dpArgLine += " -DdropProject.maven.repository=${File(mavenRepository).absolutePath}"
+            dpArgLine += " -DdropProject.maven.repository=${File(dropProjectProperties.maven.repository).absolutePath}"
             // uncomment this to diagnose problems within our custom security manager (SandboxSecurityManager)
 //            dpArgLine += " -DdropProject.securityManager.debug=true"
         }
@@ -134,8 +130,8 @@ class MavenInvoker {
         request.goals = Arrays.asList("clean", "compile", "test")  // "pmd:check", "checkstyle:check", "exec:java"
 
         val invoker = DefaultInvoker()
-        invoker.mavenHome = File(mavenHome)
-        invoker.localRepositoryDirectory = File(mavenRepository)
+        invoker.mavenHome = File(dropProjectProperties.maven.home)
+        invoker.localRepositoryDirectory = File(dropProjectProperties.maven.repository)
 
         val result = invoker.execute(request)
 

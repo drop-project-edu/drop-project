@@ -22,7 +22,7 @@ package org.dropProject.controllers
 import com.zaxxer.hikari.HikariDataSource
 import org.dropProject.extensions.realName
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
+import org.dropProject.config.DropProjectProperties
 import org.springframework.boot.info.BuildProperties
 import org.springframework.security.provisioning.InMemoryUserDetailsManager
 import org.springframework.security.provisioning.UserDetailsManager
@@ -35,14 +35,9 @@ import jakarta.servlet.http.HttpServletRequest
 class GlobalControllerAdvice(
     val buildProperties: BuildProperties,
     private val dataSource: HikariDataSource,
-    private val userDetailsManager: UserDetailsManager
+    private val userDetailsManager: UserDetailsManager,
+    val dropProjectProperties: DropProjectProperties
 ) {
-
-    @Value("\${dropProject.admin.email}")
-    val adminEmailProperty: String = ""
-
-    @Value("\${dropProject.footer.message:}")
-    val footerMessage: String = ""
 
     @ModelAttribute("username")
     fun getUsername(principal: Principal?) : String {
@@ -65,7 +60,7 @@ class GlobalControllerAdvice(
 
     @ModelAttribute("adminEmail")
     fun getAdminEmail() : String {
-        return adminEmailProperty
+        return dropProjectProperties.admin.email
     }
 
     @ModelAttribute("embeddedDB")
@@ -75,7 +70,7 @@ class GlobalControllerAdvice(
 
     @ModelAttribute("footerMessage")
     fun footerMessage() : String {
-        return footerMessage
+        return dropProjectProperties.footer.message
     }
 
     @ModelAttribute("demoMode")

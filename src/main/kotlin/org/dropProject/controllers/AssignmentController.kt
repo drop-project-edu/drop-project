@@ -37,7 +37,7 @@ import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.RefNotAdvertisedException
 import org.hibernate.Hibernate
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
+import org.dropProject.config.DropProjectProperties
 import org.springframework.cache.CacheManager
 import org.springframework.core.io.FileSystemResource
 import org.springframework.http.HttpStatus
@@ -87,19 +87,8 @@ class AssignmentController(
     val zipService: ZipService,
     val cacheManager: CacheManager,
     val projectGroupService: ProjectGroupService,
-    val pendingTasks: PendingTasks) {
-
-    @Value("\${assignments.rootLocation}")
-    val assignmentsRootLocation: String = ""
-
-    @Value("\${mavenizedProjects.rootLocation}")
-    val mavenizedProjectsRootLocation: String = ""
-
-    @Value("\${storage.rootLocation}/upload")
-    val uploadSubmissionsRootLocation: String = "submissions/upload"
-
-    @Value("\${storage.rootLocation}/git")
-    val gitSubmissionsRootLocation: String = "submissions/git"
+    val pendingTasks: PendingTasks,
+    val dropProjectProperties: DropProjectProperties) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
@@ -223,7 +212,7 @@ class AssignmentController(
 
             // check if we can connect to given git repository
             try {
-                val directory = File(assignmentsRootLocation, assignmentForm.assignmentId)
+                val directory = File(dropProjectProperties.assignments.rootLocation, assignmentForm.assignmentId)
                 gitClient.clone(gitRepository, directory)
                 LOG.info("[${assignmentForm.assignmentId}] Successfuly cloned ${gitRepository} to ${directory}")
             } catch (e: Exception) {
@@ -246,7 +235,7 @@ class AssignmentController(
 
             if (!mustSetupGitConnection) {
                 // update hash
-                val git = Git.open(File(assignmentsRootLocation, newAssignment.gitRepositoryFolder))
+                val git = Git.open(File(dropProjectProperties.assignments.rootLocation, newAssignment.gitRepositoryFolder))
                 newAssignment.gitCurrentHash = gitClient.getLastCommitInfo(git)?.sha1
             }
 
@@ -287,7 +276,7 @@ class AssignmentController(
             assignmentService.updateAssignment(existingAssignment, assignmentForm)
 
             // update hash
-            val git = Git.open(File(assignmentsRootLocation, existingAssignment.gitRepositoryFolder))
+            val git = Git.open(File(dropProjectProperties.assignments.rootLocation, existingAssignment.gitRepositoryFolder))
             existingAssignment.gitCurrentHash = gitClient.getLastCommitInfo(git)?.sha1
 
             assignmentRepository.save(existingAssignment)
@@ -414,10 +403,10 @@ class AssignmentController(
         }
 
         // check if it has been setup for git connection and if there is a repository folder
-        if (assignment.gitRepositoryPrivKey != null && File(assignmentsRootLocation, assignment.gitRepositoryFolder).exists()) {
+        if (assignment.gitRepositoryPrivKey != null && File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder).exists()) {
 
             // get git info
-            val git = Git.open(File(assignmentsRootLocation, assignment.gitRepositoryFolder))
+            val git = Git.open(File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder))
             val lastCommitInfo = gitClient.getLastCommitInfo(git)
             val sshKeyFingerprint = gitClient.computeSshFingerprint(assignment.gitRepositoryPubKey!!)
 
@@ -539,10 +528,10 @@ class AssignmentController(
 
         try {
             LOG.info("Pulling git repository for ${assignmentId}")
-            gitClient.pull(File(assignmentsRootLocation, assignment.gitRepositoryFolder), assignment.gitRepositoryPrivKey!!.toByteArray())
+            gitClient.pull(File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder), assignment.gitRepositoryPrivKey!!.toByteArray())
 
             // update hash
-            val git = Git.open(File(assignmentsRootLocation, assignment.gitRepositoryFolder))
+            val git = Git.open(File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder))
             assignment.gitCurrentHash = gitClient.getLastCommitInfo(git)?.sha1
 
             // remove the reportId from all git submissions (if there are any) to signal the student that he should
@@ -659,7 +648,7 @@ class AssignmentController(
         }
 
         run {
-            val assignmentFolder = File(assignmentsRootLocation, assignment.gitRepositoryFolder)
+            val assignmentFolder = File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder)
             if (assignmentFolder.exists()) {
                 assignmentFolder.deleteRecursively()
             }
@@ -667,11 +656,11 @@ class AssignmentController(
 
         val gitRepository = assignment.gitRepositoryUrl
         try {
-            val directory = File(assignmentsRootLocation, assignment.gitRepositoryFolder)
+            val directory = File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder)
             gitClient.clone(gitRepository, directory, assignment.gitRepositoryPrivKey!!.toByteArray())
             LOG.info("[${assignmentId}] Successfuly cloned ${gitRepository} to ${directory}")
             // update hash
-            val git = Git.open(File(assignmentsRootLocation, assignment.gitRepositoryFolder))
+            val git = Git.open(File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder))
             assignment.gitCurrentHash = gitClient.getLastCommitInfo(git)?.sha1
             assignmentRepository.save(assignment)
         } catch (e: Exception) {
@@ -779,8 +768,8 @@ class AssignmentController(
             // remove the base folder for all original submissions for this assignment
             val assignmentOriginalProjectsRootFolder =
                 when (assignment.submissionMethod) {
-                    SubmissionMethod.UPLOAD -> File(uploadSubmissionsRootLocation, assignmentId)
-                    SubmissionMethod.GIT -> File(gitSubmissionsRootLocation, assignmentId)
+                    SubmissionMethod.UPLOAD -> File(dropProjectProperties.storage.uploadLocation, assignmentId)
+                    SubmissionMethod.GIT -> File(dropProjectProperties.storage.gitLocation, assignmentId)
                 }
             if (assignmentOriginalProjectsRootFolder.deleteRecursively()) {
                 LOG.info("Removed original projects base folder: ${assignmentOriginalProjectsRootFolder}")
@@ -789,7 +778,7 @@ class AssignmentController(
             }
 
             // remove the base folder for all mavenized submissions for this assignment
-            val assignmentMavenizedProjectsRootFolder = File(mavenizedProjectsRootLocation, assignmentId)
+            val assignmentMavenizedProjectsRootFolder = File(dropProjectProperties.mavenizedProjects.rootLocation, assignmentId)
             if (assignmentMavenizedProjectsRootFolder.deleteRecursively()) {
                 LOG.info("Removed mavenized projects base folder: ${assignmentMavenizedProjectsRootFolder}")
             } else {
@@ -829,7 +818,7 @@ class AssignmentController(
         assignmentRepository.deleteById(assignmentId)
         assigneeRepository.deleteByAssignmentId(assignmentId)
 
-        val rootFolder = File(assignmentsRootLocation, assignment.gitRepositoryFolder)
+        val rootFolder = File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder)
 
         try {
             FileUtils.deleteDirectory(rootFolder)
@@ -871,7 +860,7 @@ class AssignmentController(
         if (!assignment.active) {
 
             // check if it has been setup for git connection and if there is a repository folder
-            if (!File(assignmentsRootLocation, assignment.gitRepositoryFolder).exists()) {
+            if (!File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder).exists()) {
                 redirectAttributes.addFlashAttribute("error", "Can't mark assignment as active since it is not connected to a git repository.")
                 return "redirect:/assignment/my"
             }

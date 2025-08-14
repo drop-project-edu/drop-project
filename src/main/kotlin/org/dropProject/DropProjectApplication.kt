@@ -22,6 +22,7 @@ package org.dropProject
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.builder.SpringApplicationBuilder
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer
 import org.springframework.cache.annotation.EnableCaching
 import org.springframework.context.annotation.PropertySource
@@ -31,6 +32,7 @@ import org.springframework.scheduling.annotation.EnableScheduling
 @SpringBootApplication
 @EnableScheduling
 @EnableCaching
+@ConfigurationPropertiesScan
 @PropertySource("classpath:drop-project.properties")
 class DropProjectApplication : SpringBootServletInitializer() {
 

@@ -23,7 +23,7 @@ import org.dropProject.security.DropProjectSecurityConfig
 import org.dropProject.security.PersonalTokenAuthenticationManager
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
+import org.dropProject.config.DropProjectProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
@@ -44,13 +44,11 @@ import java.util.logging.Logger
 
 @Component
 class InMemoryUserDetailsManagerFactory(
-    val resourceLoader: ResourceLoader
+    val resourceLoader: ResourceLoader,
+    val dropProjectProperties: DropProjectProperties
 ) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
-
-    @Value("\${dp.config.location:}")
-    val configLocationFolder: String = ""
 
     @Bean
     fun inMemoryUserDetailsManager(): InMemoryUserDetailsManager {
@@ -60,13 +58,13 @@ class InMemoryUserDetailsManagerFactory(
         val usersList = mutableListOf<UserDetails>()
 
         val loadFromConfig =
-            configLocationFolder.isNotEmpty() && resourceLoader.getResource("file:${configLocationFolder}/users.csv")
+            dropProjectProperties.config.location.isNotEmpty() && resourceLoader.getResource("file:${dropProjectProperties.config.location}/users.csv")
                 .exists()
         val loadFromRoot = resourceLoader.getResource("classpath:users.csv").exists()
 
         if (loadFromConfig || loadFromRoot) {
             val filenameAsResource =
-                if (loadFromConfig) "file:${configLocationFolder}/users.csv" else "classpath:users.csv"
+                if (loadFromConfig) "file:${dropProjectProperties.config.location}/users.csv" else "classpath:users.csv"
             LOG.info("Found ${filenameAsResource}. Will load user details from there.")
 
             val usersFile = resourceLoader.getResource(filenameAsResource).inputStream.bufferedReader()

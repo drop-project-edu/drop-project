@@ -38,7 +38,7 @@ import org.dropProject.repository.*
 import org.eclipse.jgit.api.Git
 import org.kohsuke.github.GitHub
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
+import org.dropProject.config.DropProjectProperties
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.scheduling.annotation.Async
@@ -76,25 +76,11 @@ class AssignmentService(
     val pendingTasks: PendingTasks,
     val projectGroupService: ProjectGroupService,
     val gitClient: GitClient,
-    val assignmentTeacherFiles: AssignmentTeacherFiles
+    val assignmentTeacherFiles: AssignmentTeacherFiles,
+    val dropProjectProperties: DropProjectProperties
 ) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
-
-    @Value("\${assignments.rootLocation}")
-    val assignmentsRootLocation: String = ""
-
-    @Value("\${mavenizedProjects.rootLocation}")
-    val mavenizedProjectsRootLocation: String = ""
-
-    @Value("\${storage.rootLocation}/upload")
-    val uploadSubmissionsRootLocation: String = "submissions/upload"
-
-    @Value("\${storage.rootLocation}/git")
-    val gitSubmissionsRootLocation: String = "submissions/git"
-
-    @Value("\${github.token:no-token}")
-    val githubToken: String = ""
 
     /**
      * Returns the [Assignment]s that a certain user can access. The returned assignments will be all the public ones,
@@ -467,7 +453,7 @@ class AssignmentService(
             submissions.forEachIndexed { index, it ->
                 with(it) {
                     if (submissionId != null && submissionFolder != null) {
-                        val projectFolderFrom = File(uploadSubmissionsRootLocation, submissionFolder)
+                        val projectFolderFrom = File(dropProjectProperties.storage.uploadLocation, submissionFolder)
                         val projectFolderTo = File(destinationFolder, submissionFolder.removeSuffix(submissionId))
                         projectFolderTo.mkdirs()
 
@@ -488,7 +474,7 @@ class AssignmentService(
 
             val gitSubmissions = gitSubmissionRepository.findByAssignmentIdAndConnected(assignment.id, connected = true)
             gitSubmissions.forEachIndexed { index, it ->
-                val repositoryFolderFrom = File(gitSubmissionsRootLocation, it.getFolderRelativeToStorageRoot())
+                val repositoryFolderFrom = File(dropProjectProperties.storage.gitLocation, it.getFolderRelativeToStorageRoot())
                 val repositoryFolderTo = File(destinationFolder, it.getParentFolderRelativeToStorageRoot())
                 repositoryFolderTo.mkdirs()
 
@@ -536,8 +522,8 @@ class AssignmentService(
                 val assignment = assignmentRepository.findById(assignmentId)
                     .orElseThrow { EntityNotFoundException("Assignment ${assignmentId} not found") }
                 when (assignment.submissionMethod) {
-                    SubmissionMethod.UPLOAD -> FileUtils.copyDirectory(originalSubmissionsFolder, File(uploadSubmissionsRootLocation))
-                    SubmissionMethod.GIT -> FileUtils.copyDirectory(originalSubmissionsFolder, File(gitSubmissionsRootLocation))
+                    SubmissionMethod.UPLOAD -> FileUtils.copyDirectory(originalSubmissionsFolder, File(dropProjectProperties.storage.uploadLocation))
+                    SubmissionMethod.GIT -> FileUtils.copyDirectory(originalSubmissionsFolder, File(dropProjectProperties.storage.gitLocation))
                 }
             }
             return AssignmentImportResult("message", "Imported successfully ${assignmentId} and all its submissions",
@@ -666,13 +652,13 @@ class AssignmentService(
             cloneAssignment(newAssignment, gitRepository)
         } catch (e: Exception) {
 
-            if (githubToken != "no-token") {  // "no-token" is the default value
+            if (dropProjectProperties.github.token != "no-token") {  // "no-token" is the default value
                 LOG.info(
                     "Error cloning ${gitRepository} - ${e}. Maybe the SSH key was removed. Let's try setting the key" +
                             "using github API"
                 )
 
-                val github = GitHub.connectUsingOAuth(githubToken)
+                val github = GitHub.connectUsingOAuth(dropProjectProperties.github.token)
                 val (username, reponame) = gitClient.getGitRepoInfo(newAssignment.gitRepositoryUrl)
                 val repository = github.getRepository("$username/$reponame")
                 val key = repository.addDeployKey("Drop Project (import)", newAssignment.gitRepositoryPubKey, true)
@@ -712,12 +698,12 @@ class AssignmentService(
     }
 
     private fun cloneAssignment(newAssignment: Assignment, gitRepository: String) {
-        val directory = File(assignmentsRootLocation, newAssignment.gitRepositoryFolder)
+        val directory = File(dropProjectProperties.assignments.rootLocation, newAssignment.gitRepositoryFolder)
         gitClient.clone(gitRepository, directory, newAssignment.gitRepositoryPrivKey!!.toByteArray())
         LOG.info("[${newAssignment.id}] Successfuly cloned ${gitRepository} to ${directory}")
 
         // update hash
-        val git = Git.open(File(assignmentsRootLocation, newAssignment.gitRepositoryFolder))
+        val git = Git.open(File(dropProjectProperties.assignments.rootLocation, newAssignment.gitRepositoryFolder))
         newAssignment.gitCurrentHash = gitClient.getLastCommitInfo(git)?.sha1
     }
 

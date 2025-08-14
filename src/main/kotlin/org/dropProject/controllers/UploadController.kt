@@ -32,6 +32,7 @@ import org.dropProject.storage.StorageException
 import org.dropProject.storage.StorageService
 import java.io.File
 import jakarta.validation.Valid
+import org.dropProject.config.DropProjectProperties
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.ResponseEntity
 import org.dropProject.data.AuthorDetails
@@ -84,17 +85,9 @@ class UploadController(
         val zipService: ZipService,
         val projectGroupService: ProjectGroupService,
         val i18n: MessageSource,
-        val authorizationService: AuthorizationService
+        val authorizationService: AuthorizationService,
+        val dropProjectProperties: DropProjectProperties
         ) {
-
-    @Value("\${assignments.rootLocation}")
-    val assignmentsRootLocation: String = ""
-
-    @Value("\${storage.rootLocation}/git")
-    val gitSubmissionsRootLocation : String = "submissions/git"
-
-    @Value("\${mavenizedProjects.rootLocation}")
-    val mavenizedProjectsRootLocation : String = ""
 
     @Value("\${spring.web.locale}")
     val currentLocale : Locale = Locale.getDefault()
@@ -228,7 +221,7 @@ class UploadController(
 
             if (gitSubmission?.connected == true) {
                 // get last commit info
-                val git = Git.open(File(gitSubmissionsRootLocation, gitSubmission.getFolderRelativeToStorageRoot()))
+                val git = Git.open(File(dropProjectProperties.storage.gitLocation, gitSubmission.getFolderRelativeToStorageRoot()))
                 val lastCommitInfo = gitClient.getLastCommitInfo(git)
                 model["lastCommitInfo"] = lastCommitInfo
             }
@@ -482,7 +475,7 @@ class UploadController(
         if (!gitSubmission.connected) {
 
             run {
-                val submissionFolder = File(gitSubmissionsRootLocation, gitSubmission.getFolderRelativeToStorageRoot())
+                val submissionFolder = File(dropProjectProperties.storage.gitLocation, gitSubmission.getFolderRelativeToStorageRoot())
                 if (submissionFolder.exists()) {
                     submissionFolder.deleteRecursively()
                 }
@@ -497,7 +490,7 @@ class UploadController(
 
             model["cloned"] = false
             try {
-                val projectFolder = File(gitSubmissionsRootLocation, gitSubmission.getFolderRelativeToStorageRoot())
+                val projectFolder = File(dropProjectProperties.storage.gitLocation, gitSubmission.getFolderRelativeToStorageRoot())
                 val git = gitClient.clone(gitRepository, projectFolder, gitSubmission.gitRepositoryPrivKey!!.toByteArray())
                 LOG.info("[${gitSubmission}] Successfuly cloned ${gitRepository} to ${projectFolder}")
                 model["cloned"] = true
@@ -576,7 +569,7 @@ class UploadController(
 
         try {
             LOG.info("Pulling git repository for ${gitSubmissionId}")
-            val git = gitClient.pull(File(gitSubmissionsRootLocation, gitSubmission.getFolderRelativeToStorageRoot()),
+            val git = gitClient.pull(File(dropProjectProperties.storage.gitLocation, gitSubmission.getFolderRelativeToStorageRoot()),
                 gitSubmission.gitRepositoryPrivKey!!.toByteArray())
             val lastCommitInfo = gitClient.getLastCommitInfo(git)
 
@@ -631,7 +624,7 @@ class UploadController(
             }
         }
 
-        val projectFolder = File(gitSubmissionsRootLocation, gitSubmission.getFolderRelativeToStorageRoot())
+        val projectFolder = File(dropProjectProperties.storage.gitLocation, gitSubmission.getFolderRelativeToStorageRoot())
 
         // verify that there is not another submission with the Submitted status
         val existingSubmissions = submissionRepository
@@ -651,7 +644,7 @@ class UploadController(
 
         // if it's a git submission, and there isn't already this info, set the git hash associated with this submission
         if (submissionGitInfoRepository.getBySubmissionId(submission.id) == null) {
-            val git = Git.open(File(gitSubmissionsRootLocation, gitSubmission.getFolderRelativeToStorageRoot()))
+            val git = Git.open(File(dropProjectProperties.storage.gitLocation, gitSubmission.getFolderRelativeToStorageRoot()))
             val lastCommitInfo = gitClient.getLastCommitInfo(git)
             if (lastCommitInfo != null) {
                 val submissionGitInfo = SubmissionGitInfo(submissionId = submission.id, gitCommitHash = lastCommitInfo.sha1)
@@ -695,7 +688,7 @@ class UploadController(
         }
 
         if (gitSubmission.connected) {
-            val submissionFolder = File(gitSubmissionsRootLocation, gitSubmission.getFolderRelativeToStorageRoot())
+            val submissionFolder = File(dropProjectProperties.storage.gitLocation, gitSubmission.getFolderRelativeToStorageRoot())
             if (submissionFolder.exists()) {
                 LOG.info("[${principal.realName()}] Removing ${submissionFolder.absolutePath}")
                 submissionFolder.deleteRecursively()
@@ -763,7 +756,7 @@ class UploadController(
             throw IllegalArgumentException("Invalid asset name")
         }
 
-        val assignmentFolder = File(assignmentsRootLocation, assignmentId)
+        val assignmentFolder = File(dropProjectProperties.assignments.rootLocation, assignmentId)
         if (assignmentFolder.exists()) {
             val assignmentPublicFolder = File(assignmentFolder, "public")
             if (assignmentPublicFolder.exists() && assignmentPublicFolder.isDirectory) {

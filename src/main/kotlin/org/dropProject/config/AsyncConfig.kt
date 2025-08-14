@@ -23,7 +23,7 @@ import org.dropProject.services.CancellableTaskScheduler
 import org.dropProject.services.MyAsyncUncaughtExceptionHandler
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
+import org.dropProject.config.DropProjectProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
@@ -36,10 +36,11 @@ import java.util.concurrent.Executor
 @EnableAsync
 @EnableScheduling
 @Profile("!test")
-class AsyncConfig : AsyncConfigurer, org.dropProject.config.AsyncConfigurer {
+class AsyncConfig(
+    val dropProjectProperties: DropProjectProperties
+) : AsyncConfigurer, org.dropProject.config.AsyncConfigurer {
 
-    @Value("\${dropProject.async.timeout}")
-    var asyncTimeout: Int = 180
+    var asyncTimeout: Int = dropProjectProperties.async.timeout
         set(value) {
             field = value
             scheduler.timeout = value * 1000L
@@ -68,7 +69,7 @@ class AsyncConfig : AsyncConfigurer, org.dropProject.config.AsyncConfigurer {
     override fun getAsyncExecutor(): Executor? {
         LOG.info("Initializing task scheduler")
 
-        scheduler = CancellableTaskScheduler(asyncTimeout * 1000L)
+        scheduler = CancellableTaskScheduler(dropProjectProperties.async.timeout * 1000L)
         scheduler.poolSize = 1
         scheduler.initialize()
         return scheduler

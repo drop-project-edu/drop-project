@@ -25,7 +25,7 @@ import org.dropProject.dao.SubmissionStatus
 import org.dropProject.repository.AssignmentRepository
 import org.dropProject.repository.SubmissionRepository
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
+import org.dropProject.config.DropProjectProperties
 import java.io.File
 import java.util.*
 import java.util.logging.Logger
@@ -39,12 +39,10 @@ class ScheduledTasks(
         val submissionRepository: SubmissionRepository,
         val assignmentRepository: AssignmentRepository,
         val gitClient: GitClient,
+        val dropProjectProperties: DropProjectProperties
 ) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
-
-    @Value("\${assignments.rootLocation}")
-    val assignmentsRootLocation: String = ""
 
     // run every 100 minutes
     @Scheduled(fixedRate = 6_000_000)
@@ -78,7 +76,7 @@ class ScheduledTasks(
         var refreshedKeys = 0
         for (assignment in assignments) {
             try {
-                gitClient.fetch(File(assignmentsRootLocation, assignment.gitRepositoryFolder),
+                gitClient.fetch(File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder),
                     assignment.gitRepositoryPrivKey!!.toByteArray())
                 LOG.info("Refreshed (Github) SSH key for assignment ${assignment.id}")
                 refreshedKeys++

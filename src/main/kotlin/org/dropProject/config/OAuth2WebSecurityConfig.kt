@@ -23,7 +23,7 @@ import org.dropProject.security.DropProjectSecurityConfig
 import org.dropProject.security.PersonalTokenAuthenticationManager
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
+import org.dropProject.config.DropProjectProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
@@ -40,13 +40,13 @@ import java.util.logging.Logger
 @Profile("oauth2")
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true)
-class OAuth2WebSecurityConfig(val resourceLoader: ResourceLoader,
-                              val manager: PersonalTokenAuthenticationManager) : DropProjectSecurityConfig(manager) {
+class OAuth2WebSecurityConfig(
+    val resourceLoader: ResourceLoader,
+    val manager: PersonalTokenAuthenticationManager,
+    val dropProjectProperties: DropProjectProperties
+) : DropProjectSecurityConfig(manager) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
-
-    @Value("\${dp.config.location:}")
-    val configLocationFolder: String = ""
 
     var idKey: String? = null
     val idValues = mutableMapOf<String, Array<String>>()  // idValue to roles list. e.g. "palves" -> ["ROLE_TEACHER,ROLE_ADMIN"]
@@ -76,11 +76,11 @@ class OAuth2WebSecurityConfig(val resourceLoader: ResourceLoader,
     @Bean
     fun userAuthoritiesMapper(): GrantedAuthoritiesMapper {
 
-        val loadFromConfig = configLocationFolder.isNotEmpty() && resourceLoader.getResource("file:${configLocationFolder}/oauth-roles.csv").exists()
+        val loadFromConfig = dropProjectProperties.config.location.isNotEmpty() && resourceLoader.getResource("file:${dropProjectProperties.config.location}/oauth-roles.csv").exists()
         val loadFromRoot = resourceLoader.getResource("classpath:oauth-roles.csv").exists()
 
         if (loadFromConfig || loadFromRoot) {
-            val filenameAsResource = if (loadFromConfig) "file:${configLocationFolder}/oauth-roles.csv" else "classpath:oauth-roles.csv"
+            val filenameAsResource = if (loadFromConfig) "file:${dropProjectProperties.config.location}/oauth-roles.csv" else "classpath:oauth-roles.csv"
             LOG.info("Found ${filenameAsResource}. Will load user roles from there.")
 
             val rolesFile = resourceLoader.getResource(filenameAsResource).inputStream.bufferedReader()
