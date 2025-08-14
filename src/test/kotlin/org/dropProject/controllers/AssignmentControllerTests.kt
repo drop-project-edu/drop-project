@@ -368,7 +368,7 @@ class AssignmentControllerTests {
                 .andExpect(status().isOk)
 
             // inject private and public key to continue
-            val assignment = assignmentRepository.getById("dummyAssignment2")
+            val assignment = assignmentRepository.findById("dummyAssignment2").get()
             assignment.gitRepositoryPrivKey = "-----BEGIN RSA PRIVATE KEY-----\n" +
                     "MIIEowIBAAKCAQEAgbzH8iu5BsdX8fZhsiqQRgG/ICbJ2gy4guNltnBeRchInAmP\n" +
                     "UdjAbLUBOwCAaixz4F5rtOvmuNy2kjpqmvdT8Ltoaox+GnSdsTRDVALmrST5MS4w\n" +
@@ -417,7 +417,7 @@ class AssignmentControllerTests {
                     )
                 )
 
-            val updatedAssignment = assignmentRepository.getById("dummyAssignment2")
+            val updatedAssignment = assignmentRepository.findById("dummyAssignment2").get()
             assert(updatedAssignment.active == false)
 
         } finally {
@@ -455,7 +455,7 @@ class AssignmentControllerTests {
         )
 
         try {
-            assignmentRepository.getById("dummyAssignment3")
+            assignmentRepository.findById("dummyAssignment3").get()
             fail("dummyAssignment shouldn't exist in the database")
         } catch (e: Exception) {
         }
@@ -542,7 +542,7 @@ class AssignmentControllerTests {
         this.mvc.perform(get("/assignment/setup-git/dummyAssignment5"))
             .andExpect(status().isOk)
 
-        val assignment = assignmentRepository.getById("dummyAssignment5")
+        val assignment = assignmentRepository.findById("dummyAssignment5").get()
         assert(assignment.active == false)
     }
 
@@ -738,7 +738,7 @@ class AssignmentControllerTests {
             .andExpect(flash().attribute("message", "Assignment was marked active"))
 
         // confirm it is now active
-        val assignment = assignmentRepository.getById("testJavaProj")
+        val assignment = assignmentRepository.findById("testJavaProj").get()
         assertTrue("assignment is not active", assignment.active)
     }
 
@@ -899,7 +899,7 @@ class AssignmentControllerTests {
         // make a submission
         val submissionId =
             testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1).toLong()
-        val submission = submissionRepository.getById(submissionId)
+        val submission = submissionRepository.findById(submissionId).get()
 
         // try to delete the assignment with force = true using someone who hasn't the admin role
         this.mvc.perform(
@@ -1714,7 +1714,7 @@ class AssignmentControllerTests {
             )
 
             // remove the private and public keys to mess up the connection with github
-            val assignment = assignmentRepository.getById("dummyAssignment")
+            val assignment = assignmentRepository.findById("dummyAssignment").get()
             assignment.gitRepositoryPrivKey = null
             assignment.gitRepositoryPubKey = null
             assignmentRepository.save(assignment)

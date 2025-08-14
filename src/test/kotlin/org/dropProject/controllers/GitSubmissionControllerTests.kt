@@ -140,7 +140,7 @@ class GitSubmissionControllerTests {
 
 
         try {
-            gitSubmissionRepository.getById(1)
+            gitSubmissionRepository.findById(1).get()
             fail("git submission shouldn't exist in the database")
         } catch (e: Exception) {
         }
@@ -184,7 +184,7 @@ class GitSubmissionControllerTests {
                 .andExpect(view().name("student-setup-git"))
 
         try {
-            val gitSubmission = gitSubmissionRepository.getById(1)
+            val gitSubmission = gitSubmissionRepository.findById(1).get()
             assertTrue("git submission should exist in the database", true)
             assertEquals("git@github.com:someuser/cs1Assignment1.git", gitSubmission.gitRepositoryUrl)
         } catch (e: Exception) {
@@ -260,7 +260,7 @@ class GitSubmissionControllerTests {
                 .andExpect(view().name("student-setup-git"))
 
 
-        val gitSubmission = gitSubmissionRepository.getById(1)
+        val gitSubmission = gitSubmissionRepository.findById(1).get()
         assertFalse(gitSubmission.connected)
 
         // inject public and private key
@@ -277,7 +277,7 @@ class GitSubmissionControllerTests {
                         "git@github.com:palves-ulht/sampleJavaAssignment.git tem uma " +
                         "estrutura inválida: O projecto não contém o ficheiro AUTHORS.txt na raiz"))
 
-        val updatedGitSubmission = gitSubmissionRepository.getById(1)
+        val updatedGitSubmission = gitSubmissionRepository.findById(1).get()
         assertFalse(updatedGitSubmission.connected)
 
         assertEquals(1, gitSubmissionRepository.count())
@@ -292,7 +292,7 @@ class GitSubmissionControllerTests {
 
         assertEquals(1, gitSubmissionRepository.count())  // make sure we don't have now two git submissions
 
-        val newGitSubmission = gitSubmissionRepository.getById(2)
+        val newGitSubmission = gitSubmissionRepository.findById(2).get()
 
         /*** GET /upload/ ***/
         this.mvc.perform(get("/upload/${defaultAssignmentId}")
@@ -304,7 +304,7 @@ class GitSubmissionControllerTests {
         // now let's put another student who shares a group with this one connecting to github
         val gitSubmissionId = testsHelper.connectToGitRepositoryAndBuildReport(mvc, gitSubmissionRepository, defaultAssignmentId,
                 "git@github.com:drop-project-edu/sampleJavaSubmission.git", "student1")
-        val anotherStudentGitSubmission = gitSubmissionRepository.getById(gitSubmissionId)
+        val anotherStudentGitSubmission = gitSubmissionRepository.findById(gitSubmissionId).get()
 
         /*** GET /upload/testJavaPro ***/
         this.mvc.perform(get("/upload/${defaultAssignmentId}")

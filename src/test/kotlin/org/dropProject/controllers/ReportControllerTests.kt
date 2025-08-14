@@ -339,7 +339,7 @@ class ReportControllerTests {
     @DirtiesContext
     fun downloadOriginalProjectFromGitSubmission() {
 
-        val assignment = assignmentRepository.getById("sampleJavaProject")
+        val assignment = assignmentRepository.findById("sampleJavaProject").get()
         assignment.submissionMethod = SubmissionMethod.GIT
         assignmentRepository.save(assignment)
 
@@ -361,7 +361,7 @@ class ReportControllerTests {
     @DirtiesContext
     fun downloadMavenProjectFromGitSubmission() {
 
-        val assignment = assignmentRepository.getById("sampleJavaProject")
+        val assignment = assignmentRepository.findById("sampleJavaProject").get()
         assignment.submissionMethod = SubmissionMethod.GIT
         assignmentRepository.save(assignment)
 
@@ -385,7 +385,7 @@ class ReportControllerTests {
     @DirtiesContext
     fun downloadMavenizedAllFromGitSubmissions() {
 
-        val assignment = assignmentRepository.getById("sampleJavaProject")
+        val assignment = assignmentRepository.findById("sampleJavaProject").get()
         assignment.submissionMethod = SubmissionMethod.GIT
         assignmentRepository.save(assignment)
 
@@ -426,7 +426,7 @@ class ReportControllerTests {
     @DirtiesContext
     fun leaderboardOK() {
 
-        val assignment = assignmentRepository.getById(defaultAssignmentId)
+        val assignment = assignmentRepository.findById(defaultAssignmentId).get()
         assignment.showLeaderBoard = true
         assignment.leaderboardType = LeaderboardType.ELLAPSED
         assignmentRepository.save(assignment)
@@ -538,7 +538,7 @@ class ReportControllerTests {
     @DirtiesContext
     fun exportCSVWithStudentTests() {
 
-        val assignment = assignmentRepository.getById(defaultAssignmentId)
+        val assignment = assignmentRepository.findById(defaultAssignmentId).get()
         assignment.acceptsStudentTests = true
         assignment.minStudentTests = 2
         assignmentRepository.save(assignment)
@@ -588,7 +588,7 @@ class ReportControllerTests {
     @DirtiesContext
     fun exportCSVWithMandatoryTests() {
 
-        val assignment = assignmentRepository.getById(defaultAssignmentId)
+        val assignment = assignmentRepository.findById(defaultAssignmentId).get()
 
         // first, edit the assignment to add a mandatory test suffix
         assignment.mandatoryTestsSuffix = "_OBG"

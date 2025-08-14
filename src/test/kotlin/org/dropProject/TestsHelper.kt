@@ -188,7 +188,7 @@ class TestsHelper {
                 .andExpect(MockMvcResultMatchers.status().isOk)
 
         // inject private and public key to continue
-        var assignment = assignmentRepository.getById(assignmentId)
+        var assignment = assignmentRepository.findById(assignmentId).get()
         assignment.gitRepositoryPrivKey = privateKey
         assignment.gitRepositoryPubKey = publicKey
         if (activateRightAfterCloning) {
@@ -204,7 +204,7 @@ class TestsHelper {
                 .andExpect(MockMvcResultMatchers.flash().attribute("message", "Assignment was successfully created and connected to git repository"))
 
         // refresh assignment
-        assignment = assignmentRepository.getById(assignmentId)
+        assignment = assignmentRepository.findById(assignmentId).get()
 
         return assignment
     }
@@ -229,7 +229,7 @@ class TestsHelper {
 
         val id = gitSubmissionRepository.findAll().last().id
 
-        val gitSubmission = gitSubmissionRepository.getById(id)
+        val gitSubmission = gitSubmissionRepository.findById(id).get()
         Assert.assertFalse(gitSubmission.connected)
 
         // inject public and private key
@@ -244,7 +244,7 @@ class TestsHelper {
                 .andExpect(MockMvcResultMatchers.header().string("Location", "/upload/${assignmentId}"))
                 .andExpect(MockMvcResultMatchers.flash().attribute("message", "Ligado com sucesso ao repositório git"))
 
-        val updatedGitSubmission = gitSubmissionRepository.getById(id)
+        val updatedGitSubmission = gitSubmissionRepository.findById(id).get()
         Assert.assertTrue(updatedGitSubmission.connected)
 
         /*** GET /upload/ ***/
