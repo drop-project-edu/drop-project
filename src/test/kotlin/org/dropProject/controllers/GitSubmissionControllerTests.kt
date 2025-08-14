@@ -25,7 +25,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
+import org.dropProject.config.DropProjectProperties
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.security.core.authority.SimpleGrantedAuthority
@@ -53,11 +53,8 @@ import java.io.File
 @ActiveProfiles("test")
 class GitSubmissionControllerTests {
 
-    @Value("\${mavenizedProjects.rootLocation}")
-    val mavenizedProjectsRootLocation: String = ""
-
-    @Value("\${storage.rootLocation}")
-    val submissionsRootLocation: String = ""
+    @Autowired
+    lateinit var dropProjectProperties: DropProjectProperties
 
     @Autowired
     lateinit var mvc: MockMvc
@@ -82,7 +79,7 @@ class GitSubmissionControllerTests {
 
     @Before
     fun initMavenizedFolder() {
-        val folder = File(mavenizedProjectsRootLocation)
+        val folder = File(dropProjectProperties.mavenizedProjects.rootLocation)
         if (folder.exists()) {
             folder.deleteRecursively()
         }
@@ -102,12 +99,12 @@ class GitSubmissionControllerTests {
 
     @After
     fun cleanup() {
-        val folder = File(mavenizedProjectsRootLocation)
+        val folder = File(dropProjectProperties.mavenizedProjects.rootLocation)
         if (folder.exists()) {
             folder.deleteRecursively()
         }
 
-        val submissionsFolder = File(submissionsRootLocation)
+        val submissionsFolder = File(dropProjectProperties.storage.rootLocation)
         if (submissionsFolder.exists()) {
             submissionsFolder.deleteRecursively()
         }

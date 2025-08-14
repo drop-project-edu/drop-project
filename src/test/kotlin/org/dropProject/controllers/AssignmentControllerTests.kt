@@ -49,7 +49,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.MethodSorters
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
+import org.dropProject.config.DropProjectProperties
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
@@ -114,11 +114,8 @@ class AssignmentControllerTests {
     @Autowired
     lateinit var scheduledTasks: ScheduledTasks
 
-    @Value("\${assignments.rootLocation}")
-    val assignmentsRootLocation: String = ""
-
-    @Value("\${storage.rootLocation}/upload")
-    val uploadSubmissionsRootLocation: String = "submissions/upload"
+    @Autowired
+    lateinit var dropProjectProperties: DropProjectProperties
 
     val TEACHER_1 = User("teacher1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
     val STUDENT_1 = User("student1", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
@@ -335,8 +332,8 @@ class AssignmentControllerTests {
         } finally {
 
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignment1").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment1").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment1").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment1").deleteRecursively()
             }
         }
     }
@@ -423,8 +420,8 @@ class AssignmentControllerTests {
         } finally {
 
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignment2").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment2").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment2").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment2").deleteRecursively()
             }
         }
     }
@@ -513,8 +510,8 @@ class AssignmentControllerTests {
 
         } finally {
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignment4").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment4").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment4").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment4").deleteRecursively()
             }
         }
     }
@@ -587,8 +584,8 @@ class AssignmentControllerTests {
         } finally {
 
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignment6").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment6").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment6").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment6").deleteRecursively()
             }
         }
     }
@@ -631,8 +628,8 @@ class AssignmentControllerTests {
         } finally {
 
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignment7").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment7").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment7").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment7").deleteRecursively()
             }
         }
     }
@@ -711,8 +708,8 @@ class AssignmentControllerTests {
         } finally {
 
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignment8").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment8").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment8").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment8").deleteRecursively()
             }
         }
     }
@@ -776,8 +773,8 @@ class AssignmentControllerTests {
 
         // make a copy of the "testJavaProj" assignment files and create an assignment based on the copy
         // so that we can safely delete it, without affecting the original files
-        val assignmentFolder = File(assignmentsRootLocation, "testJavaProjForDelete")
-        FileUtils.copyDirectory(File(assignmentsRootLocation, "testJavaProj"), assignmentFolder)
+        val assignmentFolder = File(dropProjectProperties.assignments.rootLocation, "testJavaProjForDelete")
+        FileUtils.copyDirectory(File(dropProjectProperties.assignments.rootLocation, "testJavaProj"), assignmentFolder)
 
         // create initial assignment
         val assignment = Assignment(
@@ -827,8 +824,8 @@ class AssignmentControllerTests {
 
         // make a copy of the "testJavaProj" assignment files and create an assignment based on the copy
         // so that we can safely delete it, without affecting the original files
-        val assignmentFolder = File(assignmentsRootLocation, "testJavaProjForDelete")
-        FileUtils.copyDirectory(File(assignmentsRootLocation, "testJavaProj"), assignmentFolder)
+        val assignmentFolder = File(dropProjectProperties.assignments.rootLocation, "testJavaProjForDelete")
+        FileUtils.copyDirectory(File(dropProjectProperties.assignments.rootLocation, "testJavaProj"), assignmentFolder)
 
         // create two initial assignments
         val assignment1 = Assignment(
@@ -882,8 +879,8 @@ class AssignmentControllerTests {
 
         // make a copy of the "testJavaProj" assignment files and create an assignment based on the copy
         // so that we can safely delete it, without affecting the original files
-        val assignmentFolder = File(assignmentsRootLocation, "testJavaProjForDelete")
-        FileUtils.copyDirectory(File(assignmentsRootLocation, "testJavaProj"), assignmentFolder)
+        val assignmentFolder = File(dropProjectProperties.assignments.rootLocation, "testJavaProjForDelete")
+        FileUtils.copyDirectory(File(dropProjectProperties.assignments.rootLocation, "testJavaProj"), assignmentFolder)
 
         // create initial assignment
         val assignment = Assignment(
@@ -923,7 +920,7 @@ class AssignmentControllerTests {
         assertFalse("$assignmentFolder should have been deleted", assignmentFolder.exists())
 
         // check if the submission folder was deleted
-        val submissionFolder = File(uploadSubmissionsRootLocation, submission.submissionFolder)
+        val submissionFolder = File(dropProjectProperties.storage.uploadLocation, submission.submissionFolder)
         assertFalse("$submissionFolder should have been deleted", submissionFolder.exists())
 
         // check if the submission was deleted from the database
@@ -938,8 +935,8 @@ class AssignmentControllerTests {
 
         // make a copy of the "testJavaProj" assignment files and create an assignment based on the copy
         // so that we can safely delete it, without affecting the original files
-        val assignmentFolder = File(assignmentsRootLocation, "testJavaProjForDelete")
-        FileUtils.copyDirectory(File(assignmentsRootLocation, "testJavaProj"), assignmentFolder)
+        val assignmentFolder = File(dropProjectProperties.assignments.rootLocation, "testJavaProjForDelete")
+        FileUtils.copyDirectory(File(dropProjectProperties.assignments.rootLocation, "testJavaProj"), assignmentFolder)
 
         // create initial assignment
         val assignment = Assignment(
@@ -1054,8 +1051,8 @@ class AssignmentControllerTests {
 
         } finally {
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignment4").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment4").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment4").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment4").deleteRecursively()
             }
         }
     }
@@ -1083,8 +1080,8 @@ class AssignmentControllerTests {
         } finally {
 
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignment1").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment1").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment1").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment1").deleteRecursively()
             }
         }
     }
@@ -1227,8 +1224,8 @@ class AssignmentControllerTests {
         } finally {
 
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignmentTags").exists()) {
-                File(assignmentsRootLocation, "dummyAssignmentTags").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignmentTags").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignmentTags").deleteRecursively()
             }
         }
     }
@@ -1260,8 +1257,8 @@ class AssignmentControllerTests {
         } finally {
 
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignmentTests").exists()) {
-                File(assignmentsRootLocation, "dummyAssignmentTests").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignmentTests").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignmentTests").deleteRecursively()
             }
         }
     }
@@ -1334,12 +1331,12 @@ class AssignmentControllerTests {
 
         } finally {
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignment4").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment4").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment4").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment4").deleteRecursively()
             }
 
-            if (File(assignmentsRootLocation, "dummyAssignment5").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment5").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment5").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment5").deleteRecursively()
             }
         }
     }
@@ -1409,8 +1406,8 @@ class AssignmentControllerTests {
         } finally {
 
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignment1").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment1").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment1").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment1").deleteRecursively()
             }
         }
     }
@@ -1447,7 +1444,7 @@ class AssignmentControllerTests {
 
         } finally {
             // remove the assignments files created during the test
-            File(assignmentsRootLocation, "dummyAssignment1").deleteRecursively()
+            File(dropProjectProperties.assignments.rootLocation, "dummyAssignment1").deleteRecursively()
         }
     }
 
@@ -1584,8 +1581,8 @@ class AssignmentControllerTests {
         } finally {
 
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignment1").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment1").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment1").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment1").deleteRecursively()
             }
         }
 
@@ -1693,8 +1690,8 @@ class AssignmentControllerTests {
         } finally {
 
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignment1").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment1").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment1").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment1").deleteRecursively()
             }
         }
 
@@ -1748,8 +1745,8 @@ class AssignmentControllerTests {
 
         } finally {
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignment").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment").deleteRecursively()
             }
         }
 
@@ -1794,8 +1791,8 @@ class AssignmentControllerTests {
         } finally {
 
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignmentTests").exists()) {
-                File(assignmentsRootLocation, "dummyAssignmentTests").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignmentTests").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignmentTests").deleteRecursively()
             }
         }
     }
@@ -1906,8 +1903,8 @@ class AssignmentControllerTests {
         } finally {
 
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignment7").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment7").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment7").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment7").deleteRecursively()
             }
         }
     }
@@ -2003,8 +2000,8 @@ class AssignmentControllerTests {
         } finally {
 
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignment1").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment1").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment1").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment1").deleteRecursively()
             }
         }
     }
@@ -2054,8 +2051,8 @@ class AssignmentControllerTests {
 
         } finally {
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignment4").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment4").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment4").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment4").deleteRecursively()
             }
         }
     }
@@ -2081,8 +2078,8 @@ class AssignmentControllerTests {
 
         } finally {
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignment1").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment1").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment1").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment1").deleteRecursively()
             }
         }
     }

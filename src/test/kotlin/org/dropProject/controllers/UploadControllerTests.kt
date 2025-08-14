@@ -44,7 +44,7 @@ import org.junit.runner.RunWith
 import org.mockito.BDDMockito.verify
 import org.mockito.Mockito.never
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
+import org.dropProject.config.DropProjectProperties
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.core.io.ResourceLoader
@@ -74,14 +74,8 @@ import java.util.*
 @ActiveProfiles("test")
 class UploadControllerTests {
 
-    @Value("\${mavenizedProjects.rootLocation}")
-    val mavenizedProjectsRootLocation: String = ""
-
-    @Value("\${assignments.rootLocation}")
-    val assignmentsRootLocation: String = ""
-
-    @Value("\${storage.rootLocation}")
-    val submissionsRootLocation: String = ""
+    @Autowired
+    lateinit var dropProjectProperties: DropProjectProperties
 
     @Autowired
     lateinit var mvc: MockMvc
@@ -126,7 +120,7 @@ class UploadControllerTests {
 
     @Before
     fun setup() {
-        var folder = File(mavenizedProjectsRootLocation)
+        var folder = File(dropProjectProperties.mavenizedProjects.rootLocation)
         if (folder.exists()) {
             folder.deleteRecursively()
         }
@@ -149,12 +143,12 @@ class UploadControllerTests {
 
     @After
     fun cleanup() {
-        val folder = File(mavenizedProjectsRootLocation)
+        val folder = File(dropProjectProperties.mavenizedProjects.rootLocation)
         if (folder.exists()) {
             folder.deleteRecursively()
         }
 
-        val submissionsFolder = File(submissionsRootLocation)
+        val submissionsFolder = File(dropProjectProperties.storage.rootLocation)
         if (submissionsFolder.exists()) {
             submissionsFolder.deleteRecursively()
         }
@@ -221,7 +215,7 @@ class UploadControllerTests {
         val submissionId = testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", "testJavaProj", STUDENT_1)
 
         val submissionDB = submissionRepository.findById(submissionId.toLong()).get()
-        val submissionFolder = File("$submissionsRootLocation/upload", submissionDB.submissionFolder)
+        val submissionFolder = File("${dropProjectProperties.storage.rootLocation}/upload", submissionDB.submissionFolder)
 
         assertTrue("submission folder doesn't exist", submissionFolder.exists())
 
@@ -1069,7 +1063,7 @@ class UploadControllerTests {
                 .andExpect(redirectedUrl("/buildReport/2"))
                 .andExpect(status().isFound())
 
-        var mavenizedProjectsFolder = File(mavenizedProjectsRootLocation,
+        var mavenizedProjectsFolder = File(dropProjectProperties.mavenizedProjects.rootLocation,
                                             Submission.relativeUploadFolder("testJavaProj", Date()))
         assertEquals(2, mavenizedProjectsFolder.list().size)
 
@@ -1120,8 +1114,8 @@ class UploadControllerTests {
         } finally {
 
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "sampleJavaAssignment").exists()) {
-                File(assignmentsRootLocation, "sampleJavaAssignment").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "sampleJavaAssignment").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "sampleJavaAssignment").deleteRecursively()
             }
         }
 
@@ -1150,9 +1144,9 @@ class UploadControllerTests {
     @DirtiesContext
     fun uploadProjectWithErrors_then_updateAssignment_then_rebuildFull() {
 
-        val testFile = File("${assignmentsRootLocation}/testJavaProj/src/test/java/org/dropProject/sampleAssignments/testProj/TestTeacherProject.java")
+        val testFile = File("${dropProjectProperties.assignments.rootLocation}/testJavaProj/src/test/java/org/dropProject/sampleAssignments/testProj/TestTeacherProject.java")
         val backupTestFile = testFile.copyTo(
-                File("${assignmentsRootLocation}/testJavaProj/src/test/java/org/dropProject/sampleAssignments/testProj/TestTeacherProject.java.backup"),
+                File("${dropProjectProperties.assignments.rootLocation}/testJavaProj/src/test/java/org/dropProject/sampleAssignments/testProj/TestTeacherProject.java.backup"),
                 overwrite = true)
 
         val uploader = User("a21702482", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
@@ -1737,8 +1731,8 @@ class UploadControllerTests {
 
         } finally {
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignment4").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment4").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment4").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment4").deleteRecursively()
             }
         }
     }
@@ -1781,8 +1775,8 @@ class UploadControllerTests {
 
         } finally {
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignment4").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment4").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment4").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment4").deleteRecursively()
             }
         }
     }

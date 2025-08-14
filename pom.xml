@@ -31,9 +31,17 @@
 		<start-class>org.dropProject.DropProjectApplication</start-class>
 		<license.licenseName>apache_v2</license.licenseName>
 		<orchid.version>0.21.1</orchid.version>
+		<antlr.version>4.13.0</antlr.version>
 	</properties>
 
 	<dependencies>
+		<!-- ANTLR version override to fix version mismatch warning -->
+		<dependency>
+			<groupId>org.antlr</groupId>
+			<artifactId>antlr4-runtime</artifactId>
+			<version>${antlr.version}</version>
+		</dependency>
+		
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-thymeleaf</artifactId>
