@@ -19,11 +19,12 @@
  */
 package org.dropProject.services
 
-import org.dropProject.dao.Assignment
 import org.dropProject.repository.AssignmentACLRepository
 import org.dropProject.repository.AssignmentRepository
 import org.dropProject.repository.GitSubmissionRepository
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.web.server.ResponseStatusException
 
 @Service
 class AuthorizationService(
@@ -34,7 +35,8 @@ class AuthorizationService(
 ) {
 
     fun canAccessAssignment(assignmentId: String, userId: String, isTeacher: Boolean): Boolean {
-        val assignment = assignmentRepository.findById(assignmentId).orElse(null) ?: return false
+        val assignment = assignmentRepository.findById(assignmentId)
+            .orElseThrow { throw ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found") }
         
         if (!isTeacher) {
             if (!assignment.active) {
@@ -56,7 +58,9 @@ class AuthorizationService(
     }
 
     fun canAccessAssignmentByGitSubmissionId(gitSubmissionId: String, userId: String, isTeacher: Boolean): Boolean {
-        val gitSubmission = gitSubmissionRepository.findById(gitSubmissionId.toLong()).orElse(null) ?: return false
+
+        val gitSubmission = gitSubmissionRepository.findById(gitSubmissionId.toLong())
+            .orElseThrow { throw ResponseStatusException(HttpStatus.NOT_FOUND, "Git Submission ${gitSubmissionId} not found") }
         return canAccessAssignment(gitSubmission.assignmentId, userId, isTeacher)
     }
 }

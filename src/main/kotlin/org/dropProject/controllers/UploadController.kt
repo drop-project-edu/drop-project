@@ -42,7 +42,6 @@ import org.springframework.scheduling.annotation.EnableAsync
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.RefNotAdvertisedException
 import org.springframework.security.access.AccessDeniedException
-import org.springframework.security.access.prepost.PreAuthorize
 import org.dropProject.dao.*
 import org.dropProject.data.SubmissionResult
 import org.dropProject.extensions.realName
@@ -58,6 +57,7 @@ import java.time.format.DateTimeFormatter
 import java.util.concurrent.Executor
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import org.springframework.web.server.ResponseStatusException
 import kotlin.collections.HashSet
 
 /**
@@ -181,12 +181,18 @@ class UploadController(
      * @return A String identifying the relevant View
      */
     @RequestMapping(value = ["/upload/{assignmentId}"], method = [(RequestMethod.GET)])
-    @PreAuthorize("@authorizationService.canAccessAssignment(#assignmentId, authentication.name, hasRole('TEACHER'))")
     fun getUploadForm(model: ModelMap, principal: Principal,
                       @PathVariable("assignmentId") assignmentId: String,
                       request: HttpServletRequest): String {
 
-        val assignment = assignmentRepository.findById(assignmentId).orElse(null) ?: throw AssignmentNotFoundException(assignmentId)
+        // Check if assignment exists first (404 if not)
+        val assignment = assignmentRepository.findById(assignmentId)
+            .orElseThrow { throw ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found") }
+
+        // Check authorization (403 if unauthorized)
+        if (!authorizationService.canAccessAssignment(assignmentId, principal.name, request.isUserInRole("TEACHER"))) {
+            throw AccessDeniedException("User ${principal.name} is not authorized to access assignment $assignmentId")
+        }
 
         model["assignment"] = assignment
         model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.realName(), assignment.id)
@@ -391,14 +397,18 @@ class UploadController(
      * @return A String identifying the relevant View
      */
     @RequestMapping(value = ["/student/setup-git"], method = [(RequestMethod.POST)])
-    @PreAuthorize("@authorizationService.canAccessAssignment(#assignmentId, authentication.name, hasRole('TEACHER'))")
     fun setupStudentSubmissionUsingGitRepository(@RequestParam("assignmentId") assignmentId: String,
                                                  @RequestParam("gitRepositoryUrl") gitRepositoryUrl: String?,
                                                  model: ModelMap, principal: Principal,
                                                  request: HttpServletRequest): String {
 
-        val assignment = assignmentRepository.findById(assignmentId)
-            .orElseThrow { EntityNotFoundException("Assignment ${assignmentId} not found") }
+        // Check if assignment exists first (404 if not)
+        val assignment = assignmentRepository.findById(assignmentId).orElse(null) ?: throw AssignmentNotFoundException(assignmentId)
+        
+        // Check authorization (403 if unauthorized)
+        if (!authorizationService.canAccessAssignment(assignmentId, principal.name, request.isUserInRole("TEACHER"))) {
+            throw AccessDeniedException("User ${principal.name} is not authorized to access assignment $assignmentId")
+        }
 
         model["assignment"] = assignment
         model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.realName(), assignment.id)
@@ -597,14 +607,18 @@ class UploadController(
      * @return a ResponseEntity<String>
      */
     @RequestMapping(value = ["/git-submission/generate-report/{gitSubmissionId}"], method = [(RequestMethod.POST)])
-    @PreAuthorize("@authorizationService.canAccessAssignmentByGitSubmissionId(#gitSubmissionId, authentication.name, hasRole('TEACHER'))")
     fun upload(@PathVariable gitSubmissionId: String,
                principal: Principal,
                request: HttpServletRequest): ResponseEntity<String> {
 
-        val gitSubmission = gitSubmissionRepository.findById(gitSubmissionId.toLong()).orElse(null) ?:
-        throw IllegalArgumentException("git submission ${gitSubmissionId} is not registered")
+        // Check if git submission exists first (404 if not)
+        val gitSubmission = gitSubmissionRepository.findById(gitSubmissionId.toLong()).orElse(null) ?: throw SubmissionNotFoundException(gitSubmissionId.toLong())
         val assignment = assignmentRepository.findById(gitSubmission.assignmentId).orElse(null)
+        
+        // Check authorization (403 if unauthorized)  
+        if (!authorizationService.canAccessAssignmentByGitSubmissionId(gitSubmissionId, principal.name, request.isUserInRole("TEACHER"))) {
+            throw AccessDeniedException("User ${principal.name} is not authorized to access git submission $gitSubmissionId")
+        }
 
         if (assignment.cooloffPeriod != null && !request.isUserInRole("TEACHER")) {
             val lastSubmission = submissionService.getLastSubmission(principal, assignment.id)

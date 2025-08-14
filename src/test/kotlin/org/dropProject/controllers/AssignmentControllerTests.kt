@@ -1388,7 +1388,7 @@ class AssignmentControllerTests {
             val downloadedFileAsZipObject = ZipFile(downloadedZipFile)
             downloadedFileAsZipObject.extractFile("assignment.json", "result")
 
-            val mapper = ObjectMapper().registerModule(KotlinModule())
+            val mapper = ObjectMapper().registerModule(KotlinModule.Builder().build())
             val node = mapper.readTree(downloadedJSONFileName)
             assertEquals("dummyAssignment1", node.at("/id").asText())
             assertEquals("Dummy Assignment", node.at("/name").asText())
@@ -1503,7 +1503,7 @@ class AssignmentControllerTests {
         val downloadedFileAsZipObject = ZipFile(downloadedZipFile)
         downloadedFileAsZipObject.extractFile("submissions.json", "result")
 
-        val mapper = ObjectMapper().registerModule(KotlinModule())
+        val mapper = ObjectMapper().registerModule(KotlinModule.Builder().build())
         val node = mapper.readTree(downloadedJSONFileName)
         assertEquals("testJavaProj", node.at("/0/assignmentId").asText())
         assertEquals("student1", node.at("/0/submitterUserId").asText())
@@ -1640,7 +1640,7 @@ class AssignmentControllerTests {
         val downloadedFileAsZipObject = ZipFile(downloadedZipFile)
         downloadedFileAsZipObject.extractFile("git-submissions.json", "result")
 
-        val mapper = ObjectMapper().registerModule(KotlinModule())
+        val mapper = ObjectMapper().registerModule(KotlinModule.Builder().build())
         val node = mapper.readTree(downloadedJSONFileName)
         assertEquals("testJavaProj", node.at("/0/assignmentId").asText())
         assertEquals("student1", node.at("/0/submitterUserId").asText())

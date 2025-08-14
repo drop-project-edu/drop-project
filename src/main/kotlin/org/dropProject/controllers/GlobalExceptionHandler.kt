@@ -59,6 +59,12 @@ class GlobalExceptionHandler {
     // TODO: This assumes a REST response, But what about HTML responses?...
     @ExceptionHandler(RuntimeException::class)
     fun genericException(exception: Exception): ResponseEntity<String> {
+        // Handle ResponseStatusException properly
+        if (exception is org.springframework.web.server.ResponseStatusException) {
+            LOG.warn("ResponseStatusException: ${exception.reason}")
+            return ResponseEntity(exception.reason ?: exception.message, exception.statusCode)
+        }
+        
         LOG.error("Generic exception", exception)
         exception.printStackTrace()  // TODO For same reason, the above line doesn't print the stacktrace
         return ResponseEntity("{\"error\": \"${exception}\"}", HttpStatus.INTERNAL_SERVER_ERROR)
