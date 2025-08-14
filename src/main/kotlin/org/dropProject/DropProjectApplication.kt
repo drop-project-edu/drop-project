@@ -19,39 +19,20 @@
  */
 package org.dropProject
 
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.builder.SpringApplicationBuilder
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer
-import org.springframework.cache.CacheManager
 import org.springframework.cache.annotation.EnableCaching
-import org.springframework.cache.jcache.JCacheCacheManager
-import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.PropertySource
 import org.springframework.scheduling.annotation.EnableScheduling
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
-import javax.cache.Caching
-import javax.cache.configuration.MutableConfiguration
 
 
 @SpringBootApplication
 @EnableScheduling
 @EnableCaching
-@EnableMethodSecurity
 @PropertySource("classpath:drop-project.properties")
 class DropProjectApplication : SpringBootServletInitializer() {
-
-    @Bean
-    fun cacheManager(): CacheManager {
-        val cachingProvider = Caching.getCachingProvider()
-        val cacheManager = cachingProvider.cacheManager
-        val cacheConfiguration = MutableConfiguration<Any, Any>()
-        if (cacheManager.getCache<Any, Any>(Constants.CACHE_ARCHIVED_ASSIGNMENTS_KEY) == null) {
-            cacheManager.createCache(Constants.CACHE_ARCHIVED_ASSIGNMENTS_KEY, cacheConfiguration)
-        }
-        return JCacheCacheManager(cacheManager)
-    }
 
     override fun configure(application: SpringApplicationBuilder): SpringApplicationBuilder {
         // to prevent "Cannot forward to error page for request [...] as the response has already been committed"
