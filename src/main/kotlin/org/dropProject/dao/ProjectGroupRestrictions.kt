@@ -28,7 +28,7 @@ import jakarta.persistence.PreUpdate
 
 @Entity
 data class ProjectGroupRestrictions(
-    @Id @GeneratedValue
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
 
     var minGroupSize: Int = 1,

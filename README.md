@@ -133,7 +133,7 @@ Just connect to `https://<server-url>/mcp` with an Authorization header: `Bearer
 
 For example, connect claude code with Drop Project running on localhost:
 
-    claude mcp add --transport http drop-project http://localhost:8080/mcp/ --header "Authorization: Bearer xxxxx" (replace xxxxx with your personal token)
+    claude mcp add --transport http drop-project https://playground.dropproject.org/dp/mcp/ --header "Authorization: Bearer xxxxx" (replace xxxxx with your personal token)
 
 ## Plugin
 

@@ -32,7 +32,7 @@ import jakarta.persistence.*
 @Entity
 @Table(uniqueConstraints=[UniqueConstraint(columnNames = ["submissionId", "fileName"])], indexes = [Index(columnList = "submissionId")])
 data class JUnitReport(
-        @Id @GeneratedValue
+        @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
         val id: Long = 0,
 
         val submissionId: Long,  // submission.id

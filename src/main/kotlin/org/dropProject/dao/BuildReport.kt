@@ -29,7 +29,7 @@ import jakarta.persistence.*
  */
 @Entity
 data class BuildReport(
-        @Id @GeneratedValue
+        @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
         val id: Long = 0,
 
         @Column(columnDefinition = "LONGTEXT", nullable = false)

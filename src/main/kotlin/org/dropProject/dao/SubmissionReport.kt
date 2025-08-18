@@ -64,7 +64,7 @@ enum class Indicator(val code: String, val description: String) {
 @Entity
 @Table(indexes = [Index(columnList = "submissionId")])
 data class SubmissionReport(
-        @Id @GeneratedValue
+        @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
         val id: Long = 0,
         val submissionId: Long = 0,  // FK for Submission.id
 

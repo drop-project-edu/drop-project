@@ -32,7 +32,7 @@ import jakarta.persistence.*
 @Entity
 @Table(uniqueConstraints=[UniqueConstraint(columnNames = ["assignmentId", "authorUserId"])])
 data class Assignee(
-        @Id @GeneratedValue
+        @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
         val id: Long = 0,
 
         val assignmentId: String,

@@ -33,7 +33,7 @@ import jakarta.persistence.*
  */
 @Entity
 class Author(
-        @Id @GeneratedValue
+        @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
         @JsonView(JSONViews.TeacherAPI::class)
         val id: Long = 0,
         name: String,

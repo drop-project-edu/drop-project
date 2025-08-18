@@ -43,7 +43,7 @@ import jakarta.persistence.*
 @Entity
 @Table(uniqueConstraints=[UniqueConstraint(columnNames = ["submitterUserId", "assignmentId"])])
 data class GitSubmission(
-        @Id @GeneratedValue
+        @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
         val id: Long = 0,
 
         @Column(length = 50)

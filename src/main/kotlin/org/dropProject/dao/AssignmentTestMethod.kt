@@ -32,7 +32,7 @@ import jakarta.persistence.*
 @Entity
 data class AssignmentTestMethod(
         @Id
-        @GeneratedValue
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
         val id: Long = 0,
 
         @ManyToOne

@@ -33,6 +33,6 @@ import jakarta.persistence.*
  */
 @Entity
 class SubmissionGitInfo(
-        @Id @GeneratedValue val id: Long = 0,
+        @Id @GeneratedValue(strategy = GenerationType.IDENTITY) val id: Long = 0,
         @Column(unique = true) val submissionId: Long, // FK for Submission
         val gitCommitHash: String)

@@ -33,7 +33,7 @@ import jakarta.persistence.*
  */
 @Entity
 data class ProjectGroup(
-        @Id @GeneratedValue
+        @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
         @JsonView(JSONViews.TeacherAPI::class)
         val id: Long = 0
 ){

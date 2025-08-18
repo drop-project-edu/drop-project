@@ -33,7 +33,7 @@ import jakarta.persistence.*
 @Entity
 data class AssignmentTag(
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
 
     @Column(unique = true)

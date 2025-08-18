@@ -92,7 +92,7 @@ enum class SubmissionMode {
 
 @Entity @JsonInclude(JsonInclude.Include.NON_EMPTY)
 data class Submission(
-        @Id @GeneratedValue
+        @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
         @JsonView(JSONViews.StudentAPI::class)
         val id: Long = 0,
         val submissionId: String? = null,
