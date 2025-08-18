@@ -188,7 +188,7 @@ data class Assignment(
     )
     var tags: MutableSet<AssignmentTag> = mutableSetOf(),
 
-    @JsonView(JSONViews.StudentAPI::class)
+    @JsonView(JSONViews.StudentAPI::class, JSONViews.TeacherAPI::class)
     @Transient
     var instructions: AssignmentInstructions? = null,
 

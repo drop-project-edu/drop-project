@@ -58,7 +58,10 @@ data class DropProjectProperties(
     val config: Config = Config(),
     
     /** Footer configuration */
-    val footer: Footer = Footer()
+    val footer: Footer = Footer(),
+    
+    /** MCP configuration */
+    val mcp: Mcp = Mcp()
 ) {
 
     data class Storage(
@@ -111,4 +114,10 @@ data class DropProjectProperties(
         /** Custom footer message */
         val message: String = ""
     )
+
+    data class Mcp(
+        /** Enable or disable MCP endpoints */
+        val enabled: Boolean = true
+    )
+
 }

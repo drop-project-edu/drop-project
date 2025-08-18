@@ -372,9 +372,9 @@ class AssignmentController(
      * @return a String with the name of the relevant View
      */
     @RequestMapping(value = ["/info/{assignmentId}"], method = [(RequestMethod.GET)])
-    @Transactional(readOnly = true)  // because of assignment.tags forced loading
     fun getAssignmentDetail(@PathVariable assignmentId: String, model: ModelMap, principal: Principal, request: HttpServletRequest): String {
 
+        // Check if assignment needs git setup before getting detail data
         val assignment = assignmentRepository.findById(assignmentId)
             .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
 
@@ -383,38 +383,26 @@ class AssignmentController(
             return "redirect:/assignment/setup-git/${assignment.id}"
         }
 
-        val assignees = assigneeRepository.findByAssignmentIdOrderByAuthorUserId(assignmentId)
-        val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
-        val assignmentReports = assignmentReportRepository.findByAssignmentId(assignmentId)
+        // Use the service method to get all assignment detail data
+        val isAdmin = request.isUserInRole("DROP_PROJECT_ADMIN")
+        val assignmentDetail = assignmentService.getAssignmentDetailData(assignmentId, principal, isAdmin)
 
-        if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
-            throw IllegalAccessException("Assignments can only be accessed by their owner or authorized teachers")
+        // Populate the model with data from the service
+        model["assignment"] = assignmentDetail.assignment
+        model["assignees"] = assignmentDetail.assignees
+        model["acl"] = assignmentDetail.acl
+        model["tests"] = assignmentDetail.tests
+        model["report"] = assignmentDetail.reports
+        model["reportMsg"] = assignmentDetail.reportMessage
+        model["isAdmin"] = assignmentDetail.isAdmin
+
+        // Add git-related information if available
+        if (assignmentDetail.lastCommitInfo != null) {
+            model["lastCommitInfoStr"] = assignmentDetail.lastCommitInfo
         }
-
-        model["assignment"] = assignment
-        model["assignees"] = assignees
-        model["acl"] = acl
-        model["tests"] = assignmentTestMethodRepository.findByAssignmentId(assignmentId)
-        model["report"] = assignmentReports
-        model["reportMsg"] = if (assignmentReports.any { it.type != AssignmentValidator.InfoType.INFO }) {
-            "Assignment has errors! You have to fix them before activating it."
-        } else {
-            "Good job! Assignment has no errors and is ready to be activated."
+        if (assignmentDetail.sshKeyFingerprint != null) {
+            model["sshKeyFingerprint"] = assignmentDetail.sshKeyFingerprint
         }
-
-        // check if it has been setup for git connection and if there is a repository folder
-        if (assignment.gitRepositoryPrivKey != null && File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder).exists()) {
-
-            // get git info
-            val git = Git.open(File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder))
-            val lastCommitInfo = gitClient.getLastCommitInfo(git)
-            val sshKeyFingerprint = gitClient.computeSshFingerprint(assignment.gitRepositoryPubKey!!)
-
-            model["lastCommitInfoStr"] = if (lastCommitInfo != null) lastCommitInfo.toString() else "No commits"
-            model["sshKeyFingerprint"] = sshKeyFingerprint
-        }
-
-        model["isAdmin"] = request.isUserInRole("DROP_PROJECT_ADMIN")
 
         return "assignment-detail";
     }

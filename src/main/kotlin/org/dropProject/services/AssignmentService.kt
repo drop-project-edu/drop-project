@@ -800,4 +800,64 @@ class AssignmentService(
             }
         }
     }
+
+    /**
+     * Gets comprehensive assignment detail information including assignees, ACL, tests, reports, and git info.
+     * This method extracts the business logic from AssignmentController.getAssignmentDetail() for reuse.
+     * 
+     * @param assignmentId the ID of the assignment to retrieve
+     * @param principal the user making the request
+     * @param isAdmin whether the user has admin privileges
+     * @return AssignmentDetailResponse containing all assignment detail data
+     * @throws EntityNotFoundException if the assignment is not found
+     * @throws IllegalAccessException if the user is not authorized to access the assignment
+     */
+    @Transactional(readOnly = true)  // because of assignment.tags forced loading
+    fun getAssignmentDetailData(assignmentId: String, principal: Principal, isAdmin: Boolean): AssignmentDetailResponse {
+        val assignment = assignmentRepository.findById(assignmentId)
+            .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
+
+        val assignees = assigneeRepository.findByAssignmentIdOrderByAuthorUserId(assignmentId)
+        val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
+        val assignmentReports = assignmentReportRepository.findByAssignmentId(assignmentId)
+
+        // Authorization check
+        if (principal.realName() != assignment.ownerUserId && acl.find { it.userId == principal.realName() } == null) {
+            throw IllegalAccessException("Assignments can only be accessed by their owner or authorized teachers")
+        }
+
+        val tests = assignmentTestMethodRepository.findByAssignmentId(assignmentId)
+        
+        val reportMessage = if (assignmentReports.any { it.type != AssignmentValidator.InfoType.INFO }) {
+            "Assignment has errors! You have to fix them before activating it."
+        } else {
+            "Good job! Assignment has no errors and is ready to be activated."
+        }
+
+        // Git information (if available)
+        var lastCommitInfo: String? = null
+        var sshKeyFingerprint: String? = null
+        
+        if (assignment.gitRepositoryPrivKey != null && File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder).exists()) {
+            val git = Git.open(File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder))
+            val lastCommitInfoObj = gitClient.getLastCommitInfo(git)
+            lastCommitInfo = lastCommitInfoObj?.toString() ?: "No commits"
+            sshKeyFingerprint = assignment.gitRepositoryPubKey?.let { gitClient.computeSshFingerprint(it) }
+        }
+
+        // fetch instructions
+        assignment.instructions = assignmentTeacherFiles.getInstructions(assignment)
+
+        return AssignmentDetailResponse(
+            assignment = assignment,
+            assignees = assignees,
+            acl = acl,
+            tests = tests,
+            reports = assignmentReports,
+            reportMessage = reportMessage,
+            lastCommitInfo = lastCommitInfo,
+            sshKeyFingerprint = sshKeyFingerprint,
+            isAdmin = isAdmin
+        )
+    }
 }

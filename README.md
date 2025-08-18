@@ -125,6 +125,16 @@ Some services are accessible through an API, protected by personal tokens.
 
 Documentation: [https://playground.dropproject.org/dp/swagger-ui.html](https://playground.dropproject.org/dp/swagger-ui.html)
 
+## MCP (experimental)
+
+Drop Project can act an [MCP](https://modelcontextprotocol.io/) server. Right now, only some operations are permitted and only for teachers.
+
+Just connect to `https://<server-url>/mcp` with an Authorization header: `Bearer <your-personal-token>`.
+
+For example, connect claude code with Drop Project running on localhost:
+
+    claude mcp add --transport http drop-project http://localhost:8080/mcp/ --header "Authorization: Bearer xxxxx" (replace xxxxx with your personal token)
+
 ## Plugin
 
 There is a [plugin for Intellij](https://plugins.jetbrains.com/plugin/25078-drop-project) that allows students to submit their projects directly from the IDE.
