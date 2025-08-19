@@ -19,12 +19,7 @@
  */
 package org.dropProject.dao
 
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.Id
-import jakarta.persistence.PrePersist
-import jakarta.persistence.PreUpdate
+import jakarta.persistence.*
 
 @Entity
 data class ProjectGroupRestrictions(

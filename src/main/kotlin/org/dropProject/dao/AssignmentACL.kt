@@ -19,10 +19,8 @@
  */
 package org.dropProject.dao
 
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.Id
+import jakarta.persistence.*
+
 
 /**
  * Represents the association between an [Assignment] and a user that can access it.
@@ -32,6 +30,7 @@ import jakarta.persistence.Id
  * @userId is a String, identifying the user
  */
 @Entity
+@Table(name = "assignment_acl")  // for some reason, hibernate creates an assignmentacl table if I don't put this
 data class AssignmentACL(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
