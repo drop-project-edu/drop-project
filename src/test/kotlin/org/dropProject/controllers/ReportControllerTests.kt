@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.controllers
+package org.dropproject.controllers
 
 import net.lingala.zip4j.ZipFile
 import org.apache.commons.io.FileUtils
@@ -27,7 +27,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
-import org.dropProject.config.DropProjectProperties
+import org.dropproject.config.DropProjectProperties
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.core.io.ResourceLoader
@@ -44,15 +44,15 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import java.io.File
 import java.nio.file.Files
-import org.dropProject.TestsHelper
-import org.dropProject.dao.*
-import org.dropProject.data.*
-import org.dropProject.extensions.formatDefault
-import org.dropProject.forms.SubmissionMethod
-import org.dropProject.repository.*
-import org.dropProject.services.AssignmentService
-import org.dropProject.services.PlagiarismComparison
-import org.dropProject.services.ZipService
+import org.dropproject.TestsHelper
+import org.dropproject.dao.*
+import org.dropproject.data.*
+import org.dropproject.extensions.formatDefault
+import org.dropproject.forms.SubmissionMethod
+import org.dropproject.repository.*
+import org.dropproject.services.AssignmentService
+import org.dropproject.services.PlagiarismComparison
+import org.dropproject.services.ZipService
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
 import java.util.*

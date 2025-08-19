@@ -17,15 +17,15 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.services
+package org.dropproject.services
 
 import jakarta.persistence.EntityNotFoundException
-import org.dropProject.dao.Assignment
-import org.dropProject.dao.Author
-import org.dropProject.dao.ProjectGroup
-import org.dropProject.data.AuthorDetails
-import org.dropProject.repository.AuthorRepository
-import org.dropProject.repository.ProjectGroupRepository
+import org.dropproject.dao.Assignment
+import org.dropproject.dao.Author
+import org.dropproject.dao.ProjectGroup
+import org.dropproject.data.AuthorDetails
+import org.dropproject.repository.AuthorRepository
+import org.dropproject.repository.ProjectGroupRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 

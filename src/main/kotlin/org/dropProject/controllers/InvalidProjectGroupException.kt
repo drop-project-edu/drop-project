@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.controllers
+package org.dropproject.controllers
 
 /**
  * Represents an Exception that is raised when the group that submitted a project doesn't comply with the restrictions of the assignment.

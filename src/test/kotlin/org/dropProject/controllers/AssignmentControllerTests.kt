@@ -17,25 +17,25 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.controllers
+package org.dropproject.controllers
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import net.lingala.zip4j.ZipFile
 import net.lingala.zip4j.model.FileHeader
 import org.apache.commons.io.FileUtils
-import org.dropProject.TestsHelper
-import org.dropProject.TestsHelper.Companion.sampleJavaAssignmentPrivateKey
-import org.dropProject.TestsHelper.Companion.sampleJavaAssignmentPublicKey
-import org.dropProject.dao.*
-import org.dropProject.data.SubmissionInfo
-import org.dropProject.extensions.formatJustDate
-import org.dropProject.forms.AssignmentForm
-import org.dropProject.forms.SubmissionMethod
-import org.dropProject.repository.*
-import org.dropProject.services.AssignmentService
-import org.dropProject.services.GitClient
-import org.dropProject.services.ScheduledTasks
+import org.dropproject.TestsHelper
+import org.dropproject.TestsHelper.Companion.sampleJavaAssignmentPrivateKey
+import org.dropproject.TestsHelper.Companion.sampleJavaAssignmentPublicKey
+import org.dropproject.dao.*
+import org.dropproject.data.SubmissionInfo
+import org.dropproject.extensions.formatJustDate
+import org.dropproject.forms.AssignmentForm
+import org.dropproject.forms.SubmissionMethod
+import org.dropproject.repository.*
+import org.dropproject.services.AssignmentService
+import org.dropproject.services.GitClient
+import org.dropproject.services.ScheduledTasks
 import org.hamcrest.CoreMatchers.containsString
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers
@@ -49,7 +49,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.MethodSorters
 import org.springframework.beans.factory.annotation.Autowired
-import org.dropProject.config.DropProjectProperties
+import org.dropproject.config.DropProjectProperties
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType

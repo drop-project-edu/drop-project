@@ -17,13 +17,13 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.config
+package org.dropproject.config
 
-import org.dropProject.services.CancellableTaskScheduler
-import org.dropProject.services.MyAsyncUncaughtExceptionHandler
+import org.dropproject.services.CancellableTaskScheduler
+import org.dropproject.services.MyAsyncUncaughtExceptionHandler
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.dropProject.config.DropProjectProperties
+import org.dropproject.config.DropProjectProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
@@ -38,7 +38,7 @@ import java.util.concurrent.Executor
 @Profile("!test")
 class AsyncConfig(
     val dropProjectProperties: DropProjectProperties
-) : AsyncConfigurer, org.dropProject.config.AsyncConfigurer {
+) : AsyncConfigurer, org.dropproject.config.AsyncConfigurer {
 
     var asyncTimeout: Int = dropProjectProperties.async.timeout
         set(value) {

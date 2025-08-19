@@ -17,9 +17,9 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.config
+package org.dropproject.config
 
-import org.dropProject.services.MyAsyncUncaughtExceptionHandler
+import org.dropproject.services.MyAsyncUncaughtExceptionHandler
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.MessageSource

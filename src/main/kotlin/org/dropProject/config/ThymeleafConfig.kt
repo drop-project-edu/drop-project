@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.config
+package org.dropproject.config
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.ApplicationContext

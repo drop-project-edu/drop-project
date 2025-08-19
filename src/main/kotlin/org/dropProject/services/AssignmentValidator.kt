@@ -17,17 +17,17 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.services
+package org.dropproject.services
 
 import com.thoughtworks.qdox.JavaProjectBuilder
 import com.thoughtworks.qdox.model.impl.DefaultJavaMethod
 import org.apache.maven.model.Model
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader
-import org.dropProject.Constants
-import org.dropProject.dao.Assignment
-import org.dropProject.dao.Language
-import org.dropProject.dao.TestVisibility
-import org.dropProject.extensions.toEscapedHtml
+import org.dropproject.Constants
+import org.dropproject.dao.Assignment
+import org.dropproject.dao.Language
+import org.dropproject.dao.TestVisibility
+import org.dropproject.extensions.toEscapedHtml
 import org.jetbrains.kotlin.org.jline.utils.Log
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtNamedFunction

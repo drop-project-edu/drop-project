@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.services
+package org.dropproject.services
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonView
@@ -34,11 +34,11 @@ import org.commonmark.renderer.html.AttributeProvider
 import org.commonmark.renderer.html.AttributeProviderContext
 import org.commonmark.renderer.html.AttributeProviderFactory
 import org.commonmark.renderer.html.HtmlRenderer
-import org.dropProject.dao.*
-import org.dropProject.data.JSONViews
-import org.dropProject.repository.AssignmentTestMethodRepository
-import org.dropProject.repository.BuildReportRepository
-import org.dropProject.config.DropProjectProperties
+import org.dropproject.dao.*
+import org.dropproject.data.JSONViews
+import org.dropproject.repository.AssignmentTestMethodRepository
+import org.dropproject.repository.BuildReportRepository
+import org.dropproject.config.DropProjectProperties
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.ApplicationContext
 import org.springframework.context.MessageSource

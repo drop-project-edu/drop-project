@@ -13,10 +13,10 @@
     <div class="alert alert-info" th:text="${message}" th:if="${message}" />
     <div class="alert alert-danger" th:text="${error}" th:if="${error}" />
 
-    <!--/*@thymesVar id="assignment" type="org.dropProject.dao.Assignment"*/-->
-    <!--/*@thymesVar id="assignees" type="java.util.List<org.dropProject.dao.Assignee>"*/-->
-    <!--/*@thymesVar id="acl" type="java.util.List<org.dropProject.dao.AssignmentACL>"*/-->
-    <!--/*@thymesVar id="report" type="java.util.List<org.dropProject.dao.AssignmentReport>"*/-->
+    <!--/*@thymesVar id="assignment" type="org.dropproject.dao.Assignment"*/-->
+    <!--/*@thymesVar id="assignees" type="java.util.List<org.dropproject.dao.Assignee>"*/-->
+    <!--/*@thymesVar id="acl" type="java.util.List<org.dropproject.dao.AssignmentACL>"*/-->
+    <!--/*@thymesVar id="report" type="java.util.List<org.dropproject.dao.AssignmentReport>"*/-->
     <div class="row">
         <h1 class="page-header col-sm-11" th:text="'Assignment ' + ${assignment.id}">Assignment</h1>
         <span class="label label-warning col-sm-1" th:if="${!assignment.active}">Inactive</span>

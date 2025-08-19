@@ -17,15 +17,15 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.services
+package org.dropproject.services
 
-import org.dropProject.config.PendingTaskError
-import org.dropProject.config.PendingTasks
+import org.dropproject.config.PendingTaskError
+import org.dropproject.config.PendingTasks
 import org.springframework.aop.interceptor.SimpleAsyncUncaughtExceptionHandler
 import org.springframework.stereotype.Service
-import org.dropProject.dao.Submission
-import org.dropProject.dao.SubmissionStatus
-import org.dropProject.repository.SubmissionRepository
+import org.dropproject.dao.Submission
+import org.dropproject.dao.SubmissionStatus
+import org.dropproject.repository.SubmissionRepository
 import org.slf4j.LoggerFactory
 import java.lang.reflect.Method
 import java.util.*

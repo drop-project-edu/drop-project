@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.controllers
+package org.dropproject.controllers
 
 import edu.uoc.elc.lti.tool.Tool
 import jakarta.persistence.EntityNotFoundException
@@ -27,15 +27,15 @@ import org.springframework.validation.BindingResult
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.servlet.mvc.support.RedirectAttributes
-import org.dropProject.forms.UploadForm
-import org.dropProject.storage.StorageException
-import org.dropProject.storage.StorageService
+import org.dropproject.forms.UploadForm
+import org.dropproject.storage.StorageException
+import org.dropproject.storage.StorageService
 import java.io.File
 import jakarta.validation.Valid
-import org.dropProject.config.DropProjectProperties
+import org.dropproject.config.DropProjectProperties
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.ResponseEntity
-import org.dropProject.data.AuthorDetails
+import org.dropproject.data.AuthorDetails
 import java.security.Principal
 import java.util.*
 import org.springframework.http.HttpStatus
@@ -43,12 +43,12 @@ import org.springframework.scheduling.annotation.EnableAsync
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.RefNotAdvertisedException
 import org.springframework.security.access.AccessDeniedException
-import org.dropProject.dao.*
-import org.dropProject.data.SubmissionResult
-import org.dropProject.extensions.realName
-import org.dropProject.forms.SubmissionMethod
-import org.dropProject.repository.*
-import org.dropProject.services.*
+import org.dropproject.dao.*
+import org.dropproject.data.SubmissionResult
+import org.dropproject.extensions.realName
+import org.dropproject.forms.SubmissionMethod
+import org.dropproject.repository.*
+import org.dropproject.services.*
 import org.slf4j.LoggerFactory
 import org.springframework.context.MessageSource
 import org.springframework.core.io.FileSystemResource

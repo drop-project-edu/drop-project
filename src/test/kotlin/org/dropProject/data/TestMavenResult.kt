@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.data
+package org.dropproject.data
 
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertEquals

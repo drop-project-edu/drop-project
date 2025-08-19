@@ -17,18 +17,18 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.controllers
+package org.dropproject.controllers
 
 import junit.framework.TestCase.*
-import org.dropProject.TestsHelper
-import org.dropProject.dao.*
-import org.dropProject.data.BuildReport
-import org.dropProject.data.SubmissionInfo
-import org.dropProject.data.TestType
-import org.dropProject.forms.SubmissionMethod
-import org.dropProject.repository.*
-import org.dropProject.services.ZipService
-import org.dropProject.storage.StorageService
+import org.dropproject.TestsHelper
+import org.dropproject.dao.*
+import org.dropproject.data.BuildReport
+import org.dropproject.data.SubmissionInfo
+import org.dropproject.data.TestType
+import org.dropproject.forms.SubmissionMethod
+import org.dropproject.repository.*
+import org.dropproject.services.ZipService
+import org.dropproject.storage.StorageService
 import org.hamcrest.CoreMatchers
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
@@ -44,7 +44,7 @@ import org.junit.runner.RunWith
 import org.mockito.BDDMockito.verify
 import org.mockito.Mockito.never
 import org.springframework.beans.factory.annotation.Autowired
-import org.dropProject.config.DropProjectProperties
+import org.dropproject.config.DropProjectProperties
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.core.io.ResourceLoader

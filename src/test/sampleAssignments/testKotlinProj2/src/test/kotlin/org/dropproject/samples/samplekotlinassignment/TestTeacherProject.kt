@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropproject.samples.samplekotlinassignment
+package org.dropProject.samples.samplekotlinassignment
 
 import org.junit.Assert.assertEquals
 import org.junit.Test

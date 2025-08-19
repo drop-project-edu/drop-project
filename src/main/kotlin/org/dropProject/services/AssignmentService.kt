@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.services
+package org.dropproject.services
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -25,20 +25,20 @@ import com.fasterxml.jackson.module.kotlin.KotlinModule
 import jakarta.persistence.EntityNotFoundException
 import jakarta.servlet.http.HttpServletRequest
 import org.apache.commons.io.FileUtils
-import org.dropProject.Constants
-import org.dropProject.config.PendingTasks
-import org.dropProject.dao.*
-import org.dropProject.dao.BuildReport
-import org.dropProject.data.*
-import org.dropProject.extensions.formatJustDate
-import org.dropProject.extensions.realName
-import org.dropProject.forms.AssignmentForm
-import org.dropProject.forms.SubmissionMethod
-import org.dropProject.repository.*
+import org.dropproject.Constants
+import org.dropproject.config.PendingTasks
+import org.dropproject.dao.*
+import org.dropproject.dao.BuildReport
+import org.dropproject.data.*
+import org.dropproject.extensions.formatJustDate
+import org.dropproject.extensions.realName
+import org.dropproject.forms.AssignmentForm
+import org.dropproject.forms.SubmissionMethod
+import org.dropproject.repository.*
 import org.eclipse.jgit.api.Git
 import org.kohsuke.github.GitHub
 import org.slf4j.LoggerFactory
-import org.dropProject.config.DropProjectProperties
+import org.dropproject.config.DropProjectProperties
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.scheduling.annotation.Async

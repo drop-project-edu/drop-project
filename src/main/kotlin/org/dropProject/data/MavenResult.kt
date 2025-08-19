@@ -17,9 +17,9 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.data
+package org.dropproject.data
 
-import org.dropProject.Constants
+import org.dropproject.Constants
 
 /**
  * Represents the Output of a Maven build process.

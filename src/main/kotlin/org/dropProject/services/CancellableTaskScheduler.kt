@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.services
+package org.dropproject.services
 
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
 import java.util.*

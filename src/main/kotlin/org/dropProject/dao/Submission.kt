@@ -17,13 +17,13 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.dao
+package org.dropproject.dao
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonView
-import org.dropProject.data.JSONViews
-import org.dropProject.data.JUnitSummary
-import org.dropProject.services.JUnitMethodResult
+import org.dropproject.data.JSONViews
+import org.dropproject.data.JUnitSummary
+import org.dropproject.services.JUnitMethodResult
 import java.math.BigDecimal
 import java.text.SimpleDateFormat
 import java.util.*

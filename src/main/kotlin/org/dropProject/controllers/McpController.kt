@@ -17,13 +17,13 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.controllers
+package org.dropproject.controllers
 
-import org.dropProject.mcp.data.McpError
-import org.dropProject.mcp.data.McpErrorResponse
-import org.dropProject.mcp.data.McpRequest
-import org.dropProject.mcp.data.McpResponse
-import org.dropProject.mcp.services.McpService
+import org.dropproject.mcp.data.McpError
+import org.dropproject.mcp.data.McpErrorResponse
+import org.dropproject.mcp.data.McpRequest
+import org.dropproject.mcp.data.McpResponse
+import org.dropproject.mcp.services.McpService
 import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity

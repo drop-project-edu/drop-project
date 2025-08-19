@@ -17,29 +17,29 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.services
+package org.dropproject.services
 
 import jakarta.persistence.EntityNotFoundException
 import org.apache.commons.io.FileUtils
-import org.dropProject.Constants
-import org.dropProject.controllers.InvalidProjectGroupException
-import org.dropProject.controllers.InvalidProjectStructureException
-import org.dropProject.controllers.UploadController
-import org.dropProject.dao.*
-import org.dropProject.data.AuthorDetails
-import org.dropProject.data.SubmissionInfo
-import org.dropProject.data.SubmissionResult
-import org.dropProject.data.TestType
-import org.dropProject.extensions.existsCaseSensitive
-import org.dropProject.extensions.realName
-import org.dropProject.extensions.sanitize
-import org.dropProject.forms.SubmissionMethod
-import org.dropProject.forms.UploadForm
-import org.dropProject.repository.*
-import org.dropProject.storage.StorageService
+import org.dropproject.Constants
+import org.dropproject.controllers.InvalidProjectGroupException
+import org.dropproject.controllers.InvalidProjectStructureException
+import org.dropproject.controllers.UploadController
+import org.dropproject.dao.*
+import org.dropproject.data.AuthorDetails
+import org.dropproject.data.SubmissionInfo
+import org.dropproject.data.SubmissionResult
+import org.dropproject.data.TestType
+import org.dropproject.extensions.existsCaseSensitive
+import org.dropproject.extensions.realName
+import org.dropproject.extensions.sanitize
+import org.dropproject.forms.SubmissionMethod
+import org.dropproject.forms.UploadForm
+import org.dropproject.repository.*
+import org.dropproject.storage.StorageService
 import org.mozilla.universalchardet.UniversalDetector
 import org.slf4j.LoggerFactory
-import org.dropProject.config.DropProjectProperties
+import org.dropproject.config.DropProjectProperties
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.MessageSource
 import org.springframework.http.ResponseEntity

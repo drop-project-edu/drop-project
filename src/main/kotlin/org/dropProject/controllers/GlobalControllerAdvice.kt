@@ -17,12 +17,12 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.controllers
+package org.dropproject.controllers
 
 import com.zaxxer.hikari.HikariDataSource
-import org.dropProject.extensions.realName
+import org.dropproject.extensions.realName
 import org.springframework.beans.factory.annotation.Autowired
-import org.dropProject.config.DropProjectProperties
+import org.dropproject.config.DropProjectProperties
 import org.springframework.boot.info.BuildProperties
 import org.springframework.security.provisioning.InMemoryUserDetailsManager
 import org.springframework.security.provisioning.UserDetailsManager

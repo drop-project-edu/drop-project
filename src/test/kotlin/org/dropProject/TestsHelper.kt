@@ -17,14 +17,14 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject
+package org.dropproject
 
-import org.dropProject.dao.Assignment
-import org.dropProject.dao.AssignmentVisibility
-import org.dropProject.repository.AssignmentRepository
-import org.dropProject.repository.GitSubmissionRepository
-import org.dropProject.repository.SubmissionRepository
-import org.dropProject.services.ZipService
+import org.dropproject.dao.Assignment
+import org.dropproject.dao.AssignmentVisibility
+import org.dropproject.repository.AssignmentRepository
+import org.dropproject.repository.GitSubmissionRepository
+import org.dropproject.repository.SubmissionRepository
+import org.dropproject.services.ZipService
 import org.json.JSONObject
 import org.junit.Assert
 import org.springframework.beans.factory.annotation.Autowired

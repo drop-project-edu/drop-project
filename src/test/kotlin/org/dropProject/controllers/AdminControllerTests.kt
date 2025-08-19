@@ -17,18 +17,18 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.controllers
+package org.dropproject.controllers
 
-import org.dropProject.TestsHelper
-import org.dropProject.dao.Assignment
-import org.dropProject.dao.AssignmentTag
-import org.dropProject.dao.Submission
-import org.dropProject.dao.SubmissionStatus
-import org.dropProject.forms.SubmissionMethod
-import org.dropProject.repository.AssignmentRepository
-import org.dropProject.repository.AssignmentTagRepository
-import org.dropProject.repository.SubmissionRepository
-import org.dropProject.services.AssignmentService
+import org.dropproject.TestsHelper
+import org.dropproject.dao.Assignment
+import org.dropproject.dao.AssignmentTag
+import org.dropproject.dao.Submission
+import org.dropproject.dao.SubmissionStatus
+import org.dropproject.forms.SubmissionMethod
+import org.dropproject.repository.AssignmentRepository
+import org.dropproject.repository.AssignmentTagRepository
+import org.dropproject.repository.SubmissionRepository
+import org.dropproject.services.AssignmentService
 import org.junit.Assert.assertEquals
 import org.junit.FixMethodOrder
 import org.junit.Test

@@ -17,16 +17,16 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.controllers
+package org.dropproject.controllers
 
-import org.dropProject.TestsHelper
-import org.dropProject.dao.Assignment
-import org.dropProject.dao.Indicator
-import org.dropProject.dao.Language
-import org.dropProject.dao.SubmissionReport
-import org.dropProject.data.BuildReport
-import org.dropProject.forms.SubmissionMethod
-import org.dropProject.repository.AssignmentRepository
+import org.dropproject.TestsHelper
+import org.dropproject.dao.Assignment
+import org.dropproject.dao.Indicator
+import org.dropproject.dao.Language
+import org.dropproject.dao.SubmissionReport
+import org.dropproject.data.BuildReport
+import org.dropproject.forms.SubmissionMethod
+import org.dropproject.repository.AssignmentRepository
 import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.After
@@ -36,7 +36,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
-import org.dropProject.config.DropProjectProperties
+import org.dropproject.config.DropProjectProperties
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.security.core.authority.SimpleGrantedAuthority

@@ -17,9 +17,9 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.repository
+package org.dropproject.repository
 
-import org.dropProject.dao.ProjectGroupRestrictions
+import org.dropproject.dao.ProjectGroupRestrictions
 import org.springframework.data.jpa.repository.JpaRepository
 
 /**

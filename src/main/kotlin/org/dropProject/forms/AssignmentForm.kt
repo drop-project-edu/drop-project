@@ -17,12 +17,12 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.forms
+package org.dropproject.forms
 
-import org.dropProject.dao.AssignmentVisibility
-import org.dropProject.dao.Language
-import org.dropProject.dao.LeaderboardType
-import org.dropProject.dao.TestVisibility
+import org.dropproject.dao.AssignmentVisibility
+import org.dropproject.dao.Language
+import org.dropproject.dao.LeaderboardType
+import org.dropproject.dao.TestVisibility
 import org.springframework.format.annotation.DateTimeFormat
 import java.time.LocalDateTime
 import jakarta.validation.constraints.Min

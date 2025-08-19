@@ -17,10 +17,10 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.repository
+package org.dropproject.repository
 
 import org.springframework.data.jpa.repository.JpaRepository
-import org.dropProject.dao.BuildReport
+import org.dropproject.dao.BuildReport
 
 interface BuildReportRepository : JpaRepository<BuildReport, Long> {
 

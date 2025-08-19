@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.controllers
+package org.dropproject.controllers
 
 import org.junit.After
 import org.junit.Assert.*
@@ -25,7 +25,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
-import org.dropProject.config.DropProjectProperties
+import org.dropproject.config.DropProjectProperties
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.security.core.authority.SimpleGrantedAuthority
@@ -39,10 +39,10 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
-import org.dropProject.TestsHelper
-import org.dropProject.dao.*
-import org.dropProject.forms.SubmissionMethod
-import org.dropProject.repository.*
+import org.dropproject.TestsHelper
+import org.dropproject.dao.*
+import org.dropproject.forms.SubmissionMethod
+import org.dropproject.repository.*
 import org.hamcrest.Matchers.hasProperty
 import java.io.File
 

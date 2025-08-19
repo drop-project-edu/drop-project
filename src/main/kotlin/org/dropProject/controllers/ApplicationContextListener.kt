@@ -17,19 +17,19 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.controllers
+package org.dropproject.controllers
 
 
-import org.dropProject.dao.*
-import org.dropProject.extensions.getContent
-import org.dropProject.forms.SubmissionMethod
-import org.dropProject.repository.*
-import org.dropProject.services.AssignmentService
-import org.dropProject.services.AssignmentTeacherFiles
-import org.dropProject.services.GitClient
+import org.dropproject.dao.*
+import org.dropproject.extensions.getContent
+import org.dropproject.forms.SubmissionMethod
+import org.dropproject.repository.*
+import org.dropproject.services.AssignmentService
+import org.dropproject.services.AssignmentTeacherFiles
+import org.dropproject.services.GitClient
 import org.eclipse.jgit.api.Git
 import org.slf4j.LoggerFactory
-import org.dropProject.config.DropProjectProperties
+import org.dropproject.config.DropProjectProperties
 import org.springframework.context.ApplicationListener
 import org.springframework.context.annotation.Profile
 import org.springframework.context.event.ContextRefreshedEvent

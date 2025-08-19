@@ -17,9 +17,9 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.dao
+package org.dropproject.dao
 
-import org.dropProject.services.GitClient
+import org.dropproject.services.GitClient
 import java.text.SimpleDateFormat
 import java.util.*
 import jakarta.persistence.*

@@ -17,12 +17,12 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.data
+package org.dropproject.data
 
-import org.dropProject.dao.Assignment
-import org.dropProject.dao.Language
-import org.dropProject.forms.SubmissionMethod
-import org.dropProject.services.BuildReportBuilder
+import org.dropproject.dao.Assignment
+import org.dropproject.dao.Language
+import org.dropproject.forms.SubmissionMethod
+import org.dropproject.services.BuildReportBuilder
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test

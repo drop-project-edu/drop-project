@@ -17,15 +17,15 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.services
+package org.dropproject.services
 
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
-import org.dropProject.dao.SubmissionStatus
-import org.dropProject.repository.AssignmentRepository
-import org.dropProject.repository.SubmissionRepository
+import org.dropproject.dao.SubmissionStatus
+import org.dropproject.repository.AssignmentRepository
+import org.dropproject.repository.SubmissionRepository
 import org.slf4j.LoggerFactory
-import org.dropProject.config.DropProjectProperties
+import org.dropproject.config.DropProjectProperties
 import java.io.File
 import java.util.*
 import java.util.logging.Logger

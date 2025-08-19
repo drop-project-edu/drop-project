@@ -17,16 +17,16 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.dao
+package org.dropproject.dao
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonView
-import org.dropProject.data.JSONViews
-import org.dropProject.extensions.format
-import org.dropProject.forms.SubmissionMethod
-import org.dropProject.services.AssignmentInstructions
+import org.dropproject.data.JSONViews
+import org.dropproject.extensions.format
+import org.dropproject.forms.SubmissionMethod
+import org.dropproject.services.AssignmentInstructions
 import java.util.*
 import jakarta.persistence.*
 

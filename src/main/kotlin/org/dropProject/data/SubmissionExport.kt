@@ -17,11 +17,11 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.data
+package org.dropproject.data
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnore
-import org.dropProject.dao.SubmissionMode
+import org.dropproject.dao.SubmissionMode
 import java.util.*
 import jakarta.persistence.Column
 

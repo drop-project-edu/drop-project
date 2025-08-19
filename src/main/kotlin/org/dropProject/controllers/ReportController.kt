@@ -17,23 +17,23 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.controllers
+package org.dropproject.controllers
 
 import jakarta.persistence.EntityNotFoundException
 import net.lingala.zip4j.ZipFile
 import net.lingala.zip4j.model.ZipParameters
 import net.lingala.zip4j.model.enums.CompressionLevel
 import org.apache.commons.io.FileUtils
-import org.dropProject.dao.*
-import org.dropProject.data.TestType
-import org.dropProject.extensions.formatDefault
-import org.dropProject.extensions.realName
-import org.dropProject.forms.SubmissionMethod
-import org.dropProject.repository.*
-import org.dropProject.services.*
-import org.dropProject.storage.StorageService
+import org.dropproject.dao.*
+import org.dropproject.data.TestType
+import org.dropproject.extensions.formatDefault
+import org.dropproject.extensions.realName
+import org.dropproject.forms.SubmissionMethod
+import org.dropproject.repository.*
+import org.dropproject.services.*
+import org.dropproject.storage.StorageService
 import org.slf4j.LoggerFactory
-import org.dropProject.config.DropProjectProperties
+import org.dropproject.config.DropProjectProperties
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.io.FileSystemResource
 import org.springframework.http.HttpHeaders

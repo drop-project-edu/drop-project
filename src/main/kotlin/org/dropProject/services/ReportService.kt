@@ -17,17 +17,17 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.services
+package org.dropproject.services
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonView
 import jakarta.persistence.EntityNotFoundException
-import org.dropProject.config.AsyncConfigurer
-import org.dropProject.dao.*
-import org.dropProject.data.AuthorDetails
-import org.dropProject.data.JSONViews
-import org.dropProject.extensions.realName
-import org.dropProject.repository.*
+import org.dropproject.config.AsyncConfigurer
+import org.dropproject.dao.*
+import org.dropproject.data.AuthorDetails
+import org.dropproject.data.JSONViews
+import org.dropproject.extensions.realName
+import org.dropproject.repository.*
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.MessageSource
@@ -59,7 +59,7 @@ class FullBuildReport(
     var structureErrors: List<String>? = null,
     var authors: ArrayList<AuthorDetails>? = null,
     @JsonView(JSONViews.StudentAPI::class)
-    var buildReport: org.dropProject.data.BuildReport? = null
+    var buildReport: org.dropproject.data.BuildReport? = null
 )
 
 /**

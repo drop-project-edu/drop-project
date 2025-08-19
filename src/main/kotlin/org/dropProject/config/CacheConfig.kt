@@ -17,9 +17,9 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.config
+package org.dropproject.config
 
-import org.dropProject.Constants
+import org.dropproject.Constants
 import org.springframework.cache.CacheManager
 import org.springframework.cache.jcache.JCacheCacheManager
 import org.springframework.context.annotation.Bean

@@ -17,13 +17,13 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.mcp.services
+package org.dropproject.mcp.services
 
-import org.dropProject.controllers.TeacherAPIController
-import org.dropProject.dao.TokenStatus
-import org.dropProject.mcp.data.*
-import org.dropProject.repository.PersonalTokenRepository
-import org.dropProject.services.AssignmentService
+import org.dropproject.controllers.TeacherAPIController
+import org.dropproject.dao.TokenStatus
+import org.dropproject.mcp.data.*
+import org.dropproject.repository.PersonalTokenRepository
+import org.dropproject.services.AssignmentService
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.security.Principal
@@ -118,10 +118,8 @@ class McpService(
                         appendLine("\n**Due Date:** ${assignmentDetail.assignment.dueDate}")
                     }
                     
-                    if (assignmentDetail.assignment.language != null) {
-                        appendLine("**Language:** ${assignmentDetail.assignment.language}")
-                    }
-                    
+                    appendLine("**Language:** ${assignmentDetail.assignment.language}")
+
                     if (assignmentDetail.assignees.isNotEmpty()) {
                         appendLine("\n## Assignees (${assignmentDetail.assignees.size})")
                         assignmentDetail.assignees.forEach { assignee ->

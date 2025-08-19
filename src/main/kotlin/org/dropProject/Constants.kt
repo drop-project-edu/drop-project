@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject
+package org.dropproject
 
 object Constants {
     const val TEST_NAME_PREFIX = "Test"

@@ -17,6 +17,6 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.storage
+package org.dropproject.storage
 
 class StorageException(message: String?, cause: Throwable? = null) : RuntimeException(message, cause)

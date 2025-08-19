@@ -17,12 +17,12 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.services
+package org.dropproject.services
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream
-import org.dropProject.repository.*
-import org.dropProject.storage.StorageException
+import org.dropproject.repository.*
+import org.dropproject.storage.StorageException
 import org.springframework.stereotype.Service
 import java.io.File
 import java.io.FileOutputStream

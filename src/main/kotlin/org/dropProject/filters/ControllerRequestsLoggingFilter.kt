@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.filters
+package org.dropproject.filters
 
 import org.springframework.web.filter.AbstractRequestLoggingFilter
 import jakarta.servlet.http.HttpServletRequest

@@ -17,13 +17,13 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.services
+package org.dropproject.services
 
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import org.dropProject.dao.GitSubmission
-import org.dropProject.repository.*
+import org.dropproject.dao.GitSubmission
+import org.dropproject.repository.*
 
 /**
  * Provides functionality related with handling [GitSubmission]s (for example, searching for a GitSubmission in the

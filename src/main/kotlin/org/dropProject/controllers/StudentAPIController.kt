@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.controllers
+package org.dropproject.controllers
 
 import com.fasterxml.jackson.annotation.JsonView
 import io.swagger.v3.oas.annotations.Operation
@@ -30,17 +30,17 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.validation.Valid
-import org.dropProject.dao.Assignment
-import org.dropProject.dao.Indicator
-import org.dropProject.dao.SubmissionMode
-import org.dropProject.data.AssignmentInfoResponse
-import org.dropProject.data.JSONViews
-import org.dropProject.data.SubmissionResult
-import org.dropProject.extensions.realName
-import org.dropProject.forms.UploadForm
-import org.dropProject.repository.AssigneeRepository
-import org.dropProject.repository.AssignmentRepository
-import org.dropProject.services.*
+import org.dropproject.dao.Assignment
+import org.dropproject.dao.Indicator
+import org.dropproject.dao.SubmissionMode
+import org.dropproject.data.AssignmentInfoResponse
+import org.dropproject.data.JSONViews
+import org.dropproject.data.SubmissionResult
+import org.dropproject.extensions.realName
+import org.dropproject.forms.UploadForm
+import org.dropproject.repository.AssigneeRepository
+import org.dropproject.repository.AssignmentRepository
+import org.dropproject.services.*
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType

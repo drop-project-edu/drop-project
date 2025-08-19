@@ -8,7 +8,7 @@
 
 <div th:replace="~{layout/layout :: header}"></div>
 
-<!--/*@thymesVar id="submissions" type="java.util.ArrayList<org.dropProject.data.SubmissionInfo>"*/-->
+<!--/*@thymesVar id="submissions" type="java.util.ArrayList<org.dropproject.data.SubmissionInfo>"*/-->
 <div class="container" style="max-width: 900px; margin-bottom: 65px">
 
     <h1 class="page-header" th:text="${assignmentId} + ' submissions'"></h1>
@@ -45,7 +45,7 @@
                         <th>Failing Tests</th>
                     </tr>
                 </thead>
-                <!--/*@thymesVar id="signalledGroups" type="java.util.ArrayList<org.dropProject.data.GroupedProjectGroups>"*/-->
+                <!--/*@thymesVar id="signalledGroups" type="java.util.ArrayList<org.dropproject.data.GroupedProjectGroups>"*/-->
                 <tr th:each="groupedGroups: ${signalledGroups}">
                     <td>
                         <ul class="list-group">

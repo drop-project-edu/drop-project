@@ -17,10 +17,10 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.services
+package org.dropproject.services
 
-import org.dropProject.data.AuthorDetails
-import org.dropProject.repository.ProjectGroupRepository
+import org.dropproject.data.AuthorDetails
+import org.dropproject.repository.ProjectGroupRepository
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith

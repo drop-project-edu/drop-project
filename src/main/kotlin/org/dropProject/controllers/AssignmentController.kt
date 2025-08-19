@@ -17,27 +17,27 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.controllers
+package org.dropproject.controllers
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import jakarta.persistence.EntityNotFoundException
 import org.apache.commons.io.FileUtils
-import org.dropProject.Constants.CACHE_ARCHIVED_ASSIGNMENTS_KEY
-import org.dropProject.config.PendingTaskError
-import org.dropProject.config.PendingTasks
-import org.dropProject.dao.*
-import org.dropProject.data.*
-import org.dropProject.extensions.realName
-import org.dropProject.forms.AssignmentForm
-import org.dropProject.forms.SubmissionMethod
-import org.dropProject.repository.*
-import org.dropProject.services.*
+import org.dropproject.Constants.CACHE_ARCHIVED_ASSIGNMENTS_KEY
+import org.dropproject.config.PendingTaskError
+import org.dropproject.config.PendingTasks
+import org.dropproject.dao.*
+import org.dropproject.data.*
+import org.dropproject.extensions.realName
+import org.dropproject.forms.AssignmentForm
+import org.dropproject.forms.SubmissionMethod
+import org.dropproject.repository.*
+import org.dropproject.services.*
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.RefNotAdvertisedException
 import org.hibernate.Hibernate
 import org.slf4j.LoggerFactory
-import org.dropProject.config.DropProjectProperties
+import org.dropproject.config.DropProjectProperties
 import org.springframework.cache.CacheManager
 import org.springframework.core.io.FileSystemResource
 import org.springframework.http.HttpStatus

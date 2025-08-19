@@ -38,7 +38,7 @@
         </tr>
         </thead>
         <tbody>
-        <!--/*@thymesVar id="assignments" type="java.util.ArrayList<org.dropProject.dao.Assignment>"*/-->
+        <!--/*@thymesVar id="assignments" type="java.util.ArrayList<org.dropproject.dao.Assignment>"*/-->
         <tr th:each="assignment : ${assignments}">
             <td th:text="${assignment.id}" th:title="${assignment.name}"></td>
             <td class="space-between">
@@ -66,11 +66,11 @@
                 </form>
             </td>
             <td th:if="${!archived}" class="text-center">
-                <i th:if="${assignment.visibility == T(org.dropProject.dao.AssignmentVisibility).PUBLIC}" class="fa fa-globe" aria-hidden="true"
+                <i th:if="${assignment.visibility == T(org.dropproject.dao.AssignmentVisibility).PUBLIC}" class="fa fa-globe" aria-hidden="true"
                 title="Everyone can see"></i>
-                <i th:if="${assignment.visibility == T(org.dropProject.dao.AssignmentVisibility).ONLY_BY_LINK}" class="fa fa-link" aria-hidden="true"
+                <i th:if="${assignment.visibility == T(org.dropproject.dao.AssignmentVisibility).ONLY_BY_LINK}" class="fa fa-link" aria-hidden="true"
                    title="Must have a direct link"></i>
-                <i th:if="${assignment.visibility == T(org.dropProject.dao.AssignmentVisibility).PRIVATE}" class="fa fa-lock" aria-hidden="true"
+                <i th:if="${assignment.visibility == T(org.dropproject.dao.AssignmentVisibility).PRIVATE}" class="fa fa-lock" aria-hidden="true"
                    title="Only authorized users can see"></i>
             </td>
             <td class="text-center">

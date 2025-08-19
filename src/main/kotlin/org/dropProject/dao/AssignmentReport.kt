@@ -17,9 +17,9 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.dao
+package org.dropproject.dao
 
-import org.dropProject.services.AssignmentValidator
+import org.dropproject.services.AssignmentValidator
 import jakarta.persistence.*
 
 /**

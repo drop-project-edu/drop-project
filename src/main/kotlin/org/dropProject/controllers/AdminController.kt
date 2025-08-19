@@ -17,16 +17,16 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.controllers
+package org.dropproject.controllers
 
-import org.dropProject.config.AsyncConfigurer
-import org.dropProject.dao.AssignmentTag
-import org.dropProject.dao.SubmissionStatus
-import org.dropProject.forms.AdminDashboardForm
-import org.dropProject.repository.AssignmentTagRepository
-import org.dropProject.repository.SubmissionRepository
-import org.dropProject.services.MavenInvoker
-import org.dropProject.services.SubmissionService
+import org.dropproject.config.AsyncConfigurer
+import org.dropproject.dao.AssignmentTag
+import org.dropproject.dao.SubmissionStatus
+import org.dropproject.forms.AdminDashboardForm
+import org.dropproject.repository.AssignmentTagRepository
+import org.dropproject.repository.SubmissionRepository
+import org.dropproject.services.MavenInvoker
+import org.dropproject.services.SubmissionService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Controller
 import org.springframework.ui.ModelMap
@@ -35,7 +35,7 @@ import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.mvc.support.RedirectAttributes
 import org.springframework.transaction.annotation.Transactional
 import jakarta.validation.Valid
-import org.dropProject.repository.AssignmentRepository
+import org.dropproject.repository.AssignmentRepository
 
 /**
  * AdminController contains MVC controller functions that handle requests related with DP's administration

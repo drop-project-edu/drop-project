@@ -17,12 +17,12 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.controllers
+package org.dropproject.controllers
 
-import org.dropProject.dao.PersonalToken
-import org.dropProject.dao.TokenStatus
-import org.dropProject.extensions.realName
-import org.dropProject.repository.PersonalTokenRepository
+import org.dropproject.dao.PersonalToken
+import org.dropproject.dao.TokenStatus
+import org.dropproject.extensions.realName
+import org.dropproject.repository.PersonalTokenRepository
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Controller

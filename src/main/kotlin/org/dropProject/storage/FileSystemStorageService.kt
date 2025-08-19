@@ -17,11 +17,11 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.storage
+package org.dropproject.storage
 
-import org.dropProject.dao.Submission
-import org.dropProject.services.ZipService
-import org.dropProject.config.DropProjectProperties
+import org.dropproject.dao.Submission
+import org.dropproject.services.ZipService
+import org.dropproject.config.DropProjectProperties
 import org.springframework.stereotype.Service
 import org.springframework.util.StringUtils
 import org.springframework.web.multipart.MultipartFile
@@ -78,7 +78,7 @@ class FileSystemStorageService (
 
     override fun init() {
         try {
-            Files.createDirectories(Paths.get("$dropProjectProperties.storage.uploadLocation/upload"))
+            Files.createDirectories(Paths.get("${dropProjectProperties.storage.uploadLocation}/upload"))
         } catch (e: IOException) {
             throw StorageException("Could not initialize storage", e)
         }

@@ -17,11 +17,11 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.services
+package org.dropproject.services
 
-import org.dropProject.repository.AssignmentACLRepository
-import org.dropProject.repository.AssignmentRepository
-import org.dropProject.repository.GitSubmissionRepository
+import org.dropproject.repository.AssignmentACLRepository
+import org.dropproject.repository.AssignmentRepository
+import org.dropproject.repository.GitSubmissionRepository
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException

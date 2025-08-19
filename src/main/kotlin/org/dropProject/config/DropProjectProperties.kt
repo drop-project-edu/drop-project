@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.config
+package org.dropproject.config
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 
@@ -120,4 +120,7 @@ data class DropProjectProperties(
         val enabled: Boolean = true
     )
 
+    override fun toString(): String {
+        return super.toString()
+    }
 }

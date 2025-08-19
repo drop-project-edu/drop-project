@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.services
+package org.dropproject.services
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -38,8 +38,8 @@ class TestJunitResultsParser {
     @Autowired
     lateinit var resourceLoader: ResourceLoader
 
-    val junitResultsParser = org.dropProject.services.JunitResultsParser()
-    val jacocoResultsParser = org.dropProject.services.JacocoResultsParser()
+    val junitResultsParser = org.dropproject.services.JunitResultsParser()
+    val jacocoResultsParser = org.dropproject.services.JacocoResultsParser()
 
     val junitXmlReportsRoot = "src/test/sampleJunitXmlReports"
     val jacocoReportsRoot = "src/test/sampleJacocoReports"

@@ -17,13 +17,13 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.config
+package org.dropproject.config
 
-import org.dropProject.security.DropProjectSecurityConfig
-import org.dropProject.security.PersonalTokenAuthenticationManager
+import org.dropproject.security.DropProjectSecurityConfig
+import org.dropproject.security.PersonalTokenAuthenticationManager
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.dropProject.config.DropProjectProperties
+import org.dropproject.config.DropProjectProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile

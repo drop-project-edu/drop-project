@@ -17,12 +17,12 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.controllers
+package org.dropproject.controllers
 
-import org.dropProject.TestsHelper
-import org.dropProject.dao.Assignment
-import org.dropProject.forms.SubmissionMethod
-import org.dropProject.repository.AssignmentRepository
+import org.dropproject.TestsHelper
+import org.dropproject.dao.Assignment
+import org.dropproject.forms.SubmissionMethod
+import org.dropproject.repository.AssignmentRepository
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith

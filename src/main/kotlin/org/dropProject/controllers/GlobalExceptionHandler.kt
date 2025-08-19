@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.controllers
+package org.dropproject.controllers
 
 import org.apache.tomcat.util.http.fileupload.impl.FileSizeLimitExceededException
 import org.slf4j.LoggerFactory

@@ -17,18 +17,18 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.services
+package org.dropproject.services
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import org.dropProject.dao.Assignment
-import org.dropProject.dao.JUnitReport
-import org.dropProject.dao.JacocoReport
-import org.dropProject.dao.Submission
-import org.dropProject.data.BuildReport
-import org.dropProject.repository.AssignmentTestMethodRepository
-import org.dropProject.repository.JUnitReportRepository
-import org.dropProject.repository.JacocoReportRepository
+import org.dropproject.dao.Assignment
+import org.dropproject.dao.JUnitReport
+import org.dropproject.dao.JacocoReport
+import org.dropproject.dao.Submission
+import org.dropproject.data.BuildReport
+import org.dropproject.repository.AssignmentTestMethodRepository
+import org.dropproject.repository.JUnitReportRepository
+import org.dropproject.repository.JacocoReportRepository
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileNotFoundException

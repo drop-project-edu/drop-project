@@ -17,14 +17,14 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.services
+package org.dropproject.services
 
 import com.fasterxml.jackson.annotation.JsonView
-import org.dropProject.dao.Assignment
-import org.dropProject.data.JSONViews
-import org.dropProject.data.StudentHistory
-import org.dropProject.extensions.realName
-import org.dropProject.repository.*
+import org.dropproject.dao.Assignment
+import org.dropproject.data.JSONViews
+import org.dropproject.data.StudentHistory
+import org.dropproject.extensions.realName
+import org.dropproject.repository.*
 import org.springframework.stereotype.Service
 import java.security.Principal
 import java.util.HashMap

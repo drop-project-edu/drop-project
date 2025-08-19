@@ -17,9 +17,9 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.data
+package org.dropproject.data
 
-import org.dropProject.dao.ProjectGroup
+import org.dropproject.dao.ProjectGroup
 
 /**
  * Represents student groups that were signalled as failling exactly the same unit tests.

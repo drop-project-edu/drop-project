@@ -17,14 +17,14 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.lti
+package org.dropproject.lti
 
 import edu.uoc.elc.spring.lti.security.LTIProcessingFilter
 import edu.uoc.elc.spring.lti.security.openid.OIDCFilter
 import edu.uoc.elc.spring.lti.tool.ToolDefinitionBean
 import edu.uoc.elc.spring.lti.tool.registration.RegistrationService
-import org.dropProject.security.DropProjectSecurityConfig
-import org.dropProject.security.PersonalTokenAuthenticationManager
+import org.dropproject.security.DropProjectSecurityConfig
+import org.dropproject.security.PersonalTokenAuthenticationManager
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean

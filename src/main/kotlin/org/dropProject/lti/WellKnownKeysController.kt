@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.lti
+package org.dropproject.lti
 
 import edu.uoc.elc.lti.tool.Key
 import edu.uoc.elc.spring.lti.jkws.JwksKey

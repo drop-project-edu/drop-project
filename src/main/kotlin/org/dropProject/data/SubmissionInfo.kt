@@ -17,11 +17,11 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.data
+package org.dropproject.data
 
 import com.fasterxml.jackson.annotation.JsonView
-import org.dropProject.dao.ProjectGroup
-import org.dropProject.dao.Submission
+import org.dropproject.dao.ProjectGroup
+import org.dropproject.dao.Submission
 
 /**
  * Represents the [Submission]s that a [ProjectGroup] did for a certain [Assignment].
