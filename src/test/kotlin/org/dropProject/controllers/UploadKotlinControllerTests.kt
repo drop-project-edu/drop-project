@@ -285,7 +285,7 @@ class UploadKotlinControllerTests {
                     <ul>
                     <li>
                     <p>Create a Kotlin project in your IDE with the structure depicted at the end of this page.
-                    In particular, you must create a package <code>org.dropproject.samples.samplekotlinassignment</code> and
+                    In particular, you must create a package <code>org.dropProject.samples.samplekotlinassignment</code> and
                     create a <code>Main.kt</code> in that package.</p>
                     </li>
                     <li>
