@@ -26,7 +26,7 @@ jobs:
         env:
           DP_M2_HOME: /usr/share/apache-maven-3.9.11
           DP_MVN_REPO: ~/.m2
-        run: mvn --batch-mode --update-snapshots test -Dtest=AssignmentServiceTest#testCreateAssignment
+        run: mvn --batch-mode --update-snapshots test -Dtest=UploadKotlinControllerTests#submitProjectAndCheckREADME
       - name: Upload coverage to codecov
         uses: codecov/codecov-action@v1.2.1
         with:
