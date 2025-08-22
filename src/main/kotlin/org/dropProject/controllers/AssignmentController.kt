@@ -22,8 +22,12 @@ package org.dropproject.controllers
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import jakarta.persistence.EntityNotFoundException
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
+import jakarta.validation.Valid
 import org.apache.commons.io.FileUtils
 import org.dropproject.Constants.CACHE_ARCHIVED_ASSIGNMENTS_KEY
+import org.dropproject.config.DropProjectProperties
 import org.dropproject.config.PendingTaskError
 import org.dropproject.config.PendingTasks
 import org.dropproject.dao.*
@@ -35,9 +39,7 @@ import org.dropproject.repository.*
 import org.dropproject.services.*
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.RefNotAdvertisedException
-import org.hibernate.Hibernate
 import org.slf4j.LoggerFactory
-import org.dropproject.config.DropProjectProperties
 import org.springframework.cache.CacheManager
 import org.springframework.core.io.FileSystemResource
 import org.springframework.http.HttpStatus
@@ -55,9 +57,6 @@ import java.nio.file.StandardCopyOption
 import java.security.Principal
 import java.time.ZoneId
 import java.util.*
-import jakarta.servlet.http.HttpServletRequest
-import jakarta.servlet.http.HttpServletResponse
-import jakarta.validation.Valid
 
 /**
  * AssignmentController contains MVC controller functions that handle requests related with [Assignment]s
