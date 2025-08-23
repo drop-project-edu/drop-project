@@ -1797,6 +1797,22 @@ class UploadControllerTests {
             .andExpect(status().isNotFound)
     }
 
+    @Test
+    @DirtiesContext
+    fun `upload without authentication should return 401 unauthorized`() {
+        // Create a mock multipart file by manually creating the zip
+        val projectFolder = resourceLoader.getResource("file:src/test/sampleProjects/projectOK").file
+        val zipFile = zipService.createZipFromFolder("test", projectFolder)
+        zipFile.deleteOnExit()
+        val mockFile = MockMultipartFile("file", zipFile.name, "application/zip", zipFile.readBytes())
+
+        // Try to upload without authentication - should return 401 Unauthorized
+        // This tests that our JavaScript will detect the 401 status and redirect to login
+        this.mvc.perform(multipart("/upload")
+            .file(mockFile)
+            .param("assignmentId", "testJavaProj"))
+            .andExpect(status().isUnauthorized) // 401 Unauthorized
+    }
 }
 
 
