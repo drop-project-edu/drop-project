@@ -24,11 +24,12 @@ $( document ).ready(function() {
                     window.location.replace(context + "buildReport/" + jsonResponse.submissionId);
                 });
                 this.on('error', function (file, errorMessage, xhr) {
-                    if (xhr && (xhr.status === 401 || xhr.status === 403)) {  // session timeout
-                        console.log('Session expired during upload, redirecting to login');
+                    if (xhr && (xhr.status === 401 || xhr.status === 403 || xhr.status === 405)) {  // session timeout
+                        // 405 = Method Not Allowed is returned by Spring Security when session expires on POST requests
+                        console.log('Session expired during upload (status: ' + xhr.status + '), redirecting to login');
                         redirectToLogin();
                     } else if (errorMessage !== null && typeof errorMessage === 'string' &&
-                        (errorMessage.indexOf('401') !== -1 || errorMessage.indexOf('403') !== -1)) {  // legacy check for string errors
+                        (errorMessage.indexOf('401') !== -1 || errorMessage.indexOf('403') !== -1 || errorMessage.indexOf('405') !== -1)) {  // legacy check for string errors
                         console.log('Session expired (legacy check), redirecting to login');
                         redirectToLogin();
                     } else if (errorMessage !== null && errorMessage.error !== undefined) {

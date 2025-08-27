@@ -1807,7 +1807,8 @@ class UploadControllerTests {
         val mockFile = MockMultipartFile("file", zipFile.name, "application/zip", zipFile.readBytes())
 
         // Try to upload without authentication - should return 401 Unauthorized
-        // This tests that our JavaScript will detect the 401 status and redirect to login
+        // This tests that our JavaScript will detect the 401/403/405 status and redirect to login
+        // Note: In production, this might return 405 Method Not Allowed due to Spring Security behavior
         this.mvc.perform(multipart("/upload")
             .file(mockFile)
             .param("assignmentId", "testJavaProj"))
