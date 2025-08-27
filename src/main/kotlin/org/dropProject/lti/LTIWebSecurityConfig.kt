@@ -44,7 +44,7 @@ import org.springframework.security.web.util.matcher.OrRequestMatcher
 
 @Profile("lti")
 @Configuration
-@ComponentScan(value = ["edu.uoc.elc.spring.lti.security.mvc", "edu.uoc.elc.spring.lti.tool"])
+// @ComponentScan(value = ["edu.uoc.elc.spring.lti.security.mvc", "edu.uoc.elc.spring.lti.tool"])
 class LTIWebSecurityConfig(
     @Qualifier("dpRegistrationService") val registrationService: RegistrationService,
     val toolDefinitionBean: ToolDefinitionBean,
