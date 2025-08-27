@@ -231,7 +231,7 @@
 		<dependency>
 			<groupId>org.dropproject</groupId>
 			<artifactId>spring-boot-lti-advantage-for-dp</artifactId>
-			<version>1.0.1</version>
+			<version>1.0.2</version>
 			<exclusions>
 				<exclusion>
 					<groupId>edu.uoc.elc.lti</groupId>
