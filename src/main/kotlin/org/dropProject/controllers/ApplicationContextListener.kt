@@ -165,6 +165,11 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
             }
             gitClient.clone(gitRepository, directory, assignment.gitRepositoryPrivKey!!.toByteArray())
             LOG.info("[${assignment.id}] Successfuly cloned ${gitRepository} to ${directory}")
+
+            // update hash
+            val git = Git.open(File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder))
+            assignment.gitCurrentHash = gitClient.getLastCommitInfo(git)?.sha1
+
             // only save if it successfully cloned the assignment
             assignmentRepository.save(assignment)
 
@@ -248,6 +253,8 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
             }
             gitClient.clone(gitRepository, directory, assignment.gitRepositoryPrivKey!!.toByteArray())
             LOG.info("[${assignment.id}] Successfuly cloned ${gitRepository} to ${directory}")
+
+            // update hash
             val git = Git.open(File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder))
             assignment.gitCurrentHash = gitClient.getLastCommitInfo(git)?.sha1
 
