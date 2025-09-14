@@ -24,6 +24,7 @@ import org.dropproject.dao.TokenStatus
 import org.dropproject.mcp.data.*
 import org.dropproject.repository.PersonalTokenRepository
 import org.dropproject.services.AssignmentService
+import org.dropproject.services.StudentService
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.security.Principal
@@ -34,6 +35,7 @@ import java.util.*
 class McpService(
     private val teacherAPIController: TeacherAPIController,
     private val assignmentService: AssignmentService,
+    private val studentService: StudentService,
     private val personalTokenRepository: PersonalTokenRepository
 ) {
 
@@ -80,6 +82,22 @@ class McpService(
                             "query" to mapOf(
                                 "type" to "string",
                                 "description" to "Search query to match assignment names, IDs, or tags"
+                            )
+                        ),
+                        "required" to listOf("query")
+                    )
+                ),
+                McpTool(
+                    name = "search_student",
+                    description = "Search for students by student ID or name (partial matching) and retrieve their complete submission history. " +
+                                 "Returns student information along with assignment IDs and submission IDs for detailed lookup. " +
+                                 "Useful for tracking student progress, identifying submission patterns, or providing academic support.",
+                    inputSchema = mapOf(
+                        "type" to "object",
+                        "properties" to mapOf(
+                            "query" to mapOf(
+                                "type" to "string",
+                                "description" to "Search query to match student IDs or names (case-insensitive partial matching)"
                             )
                         ),
                         "required" to listOf("query")
@@ -174,6 +192,88 @@ class McpService(
                         McpContent(
                             type = "text",
                             text = "Found ${assignments.size} assignments matching '$query':\n$assignmentList"
+                        )
+                    )
+                )
+            }
+            "search_student" -> {
+                val query = arguments["query"] as? String
+                    ?: throw IllegalArgumentException("query is required")
+                
+                val matchingStudents = studentService.getStudentList(query)
+                
+                if (matchingStudents.isEmpty()) {
+                    return McpToolCallResult(
+                        content = listOf(
+                            McpContent(
+                                type = "text",
+                                text = "No students found matching '$query'"
+                            )
+                        )
+                    )
+                }
+                
+                val studentInfoText = buildString {
+                    appendLine("Found ${matchingStudents.size} student(s) matching '$query':")
+                    appendLine()
+                    
+                    for (student in matchingStudents) {
+                        appendLine("# Student: ${student.text}")
+                        appendLine("**Student ID:** ${student.value}")
+                        appendLine()
+                        
+                        val studentHistory = studentService.getStudentHistory(student.value, principal)
+                        
+                        if (studentHistory == null) {
+                            appendLine("No submission history found for this student.")
+                            appendLine()
+                            continue
+                        }
+                        
+                        val sortedHistory = studentHistory.getHistorySortedByDateDesc()
+                        
+                        if (sortedHistory.isEmpty()) {
+                            appendLine("No submissions found for this student.")
+                            appendLine()
+                            continue
+                        }
+                        
+                        appendLine("## Submission History (${sortedHistory.size} assignment(s))")
+                        appendLine()
+                        
+                        for ((index, entry) in sortedHistory.withIndex()) {
+                            appendLine("### Assignment ${index + 1}: ${entry.assignment.name}")
+                            appendLine("**Assignment ID:** ${entry.assignment.id}")
+                            appendLine("**Language:** ${entry.assignment.language}")
+                            appendLine("**Due Date:** ${entry.assignment.dueDate ?: "Not set"}")
+                            appendLine("**Group:** ${entry.group.id} (${entry.group.authorsStr()})")
+                            appendLine()
+                            
+                            entry.ensureSubmissionsAreSorted()
+                            val submissions = entry.sortedSubmissions
+                            
+                            appendLine("**Submissions (${submissions.size}):**")
+                            for ((submissionIndex, submission) in submissions.withIndex()) {
+                                appendLine("${submissionIndex + 1}. **Submission ID:** ${submission.id}")
+                                appendLine("   - **Date:** ${submission.submissionDate}")
+                                appendLine("   - **Status:** ${submission.getStatus()}")
+                                appendLine("   - **Submitter:** ${submission.submitterName ?: submission.submitterUserId}")
+                                if (submission.buildReport != null) {
+                                    appendLine("   - **Has Build Report:** Yes")
+                                }
+                                appendLine()
+                            }
+                            appendLine("---")
+                            appendLine()
+                        }
+                    }
+                }
+                
+                McpToolCallResult(
+                    content = listOf(
+                        McpContent(
+                            type = "text",
+                            text = studentInfoText
                         )
                     )
                 )
