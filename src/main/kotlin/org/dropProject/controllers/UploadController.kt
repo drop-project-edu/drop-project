@@ -370,7 +370,7 @@ class UploadController(
         submissionRepository.save(submission)
 
         if (redirectToSubmissionsList) {
-            return "redirect:/submissions/?assignmentId=${submission.assignmentId}&groupId=${submission.group.id}"
+            return "redirect:/submissions?assignmentId=${submission.assignmentId}&groupId=${submission.group.id}"
         } else {
             return "redirect:/buildReport/${submissionId}"
         }

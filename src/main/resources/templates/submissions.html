@@ -90,7 +90,8 @@
 
             <td th:text="${submission.ellapsed} ? ${#numbers.formatDecimal(submission.ellapsed, 0, 'DEFAULT', 2, 'DEFAULT')}"></td>
             <td>
-                <form class="inline" method="post" th:action="'../markAsFinal/' + ${submission.id}">
+
+                <form class="inline" method="post" th:action="@{'/markAsFinal/' + ${submission.id}}">
                     <a th:href="@{'/buildReport/' + ${submission.id}}">
                         <span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span>
                     </a>
