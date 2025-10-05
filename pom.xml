@@ -197,11 +197,11 @@
 			<!-- version managed by Spring Boot -->
 		</dependency>
 
-				<!-- swagger for api documentation -->
+        <!-- swagger for api documentation -->
 		<dependency>
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-			<version>2.6.0</version>
+			<version>2.7.0</version>
 		</dependency>
 		
 
