@@ -262,7 +262,7 @@ class McpControllerTests: APIControllerTests {
             .andExpect(content().string(org.hamcrest.Matchers.containsString("\"jsonrpc\":\"2.0\"")))
             .andExpect(content().string(org.hamcrest.Matchers.containsString("\"id\":\"test-3\"")))
             .andExpect(content().string(org.hamcrest.Matchers.containsString("Found")))
-            .andExpect(content().string(org.hamcrest.Matchers.containsString("Java Programming Project")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("Test Project (for automatic tests)")))
     }
 
     @Test
