@@ -31,6 +31,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.core.userdetails.User
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
@@ -77,18 +78,15 @@ class McpControllerTests: APIControllerTests {
             gitRepositoryFolder = "testMcpAssignment"
         )
         assignmentRepository.save(assignment1)
-        
-        val assignment2 = Assignment(
-            id = "javaProject",
-            name = "Java Programming Project",
-            packageName = "org.dropProject.samples.javaProject",
-            ownerUserId = "teacher1",
-            submissionMethod = SubmissionMethod.GIT,
-            active = true,
-            gitRepositoryUrl = "git://dummy2",
-            gitRepositoryFolder = "javaProject"
+
+        // create initial assignments
+        val assignment02 = Assignment(
+            id = "testJavaProj", name = "Test Project (for automatic tests)",
+            packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
+            submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
+            gitRepositoryFolder = "testJavaProj"
         )
-        assignmentRepository.save(assignment2)
+        assignmentRepository.save(assignment02)
     }
 
     @Test
@@ -174,6 +172,20 @@ class McpControllerTests: APIControllerTests {
                                 },
                                 "required": ["query"]
                             }
+                        },
+                        {
+                            "name": "get_submission_code",
+                            "description": "Retrieve all source code files from a student submission as a single concatenated document. Returns the complete mavenized source code with each file clearly separated and marked with its path. Useful for code review, debugging, providing feedback, or AI-assisted analysis of student work. Requires teacher privileges.",
+                            "inputSchema": {
+                                "type": "object",
+                                "properties": {
+                                    "submissionId": {
+                                        "type": "number",
+                                        "description": "The numeric ID of the submission to retrieve code from"
+                                    }
+                                },
+                                "required": ["submissionId"]
+                            }
                         }
                     ]
                 }
@@ -251,5 +263,46 @@ class McpControllerTests: APIControllerTests {
             .andExpect(content().string(org.hamcrest.Matchers.containsString("\"id\":\"test-3\"")))
             .andExpect(content().string(org.hamcrest.Matchers.containsString("Found")))
             .andExpect(content().string(org.hamcrest.Matchers.containsString("Java Programming Project")))
+    }
+
+    @Test
+    @DirtiesContext
+    fun testMcpGetSubmissionCode() {
+        val authHeader = getBearerToken("teacher1")
+
+        // First, create a submission
+        val submissionId = testsHelper.uploadProject(this.mvc,
+            "projectOK", "testJavaProj",
+            User("student1", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT"))))
+
+        val requestJson = """
+            {
+                "jsonrpc": "2.0",
+                "id": "test-4",
+                "method": "tools/call",
+                "params": {
+                    "name": "get_submission_code",
+                    "arguments": {
+                        "submissionId": ${submissionId}
+                    }
+                }
+            }
+        """.trimIndent()
+
+        mvc.perform(
+            post("/mcp/")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", authHeader)
+                .content(requestJson)
+        )
+            .andExpect(status().isOk)
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("\"jsonrpc\":\"2.0\"")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("\"id\":\"test-4\"")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("# Submission ${submissionId}")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("**Assignment:** testJavaProj")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("## File:")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("```java")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("class Main")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("Teacher file")))
     }
 }

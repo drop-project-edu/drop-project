@@ -42,7 +42,8 @@ sealed interface ToolCommand {
         private val commandFactories: Map<String, (Map<String, Any>) -> ToolCommand> = mapOf(
             "get_assignment_info" to GetAssignmentInfo::from,
             "search_assignments" to SearchAssignments::from,
-            "search_student" to SearchStudent::from
+            "search_student" to SearchStudent::from,
+            "get_submission_code" to GetSubmissionCode::from
         )
 
         /**
@@ -68,7 +69,8 @@ sealed interface ToolCommand {
             return listOf(
                 GetAssignmentInfo.toMcpTool(),
                 SearchAssignments.toMcpTool(),
-                SearchStudent.toMcpTool()
+                SearchStudent.toMcpTool(),
+                GetSubmissionCode.toMcpTool()
             )
         }
     }

@@ -19,13 +19,17 @@
  */
 package org.dropproject.mcp.services
 
+import jakarta.servlet.http.HttpServletRequest
 import org.dropproject.controllers.TeacherAPIController
 import org.dropproject.dao.TokenStatus
 import org.dropproject.mcp.commands.ToolCommand
 import org.dropproject.mcp.data.*
 import org.dropproject.repository.PersonalTokenRepository
+import org.dropproject.repository.SubmissionRepository
 import org.dropproject.services.AssignmentService
+import org.dropproject.services.AssignmentTeacherFiles
 import org.dropproject.services.StudentService
+import org.dropproject.storage.StorageService
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.security.Principal
@@ -37,6 +41,10 @@ class McpService(
     val teacherAPIController: TeacherAPIController,
     val assignmentService: AssignmentService,
     val studentService: StudentService,
+    val submissionRepository: SubmissionRepository,
+    val assignmentTeacherFiles: AssignmentTeacherFiles,
+    val storageService: StorageService,
+    val request: HttpServletRequest,
     private val personalTokenRepository: PersonalTokenRepository
 ) {
 
@@ -75,6 +83,15 @@ class McpService(
      */
     fun callTool(toolName: String, arguments: Map<String, Any>, principal: Principal): McpToolCallResult {
         return ToolCommand.from(toolName, arguments).handle(this, principal)
+    }
+
+    /**
+     * Check if the current user has the TEACHER role.
+     *
+     * @return true if the user is a teacher, false otherwise
+     */
+    fun isTeacher(): Boolean {
+        return request.isUserInRole("TEACHER")
     }
 
     /**
