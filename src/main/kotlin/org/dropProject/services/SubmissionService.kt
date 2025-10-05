@@ -226,7 +226,7 @@ class SubmissionService(
             return ResponseEntity.internalServerError().body(SubmissionResult(error="O ficheiro tem que ser um .zip")) // TODO language
         }
 
-        LOG.info("[${principal.realName()}] uploaded ${originalFilename}")
+        LOG.debug("[${principal.realName()}] uploaded ${originalFilename}")
         val projectFolder: File? = storageService.store(file, assignment.id)
 
         if (projectFolder != null) {
@@ -348,7 +348,7 @@ class SubmissionService(
         // check the encoding of AUTHORS.txt
         val charset = try { guessCharset(authorsFile.inputStream()) } catch (ie: IOException) { Charset.defaultCharset() }
         if (!charset.equals(Charset.defaultCharset())) {
-            LOG.info("AUTHORS.txt is not in the default charset (${Charset.defaultCharset()}): ${charset}")
+            LOG.debug("AUTHORS.txt is not in the default charset (${Charset.defaultCharset()}): ${charset}")
         }
 
         // TODO check that AUTHORS.txt includes the number and name of the students
@@ -455,7 +455,7 @@ class SubmissionService(
             LOG.info("[${authorsStr}] Mavenized to folder ${mavenizedProjectFolder}")
 
             if (asyncExecutor is ThreadPoolTaskScheduler) {
-                LOG.info("asyncExecutor.activeCount = ${asyncExecutor.activeCount}")
+                LOG.debug("asyncExecutor.activeCount = ${asyncExecutor.activeCount}")
             }
 
             if (teacherRebuild) {
