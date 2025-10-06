@@ -111,7 +111,53 @@ data class McpContent(
     val type: String, // "text", "image", "resource", etc.
     val text: String? = null,
     val data: String? = null,
+    val mimeType: String? = null,
+    val resource: McpResourceReference? = null
+)
+
+// MCP Resource Reference (returned in tool responses)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class McpResourceReference(
+    val uri: String,
+    val name: String? = null,
+    val description: String? = null,
     val mimeType: String? = null
+)
+
+// MCP Resource (full resource with content)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class McpResource(
+    val uri: String,
+    val name: String? = null,
+    val description: String? = null,
+    val mimeType: String? = null,
+    val text: String? = null,
+    val blob: String? = null
+)
+
+// MCP Resources List Response
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class McpResourcesListResult(
+    val resources: List<McpResource>,
+    @JsonProperty("_meta")
+    val meta: Map<String, Any>? = null
+)
+
+// MCP Resources Read Response
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class McpResourcesReadResult(
+    val contents: List<McpResourceContent>,
+    @JsonProperty("_meta")
+    val meta: Map<String, Any>? = null
+)
+
+// MCP Resource Content (for resources/read)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class McpResourceContent(
+    val uri: String,
+    val mimeType: String? = null,
+    val text: String? = null,
+    val blob: String? = null
 )
 
 // Custom DropProject-specific server info for our initialize response

@@ -21,7 +21,9 @@ package org.dropproject.mcp.services
 
 import jakarta.servlet.http.HttpServletRequest
 import org.dropproject.controllers.TeacherAPIController
+import org.dropproject.dao.SubmissionStatus
 import org.dropproject.dao.TokenStatus
+import org.dropproject.extensions.realName
 import org.dropproject.mcp.commands.ToolCommand
 import org.dropproject.mcp.data.*
 import org.dropproject.repository.PersonalTokenRepository
@@ -31,8 +33,10 @@ import org.dropproject.services.AssignmentTeacherFiles
 import org.dropproject.services.ReportService
 import org.dropproject.services.StudentService
 import org.dropproject.storage.StorageService
+import org.springframework.security.access.AccessDeniedException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.io.File
 import java.security.Principal
 import java.util.*
 
@@ -53,7 +57,8 @@ class McpService(
         return McpInitializeResult(
             protocolVersion = "2024-11-05",
             capabilities = McpServerCapabilities(
-                tools = McpToolsCapability(listChanged = false)
+                tools = McpToolsCapability(listChanged = false),
+                resources = mapOf("listChanged" to false)
             ),
             serverInfo = McpServerInfo(
                 name = "DropProject",
@@ -101,9 +106,9 @@ class McpService(
     fun validateBearerToken(token: String): String? {
         return try {
             val tokenEntity = personalTokenRepository.getByPersonalToken(token)
-            
-            if (tokenEntity != null && 
-                tokenEntity.status == TokenStatus.ACTIVE && 
+
+            if (tokenEntity != null &&
+                tokenEntity.status == TokenStatus.ACTIVE &&
                 tokenEntity.expirationDate.after(Date())) {
                 tokenEntity.userId
             } else {
@@ -111,6 +116,171 @@ class McpService(
             }
         } catch (e: Exception) {
             null
+        }
+    }
+
+    /**
+     * List all available submission file resources for a given submission.
+     * Only teachers can list submission resources.
+     *
+     * @param submissionId The ID of the submission (optional, for filtering)
+     * @param principal The authenticated principal making the request
+     * @return McpResourcesListResult containing available resources
+     */
+    fun listResources(submissionId: Long?, principal: Principal): McpResourcesListResult {
+        // Check that principal is a teacher
+        if (!isTeacher()) {
+            throw AccessDeniedException("${principal.realName()} is not allowed to list submission resources")
+        }
+
+        val resources = mutableListOf<McpResource>()
+
+        if (submissionId != null) {
+            // List resources for a specific submission
+            val submission = submissionRepository.findById(submissionId).orElseThrow {
+                IllegalArgumentException("Submission with ID $submissionId not found")
+            }
+
+            val projectFolder = assignmentTeacherFiles.getProjectFolderAsFile(
+                submission,
+                wasRebuilt = submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT
+            )
+
+            collectResourcesFromFolder(projectFolder, projectFolder, submissionId, resources)
+        }
+
+        return McpResourcesListResult(resources = resources)
+    }
+
+    /**
+     * Read the content of a specific resource identified by URI.
+     * Only teachers can read submission file resources.
+     *
+     * @param uri The resource URI to read
+     * @param principal The authenticated principal making the request
+     * @return McpResourcesReadResult containing the resource content
+     */
+    fun readResource(uri: String, principal: Principal): McpResourcesReadResult {
+        // Check that principal is a teacher
+        if (!isTeacher()) {
+            throw AccessDeniedException("${principal.realName()} is not allowed to read submission resources")
+        }
+
+        // Parse URI: dropproject://submission/{submissionId}/file/{relativePath}
+        val uriRegex = Regex("^dropproject://submission/(\\d+)/file/(.+)$")
+        val matchResult = uriRegex.matchEntire(uri)
+            ?: throw IllegalArgumentException("Invalid resource URI: $uri")
+
+        val submissionId = matchResult.groupValues[1].toLong()
+        val relativePath = matchResult.groupValues[2]
+
+        // Get submission from repository
+        val submission = submissionRepository.findById(submissionId).orElseThrow {
+            IllegalArgumentException("Submission with ID $submissionId not found")
+        }
+
+        // Get the mavenized project folder
+        val projectFolder = assignmentTeacherFiles.getProjectFolderAsFile(
+            submission,
+            wasRebuilt = submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT
+        )
+
+        // Resolve the file path
+        val file = File(projectFolder, relativePath)
+
+        // Security check: ensure file is within project folder
+        if (!file.canonicalPath.startsWith(projectFolder.canonicalPath)) {
+            throw AccessDeniedException("Access denied to file outside submission folder")
+        }
+
+        if (!file.exists() || !file.isFile) {
+            throw IllegalArgumentException("File not found: $relativePath")
+        }
+
+        // Read file content
+        val content = try {
+            file.readText()
+        } catch (e: Exception) {
+            throw IllegalArgumentException("Error reading file $relativePath: ${e.message}")
+        }
+
+        val mimeType = getMimeTypeForFile(file)
+
+        return McpResourcesReadResult(
+            contents = listOf(
+                McpResourceContent(
+                    uri = uri,
+                    mimeType = mimeType,
+                    text = content
+                )
+            )
+        )
+    }
+
+    /**
+     * Recursively collect resources from a folder.
+     */
+    private fun collectResourcesFromFolder(
+        currentDir: File,
+        projectRoot: File,
+        submissionId: Long,
+        resources: MutableList<McpResource>
+    ) {
+        val files = currentDir.listFiles()?.sortedBy { it.name } ?: return
+
+        for (file in files) {
+            when {
+                file.isDirectory -> {
+                    // Skip build directories and hidden directories
+                    if (!file.name.startsWith(".") &&
+                        file.name != "target" &&
+                        file.name != "build" &&
+                        file.name != "out") {
+                        collectResourcesFromFolder(file, projectRoot, submissionId, resources)
+                    }
+                }
+                file.isFile && isSourceFile(file) -> {
+                    val relativePath = file.relativeTo(projectRoot).path
+                    val isTeacherFile = file.nameWithoutExtension.startsWith("TestTeacher")
+
+                    val description = if (isTeacherFile) {
+                        "Teacher file - not part of student submission, merged for testing"
+                    } else {
+                        "Student source file"
+                    }
+
+                    resources.add(
+                        McpResource(
+                            uri = "dropproject://submission/$submissionId/file/$relativePath",
+                            name = relativePath,
+                            description = description,
+                            mimeType = getMimeTypeForFile(file)
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    /**
+     * Check if a file is a source code file based on extension.
+     */
+    private fun isSourceFile(file: File): Boolean {
+        val sourceExtensions = setOf("java", "kt", "kts", "xml", "md", "txt")
+        return file.extension.lowercase() in sourceExtensions
+    }
+
+    /**
+     * Get MIME type for a file based on extension.
+     */
+    private fun getMimeTypeForFile(file: File): String {
+        return when (file.extension.lowercase()) {
+            "java" -> "text/x-java"
+            "kt", "kts" -> "text/x-kotlin"
+            "xml" -> "text/xml"
+            "md" -> "text/markdown"
+            "txt" -> "text/plain"
+            else -> "text/plain"
         }
     }
 }

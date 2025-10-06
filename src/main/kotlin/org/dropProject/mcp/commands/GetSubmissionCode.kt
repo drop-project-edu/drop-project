@@ -22,6 +22,7 @@ package org.dropproject.mcp.commands
 import org.dropproject.dao.SubmissionStatus
 import org.dropproject.extensions.realName
 import org.dropproject.mcp.data.McpContent
+import org.dropproject.mcp.data.McpResourceReference
 import org.dropproject.mcp.data.McpTool
 import org.dropproject.mcp.data.McpToolCallResult
 import org.dropproject.mcp.services.McpService
@@ -30,7 +31,7 @@ import java.io.File
 import java.security.Principal
 
 /**
- * Command to retrieve the source code files from a submission.
+ * Command to retrieve the source code files from a submission as resource references.
  *
  * @property submissionId The ID of the submission to retrieve code from
  */
@@ -53,9 +54,14 @@ data class GetSubmissionCode(val submissionId: Long) : ToolCommand {
             wasRebuilt = submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT
         )
 
-        // Collect all source files and concatenate them
-        val concatenatedCode = buildString {
-            appendLine("# Submission ${submission.id}")
+        // Collect all source files as resource references
+        val resources = mutableListOf<McpResourceReference>()
+        collectSourceFileReferences(projectFolder, projectFolder, submissionId, resources)
+
+        // Create summary text
+        val summaryText = buildString {
+            appendLine("# Submission $submissionId - Source Files")
+            appendLine()
             appendLine("**Assignment:** ${submission.assignmentId}")
             appendLine("**Submitted by:** ${submission.submitterUserId}")
             appendLine("**Date:** ${submission.submissionDate}")
@@ -63,27 +69,40 @@ data class GetSubmissionCode(val submissionId: Long) : ToolCommand {
             appendLine()
             appendLine("---")
             appendLine()
-
-            collectSourceFiles(projectFolder, projectFolder, this)
+            appendLine("## Available Files (${resources.size} files)")
+            appendLine()
+            appendLine("The following source files are available as resources. ")
+            appendLine("Use the MCP `resources/read` protocol to retrieve individual files.")
+            appendLine()
+            resources.forEach { resource ->
+                appendLine("- ${resource.name}")
+            }
         }
 
+        // Return summary with resource references
         return McpToolCallResult(
             content = listOf(
                 McpContent(
                     type = "text",
-                    text = concatenatedCode
+                    text = summaryText
                 )
-            )
+            ) + resources.map { resource ->
+                McpContent(
+                    type = "resource",
+                    resource = resource
+                )
+            }
         )
     }
 
     /**
-     * Recursively collect source files and append them to the StringBuilder.
+     * Recursively collect source files as resource references.
      */
-    private fun collectSourceFiles(
+    private fun collectSourceFileReferences(
         currentDir: File,
         projectRoot: File,
-        builder: StringBuilder
+        submissionId: Long,
+        resources: MutableList<McpResourceReference>
     ) {
         val files = currentDir.listFiles()?.sortedBy { it.name } ?: return
 
@@ -95,34 +114,32 @@ data class GetSubmissionCode(val submissionId: Long) : ToolCommand {
                         file.name != "target" &&
                         file.name != "build" &&
                         file.name != "out") {
-                        collectSourceFiles(file, projectRoot, builder)
+                        collectSourceFileReferences(file, projectRoot, submissionId, resources)
                     }
                 }
                 file.isFile && isSourceFile(file) -> {
-                    try {
-                        val content = file.readText()
-                        val relativePath = file.relativeTo(projectRoot).path
-                        val isTeacherFile = file.nameWithoutExtension.startsWith("TestTeacher")
+                    val relativePath = file.relativeTo(projectRoot).path
+                    val isTeacherFile = file.nameWithoutExtension.startsWith("TestTeacher")
 
-                        builder.append("## File: $relativePath")
-                        if (isTeacherFile) {
-                            builder.append(" *(Teacher file - not part of student submission, merged for testing)*")
-                        }
-                        builder.appendLine()
-                        builder.appendLine()
-                        builder.appendLine("```${getLanguageTag(file)}")
-                        builder.appendLine(content)
-                        builder.appendLine("```")
-                        builder.appendLine()
-                    } catch (e: Exception) {
-                        builder.appendLine("## File: ${file.relativeTo(projectRoot).path}")
-                        builder.appendLine("*Error reading file: ${e.message}*")
-                        builder.appendLine()
+                    val description = if (isTeacherFile) {
+                        "Teacher file - not part of student submission, merged for testing"
+                    } else {
+                        "Student source file"
                     }
+
+                    resources.add(
+                        McpResourceReference(
+                            uri = "dropproject://submission/$submissionId/file/$relativePath",
+                            name = relativePath,
+                            description = description,
+                            mimeType = getMimeType(file)
+                        )
+                    )
                 }
             }
         }
     }
+
 
     /**
      * Check if a file is a source code file based on extension.
@@ -133,15 +150,16 @@ data class GetSubmissionCode(val submissionId: Long) : ToolCommand {
     }
 
     /**
-     * Get language tag for markdown code blocks.
+     * Get MIME type for a file based on extension.
      */
-    private fun getLanguageTag(file: File): String {
+    private fun getMimeType(file: File): String {
         return when (file.extension.lowercase()) {
-            "java" -> "java"
-            "kt", "kts" -> "kotlin"
-            "xml" -> "xml"
-            "md" -> "markdown"
-            else -> ""
+            "java" -> "text/x-java"
+            "kt", "kts" -> "text/x-kotlin"
+            "xml" -> "text/xml"
+            "md" -> "text/markdown"
+            "txt" -> "text/plain"
+            else -> "text/plain"
         }
     }
 
@@ -154,8 +172,9 @@ data class GetSubmissionCode(val submissionId: Long) : ToolCommand {
         fun toMcpTool(): McpTool {
             return McpTool(
                 name = "get_submission_code",
-                description = "Retrieve all source code files from a student submission as a single concatenated document. " +
-                        "Returns the complete mavenized source code with each file clearly separated and marked with its path. " +
+                description = "Retrieve a list of source code files from a student submission as MCP resources. " +
+                        "Returns resource references that can be individually fetched using the MCP resources/read protocol. " +
+                        "This approach allows selective file retrieval and avoids large response payloads. " +
                         "Useful for code review, debugging, providing feedback, or AI-assisted analysis of student work. " +
                         "Requires teacher privileges.",
                 inputSchema = mapOf(

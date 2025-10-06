@@ -71,14 +71,23 @@ class McpController(
                     val toolName = request.params?.get("name") as? String
                         ?: throw IllegalArgumentException("Tool name is required")
                     val arguments = request.params["arguments"] as? Map<String, Any> ?: emptyMap()
-                    
+
                     mcpService.callTool(toolName, arguments, principal)
+                }
+                "resources/list" -> {
+                    val submissionId = (request.params?.get("submissionId") as? Number)?.toLong()
+                    mcpService.listResources(submissionId, principal)
+                }
+                "resources/read" -> {
+                    val uri = request.params?.get("uri") as? String
+                        ?: throw IllegalArgumentException("Resource URI is required")
+                    mcpService.readResource(uri, principal)
                 }
                 else -> throw IllegalArgumentException("Unknown method: ${request.method}")
             }
-            
+
             ResponseEntity.ok(McpResponse(id = request.id, result = result))
-            
+
         } catch (e: Exception) {
             logger.error("MCP request failed: ${e.message}", e)
             ResponseEntity.ok(

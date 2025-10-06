@@ -175,7 +175,7 @@ class McpControllerTests: APIControllerTests {
                         },
                         {
                             "name": "get_submission_code",
-                            "description": "Retrieve all source code files from a student submission as a single concatenated document. Returns the complete mavenized source code with each file clearly separated and marked with its path. Useful for code review, debugging, providing feedback, or AI-assisted analysis of student work. Requires teacher privileges.",
+                            "description": "Retrieve a list of source code files from a student submission as MCP resources. Returns resource references that can be individually fetched using the MCP resources/read protocol. This approach allows selective file retrieval and avoids large response payloads. Useful for code review, debugging, providing feedback, or AI-assisted analysis of student work. Requires teacher privileges.",
                             "inputSchema": {
                                 "type": "object",
                                 "properties": {
@@ -312,12 +312,12 @@ class McpControllerTests: APIControllerTests {
             .andExpect(status().isOk)
             .andExpect(content().string(org.hamcrest.Matchers.containsString("\"jsonrpc\":\"2.0\"")))
             .andExpect(content().string(org.hamcrest.Matchers.containsString("\"id\":\"test-4\"")))
-            .andExpect(content().string(org.hamcrest.Matchers.containsString("# Submission ${submissionId}")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("# Submission ${submissionId} - Source Files")))
             .andExpect(content().string(org.hamcrest.Matchers.containsString("**Assignment:** testJavaProj")))
-            .andExpect(content().string(org.hamcrest.Matchers.containsString("## File:")))
-            .andExpect(content().string(org.hamcrest.Matchers.containsString("```java")))
-            .andExpect(content().string(org.hamcrest.Matchers.containsString("class Main")))
-            .andExpect(content().string(org.hamcrest.Matchers.containsString("Teacher file")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("## Available Files")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("resources/read")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("\"type\":\"resource\"")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("dropproject://submission/${submissionId}/file/")))
     }
 
     @Test
@@ -360,5 +360,80 @@ class McpControllerTests: APIControllerTests {
             .andExpect(content().string(org.hamcrest.Matchers.containsString("## Group Members")))
             .andExpect(content().string(org.hamcrest.Matchers.containsString("## Results Summary")))
 
+    }
+
+    @Test
+    @DirtiesContext
+    fun testMcpResourcesList() {
+        val authHeader = getBearerToken("teacher1")
+
+        // First, create a submission
+        val submissionId = testsHelper.uploadProject(this.mvc,
+            "projectOK", "testJavaProj",
+            User("student1", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT"))))
+
+        val requestJson = """
+            {
+                "jsonrpc": "2.0",
+                "id": "test-6",
+                "method": "resources/list",
+                "params": {
+                    "submissionId": ${submissionId}
+                }
+            }
+        """.trimIndent()
+
+        mvc.perform(
+            post("/mcp/")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", authHeader)
+                .content(requestJson)
+        )
+            .andExpect(status().isOk)
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("\"jsonrpc\":\"2.0\"")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("\"id\":\"test-6\"")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("\"resources\":")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("dropproject://submission/${submissionId}/file/src/main/java/org/dropProject/sampleAssignments/testProj/Main.java")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("\"name\":")))
+
+    }
+
+    @Test
+    @DirtiesContext
+    fun testMcpResourcesRead() {
+        val authHeader = getBearerToken("teacher1")
+
+        // First, create a submission
+        val submissionId = testsHelper.uploadProject(this.mvc,
+            "projectOK", "testJavaProj",
+            User("student1", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT"))))
+
+        // Read a specific file
+        val fileUri = "dropproject://submission/${submissionId}/file/src/main/java/org/dropProject/sampleAssignments/testProj/Main.java"
+        val requestJson = """
+            {
+                "jsonrpc": "2.0",
+                "id": "test-7",
+                "method": "resources/read",
+                "params": {
+                    "uri": "$fileUri"
+                }
+            }
+        """.trimIndent()
+
+        mvc.perform(
+            post("/mcp/")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", authHeader)
+                .content(requestJson)
+        )
+            .andExpect(status().isOk)
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("\"jsonrpc\":\"2.0\"")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("\"id\":\"test-7\"")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("\"contents\":")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("\"uri\":\"$fileUri\"")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("\"mimeType\":\"text/x-java\"")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("\"text\":")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("class Main")))
     }
 }
