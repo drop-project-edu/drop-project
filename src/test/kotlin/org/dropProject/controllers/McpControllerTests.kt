@@ -186,6 +186,20 @@ class McpControllerTests: APIControllerTests {
                                 },
                                 "required": ["submissionId"]
                             }
+                        },
+                        {
+                            "name": "get_submission_info",
+                            "description": "Retrieve detailed information about a student submission, including build status, test results, compilation errors, code quality issues, and group member information. This provides a comprehensive report similar to what appears on the build report page. Teachers see additional information including hidden tests. Students can only access their own submissions.",
+                            "inputSchema": {
+                                "type": "object",
+                                "properties": {
+                                    "submissionId": {
+                                        "type": "number",
+                                        "description": "The numeric ID of the submission to retrieve information from"
+                                    }
+                                },
+                                "required": ["submissionId"]
+                            }
                         }
                     ]
                 }
@@ -304,5 +318,47 @@ class McpControllerTests: APIControllerTests {
             .andExpect(content().string(org.hamcrest.Matchers.containsString("```java")))
             .andExpect(content().string(org.hamcrest.Matchers.containsString("class Main")))
             .andExpect(content().string(org.hamcrest.Matchers.containsString("Teacher file")))
+    }
+
+    @Test
+    @DirtiesContext
+    fun testMcpGetSubmissionInfo() {
+        val authHeader = getBearerToken("teacher1")
+
+        // First, create a submission
+        val submissionId = testsHelper.uploadProject(this.mvc,
+            "projectOK", "testJavaProj",
+            User("student1", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT"))))
+
+        val requestJson = """
+            {
+                "jsonrpc": "2.0",
+                "id": "test-5",
+                "method": "tools/call",
+                "params": {
+                    "name": "get_submission_info",
+                    "arguments": {
+                        "submissionId": ${submissionId}
+                    }
+                }
+            }
+        """.trimIndent()
+
+        mvc.perform(
+            post("/mcp/")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", authHeader)
+                .content(requestJson)
+        )
+            .andExpect(status().isOk)
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("\"jsonrpc\":\"2.0\"")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("\"id\":\"test-5\"")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("# Build Report for Submission ${submissionId}")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("**Assignment:** testJavaProj")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("**Submitted:**")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("**Total Submissions:**")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("## Group Members")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("## Results Summary")))
+
     }
 }

@@ -28,6 +28,7 @@ import org.dropproject.repository.PersonalTokenRepository
 import org.dropproject.repository.SubmissionRepository
 import org.dropproject.services.AssignmentService
 import org.dropproject.services.AssignmentTeacherFiles
+import org.dropproject.services.ReportService
 import org.dropproject.services.StudentService
 import org.dropproject.storage.StorageService
 import org.springframework.stereotype.Service
@@ -43,7 +44,7 @@ class McpService(
     val studentService: StudentService,
     val submissionRepository: SubmissionRepository,
     val assignmentTeacherFiles: AssignmentTeacherFiles,
-    val storageService: StorageService,
+    val reportService: ReportService,
     val request: HttpServletRequest,
     private val personalTokenRepository: PersonalTokenRepository
 ) {
