@@ -22,7 +22,6 @@ package org.dropproject.mcp.commands
 import org.dropproject.dao.SubmissionStatus
 import org.dropproject.extensions.realName
 import org.dropproject.mcp.data.McpContent
-import org.dropproject.mcp.data.McpResourceReference
 import org.dropproject.mcp.data.McpTool
 import org.dropproject.mcp.data.McpToolCallResult
 import org.dropproject.mcp.services.McpService
@@ -31,11 +30,13 @@ import java.io.File
 import java.security.Principal
 
 /**
- * Command to retrieve the source code files from a submission as resource references.
+ * Command to retrieve the list of source code files from a submission.
  *
  * @property submissionId The ID of the submission to retrieve code from
  */
 data class GetSubmissionCode(val submissionId: Long) : ToolCommand {
+
+    data class FileInfo(val path: String, val isTeacherFile: Boolean)
 
     override fun handle(service: McpService, principal: Principal): McpToolCallResult {
         // Check that principal is a teacher
@@ -54,9 +55,9 @@ data class GetSubmissionCode(val submissionId: Long) : ToolCommand {
             wasRebuilt = submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT
         )
 
-        // Collect all source files as resource references
-        val resources = mutableListOf<McpResourceReference>()
-        collectSourceFileReferences(projectFolder, projectFolder, submissionId, resources)
+        // Collect all source file paths
+        val files = mutableListOf<FileInfo>()
+        collectSourceFiles(projectFolder, projectFolder, files)
 
         // Create summary text
         val summaryText = buildString {
@@ -69,44 +70,41 @@ data class GetSubmissionCode(val submissionId: Long) : ToolCommand {
             appendLine()
             appendLine("---")
             appendLine()
-            appendLine("## Available Files (${resources.size} files)")
+            appendLine("## Available Files (${files.size} files)")
             appendLine()
-            appendLine("The following source files are available as resources. ")
-            appendLine("Use the MCP `resources/read` protocol to retrieve individual files.")
+            appendLine("The following source files are available in this submission.")
+            appendLine("Use the `get_file_content` tool with the submission ID and file path to retrieve individual file contents.")
             appendLine()
-            resources.forEach { resource ->
-                appendLine("- ${resource.name}")
+            appendLine("Note: Files marked with [TEACHER] are teacher test files that were merged with the student submission for testing purposes - they are not part of the student's original submission.")
+            appendLine()
+            files.forEach { fileInfo ->
+                val prefix = if (fileInfo.isTeacherFile) "[TEACHER] " else ""
+                appendLine("- $prefix${fileInfo.path}")
             }
         }
 
-        // Return summary with resource references
+        // Return summary
         return McpToolCallResult(
             content = listOf(
                 McpContent(
                     type = "text",
                     text = summaryText
                 )
-            ) + resources.map { resource ->
-                McpContent(
-                    type = "resource",
-                    resource = resource
-                )
-            }
+            )
         )
     }
 
     /**
-     * Recursively collect source files as resource references.
+     * Recursively collect source file paths.
      */
-    private fun collectSourceFileReferences(
+    private fun collectSourceFiles(
         currentDir: File,
         projectRoot: File,
-        submissionId: Long,
-        resources: MutableList<McpResourceReference>
+        files: MutableList<FileInfo>
     ) {
-        val files = currentDir.listFiles()?.sortedBy { it.name } ?: return
+        val dirFiles = currentDir.listFiles()?.sortedBy { it.name } ?: return
 
-        for (file in files) {
+        for (file in dirFiles) {
             when {
                 file.isDirectory -> {
                     // Skip build directories and hidden directories
@@ -114,27 +112,14 @@ data class GetSubmissionCode(val submissionId: Long) : ToolCommand {
                         file.name != "target" &&
                         file.name != "build" &&
                         file.name != "out") {
-                        collectSourceFileReferences(file, projectRoot, submissionId, resources)
+                        collectSourceFiles(file, projectRoot, files)
                     }
                 }
                 file.isFile && isSourceFile(file) -> {
                     val relativePath = file.relativeTo(projectRoot).path
                     val isTeacherFile = file.nameWithoutExtension.startsWith("TestTeacher")
 
-                    val description = if (isTeacherFile) {
-                        "Teacher file - not part of student submission, merged for testing"
-                    } else {
-                        "Student source file"
-                    }
-
-                    resources.add(
-                        McpResourceReference(
-                            uri = "dropproject://submission/$submissionId/file/$relativePath",
-                            name = relativePath,
-                            description = description,
-                            mimeType = getMimeType(file)
-                        )
-                    )
+                    files.add(FileInfo(relativePath, isTeacherFile))
                 }
             }
         }
@@ -172,8 +157,8 @@ data class GetSubmissionCode(val submissionId: Long) : ToolCommand {
         fun toMcpTool(): McpTool {
             return McpTool(
                 name = "get_submission_code",
-                description = "Retrieve a list of source code files from a student submission as MCP resources. " +
-                        "Returns resource references that can be individually fetched using the MCP resources/read protocol. " +
+                description = "Retrieve a list of source code files from a student submission. " +
+                        "Returns a list of file paths that can be individually fetched using the get_file_content tool. " +
                         "This approach allows selective file retrieval and avoids large response payloads. " +
                         "Useful for code review, debugging, providing feedback, or AI-assisted analysis of student work. " +
                         "Requires teacher privileges.",

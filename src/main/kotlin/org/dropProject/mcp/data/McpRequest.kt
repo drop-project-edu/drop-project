@@ -160,6 +160,23 @@ data class McpResourceContent(
     val blob: String? = null
 )
 
+// MCP Resource Template (for resources/templates/list)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class McpResourceTemplate(
+    val uriTemplate: String,
+    val name: String? = null,
+    val description: String? = null,
+    val mimeType: String? = null
+)
+
+// MCP Resource Templates List Response
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class McpResourceTemplatesListResult(
+    val resourceTemplates: List<McpResourceTemplate>,
+    @JsonProperty("_meta")
+    val meta: Map<String, Any>? = null
+)
+
 // Custom DropProject-specific server info for our initialize response
 data class DropProjectServerInfo(
     val name: String,

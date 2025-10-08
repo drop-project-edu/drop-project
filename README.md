@@ -129,11 +129,30 @@ Documentation: [https://playground.dropproject.org/dp/swagger-ui.html](https://p
 
 Drop Project can act an [MCP](https://modelcontextprotocol.io/) server. Right now, only some operations are permitted and only for teachers.
 
-Just connect to `https://<server-url>/mcp` with an Authorization header: `Bearer <your-personal-token>`.
+Just connect to `https://<server-url>/mcp/` with an Authorization header: `Bearer <your-personal-token>`.
 
-For example, connect claude code with Drop Project running on localhost:
+### Using claude code
 
     claude mcp add --transport http drop-project https://playground.dropproject.org/dp/mcp/ --header "Authorization: Bearer xxxxx" (replace xxxxx with your personal token)
+
+### Using github copilot plugin in Intellij
+
+* Enter the chat window
+* Select "agent" mode
+* Click the tool icon, next to the dropdown with the models
+* Click the "add more tools" button
+* It will open an mcp.json file. Add the following content:
+```json
+"servers": {
+  "drop-project": {
+  "url": "https://playground.dropproject.org/dp/mcp/",
+  "requestInit": {
+    "headers": {
+      "Authorization": "Bearer xxxx" (replace xxxxx with your personal token)
+    }
+  }
+}
+```
 
 ## Plugin
 

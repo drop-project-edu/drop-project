@@ -48,20 +48,20 @@ class McpController(
     ): ResponseEntity<Any>? {
         
         logger.info("MCP request: method=${request.method}, user=${principal.name}")
-        
+
         // Handle notifications (no response expected)
-//        if (request.method.startsWith("notifications/")) {
-//            when (request.method) {
-//                "notifications/initialized" -> {
-//                    logger.info("MCP client initialized successfully for user: ${principal.name}")
-//                }
-//                else -> {
-//                    logger.warn("Unknown notification: ${request.method}")
-//                }
-//            }
-//            return null // No response for notifications
-//        }
-        
+        if (request.method.startsWith("notifications/")) {
+            when (request.method) {
+                "notifications/initialized" -> {
+                    logger.info("MCP client initialized successfully for user: ${principal.name}")
+                }
+                else -> {
+                    logger.warn("Unknown notification: ${request.method}")
+                }
+            }
+            return null // No response for notifications
+        }
+
         // Handle regular requests (response expected)
         return try {
             val result = when (request.method) {
@@ -73,15 +73,6 @@ class McpController(
                     val arguments = request.params["arguments"] as? Map<String, Any> ?: emptyMap()
 
                     mcpService.callTool(toolName, arguments, principal)
-                }
-                "resources/list" -> {
-                    val submissionId = (request.params?.get("submissionId") as? Number)?.toLong()
-                    mcpService.listResources(submissionId, principal)
-                }
-                "resources/read" -> {
-                    val uri = request.params?.get("uri") as? String
-                        ?: throw IllegalArgumentException("Resource URI is required")
-                    mcpService.readResource(uri, principal)
                 }
                 else -> throw IllegalArgumentException("Unknown method: ${request.method}")
             }
