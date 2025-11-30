@@ -123,7 +123,7 @@ The test coverage report will be available in the following folder:
 
 Some services are accessible through an API, protected by personal tokens.
 
-Documentation: [https://playground.dropproject.org/dp/swagger-ui.html](https://playground.dropproject.org/dp/swagger-ui.html)
+Documentation: [https://playground.dropproject.org/dp/swagger-ui/index.html](https://playground.dropproject.org/dp/swagger-ui/index.html)
 
 ## MCP (experimental)
 

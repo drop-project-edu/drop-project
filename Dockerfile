@@ -1,5 +1,5 @@
 #FROM tomcat:9-jdk17-openjdk-slim
-FROM openjdk:17-jdk-slim
+FROM openjdk:17.0.2-slim
 
 EXPOSE 8080
 
