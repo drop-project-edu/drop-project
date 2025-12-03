@@ -1142,6 +1142,20 @@ class UploadControllerTests {
 
     @Test
     @DirtiesContext
+    fun `upload group project when one member is not in whitelist`() {
+
+        // create whitelist with only student1
+        assigneeRepository.save(Assignee(assignmentId = "testJavaProj", authorUserId = "student1"))
+
+        // try to upload a group project with student1 and student2
+        // projectOK has AUTHORS.txt with both student1 and student2
+        val error = testsHelper.uploadProject(this.mvc, "projectOK", "testJavaProj", STUDENT_1,
+            expectedResultMatcher = status().isInternalServerError())
+        assertEquals("Student student2 is not authorized for this assignment.", error)
+    }
+
+    @Test
+    @DirtiesContext
     fun uploadProjectWithErrors_then_updateAssignment_then_rebuildFull() {
 
         val testFile = File("${dropProjectProperties.assignments.rootLocation}/testJavaProj/src/test/java/org/dropProject/sampleAssignments/testProj/TestTeacherProject.java")

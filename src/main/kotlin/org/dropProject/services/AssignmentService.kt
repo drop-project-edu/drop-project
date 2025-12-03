@@ -27,6 +27,7 @@ import jakarta.servlet.http.HttpServletRequest
 import org.apache.commons.io.FileUtils
 import org.dropproject.Constants
 import org.dropproject.config.PendingTasks
+import org.dropproject.controllers.InvalidProjectGroupException
 import org.dropproject.dao.*
 import org.dropproject.dao.BuildReport
 import org.dropproject.data.*
@@ -797,6 +798,29 @@ class AssignmentService(
             // let's check if the current user belongs to the white list
             if (!assigneeRepository.existsByAssignmentIdAndAuthorUserId(assignmentId, principalName)) {
                 throw AccessDeniedException("${principalName} is not allowed to view this assignment")
+            }
+        }
+    }
+
+    /**
+     * Checks if all members of a group are in the assignment's whitelist.
+     * @param assignmentId is a String identifying the assignment
+     * @param groupMembers is a List of author IDs (student numbers) representing the group members
+     * @param i18n is the MessageSource for internationalization
+     * @param currentLocale is the current Locale for message formatting
+     * @throws InvalidProjectGroupException if any group member is not in the whitelist
+     */
+    fun checkGroupMembersInWhitelist(assignmentId: String, groupMembers: List<String>,
+                                     i18n: org.springframework.context.MessageSource,
+                                     currentLocale: java.util.Locale) {
+        if (assigneeRepository.existsByAssignmentId(assignmentId)) {
+            // if it enters here, it means this assignment has a white list
+            // let's check if all group members belong to the white list
+            for (memberId in groupMembers) {
+                if (!assigneeRepository.existsByAssignmentIdAndAuthorUserId(assignmentId, memberId)) {
+                    throw InvalidProjectGroupException(i18n.getMessage("student.submit.groupMemberNotInWhitelist",
+                        arrayOf(memberId), currentLocale))
+                }
             }
         }
     }

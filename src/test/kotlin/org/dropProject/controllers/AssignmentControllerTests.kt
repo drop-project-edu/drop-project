@@ -785,6 +785,7 @@ class AssignmentControllerTests {
         )
         assignmentRepository.save(assignment)
         assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student1"))
+        assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student2"))
 
 
         // make a submission
@@ -891,6 +892,7 @@ class AssignmentControllerTests {
         )
         assignmentRepository.save(assignment)
         assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student1"))
+        assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student2"))
 
 
         // make a submission

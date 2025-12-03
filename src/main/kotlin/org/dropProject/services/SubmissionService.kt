@@ -249,6 +249,9 @@ class SubmissionService(
                 }
             }
 
+            // check if all group members are in the assignment's whitelist
+            assignmentService.checkGroupMembersInWhitelist(assignment.id, authors.map { it.number }, i18n, currentLocale)
+
             val group = projectGroupService.getOrCreateProjectGroup(authors)
 
             // verify that there is not another submission with the Submitted status
