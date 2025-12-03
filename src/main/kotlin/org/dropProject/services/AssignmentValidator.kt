@@ -187,10 +187,10 @@ class AssignmentValidator {
         if (surefirePlugin != null) {
             if (assignment.calculateStudentTestsCoverage) {
                 if (surefirePlugin.configuration == null ||
-                        !surefirePlugin.configuration.toString().contains("<include>${packagePath}/*</include>")) {
+                        !surefirePlugin.configuration.toString().contains("<include>${packagePath}/**/*</include>")) {
                     report.add(Info(InfoType.ERROR, "jacoco-maven-plugin (used for coverage) has a configuration problem",
                             "The jacoco-maven-plugin must include a configuration that includes only the classes of " +
-                                    "the assignment package. Please fix this in your assignment POM file. " +
+                                    "the assignment package and its subpackages. Please fix this in your assignment POM file. " +
                                     "Configuration example:<br/><pre>" +
                                     """
                                     |<plugin>
@@ -199,8 +199,12 @@ class AssignmentValidator {
                                     |    <version>0.8.2</version>
                                     |    <configuration>
                                     |        <includes>
-                                    |            <include>${packagePath}/*</include>
+                                    |            <include>${packagePath}/**/*</include>
                                     |        </includes>
+                                    |        <!-- optionally exclude some subpackages such as guiSimulator -->
+                                    |        <excludes>
+                                                <exclude>${packagePath}/guiSimulator/*</exclude>
+                                             </excludes>
                                     |    </configuration>
                                     |    <executions>
                                     |        <execution>
