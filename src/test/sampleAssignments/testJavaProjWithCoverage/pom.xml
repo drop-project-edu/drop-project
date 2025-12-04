@@ -96,7 +96,7 @@
                 <version>0.8.5</version>
                 <configuration>
                     <includes>
-                        <include>org/dropProject/sampleAssignments/testProj/*</include>
+                        <include>org/dropProject/sampleAssignments/testProj/**/*</include>
                     </includes>
                 </configuration>
                 <executions>
