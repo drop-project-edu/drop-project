@@ -86,7 +86,8 @@ class UploadController(
         val projectGroupService: ProjectGroupService,
         val i18n: MessageSource,
         val authorizationService: AuthorizationService,
-        val dropProjectProperties: DropProjectProperties
+        val dropProjectProperties: DropProjectProperties,
+        val cooloffOverrideService: CooloffOverrideService
         ) {
 
     @Value("\${spring.web.locale}")

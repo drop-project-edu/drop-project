@@ -27,6 +27,7 @@ import org.dropproject.data.SubmissionInfo
 import org.dropproject.data.TestType
 import org.dropproject.forms.SubmissionMethod
 import org.dropproject.repository.*
+import org.dropproject.services.CooloffOverrideService
 import org.dropproject.services.ZipService
 import org.dropproject.storage.StorageService
 import org.hamcrest.CoreMatchers
@@ -112,6 +113,9 @@ class UploadControllerTests {
 
     @Autowired
     private lateinit var testsHelper: TestsHelper
+
+    @Autowired
+    lateinit var cooloffOverrideService: CooloffOverrideService
 
     val STUDENT_1 = User("student1", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
     val STUDENT_2 = User("student2", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
@@ -1827,6 +1831,37 @@ class UploadControllerTests {
             .file(mockFile)
             .param("assignmentId", "testJavaProj"))
             .andExpect(status().isUnauthorized) // 401 Unauthorized
+    }
+
+    @Test
+    @DirtiesContext
+    fun `try to upload with cooloff then disable and upload again`() {
+
+        val assignment = assignmentRepository.findById("testJavaProj").get()
+        assignment.cooloffPeriod = 10
+        assignmentRepository.save(assignment)
+
+        testsHelper.uploadProject(this.mvc, "projectCheckstyleErrors", "testJavaProj", STUDENT_1)
+        val now = LocalTime.now()
+
+        this.mvc.perform(get("/upload/testJavaProj")
+            .with(user(STUDENT_1)))
+            .andExpect(status().isOk)
+            .andExpect(view().name("student-upload-form"))
+            .andExpect(model().attribute("coolOffEnd",
+                now.plusMinutes(10).format(DateTimeFormatter.ofPattern("HH:mm"))))
+
+        // Teacher disables cooloff for 30 minutes
+        this.mvc.perform(post("/assignment/cooloff/${assignment.id}/disable")
+            .param("duration", "30")
+            .with(user(TEACHER_1)))
+            .andExpect(status().isOk)
+
+        this.mvc.perform(get("/upload/testJavaProj")
+            .with(user(STUDENT_1)))
+            .andExpect(status().isOk)
+            .andExpect(view().name("student-upload-form"))
+            .andExpect(model().attributeDoesNotExist("coolOffEnd"))
     }
 }
 

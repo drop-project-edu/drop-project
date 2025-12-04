@@ -84,7 +84,8 @@ class SubmissionService(
     val asyncExecutor: Executor,
     val zipService: ZipService,
     val assignmentRepository: AssignmentRepository,
-    val dropProjectProperties: DropProjectProperties
+    val dropProjectProperties: DropProjectProperties,
+    val cooloffOverrideService: CooloffOverrideService
 ) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
@@ -319,6 +320,11 @@ class SubmissionService(
 
     // returns the date when the next submission can be made or null if it's not in cool-off period
     fun calculateCoolOff(lastSubmission: Submission, assignment: Assignment) : LocalDateTime? {
+        // Check if cooloff has been temporarily disabled
+        if (cooloffOverrideService.isDisabled(assignment.id)) {
+            return null
+        }
+
         val lastSubmissionDate = Timestamp(lastSubmission.submissionDate.time).toLocalDateTime()
         val now = LocalDateTime.now()
         val delta = ChronoUnit.MINUTES.between(lastSubmissionDate, now)

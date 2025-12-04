@@ -87,7 +87,8 @@ class AssignmentController(
     val cacheManager: CacheManager,
     val projectGroupService: ProjectGroupService,
     val pendingTasks: PendingTasks,
-    val dropProjectProperties: DropProjectProperties) {
+    val dropProjectProperties: DropProjectProperties,
+    val cooloffOverrideService: CooloffOverrideService) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
@@ -394,6 +395,7 @@ class AssignmentController(
         model["report"] = assignmentDetail.reports
         model["reportMsg"] = assignmentDetail.reportMessage
         model["isAdmin"] = assignmentDetail.isAdmin
+        model["cooloffOverride"] = assignmentDetail.cooloffOverride
 
         // Add git-related information if available
         if (assignmentDetail.lastCommitInfo != null) {
@@ -1078,7 +1080,96 @@ class AssignmentController(
         return result.redirectUrl
     }
 
+    /**
+     * Temporarily disables the cooloff period for an assignment.
+     * Only the assignment owner or users in the ACL can perform this action.
+     *
+     * @param assignmentId The ID of the assignment
+     * @param duration The duration in minutes (must be 15, 30, or 60)
+     * @param principal The authenticated user
+     * @return ResponseEntity with success or error message
+     */
+    @RequestMapping(value = ["/cooloff/{assignmentId}/disable"], method = [RequestMethod.POST])
+    @ResponseBody
+    fun disableCooloff(
+        @PathVariable assignmentId: String,
+        @RequestParam duration: Int,
+        principal: Principal
+    ): ResponseEntity<Map<String, Any>> {
 
+        val assignment = assignmentRepository.findById(assignmentId)
+            .orElseThrow { throw IllegalArgumentException("Assignment not found") }
+
+        // Check cooloff configured
+        if (assignment.cooloffPeriod == null) {
+            return ResponseEntity.badRequest()
+                .body(mapOf("error" to "This assignment has no cooloff period"))
+        }
+
+        // Authorization check - owner or ACL
+        val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
+        if (principal.realName() != assignment.ownerUserId &&
+            acl.find { it.userId == principal.realName() } == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(mapOf("error" to "Not authorized"))
+        }
+
+        // Validate duration
+        if (duration !in listOf(15, 30, 60)) {
+            return ResponseEntity.badRequest()
+                .body(mapOf("error" to "Duration must be 15, 30, or 60 minutes"))
+        }
+
+        // Disable cooloff
+        val info = cooloffOverrideService.disableCooloff(
+            assignmentId, principal.realName(), duration
+        )
+
+        LOG.info("[${principal.realName()}] disabled cooloff for $assignmentId for $duration min")
+
+        return ResponseEntity.ok(mapOf(
+            "success" to true,
+            "message" to "Cooloff disabled for $duration minutes"
+        ))
+    }
+
+    /**
+     * Re-enables the cooloff period for an assignment (removes the temporary override).
+     * Only the assignment owner or users in the ACL can perform this action.
+     *
+     * @param assignmentId The ID of the assignment
+     * @param principal The authenticated user
+     * @return ResponseEntity with success or error message
+     */
+    @RequestMapping(value = ["/cooloff/{assignmentId}/enable"], method = [RequestMethod.POST])
+    @ResponseBody
+    fun enableCooloff(
+        @PathVariable assignmentId: String,
+        principal: Principal
+    ): ResponseEntity<Map<String, Any>> {
+
+        val assignment = assignmentRepository.findById(assignmentId)
+            .orElseThrow { throw IllegalArgumentException("Assignment not found") }
+
+        // Authorization check
+        val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
+        if (principal.realName() != assignment.ownerUserId &&
+            acl.find { it.userId == principal.realName() } == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(mapOf("error" to "Not authorized"))
+        }
+
+        // Check if actually disabled
+        if (!cooloffOverrideService.isDisabled(assignmentId)) {
+            return ResponseEntity.badRequest()
+                .body(mapOf("error" to "Cooloff is not currently disabled"))
+        }
+
+        cooloffOverrideService.enableCooloff(assignmentId)
+        LOG.info("[${principal.realName()}] re-enabled cooloff for $assignmentId")
+
+        return ResponseEntity.ok(mapOf("success" to true, "message" to "Cooloff re-enabled"))
+    }
 
 
     /**

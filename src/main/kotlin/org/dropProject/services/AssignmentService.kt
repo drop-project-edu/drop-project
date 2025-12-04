@@ -78,7 +78,8 @@ class AssignmentService(
     val projectGroupService: ProjectGroupService,
     val gitClient: GitClient,
     val assignmentTeacherFiles: AssignmentTeacherFiles,
-    val dropProjectProperties: DropProjectProperties
+    val dropProjectProperties: DropProjectProperties,
+    val cooloffOverrideService: CooloffOverrideService
 ) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
@@ -872,6 +873,21 @@ class AssignmentService(
         // fetch instructions
         assignment.instructions = assignmentTeacherFiles.getInstructions(assignment)
 
+        // Get cooloff override information
+        val cooloffOverride = if (assignment.cooloffPeriod != null) {
+            val overrideInfo = cooloffOverrideService.getOverrideInfo(assignmentId)
+            if (overrideInfo != null) {
+                CooloffOverrideDisplay(
+                    isDisabled = true,
+                    disabledBy = overrideInfo.teacherId,
+                    remainingMinutes = cooloffOverrideService.getRemainingMinutes(assignmentId),
+                    expiryTime = overrideInfo.expiryTime
+                )
+            } else {
+                CooloffOverrideDisplay(false, null, null, null)
+            }
+        } else null
+
         return AssignmentDetailResponse(
             assignment = assignment,
             assignees = assignees,
@@ -881,7 +897,8 @@ class AssignmentService(
             reportMessage = reportMessage,
             lastCommitInfo = lastCommitInfo,
             sshKeyFingerprint = sshKeyFingerprint,
-            isAdmin = isAdmin
+            isAdmin = isAdmin,
+            cooloffOverride = cooloffOverride
         )
     }
 }

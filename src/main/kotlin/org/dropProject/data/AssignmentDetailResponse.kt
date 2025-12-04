@@ -21,6 +21,7 @@ package org.dropproject.data
 
 import com.fasterxml.jackson.annotation.JsonView
 import org.dropproject.dao.*
+import java.time.LocalDateTime
 
 /**
  * Response data class containing comprehensive assignment detail information.
@@ -29,28 +30,42 @@ import org.dropproject.dao.*
 data class AssignmentDetailResponse(
     @JsonView(JSONViews.StudentAPI::class, JSONViews.TeacherAPI::class)
     val assignment: Assignment,
-    
+
     @JsonView(JSONViews.TeacherAPI::class)
     val assignees: List<Assignee>,
-    
+
     @JsonView(JSONViews.TeacherAPI::class)
     val acl: List<AssignmentACL>,
-    
+
     @JsonView(JSONViews.TeacherAPI::class)
     val tests: List<AssignmentTestMethod>,
-    
+
     @JsonView(JSONViews.TeacherAPI::class)
     val reports: List<AssignmentReport>,
-    
+
     @JsonView(JSONViews.TeacherAPI::class)
     val reportMessage: String,
-    
+
     @JsonView(JSONViews.TeacherAPI::class)
     val lastCommitInfo: String?,
-    
+
     @JsonView(JSONViews.TeacherAPI::class)
     val sshKeyFingerprint: String?,
-    
+
     @JsonView(JSONViews.TeacherAPI::class)
-    val isAdmin: Boolean
+    val isAdmin: Boolean,
+
+    @JsonView(JSONViews.TeacherAPI::class)
+    val cooloffOverride: CooloffOverrideDisplay?
+)
+
+/**
+ * Data class representing the cooloff override status for an assignment.
+ * Used to display temporary cooloff disable information to teachers.
+ */
+data class CooloffOverrideDisplay(
+    val isDisabled: Boolean,
+    val disabledBy: String?,
+    val remainingMinutes: Long?,
+    val expiryTime: LocalDateTime?
 )
