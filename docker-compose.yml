@@ -11,7 +11,7 @@ services:
       - ./db:/var/lib/mysql
 
   drop-project:
-    image: pedroalv3s/drop-project:v1.0.0-beta.1
+    image: pedroalv3s/drop-project:v1.0.0-beta.3
     restart: "on-failure"
     environment:
       SPRING_PROFILES_ACTIVE: mysql
