@@ -1,5 +1,3 @@
-version: '3.5'
-
 services:
   db:
     image: mysql:8.0.35
@@ -13,7 +11,7 @@ services:
       - ./db:/var/lib/mysql
 
   drop-project:
-    image: pedroalv3s/drop-project:v0.9.8
+    image: pedroalv3s/drop-project:v1.0.0-beta.1
     restart: "on-failure"
     environment:
       SPRING_PROFILES_ACTIVE: mysql
@@ -22,7 +20,7 @@ services:
       DB_URL: jdbc:mysql://db:3306/dp?connectTimeout=0&socketTimeout=0&autoReconnect=true&useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       DB_USERNAME: dp
       DB_PASSWORD: dp
-      SERVER_SERVLET_CONTEXT_PATH: /dp-test
+#      SERVER_SERVLET_CONTEXT_PATH: /dp-test
     volumes:
       - ./conf:/usr/src/app/conf
       - ./submissions:/usr/src/app/submissions
@@ -42,4 +40,4 @@ services:
       PMA_HOST: db
       MYSQL_ROOT_PASSWORD: s3cret
     ports:
-      - "8096:80"
+      - "8081:80"
