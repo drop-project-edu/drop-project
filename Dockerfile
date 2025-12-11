@@ -22,18 +22,9 @@ RUN apt-get update && \
 
 RUN groupadd -r spring && useradd -r -g spring spring
 
-RUN mkdir -p /usr/src/app/mvn_repository \
-             /usr/src/app/submissions \
-             /usr/src/app/assignments \
-             /usr/src/app/mavenized-projects \
-             /usr/src/app/conf && \
-    chown -R spring:spring /usr/src/app
-
 ENV DP_M2_HOME=/usr/share/maven
 ENV DP_MVN_REPO=/usr/src/app/mvn_repository
 
 COPY --from=build --chown=spring:spring /usr/src/app/target/drop-project.jar /usr/src/app/
-
-USER spring
 
 CMD ["java", "-jar", "drop-project.jar"]
