@@ -81,7 +81,7 @@ The application should now be accessible on [http://localhost:8080](http://local
 
     docker run -p 8080:8080 pedroalv3s/drop-project
 
-### Production mode (using mysql)
+### Demo mode (using mysql)
 
 Clone the project and in the root folder execute:
 

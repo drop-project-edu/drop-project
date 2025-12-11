@@ -4,8 +4,7 @@ WORKDIR /usr/src/app
 
 COPY pom.xml .
 
-# Orchid plugin and JCenter fails. lets try to cache what we can
-RUN (mvn dependency:resolve && mvn dependency:resolve-plugins) || true
+RUN mvn clean package -Dmaven.main.skip -Dmaven.test.skip -DskipTests
 
 COPY src src/
 
