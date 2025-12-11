@@ -17,7 +17,6 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     env_file: ".env"
-    user: "1000:1000"
     volumes:
       - ./conf:/usr/src/app/conf
       - ./submissions:/usr/src/app/submissions
