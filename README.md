@@ -101,7 +101,11 @@ To run Drop Project, open a terminal in the codespace and in the root directory 
 
     docker compose up
 
-The application will be accessible on [http://localhost:8080](http://localhost:8080). Codespaces will automatically forward the port to a accessible URL.
+Once the server is running, you can access the application using either of the following methods:
+
+* Navigate to the Ports tab (located next to the Terminal tab in the bottom panel). Find port 8080, hover over the "Local Address" column, and click the globe icon (Open in Browser).
+
+* Hold Ctrl (or Cmd on macOS) and click the link http://localhost:8080 directly inside the Codespace.
 
 ## Documentation
 
