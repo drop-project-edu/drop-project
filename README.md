@@ -89,6 +89,20 @@ Clone the project and in the root folder execute:
 
 The application should now be accessible on [http://localhost:8080](http://localhost:8080)
 
+## Running on GitHub Codespaces
+
+You can run Drop Project on [GitHub Codespaces](https://github.com/features/codespaces) by clicking the button below:
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/drop-project-edu/drop-project)
+
+This will open a new codespace with Drop Project already cloned.
+
+To run Drop Project, open a terminal in the codespace and in the root directory execute:
+
+    docker compose up
+
+The application will be accessible on [http://localhost:8080](http://localhost:8080). Codespaces will automatically forward the port to a accessible URL.
+
 ## Documentation
 
 [https://drop-project-edu.github.io/drop-project/](https://drop-project-edu.github.io/drop-project/)
