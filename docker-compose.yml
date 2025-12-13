@@ -2,42 +2,41 @@ services:
   db:
     image: mysql:8.0.35
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci
-    environment:
-      MYSQL_ROOT_PASSWORD: s3cret
-      MYSQL_DATABASE: dp
-      MYSQL_USER: dp
-      MYSQL_PASSWORD: dp
+    env_file: ".env"
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     volumes:
-      - ./db:/var/lib/mysql
+      - db-data:/var/lib/mysql
 
   drop-project:
-    image: pedroalv3s/drop-project:v1.0.0-beta.3
-    restart: "on-failure"
-    environment:
-      SPRING_PROFILES_ACTIVE: mysql
-      SPRING_CONFIG_ADDITIONAL-LOCATION: /usr/src/app/conf/
-      DP_CONFIG_LOCATION: /usr/src/app/conf/
-      DB_URL: jdbc:mysql://db:3306/dp?connectTimeout=0&socketTimeout=0&autoReconnect=true&useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      DB_USERNAME: dp
-      DB_PASSWORD: dp
-#      SERVER_SERVLET_CONTEXT_PATH: /dp-test
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: ".env"
     volumes:
       - ./conf:/usr/src/app/conf
       - ./submissions:/usr/src/app/submissions
       - ./assignments:/usr/src/app/assignments
       - ./mavenized-projects:/usr/src/app/mavenized-projects
     ports:
-      - "8080:8080"
-    links:
-      - db
+      - 8080:8080
+    depends_on:
+      db:
+        condition: service_healthy
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:5.2.1
     restart: always
-    depends_on:
-      - db
-    environment:
-      PMA_HOST: db
-      MYSQL_ROOT_PASSWORD: s3cret
+    env_file: ".env"
     ports:
-      - "8081:80"
+      - 8096:80
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db-data:

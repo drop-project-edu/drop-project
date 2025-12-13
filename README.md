@@ -81,13 +81,31 @@ The application should now be accessible on [http://localhost:8080](http://local
 
     docker run -p 8080:8080 pedroalv3s/drop-project
 
-### Production mode (using mysql)
+### Demo mode (using mysql)
 
 Clone the project and in the root folder execute:
 
     docker compose up
 
 The application should now be accessible on [http://localhost:8080](http://localhost:8080)
+
+## Running on GitHub Codespaces
+
+You can run Drop Project on [GitHub Codespaces](https://github.com/features/codespaces) by clicking the button below:
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/drop-project-edu/drop-project)
+
+This will open a new codespace with Drop Project already cloned.
+
+To run Drop Project, open a terminal in the codespace and in the root directory execute:
+
+    docker compose up
+
+Once the server is running, you can access the application using either of the following methods:
+
+* Navigate to the Ports tab (located next to the Terminal tab in the bottom panel). Find port 8080, hover over the "Local Address" column, and click the globe icon (Open in Browser).
+
+* Hold Ctrl (or Cmd on macOS) and click the link http://localhost:8080 directly inside the Codespace.
 
 ## Documentation
 
