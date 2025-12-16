@@ -1,0 +1,48 @@
+# ------------------------------------------------------------------------------
+# Docker Compose configuration for Drop Project
+#
+# This file is intended for local development and testing.
+# It defines:
+#   - A MySQL database with persistent storage
+#   - The Drop Project application, built locally from the Dockerfile
+#
+# Environment variables are loaded from the .env file.
+# The application service will start only after the database is healthy.
+#
+# Note:
+#   - This setup is not intended for production use.
+#   - For production or CI, prefer running docker-compose.yml instead of this file.
+# ------------------------------------------------------------------------------
+
+services:
+  db:
+    image: mysql:8.0.35
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci
+    env_file: ".env"
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - db-data:/var/lib/mysql
+
+  drop-project:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: ".env"
+    volumes:
+      - ./conf:/usr/src/app/conf
+      - ./submissions:/usr/src/app/submissions
+      - ./assignments:/usr/src/app/assignments
+      - ./mavenized-projects:/usr/src/app/mavenized-projects
+    ports:
+      - 8080:8080
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db-data:

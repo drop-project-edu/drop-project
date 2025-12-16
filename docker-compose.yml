@@ -12,9 +12,7 @@ services:
       - db-data:/var/lib/mysql
 
   drop-project:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/drop-project-edu/drop-project:0.9.9-beta.3
     restart: unless-stopped
     env_file: ".env"
     volumes:

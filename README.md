@@ -5,8 +5,7 @@
 ![Build Status](https://github.com/drop-project-edu/drop-project/workflows/Run%20Tests/badge.svg?branch=master)
 [![codecov](https://codecov.io/gh/drop-project-edu/drop-project/branch/master/graph/badge.svg)](https://codecov.io/gh/drop-project-edu/drop-project)
 [![Apache License](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
-[![Docker Image Version](https://img.shields.io/docker/v/pedroalv3s/drop-project?label=docker&link=https%3A%2F%2Fhub.docker.com%2Fr%2Fpedroalv3s%2Fdrop-project)](https://hub.docker.com/r/pedroalv3s/drop-project)
-
+[![Release](https://img.shields.io/github/v/release/drop-project-edu/drop-project?label=ghcr)](https://github.com/drop-project-edu/drop-project/pkgs/container/drop-project)
 
 A web application where students drop their projects to check for correctness and quality.
 
@@ -79,7 +78,7 @@ The application should now be accessible on [http://localhost:8080](http://local
 
 ### Demo mode (in memory database)
 
-    docker run -p 8080:8080 pedroalv3s/drop-project
+    docker run -p 8080:8080 ghcr.io/drop-project-edu/drop-project:latest
 
 ### Demo mode (using mysql)
 
@@ -88,6 +87,10 @@ Clone the project and in the root folder execute:
     docker compose up
 
 The application should now be accessible on [http://localhost:8080](http://localhost:8080)
+
+### Demo mode (using mysql, building from sources)
+
+    docker compose -f docker-compose-dev.yml up
 
 ## Running on GitHub Codespaces
 
@@ -99,7 +102,7 @@ This will open a new codespace with Drop Project already cloned.
 
 To run Drop Project, open a terminal in the codespace and in the root directory execute:
 
-    docker compose up
+    docker compose -f docker-compose-dev.yml up
 
 Once the server is running, you can access the application using either of the following methods:
 
