@@ -17,18 +17,19 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.controllers
+package org.dropproject.controllers
 
 import junit.framework.TestCase.*
-import org.dropProject.TestsHelper
-import org.dropProject.dao.*
-import org.dropProject.data.BuildReport
-import org.dropProject.data.SubmissionInfo
-import org.dropProject.data.TestType
-import org.dropProject.forms.SubmissionMethod
-import org.dropProject.repository.*
-import org.dropProject.services.ZipService
-import org.dropProject.storage.StorageService
+import org.dropproject.TestsHelper
+import org.dropproject.dao.*
+import org.dropproject.data.BuildReport
+import org.dropproject.data.SubmissionInfo
+import org.dropproject.data.TestType
+import org.dropproject.forms.SubmissionMethod
+import org.dropproject.repository.*
+import org.dropproject.services.CooloffOverrideService
+import org.dropproject.services.ZipService
+import org.dropproject.storage.StorageService
 import org.hamcrest.CoreMatchers
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
@@ -44,7 +45,7 @@ import org.junit.runner.RunWith
 import org.mockito.BDDMockito.verify
 import org.mockito.Mockito.never
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
+import org.dropproject.config.DropProjectProperties
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.core.io.ResourceLoader
@@ -74,14 +75,8 @@ import java.util.*
 @ActiveProfiles("test")
 class UploadControllerTests {
 
-    @Value("\${mavenizedProjects.rootLocation}")
-    val mavenizedProjectsRootLocation: String = ""
-
-    @Value("\${assignments.rootLocation}")
-    val assignmentsRootLocation: String = ""
-
-    @Value("\${storage.rootLocation}")
-    val submissionsRootLocation: String = ""
+    @Autowired
+    lateinit var dropProjectProperties: DropProjectProperties
 
     @Autowired
     lateinit var mvc: MockMvc
@@ -119,13 +114,17 @@ class UploadControllerTests {
     @Autowired
     private lateinit var testsHelper: TestsHelper
 
+    @Autowired
+    lateinit var cooloffOverrideService: CooloffOverrideService
+
     val STUDENT_1 = User("student1", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
     val STUDENT_2 = User("student2", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
+    val STUDENT_3 = User("student3", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
     val TEACHER_1 = User("teacher1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
 
     @Before
     fun setup() {
-        var folder = File(mavenizedProjectsRootLocation)
+        var folder = File(dropProjectProperties.mavenizedProjects.rootLocation)
         if (folder.exists()) {
             folder.deleteRecursively()
         }
@@ -148,12 +147,12 @@ class UploadControllerTests {
 
     @After
     fun cleanup() {
-        val folder = File(mavenizedProjectsRootLocation)
+        val folder = File(dropProjectProperties.mavenizedProjects.rootLocation)
         if (folder.exists()) {
             folder.deleteRecursively()
         }
 
-        val submissionsFolder = File(submissionsRootLocation)
+        val submissionsFolder = File(dropProjectProperties.storage.rootLocation)
         if (submissionsFolder.exists()) {
             submissionsFolder.deleteRecursively()
         }
@@ -162,7 +161,7 @@ class UploadControllerTests {
     // @Test - rever isto
     fun shouldNotAcceptNoZipFile() {
         val multipartFile = MockMultipartFile("file", "test.txt", "text/plain", "Spring Framework".toByteArray())
-        this.mvc.perform(multipart("/upload").file(multipartFile))
+        this.mvc.perform(multipart("/upload").file(multipartFile).with(user(STUDENT_1)))
                 .andExpect(status().isFound)
                 .andExpect(header().string("Location", "/upload"))
                 .andExpect(flash().attribute("error", "O ficheiro tem que ser um .zip"))
@@ -176,7 +175,7 @@ class UploadControllerTests {
         val bigFileData = ByteArray(100_000_000) { 1 }
 
         val multipartFile = MockMultipartFile("file", "test.txt", "text/plain", bigFileData)
-        this.mvc.perform(multipart("/upload").file(multipartFile))
+        this.mvc.perform(multipart("/upload").file(multipartFile).with(user(STUDENT_1)))
                 .andExpect(status().isFound)
                 .andExpect(header().string("Location", "/upload"))
                 .andExpect(flash().attribute("error", "Ficheiro excede o tamanho máximo permitido"))
@@ -201,7 +200,7 @@ class UploadControllerTests {
     @DirtiesContext
     fun getUploadPageWithCooloff() {
 
-        val assignment = assignmentRepository.getById("testJavaProj")
+        val assignment = assignmentRepository.findById("testJavaProj").get()
         assignment.cooloffPeriod = 10
         assignmentRepository.save(assignment)
 
@@ -219,8 +218,8 @@ class UploadControllerTests {
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", "testJavaProj", STUDENT_1)
 
-        val submissionDB = submissionRepository.getById(submissionId.toLong())
-        val submissionFolder = File("$submissionsRootLocation/upload", submissionDB.submissionFolder)
+        val submissionDB = submissionRepository.findById(submissionId.toLong()).get()
+        val submissionFolder = File("${dropProjectProperties.storage.rootLocation}/upload", submissionDB.submissionFolder)
 
         assertTrue("submission folder doesn't exist", submissionFolder.exists())
 
@@ -232,7 +231,7 @@ class UploadControllerTests {
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", "testJavaProj", STUDENT_1)
 
-        val reportResult = this.mvc.perform(get("/buildReport/$submissionId"))
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
                 .andExpect(status().isOk)
                 .andReturn()
 
@@ -256,7 +255,7 @@ class UploadControllerTests {
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectInvalidStructure2", "testJavaProj", STUDENT_1)
 
-        val reportResult = this.mvc.perform(get("/buildReport/$submissionId"))
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
                 .andExpect(status().isOk)
                 .andReturn()
 
@@ -279,7 +278,7 @@ class UploadControllerTests {
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
 
-        val reportResult = this.mvc.perform(get("/buildReport/$submissionId"))
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
                 .andExpect(status().isOk)
                 .andReturn()
 
@@ -304,7 +303,7 @@ class UploadControllerTests {
     @DirtiesContext
     fun uploadProjectWithCompilationErrorsThenCooloff() { // cooloff is reduced for structure or compilation errors
 
-        val assignment = assignmentRepository.getById("testJavaProj")
+        val assignment = assignmentRepository.findById("testJavaProj").get()
         assignment.cooloffPeriod = 10
         assignmentRepository.save(assignment)
 
@@ -323,7 +322,7 @@ class UploadControllerTests {
     @DirtiesContext
     fun uploadProjectThenCooloff() {
 
-        val assignment = assignmentRepository.getById("testJavaProj")
+        val assignment = assignmentRepository.findById("testJavaProj").get()
         assignment.cooloffPeriod = 10
         assignmentRepository.save(assignment)
 
@@ -344,7 +343,7 @@ class UploadControllerTests {
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectCheckstyleErrors", "testJavaProj", STUDENT_1)
 
-        val reportResult = this.mvc.perform(get("/buildReport/$submissionId"))
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
                 .andExpect(status().isOk())
                 .andReturn()
 
@@ -383,7 +382,7 @@ class UploadControllerTests {
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectOK", "testJavaProj", STUDENT_1)
 
-        val reportResult = this.mvc.perform(get("/buildReport/$submissionId"))
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
                 .andExpect(status().isOk())
                 .andReturn()
 
@@ -412,7 +411,7 @@ class UploadControllerTests {
         assert(buildResult.elapsedTimeJUnit()!! > 1.toBigDecimal())
 
         // check that the submission was associated with the right assignment git hash
-        val submissionFromDB = submissionRepository.getById(submissionId.toLong())
+        val submissionFromDB = submissionRepository.findById(submissionId.toLong()).get()
         assertEquals("somehash", submissionFromDB.assignmentGitHash)
     }
 
@@ -422,7 +421,7 @@ class UploadControllerTests {
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectJava17", "testJavaProj", STUDENT_1)
 
-        val reportResult = this.mvc.perform(get("/buildReport/$submissionId"))
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
             .andExpect(status().isOk())
             .andReturn()
 
@@ -445,7 +444,7 @@ class UploadControllerTests {
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectWithREADME", "testJavaProj", STUDENT_1)
 
-        val reportResult = this.mvc.perform(get("/buildReport/$submissionId"))
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
             .andExpect(status().isOk())
             .andReturn()
 
@@ -467,7 +466,7 @@ class UploadControllerTests {
 
         testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
 
-        this.mvc.perform(get("/upload/testJavaProj"))
+        this.mvc.perform(get("/upload/testJavaProj").with(user(STUDENT_1)))
                 .andExpect(status().isOk())
                 .andExpect(model().attribute("numSubmissions", 1L))
 
@@ -480,7 +479,7 @@ class UploadControllerTests {
         testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", "testJavaProj", STUDENT_1)
 
         this.mvc.perform(get("/buildReport/1")
-                .with(user("otherStudent")))
+                .with(user(STUDENT_3)))
                 .andExpect(status().isForbidden())
 
     }
@@ -491,7 +490,7 @@ class UploadControllerTests {
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectHackingAttempt", "testJavaProj", STUDENT_1)
 
-        val reportResult = this.mvc.perform(get("/buildReport/$submissionId"))
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
                 .andExpect(status().isOk())
                 .andReturn()
 
@@ -571,7 +570,7 @@ class UploadControllerTests {
     fun uploadProjectJunitErrors() {
         val submissionId = testsHelper.uploadProject(this.mvc, "projectJUnitErrors", "testJavaProj", STUDENT_1)
 
-        val reportResult = this.mvc.perform(get("/buildReport/$submissionId"))
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
                 .andExpect(status().isOk())
                 .andReturn()
 
@@ -650,7 +649,7 @@ class UploadControllerTests {
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectJUnitErrors", "testJavaProjJUnit5", STUDENT_1)
 
-        val reportResult = this.mvc.perform(get("/buildReport/$submissionId"))
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
             .andExpect(status().isOk())
             .andReturn()
 
@@ -726,7 +725,7 @@ class UploadControllerTests {
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectJUnitErrors", "testJavaProjWithIgnoredTests", STUDENT_1)
 
-        val reportResult = this.mvc.perform(get("/buildReport/$submissionId"))
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
                 .andExpect(status().isOk())
                 .andReturn()
 
@@ -758,7 +757,7 @@ class UploadControllerTests {
     @DirtiesContext
     fun uploadProjectJunitErrors_HiddenTestsVisibility() {
 
-        val assignment = assignmentRepository.getById("testJavaProj")
+        val assignment = assignmentRepository.findById("testJavaProj").get()
         assignment.hiddenTestsVisibility = TestVisibility.HIDE_EVERYTHING  // <<< this is very important for this test
         assignmentRepository.save(assignment)
 
@@ -813,10 +812,10 @@ class UploadControllerTests {
     @DirtiesContext
     fun uploadProjectOtherEncoding() {
 
-        val submissionId = testsHelper.uploadProject(this.mvc, "projectOtherEncoding", "testJavaProj",
-                User("a21702482", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT"))))
+        val uploader = User("a21702482", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
+        val submissionId = testsHelper.uploadProject(this.mvc, "projectOtherEncoding", "testJavaProj", uploader)
 
-        val reportResult = this.mvc.perform(get("/buildReport/$submissionId"))
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(uploader)))
                 .andExpect(status().isOk())
                 .andReturn()
 
@@ -841,10 +840,10 @@ class UploadControllerTests {
     @DirtiesContext
     fun uploadProjectWithBOM() {
 
-        val submissionId = testsHelper.uploadProject(this.mvc, "projectWithBOM", "testJavaProj",
-                User("a21702482", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT"))))
+        val uploader = User("a21702482", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
+        val submissionId = testsHelper.uploadProject(this.mvc, "projectWithBOM", "testJavaProj", uploader)
 
-        val reportResult = this.mvc.perform(get("/buildReport/$submissionId"))
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(uploader)))
                 .andExpect(status().isOk())
                 .andReturn()
 
@@ -893,7 +892,8 @@ class UploadControllerTests {
             this.mvc.perform(multipart("/upload")
                     .file(multipartFile)
                     .param("assignmentId", "testJavaProj")
-                    .param("async", "false"))
+                    .param("async", "false")
+                    .with(user(STUDENT_1)))
                     .andExpect(status().isInternalServerError())
                     .andExpect(content().json("{ \"error\": \"O ficheiro AUTHORS.txt não está correcto. Contém autores duplicados.\"}"))
 
@@ -961,10 +961,10 @@ class UploadControllerTests {
     @Test
     @DirtiesContext
     fun uploadProjectUnexpectedCharacter() {
-        val submissionId = testsHelper.uploadProject(this.mvc, "projectUnexpectedCharacter", "testJavaProj",
-                User("p4453", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER"))))
+        val uploader = User("p4453", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
+        val submissionId = testsHelper.uploadProject(this.mvc, "projectUnexpectedCharacter", "testJavaProj", uploader)
 
-        val reportResult = this.mvc.perform(get("/buildReport/$submissionId"))
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(uploader)))
                 .andExpect(status().isOk())
                 .andReturn()
 
@@ -993,7 +993,7 @@ class UploadControllerTests {
 
         assigneeRepository.save(Assignee(assignmentId = "testJavaProj", authorUserId = "student1"))
 
-        this.mvc.perform(get("/"))
+        this.mvc.perform(get("/").with(user(STUDENT_1)))
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("/upload/testJavaProj"))
     }
@@ -1009,7 +1009,7 @@ class UploadControllerTests {
                 .andExpect(status().isOk())
 
         this.mvc.perform(get("/upload/testJavaProj")
-                .with(user("doesntexist")))
+                .with(user(STUDENT_2)))
                 .andExpect(status().isForbidden())
     }
 
@@ -1027,12 +1027,12 @@ class UploadControllerTests {
                 .andExpect(status().isFound)
 
         // check if it was not marked as final
-        this.mvc.perform(get("/buildReport/1"))
+        this.mvc.perform(get("/buildReport/1").with(user(STUDENT_1)))
                 .andExpect(status().isOk)
                 .andExpect(model().attribute<Submission>("submission", hasProperty("markedAsFinal", equalTo(false))))
 
         // check if it was marked as final
-        this.mvc.perform(get("/buildReport/2"))
+        this.mvc.perform(get("/buildReport/2").with(user(STUDENT_1)))
                 .andExpect(status().isOk)
                 .andExpect(model().attribute<Submission>("submission", hasProperty("markedAsFinal", equalTo(true))))
 
@@ -1043,12 +1043,12 @@ class UploadControllerTests {
             .andExpect(status().isFound)
 
         // check if it was marked as final
-        this.mvc.perform(get("/buildReport/1"))
+        this.mvc.perform(get("/buildReport/1").with(user(STUDENT_1)))
             .andExpect(status().isOk)
             .andExpect(model().attribute<Submission>("submission", hasProperty("markedAsFinal", equalTo(true))))
 
         // check if it was not marked as final
-        this.mvc.perform(get("/buildReport/2"))
+        this.mvc.perform(get("/buildReport/2").with(user(STUDENT_1)))
             .andExpect(status().isOk)
             .andExpect(model().attribute<Submission>("submission", hasProperty("markedAsFinal", equalTo(false))))
 
@@ -1067,21 +1067,21 @@ class UploadControllerTests {
                 .andExpect(redirectedUrl("/buildReport/2"))
                 .andExpect(status().isFound())
 
-        var mavenizedProjectsFolder = File(mavenizedProjectsRootLocation,
+        var mavenizedProjectsFolder = File(dropProjectProperties.mavenizedProjects.rootLocation,
                                             Submission.relativeUploadFolder("testJavaProj", Date()))
         assertEquals(2, mavenizedProjectsFolder.list().size)
 
         val admin = User("admin", "", mutableListOf(SimpleGrantedAuthority("ROLE_DROP_PROJECT_ADMIN")))
 
         // cleanup all non-final - should delete the mavenized folder of submission 1
-        this.mvc.perform(post("/cleanup/testJavaProj")
+        this.mvc.perform(post("/admin/cleanup/testJavaProj")
                 .with(user(admin)))
                 .andExpect(redirectedUrl("/report/testJavaProj"))
                 .andExpect(status().isFound())
 
         assertEquals(1, mavenizedProjectsFolder.list().size)
 
-        val submissionThatSurvivedCleanup = submissionRepository.getById(2)
+        val submissionThatSurvivedCleanup = submissionRepository.findById(2).get()
 
         assertEquals("${submissionThatSurvivedCleanup.submissionId}-mavenized", mavenizedProjectsFolder.list()[0])
     }
@@ -1099,7 +1099,7 @@ class UploadControllerTests {
 
             val submissionId = testsHelper.uploadProject(this.mvc, "projectSampleJavaAssignmentNOK", "sampleJavaAssignment", STUDENT_1)
 
-            val reportResult = this.mvc.perform(get("/buildReport/$submissionId"))
+            val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
                     .andExpect(status().isOk())
                     .andReturn()
 
@@ -1118,8 +1118,8 @@ class UploadControllerTests {
         } finally {
 
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "sampleJavaAssignment").exists()) {
-                File(assignmentsRootLocation, "sampleJavaAssignment").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "sampleJavaAssignment").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "sampleJavaAssignment").deleteRecursively()
             }
         }
 
@@ -1146,12 +1146,28 @@ class UploadControllerTests {
 
     @Test
     @DirtiesContext
+    fun `upload group project when one member is not in whitelist`() {
+
+        // create whitelist with only student1
+        assigneeRepository.save(Assignee(assignmentId = "testJavaProj", authorUserId = "student1"))
+
+        // try to upload a group project with student1 and student2
+        // projectOK has AUTHORS.txt with both student1 and student2
+        val error = testsHelper.uploadProject(this.mvc, "projectOK", "testJavaProj", STUDENT_1,
+            expectedResultMatcher = status().isInternalServerError())
+        assertEquals("Student student2 is not authorized for this assignment.", error)
+    }
+
+    @Test
+    @DirtiesContext
     fun uploadProjectWithErrors_then_updateAssignment_then_rebuildFull() {
 
-        val testFile = File("${assignmentsRootLocation}/testJavaProj/src/test/java/org/dropProject/sampleAssignments/testProj/TestTeacherProject.java")
+        val testFile = File("${dropProjectProperties.assignments.rootLocation}/testJavaProj/src/test/java/org/dropProject/sampleAssignments/testProj/TestTeacherProject.java")
         val backupTestFile = testFile.copyTo(
-                File("${assignmentsRootLocation}/testJavaProj/src/test/java/org/dropProject/sampleAssignments/testProj/TestTeacherProject.java.backup"),
+                File("${dropProjectProperties.assignments.rootLocation}/testJavaProj/src/test/java/org/dropProject/sampleAssignments/testProj/TestTeacherProject.java.backup"),
                 overwrite = true)
+
+        val uploader = User("a21702482", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
 
         try {
 
@@ -1165,10 +1181,9 @@ class UploadControllerTests {
 
             // submit assignment and check errors
             run {
-                val submissionId = testsHelper.uploadProject(this.mvc, "projectOtherEncoding", "testJavaProj",
-                        User("a21702482", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT"))))
+                val submissionId = testsHelper.uploadProject(this.mvc, "projectOtherEncoding", "testJavaProj", uploader)
 
-                val reportResult = this.mvc.perform(get("/buildReport/$submissionId"))
+                val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(uploader)))
                         .andExpect(status().isOk())
                         .andReturn()
 
@@ -1203,7 +1218,7 @@ class UploadControllerTests {
 
             // check that are no longer errors
             run {
-                val reportResult = this.mvc.perform(get("/buildReport/2"))
+                val reportResult = this.mvc.perform(get("/buildReport/2").with(user(uploader)))
                         .andExpect(status().isOk())
                         .andReturn()
 
@@ -1388,14 +1403,14 @@ class UploadControllerTests {
     @DirtiesContext
     fun uploadProjectWithoutStudentTestsForAssignmentThatRequiresStudentTests() {
 
-        val assignment = assignmentRepository.getById("testJavaProj")
+        val assignment = assignmentRepository.findById("testJavaProj").get()
         assignment.acceptsStudentTests = true  // <<< this is very important for this test
         assignment.minStudentTests = 1
         assignmentRepository.save(assignment)
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectOK", "testJavaProj", STUDENT_1)  // <<< this project doesn't have student tests
 
-        val reportResult = this.mvc.perform(get("/buildReport/$submissionId"))
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
                 .andExpect(status().isOk())
                 .andReturn()
 
@@ -1433,14 +1448,14 @@ class UploadControllerTests {
     @DirtiesContext
     fun uploadProjectWithoutEnoughStudentTests() {
 
-        val assignment = assignmentRepository.getById("testJavaProj")
+        val assignment = assignmentRepository.findById("testJavaProj").get()
         assignment.acceptsStudentTests = true  // <<< this is very important for this test
         assignment.minStudentTests = 2  // <<< this project requires at least 2 student tests
         assignmentRepository.save(assignment)
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectWith1StudentTest", "testJavaProj", STUDENT_1)  // <<< this project only has 1 student test
 
-        val reportResult = this.mvc.perform(get("/buildReport/$submissionId"))
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
                 .andExpect(status().isOk())
                 .andReturn()
 
@@ -1481,7 +1496,7 @@ class UploadControllerTests {
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectWithTestInputFiles", "testJavaProj", STUDENT_1)
 
-        val reportResult = this.mvc.perform(get("/buildReport/$submissionId"))
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
                 .andExpect(status().isOk())
                 .andReturn()
 
@@ -1502,13 +1517,13 @@ class UploadControllerTests {
     @DirtiesContext
     fun uploadProjectOutOfMemory() {
 
-        val assignment = assignmentRepository.getById("testJavaProj")
+        val assignment = assignmentRepository.findById("testJavaProj").get()
         assignment.maxMemoryMb = 64  // <<< this is very important for this test
         assignmentRepository.save(assignment)
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectOutOfMemory", "testJavaProj", STUDENT_1)
 
-        val reportResult = this.mvc.perform(get("/buildReport/$submissionId"))
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
                 .andExpect(status().isOk())
                 .andReturn()
 
@@ -1535,12 +1550,12 @@ class UploadControllerTests {
     @DirtiesContext
     fun uploadProjectWithLargeOutput() {  // too many println's
 
-        val assignment = assignmentRepository.getById("testJavaProj")
+        val assignment = assignmentRepository.findById("testJavaProj").get()
         assignmentRepository.save(assignment)
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectWithLargeOutput", "testJavaProj", STUDENT_1)
 
-        val reportResult = this.mvc.perform(get("/buildReport/$submissionId"))
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
                 .andExpect(status().isOk())
                 .andReturn()
 
@@ -1554,10 +1569,10 @@ class UploadControllerTests {
     fun rebuild() {
         val submissionId = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
 
-        this.mvc.perform(get("/buildReport/$submissionId"))
+        this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
                 .andExpect(status().isOk)
 
-        val submission = submissionRepository.getById(submissionId.toLong())
+        val submission = submissionRepository.findById(submissionId.toLong()).get()
         assertEquals(SubmissionStatus.VALIDATED, submission.getStatus())
 
         this.mvc.perform(post("/rebuild/$submissionId")
@@ -1565,7 +1580,7 @@ class UploadControllerTests {
                 .andExpect(status().isFound)
                 .andExpect(header().string("Location", "/buildReport/$submissionId"))
 
-        val updatedSubmission = submissionRepository.getById(submissionId.toLong())
+        val updatedSubmission = submissionRepository.findById(submissionId.toLong()).get()
         assertEquals(SubmissionStatus.VALIDATED, updatedSubmission.getStatus())
     }
 
@@ -1683,7 +1698,7 @@ class UploadControllerTests {
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectWithStudentTestNotValid", "testJavaProj", STUDENT_1)
 
-        val reportResult = this.mvc.perform(get("/buildReport/$submissionId"))
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
             .andExpect(status().isOk())
             .andReturn()
 
@@ -1734,8 +1749,8 @@ class UploadControllerTests {
 
         } finally {
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignment4").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment4").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment4").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment4").deleteRecursively()
             }
         }
     }
@@ -1778,8 +1793,8 @@ class UploadControllerTests {
 
         } finally {
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignment4").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment4").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment4").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment4").deleteRecursively()
             }
         }
     }
@@ -1800,6 +1815,54 @@ class UploadControllerTests {
             .andExpect(status().isNotFound)
     }
 
+    @Test
+    @DirtiesContext
+    fun `upload without authentication should return 401 unauthorized`() {
+        // Create a mock multipart file by manually creating the zip
+        val projectFolder = resourceLoader.getResource("file:src/test/sampleProjects/projectOK").file
+        val zipFile = zipService.createZipFromFolder("test", projectFolder)
+        zipFile.deleteOnExit()
+        val mockFile = MockMultipartFile("file", zipFile.name, "application/zip", zipFile.readBytes())
+
+        // Try to upload without authentication - should return 401 Unauthorized
+        // This tests that our JavaScript will detect the 401/403/405 status and redirect to login
+        // Note: In production, this might return 405 Method Not Allowed due to Spring Security behavior
+        this.mvc.perform(multipart("/upload")
+            .file(mockFile)
+            .param("assignmentId", "testJavaProj"))
+            .andExpect(status().isUnauthorized) // 401 Unauthorized
+    }
+
+    @Test
+    @DirtiesContext
+    fun `try to upload with cooloff then disable and upload again`() {
+
+        val assignment = assignmentRepository.findById("testJavaProj").get()
+        assignment.cooloffPeriod = 10
+        assignmentRepository.save(assignment)
+
+        testsHelper.uploadProject(this.mvc, "projectCheckstyleErrors", "testJavaProj", STUDENT_1)
+        val now = LocalTime.now()
+
+        this.mvc.perform(get("/upload/testJavaProj")
+            .with(user(STUDENT_1)))
+            .andExpect(status().isOk)
+            .andExpect(view().name("student-upload-form"))
+            .andExpect(model().attribute("coolOffEnd",
+                now.plusMinutes(10).format(DateTimeFormatter.ofPattern("HH:mm"))))
+
+        // Teacher disables cooloff for 30 minutes
+        this.mvc.perform(post("/assignment/cooloff/${assignment.id}/disable")
+            .param("duration", "30")
+            .with(user(TEACHER_1)))
+            .andExpect(status().isOk)
+
+        this.mvc.perform(get("/upload/testJavaProj")
+            .with(user(STUDENT_1)))
+            .andExpect(status().isOk)
+            .andExpect(view().name("student-upload-form"))
+            .andExpect(model().attributeDoesNotExist("coolOffEnd"))
+    }
 }
 
 

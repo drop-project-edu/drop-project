@@ -17,11 +17,11 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.data
+package org.dropproject.data
 
 import junit.framework.TestCase.assertEquals
-import org.dropProject.dao.Author
-import org.dropProject.dao.ProjectGroup
+import org.dropproject.dao.Author
+import org.dropproject.dao.ProjectGroup
 import org.junit.Test
 
 class TestProjectGroup {

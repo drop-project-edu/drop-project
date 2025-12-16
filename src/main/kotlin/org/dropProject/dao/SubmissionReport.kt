@@ -17,11 +17,11 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.dao
+package org.dropproject.dao
 
 import com.fasterxml.jackson.annotation.JsonView
-import org.dropProject.data.JSONViews
-import javax.persistence.*
+import org.dropproject.data.JSONViews
+import jakarta.persistence.*
 import kotlin.jvm.Transient
 
 /**
@@ -64,7 +64,7 @@ enum class Indicator(val code: String, val description: String) {
 @Entity
 @Table(indexes = [Index(columnList = "submissionId")])
 data class SubmissionReport(
-        @Id @GeneratedValue
+        @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
         val id: Long = 0,
         val submissionId: Long = 0,  // FK for Submission.id
 

@@ -1,19 +1,19 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 
-<head th:replace="layout/layout :: head (pageTitle='Drop Project - Create new assignment')">
+<head th:replace="~{layout/layout :: head (pageTitle='Drop Project - Create new assignment')}">
 </head>
 
 <body>
 
-<div th:replace="layout/layout :: header"></div>
+<div th:replace="~{layout/layout :: header}"></div>
 
 <div class="container" style="max-width: 760px; margin-bottom: 65px">
 
     <h1 class="page-header" th:if="${!assignmentForm.editMode}">Create a new assignment</h1>
     <h1 class="page-header" th:if="${assignmentForm.editMode}">Edit assignment</h1>
 
-    <!--/*@thymesVar id="assignmentForm" type="org.dropProject.forms.AssignmentForm"*/-->
+    <!--/*@thymesVar id="assignmentForm" type="org.dropproject.forms.AssignmentForm"*/-->
     <form th:object="${assignmentForm}" method="post" th:action="@{/assignment/new}" class="form-horizontal">
         <div class="form-group" th:classappend="${#fields.hasErrors('assignmentId')} ? 'has-error' : ''">
             <label for="assignmentId" class="col-sm-3 control-label">ID</label>
@@ -242,7 +242,7 @@
 
 </div>
 
-<div th:replace="layout/layout :: footer"></div>
+<div th:replace="~{layout/layout :: footer}"></div>
 
 <script th:src="@{/js/dropproject.js}"></script>
 <script th:src="@{/js/bootstrap-tagsinput.min.js}"></script>

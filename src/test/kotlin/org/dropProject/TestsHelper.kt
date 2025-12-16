@@ -17,14 +17,14 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject
+package org.dropproject
 
-import org.dropProject.dao.Assignment
-import org.dropProject.dao.AssignmentVisibility
-import org.dropProject.repository.AssignmentRepository
-import org.dropProject.repository.GitSubmissionRepository
-import org.dropProject.repository.SubmissionRepository
-import org.dropProject.services.ZipService
+import org.dropproject.dao.Assignment
+import org.dropproject.dao.AssignmentVisibility
+import org.dropproject.repository.AssignmentRepository
+import org.dropproject.repository.GitSubmissionRepository
+import org.dropproject.repository.SubmissionRepository
+import org.dropproject.services.ZipService
 import org.json.JSONObject
 import org.junit.Assert
 import org.springframework.beans.factory.annotation.Autowired
@@ -188,7 +188,7 @@ class TestsHelper {
                 .andExpect(MockMvcResultMatchers.status().isOk)
 
         // inject private and public key to continue
-        var assignment = assignmentRepository.getById(assignmentId)
+        var assignment = assignmentRepository.findById(assignmentId).get()
         assignment.gitRepositoryPrivKey = privateKey
         assignment.gitRepositoryPubKey = publicKey
         if (activateRightAfterCloning) {
@@ -204,7 +204,7 @@ class TestsHelper {
                 .andExpect(MockMvcResultMatchers.flash().attribute("message", "Assignment was successfully created and connected to git repository"))
 
         // refresh assignment
-        assignment = assignmentRepository.getById(assignmentId)
+        assignment = assignmentRepository.findById(assignmentId).get()
 
         return assignment
     }
@@ -229,7 +229,7 @@ class TestsHelper {
 
         val id = gitSubmissionRepository.findAll().last().id
 
-        val gitSubmission = gitSubmissionRepository.getById(id)
+        val gitSubmission = gitSubmissionRepository.findById(id).get()
         Assert.assertFalse(gitSubmission.connected)
 
         // inject public and private key
@@ -244,11 +244,11 @@ class TestsHelper {
                 .andExpect(MockMvcResultMatchers.header().string("Location", "/upload/${assignmentId}"))
                 .andExpect(MockMvcResultMatchers.flash().attribute("message", "Ligado com sucesso ao repositório git"))
 
-        val updatedGitSubmission = gitSubmissionRepository.getById(id)
+        val updatedGitSubmission = gitSubmissionRepository.findById(id).get()
         Assert.assertTrue(updatedGitSubmission.connected)
 
         /*** GET /upload/ ***/
-        mvc.perform(MockMvcRequestBuilders.get("/upload/${assignmentId}"))
+        mvc.perform(MockMvcRequestBuilders.get("/upload/${assignmentId}").with(user(student)))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.view().name("student-git-form"))
                 .andExpect(MockMvcResultMatchers.model().attribute("gitSubmission", updatedGitSubmission))

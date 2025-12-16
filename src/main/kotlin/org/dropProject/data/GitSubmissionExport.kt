@@ -17,12 +17,12 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.data
+package org.dropproject.data
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnore
 import java.util.*
-import javax.persistence.Column
+import jakarta.persistence.Column
 import kotlin.collections.ArrayList
 
 

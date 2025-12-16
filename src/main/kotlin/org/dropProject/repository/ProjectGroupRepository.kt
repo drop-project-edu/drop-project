@@ -17,13 +17,13 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.repository
+package org.dropproject.repository
 
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
-import org.dropProject.dao.ProjectGroup
-import org.dropProject.dao.Submission
+import org.dropproject.dao.ProjectGroup
+import org.dropproject.dao.Submission
 
 /**
  * Provides functions to query [ProjectGroup]s that have been persisted in the database.

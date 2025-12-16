@@ -17,21 +17,30 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.controllers
+package org.dropproject.controllers
 
 import com.fasterxml.jackson.annotation.JsonView
-import io.swagger.annotations.*
-import org.dropProject.dao.Assignment
-import org.dropProject.dao.Indicator
-import org.dropProject.dao.SubmissionMode
-import org.dropProject.data.AssignmentInfoResponse
-import org.dropProject.data.JSONViews
-import org.dropProject.data.SubmissionResult
-import org.dropProject.extensions.realName
-import org.dropProject.forms.UploadForm
-import org.dropProject.repository.AssigneeRepository
-import org.dropProject.repository.AssignmentRepository
-import org.dropProject.services.*
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
+import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
+import jakarta.validation.Valid
+import org.dropproject.dao.Assignment
+import org.dropproject.dao.Indicator
+import org.dropproject.dao.SubmissionMode
+import org.dropproject.data.AssignmentInfoResponse
+import org.dropproject.data.JSONViews
+import org.dropproject.data.SubmissionResult
+import org.dropproject.extensions.realName
+import org.dropproject.forms.UploadForm
+import org.dropproject.repository.AssigneeRepository
+import org.dropproject.repository.AssignmentRepository
+import org.dropproject.services.*
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -40,17 +49,12 @@ import org.springframework.validation.BindingResult
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import java.security.Principal
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
-import javax.validation.Valid
 
 
 @RestController
 @RequestMapping("/api/student")
-@Api(authorizations = [Authorization(value="basicAuth")],
-    value="Student API",
-    description = "All endpoints must be authenticated using a personal token, sent with the standard \"basic auth\" header.<br/>" +
-            "Using curl, it's as simple as including <pre>-u user:token</pre>")
+@Tag(name = "Student API", description = "All endpoints must be authenticated using a personal token, sent with the standard \"basic auth\" header.<br/>" +
+        "Using curl, it's as simple as including <pre>-u user:token</pre>")
 class StudentAPIController(
     val assignmentRepository: AssignmentRepository,
     val assigneeRepository: AssigneeRepository,
@@ -64,8 +68,8 @@ class StudentAPIController(
 
     @GetMapping(value = ["/assignments/current"], produces = [MediaType.APPLICATION_JSON_VALUE])
     @JsonView(JSONViews.StudentAPI::class)  // to publish only certain fields of the Assignment
-    @ApiOperation(value = "Get all the current assignments assigned or associated with the person identified by the \"basic auth\" header",
-        response = Assignment::class, responseContainer = "List", ignoreJsonView = false)
+    @Operation(summary = "Get all the current assignments assigned or associated with the person identified by the \"basic auth\" header",
+        security = [SecurityRequirement(name = "basicScheme")])
     fun getCurrentAssignments(principal: Principal, request: HttpServletRequest): ResponseEntity<List<Assignment>> {
 
         val assignments = assignmentService.getMyAssignments(principal, archived = false)
@@ -84,7 +88,7 @@ class StudentAPIController(
     }
 
     @RequestMapping(value = ["/submissions/new"], method = [(RequestMethod.POST)], produces = [MediaType.APPLICATION_JSON_VALUE])
-    @ApiOperation(value = "Upload a submission (zip) file. This is an asynchronous operation: " +
+    @Operation(summary = "Upload a submission (zip) file. This is an asynchronous operation: " +
             "you get a submissionId for a pending submission. You then have to check (polling) when the build results are available." +
             "Example using curl: curl -u student1:2RVawLImDTV0betF17P2 -F \"assignmentId=sampleJavaProject\" -F \"file=@/Users/pedroalves/Downloads/sampleJavaSubmission.zip\" http://localhost:8080/api/student/submissions/new")
     fun upload(@Valid @ModelAttribute("uploadForm") uploadForm: UploadForm,
@@ -100,7 +104,26 @@ class StudentAPIController(
 
     @RequestMapping(value = ["/submissions/{submissionId}"], method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_JSON_VALUE])
     @JsonView(JSONViews.StudentAPI::class)  // to publish only certain fields of the Assignment
-    @ApiOperation(value = "Get the build report associated with this submission")
+    @Operation(summary = "Get the build report associated with this submission")
+    @ApiResponses(value = [
+        ApiResponse(responseCode = "200", description = "Submission is validated and build report is available",
+            content = [ Content(mediaType = "application/json", schema = Schema(implementation = FullBuildReport::class)) ]),
+        ApiResponse(
+            responseCode = "202",
+            description = "Submission is still validating (async) and build report is not yet available. Check again in a few seconds",
+            content = [
+                Content(
+                    mediaType = "application/json",
+                    schema = Schema(
+                        type = "object",
+                        example = """
+                            {
+                                "error": "Submission is validating"
+                            }
+                            """))
+            ]
+        )
+    ])
     fun getBuildReport(@PathVariable submissionId: Long, principal: Principal,
                        request: HttpServletRequest,
                        response: HttpServletResponse): ResponseEntity<FullBuildReport> {
@@ -111,7 +134,7 @@ class StudentAPIController(
         report.summary?.removeIf { it.reportKey == Indicator.HIDDEN_UNIT_TESTS.code}
 
         return when {
-            report.autoRefresh == true -> {
+            report.isValidating == true -> {
                 // force a response since this http code messes up spring security, redirecting to login page
                 response.status = HttpServletResponse.SC_ACCEPTED
                 response.contentType = MediaType.APPLICATION_JSON_VALUE
@@ -131,7 +154,7 @@ class StudentAPIController(
 
     @RequestMapping(value = ["/assignments/{assignmentID}"], method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_JSON_VALUE])
     @JsonView(JSONViews.StudentAPI::class)  // to publish only certain fields of the Assignment
-    @ApiOperation(value = "Get specific assignment information")
+    @Operation(summary = "Get specific assignment information")
     fun getAssignmentInfo(principal: Principal, @PathVariable assignmentID: String) : ResponseEntity<AssignmentInfoResponse> {
 
         //control access on w-list

@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.extensions
+package org.dropproject.extensions
 
 import org.springframework.core.io.ClassPathResource
 import org.springframework.util.FileCopyUtils

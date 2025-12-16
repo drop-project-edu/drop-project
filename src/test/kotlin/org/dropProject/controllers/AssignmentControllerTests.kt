@@ -17,25 +17,25 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.controllers
+package org.dropproject.controllers
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import net.lingala.zip4j.ZipFile
 import net.lingala.zip4j.model.FileHeader
 import org.apache.commons.io.FileUtils
-import org.dropProject.TestsHelper
-import org.dropProject.TestsHelper.Companion.sampleJavaAssignmentPrivateKey
-import org.dropProject.TestsHelper.Companion.sampleJavaAssignmentPublicKey
-import org.dropProject.dao.*
-import org.dropProject.data.SubmissionInfo
-import org.dropProject.extensions.formatJustDate
-import org.dropProject.forms.AssignmentForm
-import org.dropProject.forms.SubmissionMethod
-import org.dropProject.repository.*
-import org.dropProject.services.AssignmentService
-import org.dropProject.services.GitClient
-import org.dropProject.services.ScheduledTasks
+import org.dropproject.TestsHelper
+import org.dropproject.TestsHelper.Companion.sampleJavaAssignmentPrivateKey
+import org.dropproject.TestsHelper.Companion.sampleJavaAssignmentPublicKey
+import org.dropproject.dao.*
+import org.dropproject.data.SubmissionInfo
+import org.dropproject.extensions.formatJustDate
+import org.dropproject.forms.AssignmentForm
+import org.dropproject.forms.SubmissionMethod
+import org.dropproject.repository.*
+import org.dropproject.services.AssignmentService
+import org.dropproject.services.GitClient
+import org.dropproject.services.ScheduledTasks
 import org.hamcrest.CoreMatchers.containsString
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers
@@ -49,7 +49,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.MethodSorters
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
+import org.dropproject.config.DropProjectProperties
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
@@ -114,11 +114,8 @@ class AssignmentControllerTests {
     @Autowired
     lateinit var scheduledTasks: ScheduledTasks
 
-    @Value("\${assignments.rootLocation}")
-    val assignmentsRootLocation: String = ""
-
-    @Value("\${storage.rootLocation}/upload")
-    val uploadSubmissionsRootLocation: String = "submissions/upload"
+    @Autowired
+    lateinit var dropProjectProperties: DropProjectProperties
 
     val TEACHER_1 = User("teacher1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
     val STUDENT_1 = User("student1", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
@@ -335,8 +332,8 @@ class AssignmentControllerTests {
         } finally {
 
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignment1").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment1").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment1").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment1").deleteRecursively()
             }
         }
     }
@@ -368,7 +365,7 @@ class AssignmentControllerTests {
                 .andExpect(status().isOk)
 
             // inject private and public key to continue
-            val assignment = assignmentRepository.getById("dummyAssignment2")
+            val assignment = assignmentRepository.findById("dummyAssignment2").get()
             assignment.gitRepositoryPrivKey = "-----BEGIN RSA PRIVATE KEY-----\n" +
                     "MIIEowIBAAKCAQEAgbzH8iu5BsdX8fZhsiqQRgG/ICbJ2gy4guNltnBeRchInAmP\n" +
                     "UdjAbLUBOwCAaixz4F5rtOvmuNy2kjpqmvdT8Ltoaox+GnSdsTRDVALmrST5MS4w\n" +
@@ -417,14 +414,14 @@ class AssignmentControllerTests {
                     )
                 )
 
-            val updatedAssignment = assignmentRepository.getById("dummyAssignment2")
+            val updatedAssignment = assignmentRepository.findById("dummyAssignment2").get()
             assert(updatedAssignment.active == false)
 
         } finally {
 
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignment2").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment2").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment2").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment2").deleteRecursively()
             }
         }
     }
@@ -455,7 +452,7 @@ class AssignmentControllerTests {
         )
 
         try {
-            assignmentRepository.getById("dummyAssignment3")
+            assignmentRepository.findById("dummyAssignment3").get()
             fail("dummyAssignment shouldn't exist in the database")
         } catch (e: Exception) {
         }
@@ -513,8 +510,8 @@ class AssignmentControllerTests {
 
         } finally {
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignment4").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment4").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment4").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment4").deleteRecursively()
             }
         }
     }
@@ -542,7 +539,7 @@ class AssignmentControllerTests {
         this.mvc.perform(get("/assignment/setup-git/dummyAssignment5"))
             .andExpect(status().isOk)
 
-        val assignment = assignmentRepository.getById("dummyAssignment5")
+        val assignment = assignmentRepository.findById("dummyAssignment5").get()
         assert(assignment.active == false)
     }
 
@@ -587,8 +584,8 @@ class AssignmentControllerTests {
         } finally {
 
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignment6").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment6").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment6").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment6").deleteRecursively()
             }
         }
     }
@@ -631,8 +628,8 @@ class AssignmentControllerTests {
         } finally {
 
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignment7").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment7").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment7").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment7").deleteRecursively()
             }
         }
     }
@@ -711,8 +708,8 @@ class AssignmentControllerTests {
         } finally {
 
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignment8").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment8").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment8").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment8").deleteRecursively()
             }
         }
     }
@@ -738,7 +735,7 @@ class AssignmentControllerTests {
             .andExpect(flash().attribute("message", "Assignment was marked active"))
 
         // confirm it is now active
-        val assignment = assignmentRepository.getById("testJavaProj")
+        val assignment = assignmentRepository.findById("testJavaProj").get()
         assertTrue("assignment is not active", assignment.active)
     }
 
@@ -753,7 +750,7 @@ class AssignmentControllerTests {
             id = "testJavaProj", name = "Test Project (for automatic tests)",
             packageName = "org.testProj", ownerUserId = "teacher1",
             submissionMethod = SubmissionMethod.UPLOAD, active = false, gitRepositoryUrl = "git://dummyRepo",
-            gitRepositoryFolder = "testJavaProj", tagsStr = emptyList()
+            gitRepositoryFolder = "testJavaProj"
         )
         assignmentRepository.save(assignment)
         assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student1"))
@@ -776,8 +773,8 @@ class AssignmentControllerTests {
 
         // make a copy of the "testJavaProj" assignment files and create an assignment based on the copy
         // so that we can safely delete it, without affecting the original files
-        val assignmentFolder = File(assignmentsRootLocation, "testJavaProjForDelete")
-        FileUtils.copyDirectory(File(assignmentsRootLocation, "testJavaProj"), assignmentFolder)
+        val assignmentFolder = File(dropProjectProperties.assignments.rootLocation, "testJavaProjForDelete")
+        FileUtils.copyDirectory(File(dropProjectProperties.assignments.rootLocation, "testJavaProj"), assignmentFolder)
 
         // create initial assignment
         val assignment = Assignment(
@@ -788,6 +785,7 @@ class AssignmentControllerTests {
         )
         assignmentRepository.save(assignment)
         assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student1"))
+        assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student2"))
 
 
         // make a submission
@@ -827,8 +825,8 @@ class AssignmentControllerTests {
 
         // make a copy of the "testJavaProj" assignment files and create an assignment based on the copy
         // so that we can safely delete it, without affecting the original files
-        val assignmentFolder = File(assignmentsRootLocation, "testJavaProjForDelete")
-        FileUtils.copyDirectory(File(assignmentsRootLocation, "testJavaProj"), assignmentFolder)
+        val assignmentFolder = File(dropProjectProperties.assignments.rootLocation, "testJavaProjForDelete")
+        FileUtils.copyDirectory(File(dropProjectProperties.assignments.rootLocation, "testJavaProj"), assignmentFolder)
 
         // create two initial assignments
         val assignment1 = Assignment(
@@ -882,8 +880,8 @@ class AssignmentControllerTests {
 
         // make a copy of the "testJavaProj" assignment files and create an assignment based on the copy
         // so that we can safely delete it, without affecting the original files
-        val assignmentFolder = File(assignmentsRootLocation, "testJavaProjForDelete")
-        FileUtils.copyDirectory(File(assignmentsRootLocation, "testJavaProj"), assignmentFolder)
+        val assignmentFolder = File(dropProjectProperties.assignments.rootLocation, "testJavaProjForDelete")
+        FileUtils.copyDirectory(File(dropProjectProperties.assignments.rootLocation, "testJavaProj"), assignmentFolder)
 
         // create initial assignment
         val assignment = Assignment(
@@ -894,12 +892,13 @@ class AssignmentControllerTests {
         )
         assignmentRepository.save(assignment)
         assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student1"))
+        assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student2"))
 
 
         // make a submission
         val submissionId =
             testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1).toLong()
-        val submission = submissionRepository.getById(submissionId)
+        val submission = submissionRepository.findById(submissionId).get()
 
         // try to delete the assignment with force = true using someone who hasn't the admin role
         this.mvc.perform(
@@ -923,7 +922,7 @@ class AssignmentControllerTests {
         assertFalse("$assignmentFolder should have been deleted", assignmentFolder.exists())
 
         // check if the submission folder was deleted
-        val submissionFolder = File(uploadSubmissionsRootLocation, submission.submissionFolder)
+        val submissionFolder = File(dropProjectProperties.storage.uploadLocation, submission.submissionFolder)
         assertFalse("$submissionFolder should have been deleted", submissionFolder.exists())
 
         // check if the submission was deleted from the database
@@ -938,8 +937,8 @@ class AssignmentControllerTests {
 
         // make a copy of the "testJavaProj" assignment files and create an assignment based on the copy
         // so that we can safely delete it, without affecting the original files
-        val assignmentFolder = File(assignmentsRootLocation, "testJavaProjForDelete")
-        FileUtils.copyDirectory(File(assignmentsRootLocation, "testJavaProj"), assignmentFolder)
+        val assignmentFolder = File(dropProjectProperties.assignments.rootLocation, "testJavaProjForDelete")
+        FileUtils.copyDirectory(File(dropProjectProperties.assignments.rootLocation, "testJavaProj"), assignmentFolder)
 
         // create initial assignment
         val assignment = Assignment(
@@ -1054,8 +1053,8 @@ class AssignmentControllerTests {
 
         } finally {
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignment4").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment4").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment4").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment4").deleteRecursively()
             }
         }
     }
@@ -1083,8 +1082,8 @@ class AssignmentControllerTests {
         } finally {
 
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignment1").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment1").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment1").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment1").deleteRecursively()
             }
         }
     }
@@ -1227,8 +1226,8 @@ class AssignmentControllerTests {
         } finally {
 
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignmentTags").exists()) {
-                File(assignmentsRootLocation, "dummyAssignmentTags").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignmentTags").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignmentTags").deleteRecursively()
             }
         }
     }
@@ -1260,8 +1259,8 @@ class AssignmentControllerTests {
         } finally {
 
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignmentTests").exists()) {
-                File(assignmentsRootLocation, "dummyAssignmentTests").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignmentTests").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignmentTests").deleteRecursively()
             }
         }
     }
@@ -1334,12 +1333,12 @@ class AssignmentControllerTests {
 
         } finally {
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignment4").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment4").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment4").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment4").deleteRecursively()
             }
 
-            if (File(assignmentsRootLocation, "dummyAssignment5").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment5").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment5").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment5").deleteRecursively()
             }
         }
     }
@@ -1388,7 +1387,7 @@ class AssignmentControllerTests {
             val downloadedFileAsZipObject = ZipFile(downloadedZipFile)
             downloadedFileAsZipObject.extractFile("assignment.json", "result")
 
-            val mapper = ObjectMapper().registerModule(KotlinModule())
+            val mapper = ObjectMapper().registerModule(KotlinModule.Builder().build())
             val node = mapper.readTree(downloadedJSONFileName)
             assertEquals("dummyAssignment1", node.at("/id").asText())
             assertEquals("Dummy Assignment", node.at("/name").asText())
@@ -1409,8 +1408,8 @@ class AssignmentControllerTests {
         } finally {
 
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignment1").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment1").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment1").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment1").deleteRecursively()
             }
         }
     }
@@ -1425,7 +1424,7 @@ class AssignmentControllerTests {
                 MockMultipartFile("file", "export-only-assignment.dp", "application/zip", fileContent)
 
             mvc.perform(
-                MockMvcRequestBuilders.fileUpload("/assignment/import")
+                MockMvcRequestBuilders.multipart("/assignment/import")
                     .file(multipartFile)
                     .with(user(TEACHER_1))
             )
@@ -1435,7 +1434,7 @@ class AssignmentControllerTests {
 
 
             // let's check if it was well imported
-            val mvcResult = this.mvc.perform(get("/assignment/info/dummyAssignment1"))
+            val mvcResult = this.mvc.perform(get("/assignment/info/dummyAssignment1").with(user(TEACHER_1)))
                 .andExpect(status().isOk)
                 .andReturn()
 
@@ -1447,7 +1446,7 @@ class AssignmentControllerTests {
 
         } finally {
             // remove the assignments files created during the test
-            File(assignmentsRootLocation, "dummyAssignment1").deleteRecursively()
+            File(dropProjectProperties.assignments.rootLocation, "dummyAssignment1").deleteRecursively()
         }
     }
 
@@ -1503,7 +1502,7 @@ class AssignmentControllerTests {
         val downloadedFileAsZipObject = ZipFile(downloadedZipFile)
         downloadedFileAsZipObject.extractFile("submissions.json", "result")
 
-        val mapper = ObjectMapper().registerModule(KotlinModule())
+        val mapper = ObjectMapper().registerModule(KotlinModule.Builder().build())
         val node = mapper.readTree(downloadedJSONFileName)
         assertEquals("testJavaProj", node.at("/0/assignmentId").asText())
         assertEquals("student1", node.at("/0/submitterUserId").asText())
@@ -1562,7 +1561,7 @@ class AssignmentControllerTests {
                 MockMultipartFile("file", "export-assignment-and-submissions.dp", "application/zip", fileContent)
 
             mvc.perform(
-                MockMvcRequestBuilders.fileUpload("/assignment/import")
+                MockMvcRequestBuilders.multipart("/assignment/import")
                     .file(multipartFile)
                     .with(user(TEACHER_1))
             )
@@ -1584,8 +1583,8 @@ class AssignmentControllerTests {
         } finally {
 
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignment1").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment1").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment1").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment1").deleteRecursively()
             }
         }
 
@@ -1640,7 +1639,7 @@ class AssignmentControllerTests {
         val downloadedFileAsZipObject = ZipFile(downloadedZipFile)
         downloadedFileAsZipObject.extractFile("git-submissions.json", "result")
 
-        val mapper = ObjectMapper().registerModule(KotlinModule())
+        val mapper = ObjectMapper().registerModule(KotlinModule.Builder().build())
         val node = mapper.readTree(downloadedJSONFileName)
         assertEquals("testJavaProj", node.at("/0/assignmentId").asText())
         assertEquals("student1", node.at("/0/submitterUserId").asText())
@@ -1669,7 +1668,7 @@ class AssignmentControllerTests {
                 MockMultipartFile("file", "export-assignment-and-git-submissions.dp", "application/zip", fileContent)
 
             mvc.perform(
-                MockMvcRequestBuilders.fileUpload("/assignment/import")
+                MockMvcRequestBuilders.multipart("/assignment/import")
                     .file(multipartFile)
                     .with(user(TEACHER_1))
             )
@@ -1693,8 +1692,8 @@ class AssignmentControllerTests {
         } finally {
 
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignment1").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment1").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment1").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment1").deleteRecursively()
             }
         }
 
@@ -1710,24 +1709,24 @@ class AssignmentControllerTests {
             testsHelper.createAndSetupAssignment(
                 mvc, assignmentRepository, "dummyAssignment", "Dummy Assignment",
                 "org.dummy", "UPLOAD", sampleJavaAssignmentRepo,
-                teacherId = "p1", activateRightAfterCloning = false
+                teacherId = "teacher1", activateRightAfterCloning = false
             )
 
             // remove the private and public keys to mess up the connection with github
-            val assignment = assignmentRepository.getById("dummyAssignment")
+            val assignment = assignmentRepository.findById("dummyAssignment").get()
             assignment.gitRepositoryPrivKey = null
             assignment.gitRepositoryPubKey = null
             assignmentRepository.save(assignment)
 
             // test git refresh - it should fail
-            val contentString = this.mvc.perform(post("/assignment/refresh-git/dummyAssignment"))
+            val contentString = this.mvc.perform(post("/assignment/refresh-git/dummyAssignment").with(user(TEACHER_1)))
                 .andExpect(status().isInternalServerError)
                 .andReturn().response.contentAsString
             val contentJSON = JSONObject(contentString)
             assertEquals("Error pulling from git@github.com:drop-project-edu/sampleJavaAssignment.git", contentJSON.getString("error"))
 
             // reconnect assignment (step 1) - open page with the newly generated key
-            this.mvc.perform(get("/assignment/setup-git/dummyAssignment?reconnect=true"))
+            this.mvc.perform(get("/assignment/setup-git/dummyAssignment?reconnect=true").with(user(TEACHER_1)))
                 .andExpect(status().isOk)
 
             // now force the keys to be equal to the ones previously created in github
@@ -1736,7 +1735,7 @@ class AssignmentControllerTests {
             assignmentRepository.save(assignment)
 
             // reconnect assignment (step 2) - open page with the newly generated key
-            this.mvc.perform(post("/assignment/setup-git/dummyAssignment?reconnect=true"))
+            this.mvc.perform(post("/assignment/setup-git/dummyAssignment?reconnect=true").with(user(TEACHER_1)))
                 .andExpect(status().isFound)
                 .andExpect(header().string("Location", "/assignment/info/dummyAssignment"))
                 .andExpect(
@@ -1748,8 +1747,8 @@ class AssignmentControllerTests {
 
         } finally {
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignment").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment").deleteRecursively()
             }
         }
 
@@ -1794,8 +1793,8 @@ class AssignmentControllerTests {
         } finally {
 
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignmentTests").exists()) {
-                File(assignmentsRootLocation, "dummyAssignmentTests").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignmentTests").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignmentTests").deleteRecursively()
             }
         }
     }
@@ -1906,8 +1905,8 @@ class AssignmentControllerTests {
         } finally {
 
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignment7").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment7").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment7").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment7").deleteRecursively()
             }
         }
     }
@@ -2003,8 +2002,8 @@ class AssignmentControllerTests {
         } finally {
 
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignment1").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment1").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment1").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment1").deleteRecursively()
             }
         }
     }
@@ -2054,8 +2053,8 @@ class AssignmentControllerTests {
 
         } finally {
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignment4").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment4").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment4").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment4").deleteRecursively()
             }
         }
     }
@@ -2081,8 +2080,8 @@ class AssignmentControllerTests {
 
         } finally {
             // cleanup assignment files
-            if (File(assignmentsRootLocation, "dummyAssignment1").exists()) {
-                File(assignmentsRootLocation, "dummyAssignment1").deleteRecursively()
+            if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment1").exists()) {
+                File(dropProjectProperties.assignments.rootLocation, "dummyAssignment1").deleteRecursively()
             }
         }
     }

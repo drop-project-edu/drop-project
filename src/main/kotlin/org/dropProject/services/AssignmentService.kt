@@ -17,26 +17,29 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.services
+package org.dropproject.services
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import jakarta.persistence.EntityNotFoundException
+import jakarta.servlet.http.HttpServletRequest
 import org.apache.commons.io.FileUtils
-import org.dropProject.Constants
-import org.dropProject.PendingTasks
-import org.dropProject.dao.*
-import org.dropProject.dao.BuildReport
-import org.dropProject.data.*
-import org.dropProject.extensions.formatJustDate
-import org.dropProject.extensions.realName
-import org.dropProject.forms.AssignmentForm
-import org.dropProject.forms.SubmissionMethod
-import org.dropProject.repository.*
+import org.dropproject.Constants
+import org.dropproject.config.PendingTasks
+import org.dropproject.controllers.InvalidProjectGroupException
+import org.dropproject.dao.*
+import org.dropproject.dao.BuildReport
+import org.dropproject.data.*
+import org.dropproject.extensions.formatJustDate
+import org.dropproject.extensions.realName
+import org.dropproject.forms.AssignmentForm
+import org.dropproject.forms.SubmissionMethod
+import org.dropproject.repository.*
 import org.eclipse.jgit.api.Git
 import org.kohsuke.github.GitHub
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
+import org.dropproject.config.DropProjectProperties
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.scheduling.annotation.Async
@@ -48,7 +51,6 @@ import java.io.File
 import java.nio.file.Files
 import java.security.Principal
 import java.util.*
-import javax.servlet.http.HttpServletRequest
 
 data class AssignmentImportResult(val type: String, val message: String, val redirectUrl: String)
 
@@ -67,7 +69,6 @@ class AssignmentService(
     val assignmentTestMethodRepository: AssignmentTestMethodRepository,
     val submissionReportRepository: SubmissionReportRepository,
     val assignmentTagRepository: AssignmentTagRepository,
-    val assignmentTagsRepository: AssignmentTagsRepository,
     val buildReportRepository: BuildReportRepository,
     val jUnitReportRepository: JUnitReportRepository,
     val jacocoReportRepository: JacocoReportRepository,
@@ -76,25 +77,12 @@ class AssignmentService(
     val pendingTasks: PendingTasks,
     val projectGroupService: ProjectGroupService,
     val gitClient: GitClient,
-    val assignmentTeacherFiles: AssignmentTeacherFiles
+    val assignmentTeacherFiles: AssignmentTeacherFiles,
+    val dropProjectProperties: DropProjectProperties,
+    val cooloffOverrideService: CooloffOverrideService
 ) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
-
-    @Value("\${assignments.rootLocation}")
-    val assignmentsRootLocation: String = ""
-
-    @Value("\${mavenizedProjects.rootLocation}")
-    val mavenizedProjectsRootLocation: String = ""
-
-    @Value("\${storage.rootLocation}/upload")
-    val uploadSubmissionsRootLocation: String = "submissions/upload"
-
-    @Value("\${storage.rootLocation}/git")
-    val gitSubmissionsRootLocation: String = "submissions/git"
-
-    @Value("\${github.token:no-token}")
-    val githubToken: String = ""
 
     /**
      * Returns the [Assignment]s that a certain user can access. The returned assignments will be all the public ones,
@@ -109,15 +97,15 @@ class AssignmentService(
         key = "#principal.name",
         condition = "#archived==true")
     fun getMyAssignments(principal: Principal, archived: Boolean): List<Assignment> {
-        val assignmentsOwns = assignmentRepository.findByOwnerUserId(principal.realName())
+        val assignmentsOwns = assignmentRepository.findAllByOwnerUserId(principal.realName())
         val assignmentsPublic = assignmentRepository.findAllByVisibility(AssignmentVisibility.PUBLIC)
 
         val assignmentsACL = assignmentACLRepository.findByUserId(principal.realName()).mapNotNull {
-            assignmentRepository.findByIdOrNull(it.assignmentId)
+            assignmentRepository.findById(it.assignmentId).orElse(null)
         }
 
         val assignmentsAssignee = assigneeRepository.findByAuthorUserId(principal.realName()).mapNotNull {
-            assignmentRepository.findByIdOrNull(it.assignmentId)
+            assignmentRepository.findById(it.assignmentId).orElse(null)
         }
 
         val assignments = HashSet<Assignment>()  // use HashSet to remove duplicates
@@ -127,11 +115,6 @@ class AssignmentService(
         assignments.addAll(assignmentsAssignee)
 
         val filteredAssigments = assignments.filter { it.archived == archived }.sortedBy { it.id }
-
-        for (assignment in filteredAssigments) {
-            assignment.tagsStr = getTagsStr(assignment)
-        }
-
         return filteredAssigments
     }
 
@@ -151,7 +134,9 @@ class AssignmentService(
     fun getAllSubmissionsForAssignment(assignmentId: String, principal: Principal, model: ModelMap,
                                        request: HttpServletRequest, includeTestDetails: Boolean = false,
                                        mode: String) {
-        val assignment = assignmentRepository.findById(assignmentId).get()
+        val assignment = assignmentRepository.findById(assignmentId)
+            .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
+
         model["assignment"] = assignment
 
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
@@ -439,7 +424,7 @@ class AssignmentService(
         val originalSubmissionsFolder = File(tempFolder, EXPORTED_ORIGINAL_SUBMISSIONS_FOLDER)
         originalSubmissionsFolder.mkdirs()
 
-        val mapper = ObjectMapper().registerModule(KotlinModule())
+        val mapper = ObjectMapper().registerModule(KotlinModule.Builder().build())
 
         try {
             mapper.writeValue(assignmentJsonFile, assignment)
@@ -470,7 +455,7 @@ class AssignmentService(
             submissions.forEachIndexed { index, it ->
                 with(it) {
                     if (submissionId != null && submissionFolder != null) {
-                        val projectFolderFrom = File(uploadSubmissionsRootLocation, submissionFolder)
+                        val projectFolderFrom = File(dropProjectProperties.storage.uploadLocation, submissionFolder)
                         val projectFolderTo = File(destinationFolder, submissionFolder.removeSuffix(submissionId))
                         projectFolderTo.mkdirs()
 
@@ -491,7 +476,7 @@ class AssignmentService(
 
             val gitSubmissions = gitSubmissionRepository.findByAssignmentIdAndConnected(assignment.id, connected = true)
             gitSubmissions.forEachIndexed { index, it ->
-                val repositoryFolderFrom = File(gitSubmissionsRootLocation, it.getFolderRelativeToStorageRoot())
+                val repositoryFolderFrom = File(dropProjectProperties.storage.gitLocation, it.getFolderRelativeToStorageRoot())
                 val repositoryFolderTo = File(destinationFolder, it.getParentFolderRelativeToStorageRoot())
                 repositoryFolderTo.mkdirs()
 
@@ -536,10 +521,11 @@ class AssignmentService(
 
             // import all the original submission files
             if (originalSubmissionsFolder.exists()) {
-                val assignment = assignmentRepository.getById(assignmentId)
+                val assignment = assignmentRepository.findById(assignmentId)
+                    .orElseThrow { EntityNotFoundException("Assignment ${assignmentId} not found") }
                 when (assignment.submissionMethod) {
-                    SubmissionMethod.UPLOAD -> FileUtils.copyDirectory(originalSubmissionsFolder, File(uploadSubmissionsRootLocation))
-                    SubmissionMethod.GIT -> FileUtils.copyDirectory(originalSubmissionsFolder, File(gitSubmissionsRootLocation))
+                    SubmissionMethod.UPLOAD -> FileUtils.copyDirectory(originalSubmissionsFolder, File(dropProjectProperties.storage.uploadLocation))
+                    SubmissionMethod.GIT -> FileUtils.copyDirectory(originalSubmissionsFolder, File(dropProjectProperties.storage.gitLocation))
                 }
             }
             return AssignmentImportResult("message", "Imported successfully ${assignmentId} and all its submissions",
@@ -668,13 +654,13 @@ class AssignmentService(
             cloneAssignment(newAssignment, gitRepository)
         } catch (e: Exception) {
 
-            if (githubToken != "no-token") {  // "no-token" is the default value
+            if (dropProjectProperties.github.token != "no-token") {  // "no-token" is the default value
                 LOG.info(
                     "Error cloning ${gitRepository} - ${e}. Maybe the SSH key was removed. Let's try setting the key" +
                             "using github API"
                 )
 
-                val github = GitHub.connectUsingOAuth(githubToken)
+                val github = GitHub.connectUsingOAuth(dropProjectProperties.github.token)
                 val (username, reponame) = gitClient.getGitRepoInfo(newAssignment.gitRepositoryUrl)
                 val repository = github.getRepository("$username/$reponame")
                 val key = repository.addDeployKey("Drop Project (import)", newAssignment.gitRepositoryPubKey, true)
@@ -714,12 +700,12 @@ class AssignmentService(
     }
 
     private fun cloneAssignment(newAssignment: Assignment, gitRepository: String) {
-        val directory = File(assignmentsRootLocation, newAssignment.gitRepositoryFolder)
+        val directory = File(dropProjectProperties.assignments.rootLocation, newAssignment.gitRepositoryFolder)
         gitClient.clone(gitRepository, directory, newAssignment.gitRepositoryPrivKey!!.toByteArray())
         LOG.info("[${newAssignment.id}] Successfuly cloned ${gitRepository} to ${directory}")
 
         // update hash
-        val git = Git.open(File(assignmentsRootLocation, newAssignment.gitRepositoryFolder))
+        val git = Git.open(File(dropProjectProperties.assignments.rootLocation, newAssignment.gitRepositoryFolder))
         newAssignment.gitCurrentHash = gitClient.getLastCommitInfo(git)?.sha1
     }
 
@@ -771,30 +757,10 @@ class AssignmentService(
         if (assignmentTag == null) {
             assignmentTag = AssignmentTag(name = tagName.trim().lowercase(Locale.getDefault()))
             assignmentTagRepository.save(assignmentTag)
-        } else {
-            if (assignmentTagsRepository.existsById(AssignmentTagsCompositeKey(assignment.id, assignmentTag.id))) {
-                return  // already exists, nothing to do here
-            }
         }
-
-        assignmentTagsRepository.save(AssignmentTags(assignment.id, assignmentTag.id))
-    }
-
-    /**
-     * Returns all the tags of the given assignment in a list of string
-     */
-    fun getTagsStr(assignment: Assignment) : List<String> {
-        val tagsStr = mutableListOf<String>()
-
-        val assignmentTagsAssociationList = assignmentTagsRepository.findByAssignmentId(assignment.id)
-        assignmentTagsAssociationList.forEach {
-            val assignmentTag = assignmentTagRepository.findByIdOrNull(it.tagId)
-            if (assignmentTag != null) {
-                tagsStr.add(assignmentTag.name)
-            }
-        }
-
-        return tagsStr
+        // attach via ManyToMany; Set prevents duplicates
+        assignment.tags.add(assignmentTag)
+        assignmentRepository.save(assignment)
     }
 
     /**
@@ -804,17 +770,19 @@ class AssignmentService(
      * and removes them from the global tags table
      */
     fun clearAllTags(assignment: Assignment, clearOrphans: Boolean = false) {
-        val assignmentTagsList = assignmentTagsRepository.findByAssignmentId(assignment.id)
-        val assignmentTagsIds = assignmentTagsList.map { it.tagId }
-        assignmentTagsRepository.deleteAll(assignmentTagsList)
+        // keep previous tag ids if we might remove orphans later
+        val previousTagIds: List<Long> = if (clearOrphans) assignment.tags.map { it.id } else emptyList()
 
-        if (clearOrphans) {
-            assignmentTagsIds.forEach {
-                if (assignmentTagsRepository.countAssignmentTagsByTagId(it) == 0L) {
-                    assignmentTagRepository.deleteById(it)
-                }
+        // Clear via the relationship; Hibernate will delete join rows
+        assignment.tags.clear()
+        assignmentRepository.save(assignment)
+
+        previousTagIds.forEach { tagId ->
+            if (assignmentRepository.countByTags_Id(tagId) == 0L) {
+                assignmentTagRepository.deleteById(tagId)
             }
         }
+
     }
 
     /**
@@ -833,5 +801,104 @@ class AssignmentService(
                 throw AccessDeniedException("${principalName} is not allowed to view this assignment")
             }
         }
+    }
+
+    /**
+     * Checks if all members of a group are in the assignment's whitelist.
+     * @param assignmentId is a String identifying the assignment
+     * @param groupMembers is a List of author IDs (student numbers) representing the group members
+     * @param i18n is the MessageSource for internationalization
+     * @param currentLocale is the current Locale for message formatting
+     * @throws InvalidProjectGroupException if any group member is not in the whitelist
+     */
+    fun checkGroupMembersInWhitelist(assignmentId: String, groupMembers: List<String>,
+                                     i18n: org.springframework.context.MessageSource,
+                                     currentLocale: java.util.Locale) {
+        if (assigneeRepository.existsByAssignmentId(assignmentId)) {
+            // if it enters here, it means this assignment has a white list
+            // let's check if all group members belong to the white list
+            for (memberId in groupMembers) {
+                if (!assigneeRepository.existsByAssignmentIdAndAuthorUserId(assignmentId, memberId)) {
+                    throw InvalidProjectGroupException(i18n.getMessage("student.submit.groupMemberNotInWhitelist",
+                        arrayOf(memberId), currentLocale))
+                }
+            }
+        }
+    }
+
+    /**
+     * Gets comprehensive assignment detail information including assignees, ACL, tests, reports, and git info.
+     * This method extracts the business logic from AssignmentController.getAssignmentDetail() for reuse.
+     * 
+     * @param assignmentId the ID of the assignment to retrieve
+     * @param principal the user making the request
+     * @param isAdmin whether the user has admin privileges
+     * @return AssignmentDetailResponse containing all assignment detail data
+     * @throws EntityNotFoundException if the assignment is not found
+     * @throws IllegalAccessException if the user is not authorized to access the assignment
+     */
+    @Transactional(readOnly = true)  // because of assignment.tags forced loading
+    fun getAssignmentDetailData(assignmentId: String, principal: Principal, isAdmin: Boolean): AssignmentDetailResponse {
+        val assignment = assignmentRepository.findById(assignmentId)
+            .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
+
+        val assignees = assigneeRepository.findByAssignmentIdOrderByAuthorUserId(assignmentId)
+        val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
+        val assignmentReports = assignmentReportRepository.findByAssignmentId(assignmentId)
+
+        // Authorization check
+        if (principal.realName() != assignment.ownerUserId && acl.find { it.userId == principal.realName() } == null) {
+            throw IllegalAccessException("Assignments can only be accessed by their owner or authorized teachers")
+        }
+
+        val tests = assignmentTestMethodRepository.findByAssignmentId(assignmentId)
+        
+        val reportMessage = if (assignmentReports.any { it.type != AssignmentValidator.InfoType.INFO }) {
+            "Assignment has errors! You have to fix them before activating it."
+        } else {
+            "Good job! Assignment has no errors and is ready to be activated."
+        }
+
+        // Git information (if available)
+        var lastCommitInfo: String? = null
+        var sshKeyFingerprint: String? = null
+        
+        if (assignment.gitRepositoryPrivKey != null && File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder).exists()) {
+            val git = Git.open(File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder))
+            val lastCommitInfoObj = gitClient.getLastCommitInfo(git)
+            lastCommitInfo = lastCommitInfoObj?.toString() ?: "No commits"
+            sshKeyFingerprint = assignment.gitRepositoryPubKey?.let { gitClient.computeSshFingerprint(it) }
+        }
+
+        // fetch instructions
+        assignment.instructions = assignmentTeacherFiles.getInstructions(assignment)
+
+        // Get cooloff override information
+        val cooloffOverride = if (assignment.cooloffPeriod != null) {
+            val overrideInfo = cooloffOverrideService.getOverrideInfo(assignmentId)
+            if (overrideInfo != null) {
+                CooloffOverrideDisplay(
+                    isDisabled = true,
+                    disabledBy = overrideInfo.teacherId,
+                    remainingMinutes = cooloffOverrideService.getRemainingMinutes(assignmentId),
+                    expiryTime = overrideInfo.expiryTime
+                )
+            } else {
+                CooloffOverrideDisplay(false, null, null, null)
+            }
+        } else null
+
+        return AssignmentDetailResponse(
+            assignment = assignment,
+            assignees = assignees,
+            acl = acl,
+            tests = tests,
+            reports = assignmentReports,
+            reportMessage = reportMessage,
+            lastCommitInfo = lastCommitInfo,
+            sshKeyFingerprint = sshKeyFingerprint,
+            isAdmin = isAdmin,
+            cooloffOverride = cooloffOverride
+        )
     }
 }

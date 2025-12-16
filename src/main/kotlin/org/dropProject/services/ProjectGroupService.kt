@@ -17,14 +17,15 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.services
+package org.dropproject.services
 
-import org.dropProject.dao.Assignment
-import org.dropProject.dao.Author
-import org.dropProject.dao.ProjectGroup
-import org.dropProject.data.AuthorDetails
-import org.dropProject.repository.AuthorRepository
-import org.dropProject.repository.ProjectGroupRepository
+import jakarta.persistence.EntityNotFoundException
+import org.dropproject.dao.Assignment
+import org.dropproject.dao.Author
+import org.dropproject.dao.ProjectGroup
+import org.dropproject.data.AuthorDetails
+import org.dropproject.repository.AuthorRepository
+import org.dropproject.repository.ProjectGroupRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -48,7 +49,8 @@ class ProjectGroupService(val projectGroupRepository: ProjectGroupRepository,
      fun searchExistingProjectGroupOrCreateNew(authors: List<AuthorDetails>): ProjectGroup {
         val groups = projectGroupRepository.getGroupsForAuthor(authors.first().number)
         for (group in groups) {
-            val groupWithAuthors = projectGroupRepository.getById(group.id) // need this to fetch all the authors of this group
+            val groupWithAuthors = projectGroupRepository.findById(group.id) // need this to fetch all the authors of this group
+                .orElseThrow { EntityNotFoundException("ProjectGroup ${group.id} not found") }
             if (groupWithAuthors.authors.size == authors.size &&
                 groupWithAuthors.authors.map { it.userId }.containsAll(authors.map { it.number })) {
                 // it's the same group

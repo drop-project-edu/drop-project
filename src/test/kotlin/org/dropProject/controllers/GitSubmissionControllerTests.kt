@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.controllers
+package org.dropproject.controllers
 
 import org.junit.After
 import org.junit.Assert.*
@@ -25,7 +25,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
+import org.dropproject.config.DropProjectProperties
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.security.core.authority.SimpleGrantedAuthority
@@ -39,10 +39,10 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
-import org.dropProject.TestsHelper
-import org.dropProject.dao.*
-import org.dropProject.forms.SubmissionMethod
-import org.dropProject.repository.*
+import org.dropproject.TestsHelper
+import org.dropproject.dao.*
+import org.dropproject.forms.SubmissionMethod
+import org.dropproject.repository.*
 import org.hamcrest.Matchers.hasProperty
 import java.io.File
 
@@ -53,11 +53,8 @@ import java.io.File
 @ActiveProfiles("test")
 class GitSubmissionControllerTests {
 
-    @Value("\${mavenizedProjects.rootLocation}")
-    val mavenizedProjectsRootLocation: String = ""
-
-    @Value("\${storage.rootLocation}")
-    val submissionsRootLocation: String = ""
+    @Autowired
+    lateinit var dropProjectProperties: DropProjectProperties
 
     @Autowired
     lateinit var mvc: MockMvc
@@ -82,7 +79,7 @@ class GitSubmissionControllerTests {
 
     @Before
     fun initMavenizedFolder() {
-        val folder = File(mavenizedProjectsRootLocation)
+        val folder = File(dropProjectProperties.mavenizedProjects.rootLocation)
         if (folder.exists()) {
             folder.deleteRecursively()
         }
@@ -102,12 +99,12 @@ class GitSubmissionControllerTests {
 
     @After
     fun cleanup() {
-        val folder = File(mavenizedProjectsRootLocation)
+        val folder = File(dropProjectProperties.mavenizedProjects.rootLocation)
         if (folder.exists()) {
             folder.deleteRecursively()
         }
 
-        val submissionsFolder = File(submissionsRootLocation)
+        val submissionsFolder = File(dropProjectProperties.storage.rootLocation)
         if (submissionsFolder.exists()) {
             submissionsFolder.deleteRecursively()
         }
@@ -140,7 +137,7 @@ class GitSubmissionControllerTests {
 
 
         try {
-            gitSubmissionRepository.getById(1)
+            gitSubmissionRepository.findById(1).get()
             fail("git submission shouldn't exist in the database")
         } catch (e: Exception) {
         }
@@ -184,7 +181,7 @@ class GitSubmissionControllerTests {
                 .andExpect(view().name("student-setup-git"))
 
         try {
-            val gitSubmission = gitSubmissionRepository.getById(1)
+            val gitSubmission = gitSubmissionRepository.findById(1).get()
             assertTrue("git submission should exist in the database", true)
             assertEquals("git@github.com:someuser/cs1Assignment1.git", gitSubmission.gitRepositoryUrl)
         } catch (e: Exception) {
@@ -209,7 +206,7 @@ class GitSubmissionControllerTests {
                 "git@github.com:drop-project-edu/sampleJavaSubmission.git", "student1")
 
         /*** GET /buildReport ***/
-        val reportResult = this.mvc.perform(get("/buildReport/1"))
+        val reportResult = this.mvc.perform(get("/buildReport/1").with(user(STUDENT_1)))
                 .andExpect(status().isOk)
                 .andExpect(model().attribute("gitRepository", "https://github.com/drop-project-edu/sampleJavaSubmission"))
                 .andExpect(model().attribute("gitRepositoryWithHash", "https://github.com/drop-project-edu/sampleJavaSubmission/tree/88d14eac0debdc0baf8e3592d4744ce4979f3fd8"))
@@ -232,7 +229,7 @@ class GitSubmissionControllerTests {
                 .andExpect(header().string("Location", "/buildReport/2"))
 
         /*** GET /submissions/1 ***/
-        this.mvc.perform(get("/submissions/?assignmentId=${defaultAssignmentId}&groupId=1")
+        this.mvc.perform(get("/submissions?assignmentId=${defaultAssignmentId}&groupId=1")
                 .with(user(TEACHER_1)))
                 .andExpect(status().isOk())
 
@@ -260,7 +257,7 @@ class GitSubmissionControllerTests {
                 .andExpect(view().name("student-setup-git"))
 
 
-        val gitSubmission = gitSubmissionRepository.getById(1)
+        val gitSubmission = gitSubmissionRepository.findById(1).get()
         assertFalse(gitSubmission.connected)
 
         // inject public and private key
@@ -277,7 +274,7 @@ class GitSubmissionControllerTests {
                         "git@github.com:palves-ulht/sampleJavaAssignment.git tem uma " +
                         "estrutura inválida: O projecto não contém o ficheiro AUTHORS.txt na raiz"))
 
-        val updatedGitSubmission = gitSubmissionRepository.getById(1)
+        val updatedGitSubmission = gitSubmissionRepository.findById(1).get()
         assertFalse(updatedGitSubmission.connected)
 
         assertEquals(1, gitSubmissionRepository.count())
@@ -292,7 +289,7 @@ class GitSubmissionControllerTests {
 
         assertEquals(1, gitSubmissionRepository.count())  // make sure we don't have now two git submissions
 
-        val newGitSubmission = gitSubmissionRepository.getById(2)
+        val newGitSubmission = gitSubmissionRepository.findById(2).get()
 
         /*** GET /upload/ ***/
         this.mvc.perform(get("/upload/${defaultAssignmentId}")
@@ -304,7 +301,7 @@ class GitSubmissionControllerTests {
         // now let's put another student who shares a group with this one connecting to github
         val gitSubmissionId = testsHelper.connectToGitRepositoryAndBuildReport(mvc, gitSubmissionRepository, defaultAssignmentId,
                 "git@github.com:drop-project-edu/sampleJavaSubmission.git", "student1")
-        val anotherStudentGitSubmission = gitSubmissionRepository.getById(gitSubmissionId)
+        val anotherStudentGitSubmission = gitSubmissionRepository.findById(gitSubmissionId).get()
 
         /*** GET /upload/testJavaPro ***/
         this.mvc.perform(get("/upload/${defaultAssignmentId}")

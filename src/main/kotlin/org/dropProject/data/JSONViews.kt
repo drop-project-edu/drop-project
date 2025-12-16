@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.data
+package org.dropproject.data
 
 /**
  * This is used by the JSON Serializer to include only certain attributes.

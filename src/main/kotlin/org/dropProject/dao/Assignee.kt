@@ -17,9 +17,9 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.dao
+package org.dropproject.dao
 
-import javax.persistence.*
+import jakarta.persistence.*
 
 /**
  * Represents an Assignee of an [Assignment]. Some assignments are private in the sense that they can only be accessed
@@ -32,7 +32,7 @@ import javax.persistence.*
 @Entity
 @Table(uniqueConstraints=[UniqueConstraint(columnNames = ["assignmentId", "authorUserId"])])
 data class Assignee(
-        @Id @GeneratedValue
+        @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
         val id: Long = 0,
 
         val assignmentId: String,

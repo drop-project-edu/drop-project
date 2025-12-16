@@ -17,18 +17,14 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject
+package org.dropproject
 
-import net.sf.ehcache.config.CacheConfiguration
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.builder.SpringApplicationBuilder
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer
-import org.springframework.cache.CacheManager
 import org.springframework.cache.annotation.EnableCaching
-import org.springframework.cache.ehcache.EhCacheCacheManager
-import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.PropertySource
 import org.springframework.scheduling.annotation.EnableScheduling
 
@@ -36,16 +32,9 @@ import org.springframework.scheduling.annotation.EnableScheduling
 @SpringBootApplication
 @EnableScheduling
 @EnableCaching
+@ConfigurationPropertiesScan
 @PropertySource("classpath:drop-project.properties")
 class DropProjectApplication : SpringBootServletInitializer() {
-
-    @Bean
-    fun cacheManager(): CacheManager {
-        val archivedAssignmentsCacheConfig = CacheConfiguration(Constants.CACHE_ARCHIVED_ASSIGNMENTS_KEY, 10)
-        val generalConfig = net.sf.ehcache.config.Configuration()
-        generalConfig.addCache(archivedAssignmentsCacheConfig)
-        return EhCacheCacheManager(net.sf.ehcache.CacheManager.newInstance(generalConfig))
-    }
 
     override fun configure(application: SpringApplicationBuilder): SpringApplicationBuilder {
         // to prevent "Cannot forward to error page for request [...] as the response has already been committed"
@@ -62,13 +51,3 @@ class DropProjectApplication : SpringBootServletInitializer() {
         }
     }
 }
-
-
-//fun main(args: Array<String>) {
-//    System.setProperty("spring.config.name", "drop-project")
-//    SpringApplication.run(DropProjectApplication::class.java, *args)
-//}
-
-
-
-

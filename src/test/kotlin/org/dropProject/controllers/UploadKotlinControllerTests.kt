@@ -17,16 +17,16 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.controllers
+package org.dropproject.controllers
 
-import org.dropProject.TestsHelper
-import org.dropProject.dao.Assignment
-import org.dropProject.dao.Indicator
-import org.dropProject.dao.Language
-import org.dropProject.dao.SubmissionReport
-import org.dropProject.data.BuildReport
-import org.dropProject.forms.SubmissionMethod
-import org.dropProject.repository.AssignmentRepository
+import org.dropproject.TestsHelper
+import org.dropproject.dao.Assignment
+import org.dropproject.dao.Indicator
+import org.dropproject.dao.Language
+import org.dropproject.dao.SubmissionReport
+import org.dropproject.data.BuildReport
+import org.dropproject.forms.SubmissionMethod
+import org.dropproject.repository.AssignmentRepository
 import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.After
@@ -36,7 +36,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
+import org.dropproject.config.DropProjectProperties
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.security.core.authority.SimpleGrantedAuthority
@@ -59,11 +59,8 @@ import java.io.File
 @ActiveProfiles("test")
 class UploadKotlinControllerTests {
 
-    @Value("\${mavenizedProjects.rootLocation}")
-    val mavenizedProjectsRootLocation : String = ""
-
-    @Value("\${storage.rootLocation}")
-    val submissionsRootLocation: String = ""
+    @Autowired
+    lateinit var dropProjectProperties: DropProjectProperties
 
     @Autowired
     lateinit var mvc : MockMvc
@@ -80,7 +77,7 @@ class UploadKotlinControllerTests {
     fun initMavenizedFolderAndCreateAssignment() {
 
         // init mavenized folder
-        var folder = File(mavenizedProjectsRootLocation)
+        var folder = File(dropProjectProperties.mavenizedProjects.rootLocation)
         if(folder.exists()) {
             folder.deleteRecursively()
         }
@@ -104,12 +101,12 @@ class UploadKotlinControllerTests {
 
     @After
     fun cleanup() {
-        val folder = File(mavenizedProjectsRootLocation)
+        val folder = File(dropProjectProperties.mavenizedProjects.rootLocation)
         if (folder.exists()) {
             folder.deleteRecursively()
         }
 
-        val submissionsFolder = File(submissionsRootLocation)
+        val submissionsFolder = File(dropProjectProperties.storage.rootLocation)
         if (submissionsFolder.exists()) {
             submissionsFolder.deleteRecursively()
         }
@@ -288,7 +285,7 @@ class UploadKotlinControllerTests {
                     <ul>
                     <li>
                     <p>Create a Kotlin project in your IDE with the structure depicted at the end of this page.
-                    In particular, you must create a package <code>org.dropproject.samples.samplekotlinassignment</code> and
+                    In particular, you must create a package <code>org.dropProject.samples.samplekotlinassignment</code> and
                     create a <code>Main.kt</code> in that package.</p>
                     </li>
                     <li>

@@ -17,19 +17,17 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.services
+package org.dropproject.services
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonView
-import org.commonmark.ext.autolink.AutolinkExtension
-import org.commonmark.parser.Parser
-import org.commonmark.renderer.html.HtmlRenderer
-import org.dropProject.AsyncConfigurer
-import org.dropProject.dao.*
-import org.dropProject.data.AuthorDetails
-import org.dropProject.data.JSONViews
-import org.dropProject.extensions.realName
-import org.dropProject.repository.*
+import jakarta.persistence.EntityNotFoundException
+import org.dropproject.config.AsyncConfigurer
+import org.dropproject.dao.*
+import org.dropproject.data.AuthorDetails
+import org.dropproject.data.JSONViews
+import org.dropproject.extensions.realName
+import org.dropproject.repository.*
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.MessageSource
@@ -38,7 +36,7 @@ import org.springframework.stereotype.Service
 import java.io.File
 import java.security.Principal
 import java.util.*
-import javax.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletRequest
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)  // exclude nulls fields and empty lists from serialization
 class FullBuildReport(
@@ -54,14 +52,14 @@ class FullBuildReport(
     var readmeHtml: String? = null,
     @JsonView(JSONViews.StudentAPI::class)
     var error: String? = null,
-    var autoRefresh: Boolean? = null,
+    var isValidating: Boolean? = null,
     @JsonView(JSONViews.StudentAPI::class)
     var summary: MutableList<SubmissionReport>? = null,
     @JsonView(JSONViews.StudentAPI::class)
     var structureErrors: List<String>? = null,
     var authors: ArrayList<AuthorDetails>? = null,
     @JsonView(JSONViews.StudentAPI::class)
-    var buildReport: org.dropProject.data.BuildReport? = null
+    var buildReport: org.dropproject.data.BuildReport? = null
 )
 
 /**
@@ -117,7 +115,8 @@ class ReportService(
             fullBuildReport.submission = submission
             submission.gitSubmissionId?.let {
                     gitSubmissionId ->
-                val gitSubmission = gitSubmissionRepository.getById(gitSubmissionId)
+                val gitSubmission = gitSubmissionRepository.findById(gitSubmissionId)
+                    .orElseThrow { EntityNotFoundException("GitSubmission ${gitSubmissionId} not found") }
                 val submissionGitInfo = submissionGitInfoRepository.getBySubmissionId(submissionId)
                 fullBuildReport.gitSubmission = gitSubmission
                 fullBuildReport.gitRepository = gitClient.convertSSHGithubURLtoHttpURL(gitSubmission.gitRepositoryUrl)
@@ -161,7 +160,7 @@ class ReportService(
                 SubmissionStatus.DELETED -> fullBuildReport.error = i18n.getMessage("student.build-report.deleted", null, currentLocale)
                 SubmissionStatus.SUBMITTED, SubmissionStatus.SUBMITTED_FOR_REBUILD, SubmissionStatus.REBUILDING -> {
                     fullBuildReport.error = i18n.getMessage("student.build-report.submitted", null, currentLocale)
-                    fullBuildReport.autoRefresh = true
+                    fullBuildReport.isValidating = true
                 }
                 SubmissionStatus.VALIDATED, SubmissionStatus.VALIDATED_REBUILT -> {
                     val submissionReport = submissionReportRepository.findBySubmissionId(submission.id)

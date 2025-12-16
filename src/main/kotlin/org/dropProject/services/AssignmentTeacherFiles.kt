@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.services
+package org.dropproject.services
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonView
@@ -34,10 +34,11 @@ import org.commonmark.renderer.html.AttributeProvider
 import org.commonmark.renderer.html.AttributeProviderContext
 import org.commonmark.renderer.html.AttributeProviderFactory
 import org.commonmark.renderer.html.HtmlRenderer
-import org.dropProject.dao.*
-import org.dropProject.data.JSONViews
-import org.dropProject.repository.AssignmentTestMethodRepository
-import org.dropProject.repository.BuildReportRepository
+import org.dropproject.dao.*
+import org.dropproject.data.JSONViews
+import org.dropproject.repository.AssignmentTestMethodRepository
+import org.dropproject.repository.BuildReportRepository
+import org.dropproject.config.DropProjectProperties
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.ApplicationContext
 import org.springframework.context.MessageSource
@@ -70,13 +71,8 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
                              val applicationContext: ApplicationContext,
                              val i18n: MessageSource,
                              val markdownRenderer: MarkdownRenderer,
+                             val dropProjectProperties: DropProjectProperties
 ) {
-
-    @Value("\${assignments.rootLocation}")
-    val assignmentsRootLocation : String = ""
-
-    @Value("\${mavenizedProjects.rootLocation}")
-    val mavenizedProjectsRootLocation : String = ""
 
     @Value("\${spring.web.locale}")
     val currentLocale : Locale = Locale.getDefault()
@@ -84,7 +80,7 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
     fun getInstructions(assignment: Assignment) : AssignmentInstructions {
 
         val instructions = AssignmentInstructions()
-        val files = File("${assignmentsRootLocation}/${assignment.gitRepositoryFolder}").listFiles { _, name -> name.startsWith("instructions")}
+        val files = File("${dropProjectProperties.assignments.rootLocation}/${assignment.gitRepositoryFolder}").listFiles { _, name -> name.startsWith("instructions")}
         if (files != null && files.isNotEmpty()) {
             val fragment = files.firstOrNull { it.extension.uppercase() == "MD" } ?: files[0]
             val extension = fragment.extension.uppercase()
@@ -108,7 +104,7 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
 
         // TODO: should change artifactId in pom.xml with the group-id...
 
-        val rootFolder = File(assignmentsRootLocation, assignment.gitRepositoryFolder)
+        val rootFolder = File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder)
         FileUtils.copyDirectory(rootFolder, mavenizedProjectFolder) {
             !it.absolutePath.startsWith("${rootFolder.absolutePath}/src/main") &&
                     !it.absolutePath.startsWith("${rootFolder.absolutePath}/.git") &&
@@ -153,7 +149,7 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
     // check that the project files associated with this assignment are valid
     fun checkAssignmentFiles(assignment: Assignment, principal: Principal?): List<AssignmentValidator.Info> {
 
-        val assignmentFolder = File(assignmentsRootLocation, assignment.gitRepositoryFolder)
+        val assignmentFolder = File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder)
 
         val assignmentValidator = applicationContext.getBean(AssignmentValidator::class.java)
 
@@ -214,7 +210,7 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
 
         val suffix = if (wasRebuilt) "-mavenized-for-rebuild" else "-mavenized"
 
-        val destinationPartialFolder = File(mavenizedProjectsRootLocation,
+        val destinationPartialFolder = File(dropProjectProperties.mavenizedProjects.rootLocation,
             Submission.relativeUploadFolder(submission.assignmentId, submission.submissionDate))
         destinationPartialFolder.mkdirs()
 

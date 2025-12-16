@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 
-<head th:replace="layout/layout :: head (pageTitle='Drop Project - Submissions')">
+<head th:replace="~{layout/layout :: head (pageTitle='Drop Project - Submissions')}">
 </head>
 
 <body>
 
-<div th:replace="layout/layout :: header"></div>
+<div th:replace="~{layout/layout :: header}"></div>
 
 <div class="container" style="max-width: 900px; margin-bottom: 65px">
 
@@ -23,7 +23,7 @@
 
     <p>&nbsp;</p>
 
-    <!--/*@thymesVar id="gitHistory" type="java.util.List<org.dropProject.services.GitClient.CommitInfo>"*/-->
+    <!--/*@thymesVar id="gitHistory" type="java.util.List<org.dropproject.services.GitClient.CommitInfo>"*/-->
     <div th:if="${gitHistory != null and !gitHistory.isEmpty()}">
         <h3>
             <a data-toggle="collapse" href="#collapseGitHistory"
@@ -51,7 +51,7 @@
         </table>
     </div>
 
-    <!--/*@thymesVar id="submissions" type="java.util.ArrayList<org.dropProject.dao.Submission>"*/-->
+    <!--/*@thymesVar id="submissions" type="java.util.ArrayList<org.dropproject.dao.Submission>"*/-->
     <h3>Submission History <small><span th:text="'(' + ${submissions.size() + ' submissions)'}"/></small></h3>
     <table class="table">
         <thead>
@@ -90,7 +90,8 @@
 
             <td th:text="${submission.ellapsed} ? ${#numbers.formatDecimal(submission.ellapsed, 0, 'DEFAULT', 2, 'DEFAULT')}"></td>
             <td>
-                <form class="inline" method="post" th:action="'../markAsFinal/' + ${submission.id}">
+
+                <form class="inline" method="post" th:action="@{'/markAsFinal/' + ${submission.id}}">
                     <a th:href="@{'/buildReport/' + ${submission.id}}">
                         <span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span>
                     </a>
@@ -105,7 +106,7 @@
 
 </div>
 
-<div th:replace="layout/layout :: footer"></div>
+<div th:replace="~{layout/layout :: footer}"></div>
 
 </body>
 </html>

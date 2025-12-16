@@ -17,19 +17,40 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.repository
+package org.dropproject.repository
 
-import org.dropProject.dao.*
-import org.springframework.data.jpa.repository.JpaRepository
+import org.dropproject.dao.*
 import org.springframework.data.jpa.repository.EntityGraph
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.stereotype.Repository
+import java.util.*
 
 /**
  * Provides functions to query [Assignment]s that have been persisted in the database.
+ * It also loads the tags of the assignments (eager loading)
  */
 interface AssignmentRepository : JpaRepository<Assignment, String> {
-    fun findByOwnerUserId(ownerUserId: String): List<Assignment>
+
+    @EntityGraph(attributePaths = ["tags", "assignmentTestMethods"])
+    override fun findById(id: String): Optional<Assignment>
+
+    @EntityGraph(attributePaths = ["tags", "assignmentTestMethods"])
+    override fun findAllById(ids: Iterable<String>): MutableList<Assignment>
+
+    @EntityGraph(attributePaths = ["tags", "assignmentTestMethods"])
+    fun findAllByOwnerUserId(ownerUserId: String): List<Assignment>
+
+    @EntityGraph(attributePaths = ["tags", "assignmentTestMethods"])
     fun findByGitRepositoryFolder(gitRepositoryFolder: String): Assignment?
-    fun findAllByActiveIsAndVisibility(active: Boolean, visibility: AssignmentVisibility): List<Assignment>
+
+    @EntityGraph(attributePaths = ["tags", "assignmentTestMethods"])
+    fun findAllByVisibilityAndActiveTrue(visibility: AssignmentVisibility): List<Assignment>
+
+    @EntityGraph(attributePaths = ["tags", "assignmentTestMethods"])
     fun findAllByVisibility(visibility: AssignmentVisibility): List<Assignment>
+
+    @EntityGraph(attributePaths = ["tags", "assignmentTestMethods"])
     fun findAllByNumSubmissions(numSubmissions: Int): List<Assignment>
+
+    fun countByTags_Id(tagId: Long): Long
 }

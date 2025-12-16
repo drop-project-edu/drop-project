@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.services
+package org.dropproject.services
 
 import com.jcraft.jsch.JSch
 import com.jcraft.jsch.KeyPair
@@ -33,13 +33,13 @@ import org.eclipse.jgit.transport.SshTransport
 import org.eclipse.jgit.transport.Transport
 import org.eclipse.jgit.util.FS
 import org.springframework.stereotype.Service
-import org.dropProject.extensions.formatDefault
+import org.dropproject.extensions.formatDefault
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.*
 import org.eclipse.jgit.lib.Repository
 import org.eclipse.jgit.treewalk.CanonicalTreeParser
-import org.dropProject.dao.formatter
+import org.dropproject.dao.formatter
 import org.eclipse.jgit.patch.HunkHeader
 import org.eclipse.jgit.util.io.DisabledOutputStream
 import org.slf4j.LoggerFactory

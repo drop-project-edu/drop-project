@@ -1,22 +1,22 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 
-<head th:replace="layout/layout :: head (pageTitle='Drop Project - Assignment detail')">
+<head th:replace="~{layout/layout :: head (pageTitle='Drop Project - Assignment detail')}">
 </head>
 
 <body>
 
-<div th:replace="layout/layout :: header"></div>
+<div th:replace="~{layout/layout :: header}"></div>
 
 <div class="container" style="max-width: 760px; margin-bottom: 65px">
 
     <div class="alert alert-info" th:text="${message}" th:if="${message}" />
     <div class="alert alert-danger" th:text="${error}" th:if="${error}" />
 
-    <!--/*@thymesVar id="assignment" type="org.dropProject.dao.Assignment"*/-->
-    <!--/*@thymesVar id="assignees" type="java.util.List<org.dropProject.dao.Assignee>"*/-->
-    <!--/*@thymesVar id="acl" type="java.util.List<org.dropProject.dao.AssignmentACL>"*/-->
-    <!--/*@thymesVar id="report" type="java.util.List<org.dropProject.dao.AssignmentReport>"*/-->
+    <!--/*@thymesVar id="assignment" type="org.dropproject.dao.Assignment"*/-->
+    <!--/*@thymesVar id="assignees" type="java.util.List<org.dropproject.dao.Assignee>"*/-->
+    <!--/*@thymesVar id="acl" type="java.util.List<org.dropproject.dao.AssignmentACL>"*/-->
+    <!--/*@thymesVar id="report" type="java.util.List<org.dropproject.dao.AssignmentReport>"*/-->
     <div class="row">
         <h1 class="page-header col-sm-11" th:text="'Assignment ' + ${assignment.id}">Assignment</h1>
         <span class="label label-warning col-sm-1" th:if="${!assignment.active}">Inactive</span>
@@ -142,7 +142,36 @@
                 </div>
                 <div class="form-group" th:if="${assignment.cooloffPeriod}">
                     <label class="col-sm-3 control-label">Cool-off period:</label>
-                    <div class="col-sm-9 read-row" th:text="${assignment.cooloffPeriod + ' minutes'}"></div>
+                    <div class="col-sm-9 read-row">
+                            <span th:text="${assignment.cooloffPeriod + ' minutes'}"
+                                  th:style="${cooloffOverride != null and cooloffOverride.isDisabled} ? 'text-decoration: line-through;' : ''"></span>
+
+                            <!-- Status indicator when disabled -->
+                            <span th:if="${cooloffOverride != null and cooloffOverride.isDisabled}"
+                                  class="label label-warning" style="margin-left: 10px;">
+                                DISABLED by <span th:text="${cooloffOverride.disabledBy}">teacher</span>
+                                until <span th:text="${#temporals.format(cooloffOverride.expiryTime, 'HH:mm')}">00:00</span>
+                            </span>
+
+                            <!-- Dropdown to disable cooloff (shown when active) -->
+                            <span th:if="${cooloffOverride == null or !cooloffOverride.isDisabled}" style="margin-left: 10px;">
+                                <select id="disableCooloffDropdown" class="form-control input-sm" style="display: inline-block; width: auto; vertical-align: baseline;">
+                                    <option value="">Disable temporarily...</option>
+                                    <option value="15">Disable for 15 min</option>
+                                    <option value="30">Disable for 30 min</option>
+                                    <option value="60">Disable for 60 min</option>
+                                </select>
+                            </span>
+
+                            <!-- Re-enable button (shown when disabled) -->
+                            <button th:if="${cooloffOverride != null and cooloffOverride.isDisabled}"
+                                    type="button"
+                                    class="btn btn-primary btn-xs"
+                                    style="margin-left: 10px;"
+                                    onclick="enableCooloff()">
+                                Re-enable Now
+                            </button>
+                    </div>
                 </div>
                 <div class="form-group" th:if="${assignment.maxMemoryMb}">
                     <label class="col-sm-3 control-label">Max memory:</label>
@@ -245,7 +274,7 @@
 
 </div>
 
-<div th:replace="layout/layout :: footer"></div>
+<div th:replace="~{layout/layout :: footer}"></div>
 
 <script th:src="@{/js/dropproject.js}"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-confirmation2@2.4.2/bootstrap-confirmation.min.js"></script>
@@ -284,6 +313,88 @@
         rootSelector: '[data-toggle=confirmation]'
         // other options
     });
+</script>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var assignmentId = /*[[${assignment.id}]]*/ '';
+    var contextPath = /*[[@{/}]]*/ '';
+    var csrfToken = /*[[${_csrf?.token}]]*/ '';
+    var csrfParamName = /*[[${_csrf?.parameterName}]]*/ '';
+
+    // Auto-reload page when cooloff override expires
+    var cooloffDisabled = /*[[${cooloffOverride?.isDisabled}]]*/ false;
+    var cooloffRemainingMinutes = /*[[${cooloffOverride?.remainingMinutes}]]*/ 0;
+    if (cooloffDisabled && cooloffRemainingMinutes > 0) {
+        // Reload page when override expires (add 30 seconds buffer)
+        setTimeout(function() {
+            location.reload();
+        }, (cooloffRemainingMinutes * 60 * 1000) + 30000);
+    }
+
+    // Handle dropdown selection for disabling cooloff
+    $(document).ready(function() {
+        $('#disableCooloffDropdown').change(function() {
+            var duration = $(this).val();
+            if (duration) {
+                disableCooloff(parseInt(duration));
+            }
+        });
+    });
+
+    function disableCooloff(duration) {
+        if (!confirm('Disable cooloff for assignment "' + assignmentId + '" for ' + duration + ' minutes?')) {
+            return;
+        }
+
+        var requestData = {};
+        requestData[csrfParamName] = csrfToken;
+        requestData['duration'] = duration;
+
+        $.ajax({
+            url: contextPath + 'assignment/cooloff/' + assignmentId + '/disable',
+            type: 'POST',
+            data: requestData,
+            success: function(response) {
+                location.reload();
+            },
+            error: function(xhr) {
+                var errorMsg = 'Error disabling cooloff';
+                try {
+                    var jsonResponse = JSON.parse(xhr.responseText);
+                    errorMsg = jsonResponse.error || errorMsg;
+                } catch (e) {}
+                alert(errorMsg);
+            }
+        });
+    }
+
+    function enableCooloff() {
+        if (!confirm('Re-enable cooloff for assignment "' + assignmentId + '" now?')) {
+            return;
+        }
+
+        var requestData = {};
+        requestData[csrfParamName] = csrfToken;
+
+        $.ajax({
+            url: contextPath + 'assignment/cooloff/' + assignmentId + '/enable',
+            type: 'POST',
+            data: requestData,
+            success: function(response) {
+                location.reload();
+            },
+            error: function(xhr) {
+                var errorMsg = 'Error enabling cooloff';
+                try {
+                    var jsonResponse = JSON.parse(xhr.responseText);
+                    errorMsg = jsonResponse.error || errorMsg;
+                } catch (e) {}
+                alert(errorMsg);
+            }
+        });
+    }
+    /*]]>*/
 </script>
 
 </body>

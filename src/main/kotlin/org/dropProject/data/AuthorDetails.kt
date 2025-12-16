@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.data
+package org.dropproject.data
 
 /**
  * Represents one of the authors of a [Submission].

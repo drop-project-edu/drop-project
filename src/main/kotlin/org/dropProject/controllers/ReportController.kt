@@ -17,21 +17,23 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.controllers
+package org.dropproject.controllers
 
+import jakarta.persistence.EntityNotFoundException
 import net.lingala.zip4j.ZipFile
 import net.lingala.zip4j.model.ZipParameters
 import net.lingala.zip4j.model.enums.CompressionLevel
 import org.apache.commons.io.FileUtils
-import org.dropProject.dao.*
-import org.dropProject.data.TestType
-import org.dropProject.extensions.formatDefault
-import org.dropProject.extensions.realName
-import org.dropProject.forms.SubmissionMethod
-import org.dropProject.repository.*
-import org.dropProject.services.*
-import org.dropProject.storage.StorageService
+import org.dropproject.dao.*
+import org.dropproject.data.TestType
+import org.dropproject.extensions.formatDefault
+import org.dropproject.extensions.realName
+import org.dropproject.forms.SubmissionMethod
+import org.dropproject.repository.*
+import org.dropproject.services.*
+import org.dropproject.storage.StorageService
 import org.slf4j.LoggerFactory
+import org.dropproject.config.DropProjectProperties
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.io.FileSystemResource
 import org.springframework.http.HttpHeaders
@@ -51,8 +53,8 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.security.Principal
 import java.util.*
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
 
 /**
  * ReportController contains MVC controller functions to handle requests related with submission reports
@@ -78,16 +80,8 @@ class ReportController(
     val reportService: ReportService,
     val jPlagService: JPlagService,
     val studentService: StudentService,
+    val dropProjectProperties: DropProjectProperties
 ) {
-
-    @Value("\${mavenizedProjects.rootLocation}")
-    val mavenizedProjectsRootLocation: String = ""
-
-    @Value("\${storage.rootLocation}/upload")
-    val uploadSubmissionsRootLocation: String = "submissions/upload"
-
-    @Value("\${storage.rootLocation}/git")
-    val gitSubmissionsRootLocation: String = "submissions/git"
 
     @Value("\${spring.web.locale}")
     val currentLocale : Locale = Locale.getDefault()
@@ -179,7 +173,7 @@ class ReportController(
         model["gitRepositoryWithHash"] = buildReport.gitRepositoryWithHash
         model["readmeHTML"] = buildReport.readmeHtml
         model["error"] = buildReport.error
-        model["autoRefresh"] = buildReport.autoRefresh
+        model["autoRefresh"] = buildReport.isValidating
         model["summary"] = buildReport.summary
         model["structureErrors"] = buildReport.structureErrors
         model["authors"] = buildReport.authors
@@ -256,7 +250,7 @@ class ReportController(
             }
 
             if (submission.submissionId != null) {  // submission by upload
-                val projectFolder = File(uploadSubmissionsRootLocation, submission.submissionFolder)
+                val projectFolder = File(dropProjectProperties.storage.uploadLocation, submission.submissionFolder)
                 val projectFile = File("${projectFolder.absolutePath}.zip")  // for every folder, there is a corresponding zip file with the same name
 
                 LOG.info("[${principal.realName()}] downloaded ${projectFile.name}")
@@ -270,7 +264,7 @@ class ReportController(
                 throw IllegalArgumentException("Git submission without gitSubmissionId")
                 val gitSubmission = gitSubmissionRepository.findById(gitSubmissionId).orElse(null)
                     ?: throw IllegalArgumentException("git submission ${gitSubmissionId} is not registered")
-                val repositoryFolder = File(gitSubmissionsRootLocation, gitSubmission.getFolderRelativeToStorageRoot())
+                val repositoryFolder = File(dropProjectProperties.storage.gitLocation, gitSubmission.getFolderRelativeToStorageRoot())
 
                 val zipFilename = submission.group.authorsIdStr().replace(",", "_")
                 val zFile = File.createTempFile(zipFilename, ".zip")
@@ -606,11 +600,12 @@ class ReportController(
         model["group"] = group
         model["submissions"] = submissions
 
-        if (assignment.submissionMethod == SubmissionMethod.GIT && !submissions.isEmpty()) {
+        if (assignment.submissionMethod == SubmissionMethod.GIT && submissions.isNotEmpty()) {
             submissions[0].gitSubmissionId?.let { gitSubmissionId ->
-                val gitSubmission = gitSubmissionRepository.getById(gitSubmissionId)
+                val gitSubmission = gitSubmissionRepository.findById(gitSubmissionId)
+                    .orElseThrow { EntityNotFoundException("GitSubmission $gitSubmissionId not found") }
 
-                val repositoryFolder = File(gitSubmissionsRootLocation, gitSubmission.getFolderRelativeToStorageRoot())
+                val repositoryFolder = File(dropProjectProperties.storage.gitLocation, gitSubmission.getFolderRelativeToStorageRoot())
                 val history = gitClient.getHistory(repositoryFolder)
                 model["gitHistory"] = history
                 model["gitRepository"] = gitClient.convertSSHGithubURLtoHttpURL(gitSubmission.gitRepositoryUrl)
@@ -901,7 +896,7 @@ class ReportController(
 //            val submissions = submissionRepository.findByAssignmentId(assignment.id)
 //
 //            for (submission in submissions) {
-//                val mavenizedFolder = File(mavenizedProjectsRootLocation + "/" + submission.submissionId + "-mavenized")
+//                val mavenizedFolder = File(dropProjectProperties.mavenizedProjects.rootLocation + "/" + submission.submissionId + "-mavenized")
 //                if (mavenizedFolder.exists()) {
 //                    countExistentFolders++
 //                    totalSize += FileUtils.sizeOfDirectory(mavenizedFolder)

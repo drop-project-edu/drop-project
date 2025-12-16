@@ -17,12 +17,12 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.services
+package org.dropproject.services
 
-import org.dropProject.controllers.InvalidProjectStructureException
-import org.dropProject.dao.Assignment
-import org.dropProject.dao.TestVisibility
-import org.dropProject.forms.SubmissionMethod
+import org.dropproject.controllers.InvalidProjectStructureException
+import org.dropproject.dao.Assignment
+import org.dropproject.dao.TestVisibility
+import org.dropproject.forms.SubmissionMethod
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test

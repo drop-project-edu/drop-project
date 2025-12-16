@@ -1,22 +1,22 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 
-<head th:replace="layout/layout :: head (pageTitle='Drop Project - Plagiarism Report')">
+<head th:replace="~{layout/layout :: head (pageTitle='Drop Project - Plagiarism Report')}">
 </head>
 
 <body>
 
-<div th:replace="layout/layout :: header"></div>
+<div th:replace="~{layout/layout :: header}"></div>
 
-<!--/*@thymesVar id="assignment" type="org.dropProject.dao.Assignment"*/-->
-<!--/*@thymesVar id="comparisons" type="java.util.List<org.dropProject.services.PlagiarismComparison>"*/-->
+<!--/*@thymesVar id="assignment" type="org.dropproject.dao.Assignment"*/-->
+<!--/*@thymesVar id="comparisons" type="java.util.List<org.dropproject.services.PlagiarismComparison>"*/-->
 <div class="container" style="max-width: 900px; margin-bottom: 65px">
 
     <div class="alert alert-info" th:text="${message}" th:if="${message}" />
     <div class="alert alert-danger" th:text="${error}" th:if="${error}" />
 
     <h1 class="page-header">Plagiarism report <small th:text="${assignment.id}"></small></h1>
-    <h6 th:text="${'Only matches above ' + T(org.dropProject.Constants).SIMILARITY_THRESHOLD*100} + '% similarity are considered'"/>
+    <h6 th:text="${'Only matches above ' + T(org.dropproject.Constants).SIMILARITY_THRESHOLD*100} + '% similarity are considered'"/>
 
     <table class="table">
         <thead>
@@ -68,7 +68,7 @@
 
 </div>
 
-<div th:replace="layout/layout :: footer"></div>
+<div th:replace="~{layout/layout :: footer}"></div>
 
 </body>
 </html>

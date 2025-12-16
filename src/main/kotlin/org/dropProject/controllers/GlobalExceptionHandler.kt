@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.controllers
+package org.dropproject.controllers
 
 import org.apache.tomcat.util.http.fileupload.impl.FileSizeLimitExceededException
 import org.slf4j.LoggerFactory
@@ -30,7 +30,7 @@ import org.springframework.web.multipart.MultipartException
 import org.springframework.web.servlet.mvc.support.RedirectAttributes
 import java.util.logging.Level
 import java.util.logging.Logger
-import javax.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletRequest
 
 
 @ControllerAdvice
@@ -59,6 +59,12 @@ class GlobalExceptionHandler {
     // TODO: This assumes a REST response, But what about HTML responses?...
     @ExceptionHandler(RuntimeException::class)
     fun genericException(exception: Exception): ResponseEntity<String> {
+        // Handle ResponseStatusException properly
+        if (exception is org.springframework.web.server.ResponseStatusException) {
+            LOG.warn("ResponseStatusException: ${exception.reason}")
+            return ResponseEntity(exception.reason ?: exception.message, exception.statusCode)
+        }
+        
         LOG.error("Generic exception", exception)
         exception.printStackTrace()  // TODO For same reason, the above line doesn't print the stacktrace
         return ResponseEntity("{\"error\": \"${exception}\"}", HttpStatus.INTERNAL_SERVER_ERROR)

@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject
+package org.dropproject.config
 
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler
 import org.springframework.aop.interceptor.SimpleAsyncUncaughtExceptionHandler
@@ -32,7 +32,7 @@ import java.util.concurrent.Executor
 @Configuration
 @EnableAsync
 @Profile("test")
-class AsyncTestConfig : AsyncConfigurer, org.dropProject.AsyncConfigurer {
+class AsyncTestConfig : AsyncConfigurer, org.dropproject.config.AsyncConfigurer {
 
     override fun getAsyncUncaughtExceptionHandler(): AsyncUncaughtExceptionHandler {
         return SimpleAsyncUncaughtExceptionHandler()

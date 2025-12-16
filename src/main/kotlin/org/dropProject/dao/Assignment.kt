@@ -17,18 +17,18 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.dao
+package org.dropproject.dao
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonView
-import org.dropProject.data.JSONViews
-import org.dropProject.extensions.format
-import org.dropProject.forms.SubmissionMethod
-import org.dropProject.services.AssignmentInstructions
+import org.dropproject.data.JSONViews
+import org.dropproject.extensions.format
+import org.dropproject.forms.SubmissionMethod
+import org.dropproject.services.AssignmentInstructions
 import java.util.*
-import javax.persistence.*
+import jakarta.persistence.*
 
 val formatter = "dd MMM HH:mm"
 
@@ -180,11 +180,15 @@ data class Assignment(
     @Transient
     var authorizedStudentIds: List<String>? = null,
 
-    @JsonView(JSONViews.TeacherAPI::class)
-    @Transient
-    var tagsStr: List<String>? = null,
+    @ManyToMany(fetch = FetchType.LAZY, cascade = [])
+    @JoinTable(
+        name = "AssignmentTags",
+        joinColumns = [JoinColumn(name = "assignmentId", referencedColumnName = "id")],
+        inverseJoinColumns = [JoinColumn(name = "tagId", referencedColumnName = "id")]
+    )
+    var tags: MutableSet<AssignmentTag> = mutableSetOf(),
 
-    @JsonView(JSONViews.StudentAPI::class)
+    @JsonView(JSONViews.StudentAPI::class, JSONViews.TeacherAPI::class)
     @Transient
     var instructions: AssignmentInstructions? = null,
 
@@ -192,6 +196,11 @@ data class Assignment(
     @JoinColumn(name = "project_group_restrictions_id")
     var projectGroupRestrictions: ProjectGroupRestrictions? = null,
 ) {
+
+    @get:JsonView(JSONViews.TeacherAPI::class)
+    @get:Transient
+    val tagsStr: List<String>
+        get() = tags.map { it.name }
 
     fun dueDateFormatted(): String? {
         return dueDate?.format(formatter)
@@ -209,7 +218,9 @@ data class Assignment(
         return "$id - $name"
     }
 
-
+    fun getLastSubmissionDateAsTimestamp(): Long {
+        return lastSubmissionDate?.time ?: 0
+    }
 
     fun linkToGithub(): String? {
         if (gitRepositoryPrivKey == null) {

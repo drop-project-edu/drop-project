@@ -17,11 +17,11 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.repository
+package org.dropproject.repository
 
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.transaction.annotation.Transactional
-import org.dropProject.dao.Assignee
+import org.dropproject.dao.Assignee
 
 /**
  * Provides functions to query [Assignee]s that have been persisted in the database.

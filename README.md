@@ -81,13 +81,31 @@ The application should now be accessible on [http://localhost:8080](http://local
 
     docker run -p 8080:8080 pedroalv3s/drop-project
 
-### Production mode (using mysql)
+### Demo mode (using mysql)
 
 Clone the project and in the root folder execute:
 
     docker compose up
 
 The application should now be accessible on [http://localhost:8080](http://localhost:8080)
+
+## Running on GitHub Codespaces
+
+You can run Drop Project on [GitHub Codespaces](https://github.com/features/codespaces) by clicking the button below:
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/drop-project-edu/drop-project)
+
+This will open a new codespace with Drop Project already cloned.
+
+To run Drop Project, open a terminal in the codespace and in the root directory execute:
+
+    docker compose up
+
+Once the server is running, you can access the application using either of the following methods:
+
+* Navigate to the Ports tab (located next to the Terminal tab in the bottom panel). Find port 8080, hover over the "Local Address" column, and click the globe icon (Open in Browser).
+
+* Hold Ctrl (or Cmd on macOS) and click the link http://localhost:8080 directly inside the Codespace.
 
 ## Documentation
 
@@ -123,7 +141,36 @@ The test coverage report will be available in the following folder:
 
 Some services are accessible through an API, protected by personal tokens.
 
-Documentation: [https://playground.dropproject.org/dp/swagger-ui/](https://playground.dropproject.org/dp/swagger-ui/)
+Documentation: [https://playground.dropproject.org/dp/swagger-ui/index.html](https://playground.dropproject.org/dp/swagger-ui/index.html)
+
+## MCP (experimental)
+
+Drop Project can act an [MCP](https://modelcontextprotocol.io/) server. Right now, only some operations are permitted and only for teachers.
+
+Just connect to `https://<server-url>/mcp/` with an Authorization header: `Bearer <your-personal-token>`.
+
+### Using claude code
+
+    claude mcp add --transport http drop-project https://playground.dropproject.org/dp/mcp/ --header "Authorization: Bearer xxxxx" (replace xxxxx with your personal token)
+
+### Using github copilot plugin in Intellij
+
+* Enter the chat window
+* Select "agent" mode
+* Click the tool icon, next to the dropdown with the models
+* Click the "add more tools" button
+* It will open an mcp.json file. Add the following content:
+```json
+"servers": {
+  "drop-project": {
+  "url": "https://playground.dropproject.org/dp/mcp/",
+  "requestInit": {
+    "headers": {
+      "Authorization": "Bearer xxxx" (replace xxxxx with your personal token)
+    }
+  }
+}
+```
 
 ## Plugin
 

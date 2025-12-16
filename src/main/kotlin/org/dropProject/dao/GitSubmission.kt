@@ -17,12 +17,12 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.dao
+package org.dropproject.dao
 
-import org.dropProject.services.GitClient
+import org.dropproject.services.GitClient
 import java.text.SimpleDateFormat
 import java.util.*
-import javax.persistence.*
+import jakarta.persistence.*
 
 /**
  * Represents a [GitSubmission] which is a [Submission] performed by connecting to a GitHub repository and pulling
@@ -43,7 +43,7 @@ import javax.persistence.*
 @Entity
 @Table(uniqueConstraints=[UniqueConstraint(columnNames = ["submitterUserId", "assignmentId"])])
 data class GitSubmission(
-        @Id @GeneratedValue
+        @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
         val id: Long = 0,
 
         @Column(length = 50)

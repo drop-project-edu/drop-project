@@ -17,39 +17,31 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.security
+package org.dropproject.security
 
-import org.springframework.http.HttpMethod
+import org.springframework.context.annotation.Bean
 import org.springframework.http.HttpStatus
+import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
-import org.springframework.security.config.annotation.web.builders.WebSecurity
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter
-import org.springframework.security.web.access.AccessDeniedHandlerImpl
+import org.springframework.security.web.SecurityFilterChain
+import org.springframework.security.web.access.AccessDeniedHandler
 import org.springframework.security.web.authentication.logout.LogoutFilter
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
 
 /**
  * Implementation of the AccessDeniedHandler that either calls the default access denied impl
  * (which forwards the request to an error page) or simply returns a 403 error code (in case of
  * an API request)
  */
-class APIAccessDeniedHandler(private val errorPage: String) : AccessDeniedHandlerImpl() {
+class APIAccessDeniedHandler(private val errorPage: String) : AccessDeniedHandler {
 
-    init {
-        setErrorPage(errorPage)
-    }
-
-    override fun handle(
-        request: HttpServletRequest,
-        response: HttpServletResponse,
-        accessDeniedException: org.springframework.security.access.AccessDeniedException) {
-
+    override fun handle(request: HttpServletRequest, response: HttpServletResponse, accessDeniedException: AccessDeniedException) {
         if (request.contentType == "application/json") {
             response.status = HttpStatus.FORBIDDEN.value()
             response.flushBuffer()  // to commit immediately the response
         } else {
-            super.handle(request, response, accessDeniedException)
+            request.getRequestDispatcher(errorPage).forward(request, response)
         }
     }
 }
@@ -58,44 +50,48 @@ class APIAccessDeniedHandler(private val errorPage: String) : AccessDeniedHandle
  * Definitions and configurations related with Security and Role Based Access Control.
  *
  */
-open class DropProjectSecurityConfig(val apiAuthenticationManager: PersonalTokenAuthenticationManager? = null) :
-    WebSecurityConfigurerAdapter() {
+open class DropProjectSecurityConfig(val apiAuthenticationManager: PersonalTokenAuthenticationManager? = null) {
 
     /**
      * Returns an array of ant matcher expressions which will be allowed without authentication
      */
-    open fun getPublicUrls() = listOf("/upload/**/public/**", "/login", "/loginFromDEISI", "/access-denied", "/error", "/h2-console/**",
-        "/api-docs", "/swagger-ui.html", "/swagger-ui/**", "/swagger-resources/**", "/v2/api-docs",
+    open fun getPublicUrls() = listOf("/upload/**/public/**", "/login", "/loginFromDEISI", "/access-denied.html", "/error", "/h2-console/**",
+        "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs",
         "/css/**", "/js/**", "/img/**", "/favicon.ico")
 
-    override fun configure(http: HttpSecurity) {
+    protected fun configure(http: HttpSecurity): HttpSecurity {
         http
             // disable csrf in case someone needs to access "/" by POST (e.g. Moodle lti)
             // and for all API calls
-            .csrf().ignoringAntMatchers("/", "/api/**").and()
-            .authorizeRequests()
-            .antMatchers(
-                *getPublicUrls().toTypedArray()
-            ).permitAll()
-            .antMatchers(
-                "/", "/upload", "/upload/**", "/buildReport/**", "/student/**",
-                "/git-submission/refresh-git/*", "/git-submission/generate-report/*", "/mySubmissions",
-                "/leaderboard/*",
-                "/personalToken", "/api/student/**"
-            )
-            .hasAnyRole("STUDENT", "TEACHER", "DROP_PROJECT_ADMIN")
-            .antMatchers("/cleanup/*", "/admin/**").hasRole("DROP_PROJECT_ADMIN")
-            .anyRequest().hasAnyRole("TEACHER", "DROP_PROJECT_ADMIN")
-            .and()
-            .exceptionHandling()
-            .accessDeniedHandler(APIAccessDeniedHandler("/access-denied.html"))
+            .csrf { 
+                it.ignoringRequestMatchers("/", "/api/**") 
+            }
+            .authorizeHttpRequests { authz ->
+                authz
+                    .requestMatchers(*getPublicUrls().toTypedArray()).permitAll()
+                    .requestMatchers(
+                        "/", "/upload", "/upload/**", "/buildReport/**", "/student/**",
+                        "/git-submission/refresh-git/*", "/git-submission/generate-report/*", "/mySubmissions",
+                        "/leaderboard/*",
+                        "/personalToken", "/api/student/**"
+                    )
+                    .hasAnyRole("STUDENT", "TEACHER", "DROP_PROJECT_ADMIN")
+                    .requestMatchers("/admin/**").hasRole("DROP_PROJECT_ADMIN")
+                    .anyRequest().hasAnyRole("TEACHER", "DROP_PROJECT_ADMIN")
+            }
+            .exceptionHandling { 
+                it.accessDeniedHandler(APIAccessDeniedHandler("/access-denied.html"))
+            }
 
         if (apiAuthenticationManager != null) {
             http.addFilterBefore(PersonalTokenAuthenticationFilter("/api/**", apiAuthenticationManager),
                 LogoutFilter::class.java)
         }
 
-        http.headers().frameOptions().sameOrigin()  // this is needed for h2-console
+        http.headers { 
+            it.frameOptions { frameOptions -> frameOptions.sameOrigin() }  // this is needed for h2-console
+        }
 
+        return http
     }
 }

@@ -17,9 +17,10 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.dao
+package org.dropproject.dao
 
-import javax.persistence.*
+import com.fasterxml.jackson.annotation.JsonIgnore
+import jakarta.persistence.*
 
 /**
  * Represents a "tag" used to categorize [Assignment]s. It is mostly used for filtering purposes. It might take any
@@ -32,12 +33,20 @@ import javax.persistence.*
 @Entity
 data class AssignmentTag(
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
 
     @Column(unique = true)
     val name: String,  // tag name
 
     @Transient
-    var selected: Boolean = false  // used for the filter in the assignments' list
-)
+    var selected: Boolean = false,  // used for the filter in the assignments' list
+
+    @ManyToMany(mappedBy = "tags")
+    @JsonIgnore // avoid recursion in APIs
+    var assignments: MutableSet<Assignment> = mutableSetOf()
+) {
+    override fun equals(other: Any?) = other is AssignmentTag && id == other.id
+    override fun hashCode() = id.hashCode()
+    override fun toString(): String = "AssignmentTag(id=$id, name=$name)"
+}

@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 
-<head th:replace="layout/layout :: head (pageTitle='Drop Project - Admin dashboard')">
+<head th:replace="~{layout/layout :: head (pageTitle='Drop Project - Admin dashboard')}">
 </head>
 
 <body>
 
-<div th:replace="layout/layout :: header"></div>
+<div th:replace="~{layout/layout :: header}"></div>
 
 <div class="container" style="max-width: 760px; margin-bottom: 65px">
 
@@ -20,7 +20,7 @@
         <div class="alert alert-danger" th:text="${error}"/>
     </div>
 
-    <!--/*@thymesVar id="adminDashboardForm" type="org.dropProject.forms.AdminDashboardForm"*/-->
+    <!--/*@thymesVar id="adminDashboardForm" type="org.dropproject.forms.AdminDashboardForm"*/-->
     <form th:object="${adminDashboardForm}" method="post" th:action="@{/admin/dashboard}" class="form-horizontal">
         <div class="form-group" th:classappend="${#fields.hasErrors('showMavenOutput')} ? 'has-error' : ''">
             <label for="showMavenOutput" class="col-sm-3 control-label">Maven Output</label>
@@ -52,7 +52,7 @@
 
 </div>
 
-<div th:replace="layout/layout :: footer"></div>
+<div th:replace="~{layout/layout :: footer}"></div>
 
 <script th:src="@{/js/dropproject.js}"></script>
 

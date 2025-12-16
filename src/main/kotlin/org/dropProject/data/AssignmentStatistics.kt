@@ -17,9 +17,9 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.data
+package org.dropproject.data
 
-import org.dropProject.dao.ProjectGroup;
+import org.dropproject.dao.ProjectGroup;
 
 /**
  * Represents statistics about the submissions done for an [Assignment].

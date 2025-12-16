@@ -17,43 +17,50 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject
+package org.dropproject.config
 
-import org.dropProject.security.DropProjectSecurityConfig
-import org.dropProject.security.PersonalTokenAuthenticationManager
+import org.dropproject.security.DropProjectSecurityConfig
+import org.dropproject.security.PersonalTokenAuthenticationManager
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
+import org.dropproject.config.DropProjectProperties
+import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.core.io.ResourceLoader
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper
 import org.springframework.security.oauth2.core.user.OAuth2UserAuthority
+import org.springframework.security.web.SecurityFilterChain
 import java.util.logging.Logger
 
 @Profile("oauth2")
 @Configuration
-class OAuth2WebSecurityConfig(val manager: PersonalTokenAuthenticationManager) : DropProjectSecurityConfig(manager) {
+@EnableMethodSecurity(prePostEnabled = true)
+class OAuth2WebSecurityConfig(
+    val resourceLoader: ResourceLoader,
+    val manager: PersonalTokenAuthenticationManager,
+    val dropProjectProperties: DropProjectProperties
+) : DropProjectSecurityConfig(manager) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
-
-    @Autowired
-    lateinit var resourceLoader: ResourceLoader
-
-    @Value("\${dp.config.location:}")
-    val configLocationFolder: String = ""
 
     var idKey: String? = null
     val idValues = mutableMapOf<String, Array<String>>()  // idValue to roles list. e.g. "palves" -> ["ROLE_TEACHER,ROLE_ADMIN"]
 
-    override fun configure(http: HttpSecurity) {
-        super.configure(http)
-        http.oauth2Login()
-                .userInfoEndpoint()
-                .userAuthoritiesMapper(userAuthoritiesMapper())  // assign roles to users
+    @Bean
+    fun filterChain(http: HttpSecurity): SecurityFilterChain {
+        configure(http)
+        http.oauth2Login { oauth2 ->
+            oauth2.userInfoEndpoint { userInfo ->
+                userInfo.userAuthoritiesMapper(userAuthoritiesMapper())  // assign roles to users
+            }
+        }
+
+        return http.build()
     }
 
     /**
@@ -66,13 +73,14 @@ class OAuth2WebSecurityConfig(val manager: PersonalTokenAuthenticationManager) :
      * Where "login" is the name of the attribute associated with the user through the user info endpoint
      * (see drop-project.properties)
      */
+    @Bean
     fun userAuthoritiesMapper(): GrantedAuthoritiesMapper {
 
-        val loadFromConfig = configLocationFolder.isNotEmpty() && resourceLoader.getResource("file:${configLocationFolder}/oauth-roles.csv").exists()
+        val loadFromConfig = dropProjectProperties.config.location.isNotEmpty() && resourceLoader.getResource("file:${dropProjectProperties.config.location}/oauth-roles.csv").exists()
         val loadFromRoot = resourceLoader.getResource("classpath:oauth-roles.csv").exists()
 
         if (loadFromConfig || loadFromRoot) {
-            val filenameAsResource = if (loadFromConfig) "file:${configLocationFolder}/oauth-roles.csv" else "classpath:oauth-roles.csv"
+            val filenameAsResource = if (loadFromConfig) "file:${dropProjectProperties.config.location}/oauth-roles.csv" else "classpath:oauth-roles.csv"
             LOG.info("Found ${filenameAsResource}. Will load user roles from there.")
 
             val rolesFile = resourceLoader.getResource(filenameAsResource).inputStream.bufferedReader()

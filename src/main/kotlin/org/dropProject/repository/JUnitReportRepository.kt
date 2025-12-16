@@ -17,13 +17,13 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.repository
+package org.dropproject.repository
 
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.transaction.annotation.Transactional
-import org.dropProject.dao.JUnitReport
-import org.dropProject.dao.ProjectGroup
-import org.dropProject.dao.Submission
+import org.dropproject.dao.JUnitReport
+import org.dropproject.dao.ProjectGroup
+import org.dropproject.dao.Submission
 import java.util.*
 
 /**

@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.services
+package org.dropproject.services
 
 import org.commonmark.ext.autolink.AutolinkExtension
 import org.commonmark.ext.gfm.tables.TableBlock

@@ -17,18 +17,18 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.services
+package org.dropproject.services
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import org.dropProject.dao.Assignment
-import org.dropProject.dao.JUnitReport
-import org.dropProject.dao.JacocoReport
-import org.dropProject.dao.Submission
-import org.dropProject.data.BuildReport
-import org.dropProject.repository.AssignmentTestMethodRepository
-import org.dropProject.repository.JUnitReportRepository
-import org.dropProject.repository.JacocoReportRepository
+import org.dropproject.dao.Assignment
+import org.dropproject.dao.JUnitReport
+import org.dropproject.dao.JacocoReport
+import org.dropproject.dao.Submission
+import org.dropproject.data.BuildReport
+import org.dropproject.repository.AssignmentTestMethodRepository
+import org.dropproject.repository.JUnitReportRepository
+import org.dropproject.repository.JacocoReportRepository
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileNotFoundException
@@ -38,21 +38,14 @@ import java.util.logging.Logger
  * This class contains functions that perform the creation of [BuildReport]s for both [Assignment]s and [Submission]s.
  */
 @Service
-class BuildReportBuilder {
+class BuildReportBuilder(
+    val junitResultsParser: JunitResultsParser,
+    val jacocoResultsParser: JacocoResultsParser,
+    val jUnitReportRepository: JUnitReportRepository,
+    val jacocoReportRepository: JacocoReportRepository
+) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
-
-    @Autowired
-    lateinit var junitResultsParser: JunitResultsParser
-
-    @Autowired
-    lateinit var jacocoResultsParser: JacocoResultsParser
-
-    @Autowired
-    lateinit var jUnitReportRepository: JUnitReportRepository
-
-    @Autowired
-    lateinit var jacocoReportRepository: JacocoReportRepository
 
     /**
      * Builds a BuildReport

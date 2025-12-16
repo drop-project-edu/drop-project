@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 
-<head th:replace="layout/layout :: head (pageTitle='Drop Project - Git submission')">
+<head th:replace="~{layout/layout :: head (pageTitle='Drop Project - Git submission')}">
 </head>
 
 <body>
 
-<div th:replace="layout/layout :: header"></div>
+<div th:replace="~{layout/layout :: header}"></div>
 
-<!--/*@thymesVar id="assignment" type="org.dropProject.dao.Assignment"*/-->
-<!--/*@thymesVar id="gitSubmission" type="org.dropProject.dao.GitSubmission"*/-->
-<!--/*@thymesVar id="lastCommitInfo" type="org.dropProject.services.GitClient.CommitInfo"*/-->
+<!--/*@thymesVar id="assignment" type="org.dropproject.dao.Assignment"*/-->
+<!--/*@thymesVar id="gitSubmission" type="org.dropproject.dao.GitSubmission"*/-->
+<!--/*@thymesVar id="lastCommitInfo" type="org.dropproject.services.GitClient.CommitInfo"*/-->
 <div class="container" style="max-width: 900px; margin-bottom: 65px">
 
     <div class="row">
@@ -118,7 +118,7 @@
 
 </div>
 
-<div th:replace="layout/layout :: footer"></div>
+<div th:replace="~{layout/layout :: footer}"></div>
 
 <script>
     $(function () {

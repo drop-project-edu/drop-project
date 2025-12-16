@@ -2,7 +2,7 @@
  * ========================LICENSE_START=================================
  * DropProject
  * %%
- * Copyright (C) 2019 Pedro Alves
+ * Copyright (C) 2019 - 2022 Pedro Alves
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,18 +17,14 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.repository
+package org.dropproject.config
 
-import org.dropProject.dao.*
-import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.transaction.annotation.Transactional
 
-/**
- * Provides functions to query [AssignmentTags]s that have been persisted in the database.
- */
-interface AssignmentTagsRepository : JpaRepository<AssignmentTags, AssignmentTagsCompositeKey> {
-    fun findByAssignmentId(assignmentId: String) : List<AssignmentTags>
-    fun findByTagId(tagId: Long) : List<AssignmentTags>
-    fun removeAllByTagId(tagId: Long): Int
-    fun countAssignmentTagsByTagId(tagId: Long): Long
+interface AsyncConfigurer {
+
+    fun getTimeout(): Int
+    fun setTimeout(timeout: Int)
+
+    fun getThreadPoolSize(): Int
+    fun setThreadPoolSize(numThreads: Int)
 }

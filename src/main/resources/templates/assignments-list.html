@@ -1,18 +1,18 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 
-<head th:replace="layout/layout :: head (pageTitle='Drop Project - My assignments')">
+<head th:replace="~{layout/layout :: head (pageTitle='Drop Project - My assignments')}">
 </head>
 
 <body>
 
-<div th:replace="layout/layout :: header"></div>
+<div th:replace="~{layout/layout :: header}"></div>
 
 <div class="container" style="max-width: 760px">
 
     <h1 class="page-header">My Assignments</h1>
 
-    <!--/*@thymesVar id="assignments" type="java.util.ArrayList<org.dropProject.dao.Assignment>"*/-->
+    <!--/*@thymesVar id="assignments" type="java.util.ArrayList<org.dropproject.dao.Assignment>"*/-->
     <table class="table" th:if="${!assignments.isEmpty()}">
         <thead>
         <tr>
@@ -44,7 +44,7 @@
 
 </div>
 
-<div th:replace="layout/layout :: footer"></div>
+<div th:replace="~{layout/layout :: footer}"></div>
 
 </body>
 </html>

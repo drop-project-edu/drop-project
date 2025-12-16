@@ -17,13 +17,13 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.services
+package org.dropproject.services
 
 import junit.framework.TestCase.assertEquals
-import org.dropProject.dao.Assignment
-import org.dropProject.dao.Language
-import org.dropProject.forms.AssignmentForm
-import org.dropProject.forms.SubmissionMethod
+import org.dropproject.dao.Assignment
+import org.dropproject.dao.Language
+import org.dropproject.forms.AssignmentForm
+import org.dropproject.forms.SubmissionMethod
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired

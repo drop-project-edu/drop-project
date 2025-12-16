@@ -17,37 +17,27 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.controllers
+package org.dropproject.controllers
 
 import com.zaxxer.hikari.HikariDataSource
-import org.dropProject.extensions.realName
+import org.dropproject.extensions.realName
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
+import org.dropproject.config.DropProjectProperties
 import org.springframework.boot.info.BuildProperties
 import org.springframework.security.provisioning.InMemoryUserDetailsManager
 import org.springframework.security.provisioning.UserDetailsManager
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ModelAttribute
 import java.security.Principal
-import javax.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletRequest
 
 @ControllerAdvice
-class GlobalControllerAdvice {
-
-    @Value("\${dropProject.admin.email}")
-    val adminEmailProperty: String = ""
-
-    @Value("\${dropProject.footer.message:}")
-    val footerMessage: String = ""
-
-    @Autowired
-    lateinit var buildProperties: BuildProperties
-
-    @Autowired
-    private val dataSource: HikariDataSource? = null
-
-    @Autowired
-    private val userDetailsManager: UserDetailsManager? = null
+class GlobalControllerAdvice(
+    val buildProperties: BuildProperties,
+    private val dataSource: HikariDataSource,
+    private val userDetailsManager: UserDetailsManager,
+    val dropProjectProperties: DropProjectProperties
+) {
 
     @ModelAttribute("username")
     fun getUsername(principal: Principal?) : String {
@@ -70,7 +60,7 @@ class GlobalControllerAdvice {
 
     @ModelAttribute("adminEmail")
     fun getAdminEmail() : String {
-        return adminEmailProperty
+        return dropProjectProperties.admin.email
     }
 
     @ModelAttribute("embeddedDB")
@@ -80,12 +70,12 @@ class GlobalControllerAdvice {
 
     @ModelAttribute("footerMessage")
     fun footerMessage() : String {
-        return footerMessage
+        return dropProjectProperties.footer.message
     }
 
     @ModelAttribute("demoMode")
     fun isDemoMode() : Boolean {
-        if (userDetailsManager != null && userDetailsManager is InMemoryUserDetailsManager) {
+        if (userDetailsManager is InMemoryUserDetailsManager) {
             return userDetailsManager.userExists("student1") ||
                     userDetailsManager.userExists("teacher1")
         } else {

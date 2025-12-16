@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 
-<head th:replace="layout/layout :: head (pageTitle='Drop Project - Report')">
+<head th:replace="~{layout/layout :: head (pageTitle='Drop Project - Report')}">
 </head>
 
 <body>
 
-<div th:replace="layout/layout :: header"></div>
+<div th:replace="~{layout/layout :: header}"></div>
 
 <!-- override popover default size because of "mark all as final" explanation -->
 <style>
@@ -15,8 +15,8 @@
     }
 </style>
 
-<!--/*@thymesVar id="submissions" type="java.util.ArrayList<org.dropProject.data.SubmissionInfo>"*/-->
-<!--/*@thymesVar id="assignment" type="org.dropProject.dao.Assignment"*/-->
+<!--/*@thymesVar id="submissions" type="java.util.ArrayList<org.dropproject.data.SubmissionInfo>"*/-->
+<!--/*@thymesVar id="assignment" type="org.dropproject.dao.Assignment"*/-->
 <div class="container" style="max-width: 900px; margin-bottom: 65px">
 
     <div class="alert alert-info" th:text="${message}" th:if="${message}" />
@@ -93,7 +93,7 @@
             </div>
 
             <div class="btn-group" role="group" th:if="${isAdmin}">
-                <form class="inline btn-group" method="post" th:action="@{'/cleanup/' + ${assignment.id}}" >
+                <form class="inline btn-group" method="post" th:action="@{'/admin/cleanup/' + ${assignment.id}}" >
                     <input type="submit" value="Cleanup" class="btn btn-default" title="Remove non-final files" />
                 </form>
             </div>
@@ -124,10 +124,10 @@
                 <tr th:each="submissionInfo : ${submissions}">
                     <td th:text="${submissionInfo.projectGroup.authorsIdStr(', ')}" th:title="${submissionInfo.projectGroup.authorsNameStr()}"></td>
                     <td th:text="${submissionInfo.projectGroup.authorsNameStr()}" th:title="${submissionInfo.projectGroup.authorsIdStr(', ')}"></td>
-                    <td class="text-center"><a class="btn btn-default btn-sm" th:href="@{/submissions/(assignmentId=${submissionInfo.lastSubmission.assignmentId},groupId=${submissionInfo.projectGroup.id})}"
+                    <td class="text-center"><a class="btn btn-default btn-sm" th:href="@{/submissions(assignmentId=${submissionInfo.lastSubmission.assignmentId},groupId=${submissionInfo.projectGroup.id})}"
                                                th:text="${submissionInfo.allSubmissions.size()}"></a></td>
                     <td class="text-center" th:text="${#dates.format(submissionInfo.lastSubmission.submissionDate, 'dd/MMM HH:mm:ss')}"
-                        th:data-order="${submissionInfo.lastSubmission.submissionDate.time}"></td>
+                        th:data-order="${submissionInfo.lastSubmission.getSubmissionDateAsTimestamp()}"></td>
                     <td th:text="${submissionInfo.lastSubmission.getStatus().description}"></td>
                     <td class="text-nowrap">
                         <span th:each="report : ${submissionInfo.lastSubmission.reportElements}">
@@ -176,7 +176,7 @@
 
 </div>
 
-<div th:replace="layout/layout :: footer"></div>
+<div th:replace="~{layout/layout :: footer}"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-confirmation2@2.4.2/bootstrap-confirmation.min.js"></script>
 <script>

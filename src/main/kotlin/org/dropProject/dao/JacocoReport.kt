@@ -17,9 +17,9 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.dao
+package org.dropproject.dao
 
-import javax.persistence.*
+import jakarta.persistence.*
 
 /**
  * Represents a persisted Jacoco report. The Jacoco report contains the result of calculating the code
@@ -33,7 +33,7 @@ import javax.persistence.*
 @Entity
 @Table(uniqueConstraints=[UniqueConstraint(columnNames = ["submissionId", "fileName"])], indexes = [Index(columnList = "submissionId")])
 data class JacocoReport(
-        @Id @GeneratedValue
+        @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
         val id: Long = 0,
 
         val submissionId: Long,  // submission.id

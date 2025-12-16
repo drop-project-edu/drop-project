@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.forms
+package org.dropproject.forms
 
 
 data class UploadForm(var assignmentId: String? = null)

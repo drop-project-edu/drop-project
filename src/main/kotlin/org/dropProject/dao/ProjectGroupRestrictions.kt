@@ -17,18 +17,13 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.dao
+package org.dropproject.dao
 
-import javax.persistence.Column
-import javax.persistence.Entity
-import javax.persistence.GeneratedValue
-import javax.persistence.Id
-import javax.persistence.PrePersist
-import javax.persistence.PreUpdate
+import jakarta.persistence.*
 
 @Entity
 data class ProjectGroupRestrictions(
-    @Id @GeneratedValue
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
 
     var minGroupSize: Int = 1,

@@ -17,26 +17,29 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.controllers
+package org.dropproject.controllers
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import jakarta.persistence.EntityNotFoundException
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
+import jakarta.validation.Valid
 import org.apache.commons.io.FileUtils
-import org.dropProject.Constants.CACHE_ARCHIVED_ASSIGNMENTS_KEY
-import org.dropProject.PendingTaskError
-import org.dropProject.PendingTasks
-import org.dropProject.dao.*
-import org.dropProject.data.*
-import org.dropProject.extensions.realName
-import org.dropProject.forms.AssignmentForm
-import org.dropProject.forms.SubmissionMethod
-import org.dropProject.repository.*
-import org.dropProject.services.*
+import org.dropproject.Constants.CACHE_ARCHIVED_ASSIGNMENTS_KEY
+import org.dropproject.config.DropProjectProperties
+import org.dropproject.config.PendingTaskError
+import org.dropproject.config.PendingTasks
+import org.dropproject.dao.*
+import org.dropproject.data.*
+import org.dropproject.extensions.realName
+import org.dropproject.forms.AssignmentForm
+import org.dropproject.forms.SubmissionMethod
+import org.dropproject.repository.*
+import org.dropproject.services.*
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.RefNotAdvertisedException
-import org.hibernate.Hibernate
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.CacheManager
 import org.springframework.core.io.FileSystemResource
 import org.springframework.http.HttpStatus
@@ -54,9 +57,6 @@ import java.nio.file.StandardCopyOption
 import java.security.Principal
 import java.time.ZoneId
 import java.util.*
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
-import javax.validation.Valid
 
 /**
  * AssignmentController contains MVC controller functions that handle requests related with [Assignment]s
@@ -86,19 +86,9 @@ class AssignmentController(
     val zipService: ZipService,
     val cacheManager: CacheManager,
     val projectGroupService: ProjectGroupService,
-    val pendingTasks: PendingTasks) {
-
-    @Value("\${assignments.rootLocation}")
-    val assignmentsRootLocation: String = ""
-
-    @Value("\${mavenizedProjects.rootLocation}")
-    val mavenizedProjectsRootLocation: String = ""
-
-    @Value("\${storage.rootLocation}/upload")
-    val uploadSubmissionsRootLocation: String = "submissions/upload"
-
-    @Value("\${storage.rootLocation}/git")
-    val gitSubmissionsRootLocation: String = "submissions/git"
+    val pendingTasks: PendingTasks,
+    val dropProjectProperties: DropProjectProperties,
+    val cooloffOverrideService: CooloffOverrideService) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
@@ -222,7 +212,7 @@ class AssignmentController(
 
             // check if we can connect to given git repository
             try {
-                val directory = File(assignmentsRootLocation, assignmentForm.assignmentId)
+                val directory = File(dropProjectProperties.assignments.rootLocation, assignmentForm.assignmentId)
                 gitClient.clone(gitRepository, directory)
                 LOG.info("[${assignmentForm.assignmentId}] Successfuly cloned ${gitRepository} to ${directory}")
             } catch (e: Exception) {
@@ -245,7 +235,7 @@ class AssignmentController(
 
             if (!mustSetupGitConnection) {
                 // update hash
-                val git = Git.open(File(assignmentsRootLocation, newAssignment.gitRepositoryFolder))
+                val git = Git.open(File(dropProjectProperties.assignments.rootLocation, newAssignment.gitRepositoryFolder))
                 newAssignment.gitCurrentHash = gitClient.getLastCommitInfo(git)?.sha1
             }
 
@@ -258,9 +248,8 @@ class AssignmentController(
             val assignmentId = assignmentForm.assignmentId ?:
             throw IllegalArgumentException("Trying to update an assignment without id")
 
-            val existingAssignment = assignmentRepository.getById(assignmentId).also {
-                it.tagsStr = assignmentService.getTagsStr(it)
-            }
+            val existingAssignment = assignmentRepository.findById(assignmentId)
+                .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
 
             if (existingAssignment.gitRepositoryUrl != assignmentForm.gitRepositoryUrl) {
                 LOG.warn("[${assignmentId}] Git repository cannot be changed")
@@ -287,7 +276,7 @@ class AssignmentController(
             assignmentService.updateAssignment(existingAssignment, assignmentForm)
 
             // update hash
-            val git = Git.open(File(assignmentsRootLocation, existingAssignment.gitRepositoryFolder))
+            val git = Git.open(File(dropProjectProperties.assignments.rootLocation, existingAssignment.gitRepositoryFolder))
             existingAssignment.gitCurrentHash = gitClient.getLastCommitInfo(git)?.sha1
 
             assignmentRepository.save(existingAssignment)
@@ -383,50 +372,38 @@ class AssignmentController(
      * @return a String with the name of the relevant View
      */
     @RequestMapping(value = ["/info/{assignmentId}"], method = [(RequestMethod.GET)])
-    @Transactional(readOnly = true)  // because of assignment.tags forced loading
     fun getAssignmentDetail(@PathVariable assignmentId: String, model: ModelMap, principal: Principal, request: HttpServletRequest): String {
 
-        val assignment = assignmentRepository.getById(assignmentId).also {
-            it.tagsStr = assignmentService.getTagsStr(it)
-        }
+        // Check if assignment needs git setup before getting detail data
+        val assignment = assignmentRepository.findById(assignmentId)
+            .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
 
         if (assignment.gitRepositoryPubKey != null && assignment.gitCurrentHash == null) {
             // assignment was not properly connected to git, redirect to the setup-git page
             return "redirect:/assignment/setup-git/${assignment.id}"
         }
 
-        val assignees = assigneeRepository.findByAssignmentIdOrderByAuthorUserId(assignmentId)
-        val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
-        val assignmentReports = assignmentReportRepository.findByAssignmentId(assignmentId)
+        // Use the service method to get all assignment detail data
+        val isAdmin = request.isUserInRole("DROP_PROJECT_ADMIN")
+        val assignmentDetail = assignmentService.getAssignmentDetailData(assignmentId, principal, isAdmin)
 
-        if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
-            throw IllegalAccessException("Assignments can only be accessed by their owner or authorized teachers")
+        // Populate the model with data from the service
+        model["assignment"] = assignmentDetail.assignment
+        model["assignees"] = assignmentDetail.assignees
+        model["acl"] = assignmentDetail.acl
+        model["tests"] = assignmentDetail.tests
+        model["report"] = assignmentDetail.reports
+        model["reportMsg"] = assignmentDetail.reportMessage
+        model["isAdmin"] = assignmentDetail.isAdmin
+        model["cooloffOverride"] = assignmentDetail.cooloffOverride
+
+        // Add git-related information if available
+        if (assignmentDetail.lastCommitInfo != null) {
+            model["lastCommitInfoStr"] = assignmentDetail.lastCommitInfo
         }
-
-        model["assignment"] = assignment
-        model["assignees"] = assignees
-        model["acl"] = acl
-        model["tests"] = assignmentTestMethodRepository.findByAssignmentId(assignmentId)
-        model["report"] = assignmentReports
-        model["reportMsg"] = if (assignmentReports.any { it.type != AssignmentValidator.InfoType.INFO }) {
-            "Assignment has errors! You have to fix them before activating it."
-        } else {
-            "Good job! Assignment has no errors and is ready to be activated."
+        if (assignmentDetail.sshKeyFingerprint != null) {
+            model["sshKeyFingerprint"] = assignmentDetail.sshKeyFingerprint
         }
-
-        // check if it has been setup for git connection and if there is a repository folder
-        if (assignment.gitRepositoryPrivKey != null && File(assignmentsRootLocation, assignment.gitRepositoryFolder).exists()) {
-
-            // get git info
-            val git = Git.open(File(assignmentsRootLocation, assignment.gitRepositoryFolder))
-            val lastCommitInfo = gitClient.getLastCommitInfo(git)
-            val sshKeyFingerprint = gitClient.computeSshFingerprint(assignment.gitRepositoryPubKey!!)
-
-            model["lastCommitInfoStr"] = if (lastCommitInfo != null) lastCommitInfo.toString() else "No commits"
-            model["sshKeyFingerprint"] = sshKeyFingerprint
-        }
-
-        model["isAdmin"] = request.isUserInRole("DROP_PROJECT_ADMIN")
 
         return "assignment-detail";
     }
@@ -444,9 +421,8 @@ class AssignmentController(
     @Transactional(readOnly = true)  // because of assignment.tags
     fun getEditAssignmentForm(@PathVariable assignmentId: String, model: ModelMap, principal: Principal): String {
 
-        val assignment = assignmentRepository.getById(assignmentId).also {
-            it.tagsStr = assignmentService.getTagsStr(it)
-        }
+        val assignment = assignmentRepository.findById(assignmentId)
+            .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
 
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
@@ -525,9 +501,8 @@ class AssignmentController(
                                        principal: Principal): ResponseEntity<String> {
 
         // check that it exists
-        val assignment = assignmentRepository.getById(assignmentId).also {
-            it.tagsStr = assignmentService.getTagsStr(it)
-        }
+        val assignment = assignmentRepository.findById(assignmentId)
+            .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
 
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
@@ -542,10 +517,10 @@ class AssignmentController(
 
         try {
             LOG.info("Pulling git repository for ${assignmentId}")
-            gitClient.pull(File(assignmentsRootLocation, assignment.gitRepositoryFolder), assignment.gitRepositoryPrivKey!!.toByteArray())
+            gitClient.pull(File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder), assignment.gitRepositoryPrivKey!!.toByteArray())
 
             // update hash
-            val git = Git.open(File(assignmentsRootLocation, assignment.gitRepositoryFolder))
+            val git = Git.open(File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder))
             assignment.gitCurrentHash = gitClient.getLastCommitInfo(git)?.sha1
 
             // remove the reportId from all git submissions (if there are any) to signal the student that he should
@@ -596,9 +571,8 @@ class AssignmentController(
                                        @RequestParam(name = "reconnect", required = false) reconnect: Boolean = false,
                                        model: ModelMap, principal: Principal): String {
 
-        val assignment = assignmentRepository.getById(assignmentId).also {
-            it.tagsStr = assignmentService.getTagsStr(it)
-        }
+        val assignment = assignmentRepository.findById(assignmentId)
+            .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
 
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
@@ -647,9 +621,8 @@ class AssignmentController(
                                          redirectAttributes: RedirectAttributes,
                                          model: ModelMap, principal: Principal): String {
 
-        val assignment = assignmentRepository.getById(assignmentId).also {
-            it.tagsStr = assignmentService.getTagsStr(it)
-        }
+        val assignment = assignmentRepository.findById(assignmentId)
+            .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
 
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
@@ -664,7 +637,7 @@ class AssignmentController(
         }
 
         run {
-            val assignmentFolder = File(assignmentsRootLocation, assignment.gitRepositoryFolder)
+            val assignmentFolder = File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder)
             if (assignmentFolder.exists()) {
                 assignmentFolder.deleteRecursively()
             }
@@ -672,11 +645,11 @@ class AssignmentController(
 
         val gitRepository = assignment.gitRepositoryUrl
         try {
-            val directory = File(assignmentsRootLocation, assignment.gitRepositoryFolder)
+            val directory = File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder)
             gitClient.clone(gitRepository, directory, assignment.gitRepositoryPrivKey!!.toByteArray())
             LOG.info("[${assignmentId}] Successfuly cloned ${gitRepository} to ${directory}")
             // update hash
-            val git = Git.open(File(assignmentsRootLocation, assignment.gitRepositoryFolder))
+            val git = Git.open(File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder))
             assignment.gitCurrentHash = gitClient.getLastCommitInfo(git)?.sha1
             assignmentRepository.save(assignment)
         } catch (e: Exception) {
@@ -760,9 +733,8 @@ class AssignmentController(
                          principal: Principal,
                          request: HttpServletRequest): String {
 
-        val assignment = assignmentRepository.getById(assignmentId).also {
-            it.tagsStr = assignmentService.getTagsStr(it)
-        }
+        val assignment = assignmentRepository.findById(assignmentId)
+            .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
 
         if (forceDelete && !request.isUserInRole("DROP_PROJECT_ADMIN")) {
             throw IllegalAccessException("Assignment can only be force-deleted by an admin")
@@ -785,8 +757,8 @@ class AssignmentController(
             // remove the base folder for all original submissions for this assignment
             val assignmentOriginalProjectsRootFolder =
                 when (assignment.submissionMethod) {
-                    SubmissionMethod.UPLOAD -> File(uploadSubmissionsRootLocation, assignmentId)
-                    SubmissionMethod.GIT -> File(gitSubmissionsRootLocation, assignmentId)
+                    SubmissionMethod.UPLOAD -> File(dropProjectProperties.storage.uploadLocation, assignmentId)
+                    SubmissionMethod.GIT -> File(dropProjectProperties.storage.gitLocation, assignmentId)
                 }
             if (assignmentOriginalProjectsRootFolder.deleteRecursively()) {
                 LOG.info("Removed original projects base folder: ${assignmentOriginalProjectsRootFolder}")
@@ -795,7 +767,7 @@ class AssignmentController(
             }
 
             // remove the base folder for all mavenized submissions for this assignment
-            val assignmentMavenizedProjectsRootFolder = File(mavenizedProjectsRootLocation, assignmentId)
+            val assignmentMavenizedProjectsRootFolder = File(dropProjectProperties.mavenizedProjects.rootLocation, assignmentId)
             if (assignmentMavenizedProjectsRootFolder.deleteRecursively()) {
                 LOG.info("Removed mavenized projects base folder: ${assignmentMavenizedProjectsRootFolder}")
             } else {
@@ -835,7 +807,7 @@ class AssignmentController(
         assignmentRepository.deleteById(assignmentId)
         assigneeRepository.deleteByAssignmentId(assignmentId)
 
-        val rootFolder = File(assignmentsRootLocation, assignment.gitRepositoryFolder)
+        val rootFolder = File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder)
 
         try {
             FileUtils.deleteDirectory(rootFolder)
@@ -865,9 +837,8 @@ class AssignmentController(
     fun toggleAssignmentStatus(@PathVariable assignmentId: String, redirectAttributes: RedirectAttributes,
                                principal: Principal): String {
 
-        val assignment = assignmentRepository.getById(assignmentId).also {
-            it.tagsStr = assignmentService.getTagsStr(it)
-        }
+        val assignment = assignmentRepository.findById(assignmentId)
+            .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
 
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
@@ -878,7 +849,7 @@ class AssignmentController(
         if (!assignment.active) {
 
             // check if it has been setup for git connection and if there is a repository folder
-            if (!File(assignmentsRootLocation, assignment.gitRepositoryFolder).exists()) {
+            if (!File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder).exists()) {
                 redirectAttributes.addFlashAttribute("error", "Can't mark assignment as active since it is not connected to a git repository.")
                 return "redirect:/assignment/my"
             }
@@ -921,9 +892,8 @@ class AssignmentController(
                           principal: Principal): String {
 
         // check that it exists
-        val assignment = assignmentRepository.getById(assignmentId).also {
-            it.tagsStr = assignmentService.getTagsStr(it)
-        }
+        val assignment = assignmentRepository.findById(assignmentId)
+            .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
 
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
 
@@ -955,9 +925,8 @@ class AssignmentController(
                                   redirectAttributes: RedirectAttributes,
                                   principal: Principal): String {
 
-        val assignment = assignmentRepository.getById(assignmentId).also {
-            it.tagsStr = assignmentService.getTagsStr(it)
-        }
+        val assignment = assignmentRepository.findById(assignmentId)
+            .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
 
         val acl = assignmentACLRepository.findByAssignmentId(assignment.id)
 
@@ -1103,7 +1072,7 @@ class AssignmentController(
             return "redirect:/assignment/import"
         }
 
-        val mapper = ObjectMapper().registerModule(KotlinModule())
+        val mapper = ObjectMapper().registerModule(KotlinModule.Builder().build())
 
         val result = assignmentService.importAssignment(mapper, assignmentJSONFile, submissionsJSONFile,
             gitSubmissionsJSONFile, originalSubmissionsFolder, principal)
@@ -1111,7 +1080,96 @@ class AssignmentController(
         return result.redirectUrl
     }
 
+    /**
+     * Temporarily disables the cooloff period for an assignment.
+     * Only the assignment owner or users in the ACL can perform this action.
+     *
+     * @param assignmentId The ID of the assignment
+     * @param duration The duration in minutes (must be 15, 30, or 60)
+     * @param principal The authenticated user
+     * @return ResponseEntity with success or error message
+     */
+    @RequestMapping(value = ["/cooloff/{assignmentId}/disable"], method = [RequestMethod.POST])
+    @ResponseBody
+    fun disableCooloff(
+        @PathVariable assignmentId: String,
+        @RequestParam duration: Int,
+        principal: Principal
+    ): ResponseEntity<Map<String, Any>> {
 
+        val assignment = assignmentRepository.findById(assignmentId)
+            .orElseThrow { throw IllegalArgumentException("Assignment not found") }
+
+        // Check cooloff configured
+        if (assignment.cooloffPeriod == null) {
+            return ResponseEntity.badRequest()
+                .body(mapOf("error" to "This assignment has no cooloff period"))
+        }
+
+        // Authorization check - owner or ACL
+        val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
+        if (principal.realName() != assignment.ownerUserId &&
+            acl.find { it.userId == principal.realName() } == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(mapOf("error" to "Not authorized"))
+        }
+
+        // Validate duration
+        if (duration !in listOf(15, 30, 60)) {
+            return ResponseEntity.badRequest()
+                .body(mapOf("error" to "Duration must be 15, 30, or 60 minutes"))
+        }
+
+        // Disable cooloff
+        val info = cooloffOverrideService.disableCooloff(
+            assignmentId, principal.realName(), duration
+        )
+
+        LOG.info("[${principal.realName()}] disabled cooloff for $assignmentId for $duration min")
+
+        return ResponseEntity.ok(mapOf(
+            "success" to true,
+            "message" to "Cooloff disabled for $duration minutes"
+        ))
+    }
+
+    /**
+     * Re-enables the cooloff period for an assignment (removes the temporary override).
+     * Only the assignment owner or users in the ACL can perform this action.
+     *
+     * @param assignmentId The ID of the assignment
+     * @param principal The authenticated user
+     * @return ResponseEntity with success or error message
+     */
+    @RequestMapping(value = ["/cooloff/{assignmentId}/enable"], method = [RequestMethod.POST])
+    @ResponseBody
+    fun enableCooloff(
+        @PathVariable assignmentId: String,
+        principal: Principal
+    ): ResponseEntity<Map<String, Any>> {
+
+        val assignment = assignmentRepository.findById(assignmentId)
+            .orElseThrow { throw IllegalArgumentException("Assignment not found") }
+
+        // Authorization check
+        val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
+        if (principal.realName() != assignment.ownerUserId &&
+            acl.find { it.userId == principal.realName() } == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(mapOf("error" to "Not authorized"))
+        }
+
+        // Check if actually disabled
+        if (!cooloffOverrideService.isDisabled(assignmentId)) {
+            return ResponseEntity.badRequest()
+                .body(mapOf("error" to "Cooloff is not currently disabled"))
+        }
+
+        cooloffOverrideService.enableCooloff(assignmentId)
+        LOG.info("[${principal.realName()}] re-enabled cooloff for $assignmentId")
+
+        return ResponseEntity.ok(mapOf("success" to true, "message" to "Cooloff re-enabled"))
+    }
 
 
     /**

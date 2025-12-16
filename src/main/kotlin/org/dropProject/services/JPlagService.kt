@@ -17,16 +17,16 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.services
+package org.dropproject.services
 
 import de.jplag.JPlag
 import de.jplag.options.JPlagOptions
 import de.jplag.reporting.reportobject.ReportObjectFactory
 import org.apache.commons.io.FileUtils
-import org.dropProject.Constants
-import org.dropProject.dao.Assignment
-import org.dropProject.dao.Submission
-import org.dropProject.repository.SubmissionRepository
+import org.dropproject.Constants
+import org.dropproject.dao.Assignment
+import org.dropproject.dao.Submission
+import org.dropproject.repository.SubmissionRepository
 import org.springframework.stereotype.Service
 import java.io.File
 import kotlin.math.round
@@ -77,8 +77,8 @@ class JPlagService(private val submissionService: SubmissionService,
     fun checkSubmissions(baseFolder: File, assignment: Assignment, outputReportFolder: File): PlagiarismResult {
 
         val language = when (assignment.language) {
-            org.dropProject.dao.Language.JAVA -> de.jplag.java.Language()
-            org.dropProject.dao.Language.KOTLIN -> de.jplag.kotlin.Language()
+            org.dropproject.dao.Language.JAVA -> de.jplag.java.Language()
+            org.dropproject.dao.Language.KOTLIN -> de.jplag.kotlin.Language()
         }
         val options = JPlagOptions(language, mutableSetOf(baseFolder), setOf())
             .withSimilarityThreshold(Constants.SIMILARITY_THRESHOLD)  // ignore comparisons below this similarity

@@ -2,7 +2,7 @@
  * ========================LICENSE_START=================================
  * DropProject
  * %%
- * Copyright (C) 2019 - 2021 Pedro Alves
+ * Copyright (C) 2019 - 2025 Pedro Alves
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,41 +17,27 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject
+package org.dropproject.config
 
+import org.dropproject.Constants
+import org.springframework.cache.CacheManager
+import org.springframework.cache.jcache.JCacheCacheManager
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Scope
-import java.lang.Exception
-
-/**
- * Used to signal errors on pending tasks
- */
-data class PendingTaskError(val exception: Throwable)
-
-/**
- * Manages tasks that are executed asynchronously such as assignments export
- */
-class PendingTasks {
-
-    // key is the id of the task, value can be anything but if it is an error, will be PendingTaskError
-    val pendingTasks = HashMap<String,Any>()
-
-    fun get(taskId: String) : Any? {
-        return pendingTasks[taskId]
-    }
-
-    fun put(taskId: String, data: Any) {
-        pendingTasks[taskId] = data
-    }
-}
+import javax.cache.Caching
+import javax.cache.configuration.MutableConfiguration
 
 @Configuration
-class PendingTasksConfig {
+class CacheConfig {
 
     @Bean
-    @Scope("singleton")
-    fun pendingTasks(): PendingTasks {
-        return PendingTasks()
+    fun cacheManager(): CacheManager {
+        val cachingProvider = Caching.getCachingProvider()
+        val cacheManager = cachingProvider.cacheManager
+        val cacheConfiguration = MutableConfiguration<Any, Any>()
+        if (cacheManager.getCache<Any, Any>(Constants.CACHE_ARCHIVED_ASSIGNMENTS_KEY) == null) {
+            cacheManager.createCache(Constants.CACHE_ARCHIVED_ASSIGNMENTS_KEY, cacheConfiguration)
+        }
+        return JCacheCacheManager(cacheManager)
     }
 }

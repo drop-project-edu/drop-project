@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.controllers
+package org.dropproject.controllers
 
 /**
  * Represents an Exception that is raised when the submitted project's file and folder structure does not comply

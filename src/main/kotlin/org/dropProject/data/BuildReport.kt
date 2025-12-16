@@ -17,16 +17,16 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.data
+package org.dropproject.data
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonView
-import org.dropProject.dao.Assignment
-import org.dropProject.dao.Language
-import org.dropProject.services.JUnitMethodResult
-import org.dropProject.services.JUnitMethodResultType
-import org.dropProject.services.JUnitResults
-import org.dropProject.services.JacocoResults
+import org.dropproject.dao.Assignment
+import org.dropproject.dao.Language
+import org.dropproject.services.JUnitMethodResult
+import org.dropproject.services.JUnitMethodResultType
+import org.dropproject.services.JUnitResults
+import org.dropproject.services.JacocoResults
 import org.slf4j.LoggerFactory
 import java.math.BigDecimal
 

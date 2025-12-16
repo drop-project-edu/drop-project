@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.controllers
+package org.dropproject.controllers
 
 import org.springframework.boot.web.error.ErrorAttributeOptions
 import org.springframework.boot.web.servlet.error.ErrorAttributes
@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.ResponseBody
 import org.springframework.web.context.request.WebRequest
 import org.springframework.web.servlet.ModelAndView
 import java.util.*
-import javax.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletRequest
 
 const val ERROR_PATH = "/error"
 
@@ -71,7 +71,7 @@ class AppErrorController(var errorAttributes: ErrorAttributes) : ErrorController
     }
 
     private fun getStatus(request: HttpServletRequest): HttpStatus {
-        val statusCode = request.getAttribute("javax.servlet.error.status_code") as Int
+        val statusCode = request.getAttribute("jakarta.servlet.error.status_code") as Int
 
         try {
             return HttpStatus.valueOf(statusCode)

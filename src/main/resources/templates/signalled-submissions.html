@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 
-<head th:replace="layout/layout :: head (pageTitle='Drop Project - Signalled Students')">
+<head th:replace="~{layout/layout :: head (pageTitle='Drop Project - Signalled Students')}">
 </head>
 
 <body>
 
-<div th:replace="layout/layout :: header"></div>
+<div th:replace="~{layout/layout :: header}"></div>
 
-<!--/*@thymesVar id="submissions" type="java.util.ArrayList<org.dropProject.data.SubmissionInfo>"*/-->
+<!--/*@thymesVar id="submissions" type="java.util.ArrayList<org.dropproject.data.SubmissionInfo>"*/-->
 <div class="container" style="max-width: 900px; margin-bottom: 65px">
 
     <h1 class="page-header" th:text="${assignmentId} + ' submissions'"></h1>
@@ -45,13 +45,13 @@
                         <th>Failing Tests</th>
                     </tr>
                 </thead>
-                <!--/*@thymesVar id="signalledGroups" type="java.util.ArrayList<org.dropProject.data.GroupedProjectGroups>"*/-->
+                <!--/*@thymesVar id="signalledGroups" type="java.util.ArrayList<org.dropproject.data.GroupedProjectGroups>"*/-->
                 <tr th:each="groupedGroups: ${signalledGroups}">
                     <td>
                         <ul class="list-group">
                             <li class="list-group-item" th:each="group: ${groupedGroups.groups}">
                                 <span th:text="${'Group:' + group.id + ' | ' + group.authorsNameStr()}"/>
-                                <small><a th:href="@{'/submissions/?assignmentId=' + ${assignmentId} + '&groupId=' + ${group.id}}">(submissions)</a></small>
+                                <small><a th:href="@{'/submissions?assignmentId=' + ${assignmentId} + '&groupId=' + ${group.id}}">(submissions)</a></small>
                             </li>
                         </ul>
                     </td>
@@ -95,7 +95,7 @@
                     <td th:text="${groupStats.groupID}"/></td>
                     <td th:text="${groupStats.group.authorsNameStr()}"></td>
                     <td>
-                        <a th:each="groupID: ${groupStats.groupID}" th:href="@{'/submissions/?assignmentId=' + ${assignmentId} + '&groupId=' + ${groupID}}">View submissions</a>
+                        <a th:each="groupID: ${groupStats.groupID}" th:href="@{'/submissions?assignmentId=' + ${assignmentId} + '&groupId=' + ${groupID}}">View submissions</a>
                     </td>
                     <td th:text="${groupStats.nrSubmissions}"/></td>
                     <td th:text="${groupStats.nrPassedTests}"/></td>
@@ -108,7 +108,7 @@
 
 </div>
 
-<div th:replace="layout/layout :: footer"></div>
+<div th:replace="~{layout/layout :: footer}"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-confirmation2@2.4.2/bootstrap-confirmation.min.js"></script>
 <script>

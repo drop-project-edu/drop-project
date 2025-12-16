@@ -17,10 +17,10 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.repository
+package org.dropproject.repository
 
-import org.dropProject.dao.ProjectGroup
-import org.dropProject.dao.Submission
+import org.dropproject.dao.ProjectGroup
+import org.dropproject.dao.Submission
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query

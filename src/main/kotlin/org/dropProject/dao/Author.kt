@@ -17,11 +17,11 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.dao
+package org.dropproject.dao
 
 import com.fasterxml.jackson.annotation.JsonView
-import org.dropProject.data.JSONViews
-import javax.persistence.*
+import org.dropproject.data.JSONViews
+import jakarta.persistence.*
 
 /**
  * Represents the author of a submission (a student or a teacher).
@@ -33,7 +33,7 @@ import javax.persistence.*
  */
 @Entity
 class Author(
-        @Id @GeneratedValue
+        @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
         @JsonView(JSONViews.TeacherAPI::class)
         val id: Long = 0,
         name: String,

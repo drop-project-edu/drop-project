@@ -17,9 +17,9 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.dao
+package org.dropproject.dao
 
-import javax.persistence.*
+import jakarta.persistence.*
 
 /**
  * Represents specific git information for submissions. This is different from the class [GitSubmission]
@@ -33,6 +33,6 @@ import javax.persistence.*
  */
 @Entity
 class SubmissionGitInfo(
-        @Id @GeneratedValue val id: Long = 0,
+        @Id @GeneratedValue(strategy = GenerationType.IDENTITY) val id: Long = 0,
         @Column(unique = true) val submissionId: Long, // FK for Submission
         val gitCommitHash: String)

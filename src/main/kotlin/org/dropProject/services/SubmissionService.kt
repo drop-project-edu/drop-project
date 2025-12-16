@@ -17,27 +17,29 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.services
+package org.dropproject.services
 
+import jakarta.persistence.EntityNotFoundException
 import org.apache.commons.io.FileUtils
-import org.dropProject.Constants
-import org.dropProject.controllers.InvalidProjectGroupException
-import org.dropProject.controllers.InvalidProjectStructureException
-import org.dropProject.controllers.UploadController
-import org.dropProject.dao.*
-import org.dropProject.data.AuthorDetails
-import org.dropProject.data.SubmissionInfo
-import org.dropProject.data.SubmissionResult
-import org.dropProject.data.TestType
-import org.dropProject.extensions.existsCaseSensitive
-import org.dropProject.extensions.realName
-import org.dropProject.extensions.sanitize
-import org.dropProject.forms.SubmissionMethod
-import org.dropProject.forms.UploadForm
-import org.dropProject.repository.*
-import org.dropProject.storage.StorageService
+import org.dropproject.Constants
+import org.dropproject.controllers.InvalidProjectGroupException
+import org.dropproject.controllers.InvalidProjectStructureException
+import org.dropproject.controllers.UploadController
+import org.dropproject.dao.*
+import org.dropproject.data.AuthorDetails
+import org.dropproject.data.SubmissionInfo
+import org.dropproject.data.SubmissionResult
+import org.dropproject.data.TestType
+import org.dropproject.extensions.existsCaseSensitive
+import org.dropproject.extensions.realName
+import org.dropproject.extensions.sanitize
+import org.dropproject.forms.SubmissionMethod
+import org.dropproject.forms.UploadForm
+import org.dropproject.repository.*
+import org.dropproject.storage.StorageService
 import org.mozilla.universalchardet.UniversalDetector
 import org.slf4j.LoggerFactory
+import org.dropproject.config.DropProjectProperties
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.MessageSource
 import org.springframework.http.ResponseEntity
@@ -60,7 +62,7 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.*
 import java.util.concurrent.Executor
-import javax.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletRequest
 
 
 /**
@@ -82,6 +84,8 @@ class SubmissionService(
     val asyncExecutor: Executor,
     val zipService: ZipService,
     val assignmentRepository: AssignmentRepository,
+    val dropProjectProperties: DropProjectProperties,
+    val cooloffOverrideService: CooloffOverrideService
 ) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
@@ -91,12 +95,6 @@ class SubmissionService(
 
     @Value("\${spring.web.locale}")
     val currentLocale : Locale = Locale.getDefault()
-
-    @Value("\${storage.rootLocation}/upload")
-    val uploadSubmissionsRootLocation: String = "submissions/upload"
-
-    @Value("\${storage.rootLocation}/git")
-    val gitSubmissionsRootLocation: String = "submissions/git"
 
     /**
      * Returns all the SubmissionInfo objects related with [assignment].
@@ -229,7 +227,7 @@ class SubmissionService(
             return ResponseEntity.internalServerError().body(SubmissionResult(error="O ficheiro tem que ser um .zip")) // TODO language
         }
 
-        LOG.info("[${principal.realName()}] uploaded ${originalFilename}")
+        LOG.debug("[${principal.realName()}] uploaded ${originalFilename}")
         val projectFolder: File? = storageService.store(file, assignment.id)
 
         if (projectFolder != null) {
@@ -246,11 +244,14 @@ class SubmissionService(
             if (assignment.projectGroupRestrictions != null) {
                 val restrictions = assignment.projectGroupRestrictions!!
                 if (authors.size !in restrictions.minGroupSize .. (restrictions.maxGroupSize ?: 50) &&
-                    restrictions.exceptionsAsList()?.contains(principal.realName()) != true) {
+                    !restrictions.exceptionsAsList().contains(principal.realName())) {
                     throw InvalidProjectGroupException(i18n.getMessage("student.submit.invalidGroup",
-                        arrayOf(restrictions.minGroupSize, restrictions.maxGroupSize ?: ""), currentLocale))
+                        arrayOf(restrictions.minGroupSize, restrictions.maxGroupSize ?: 50), currentLocale))
                 }
             }
+
+            // check if all group members are in the assignment's whitelist
+            assignmentService.checkGroupMembersInWhitelist(assignment.id, authors.map { it.number }, i18n, currentLocale)
 
             val group = projectGroupService.getOrCreateProjectGroup(authors)
 
@@ -319,6 +320,11 @@ class SubmissionService(
 
     // returns the date when the next submission can be made or null if it's not in cool-off period
     fun calculateCoolOff(lastSubmission: Submission, assignment: Assignment) : LocalDateTime? {
+        // Check if cooloff has been temporarily disabled
+        if (cooloffOverrideService.isDisabled(assignment.id)) {
+            return null
+        }
+
         val lastSubmissionDate = Timestamp(lastSubmission.submissionDate.time).toLocalDateTime()
         val now = LocalDateTime.now()
         val delta = ChronoUnit.MINUTES.between(lastSubmissionDate, now)
@@ -351,7 +357,7 @@ class SubmissionService(
         // check the encoding of AUTHORS.txt
         val charset = try { guessCharset(authorsFile.inputStream()) } catch (ie: IOException) { Charset.defaultCharset() }
         if (!charset.equals(Charset.defaultCharset())) {
-            LOG.info("AUTHORS.txt is not in the default charset (${Charset.defaultCharset()}): ${charset}")
+            LOG.debug("AUTHORS.txt is not in the default charset (${Charset.defaultCharset()}): ${charset}")
         }
 
         // TODO check that AUTHORS.txt includes the number and name of the students
@@ -458,7 +464,7 @@ class SubmissionService(
             LOG.info("[${authorsStr}] Mavenized to folder ${mavenizedProjectFolder}")
 
             if (asyncExecutor is ThreadPoolTaskScheduler) {
-                LOG.info("asyncExecutor.activeCount = ${asyncExecutor.activeCount}")
+                LOG.debug("asyncExecutor.activeCount = ${asyncExecutor.activeCount}")
             }
 
             if (teacherRebuild) {
@@ -608,7 +614,7 @@ class SubmissionService(
                 val gitSubmission = gitSubmissionRepository.findById(gitSubmissionId).orElse(null) ?:
                 throw UploadController.SubmissionNotFoundException(submission.gitSubmissionId!!)
 
-                File(gitSubmissionsRootLocation, gitSubmission.getFolderRelativeToStorageRoot())
+                File(dropProjectProperties.storage.gitLocation, gitSubmission.getFolderRelativeToStorageRoot())
 
             } else {
                 throw IllegalStateException("submission ${submission.id} has both submissionId and gitSubmissionId equal to null")
@@ -618,7 +624,8 @@ class SubmissionService(
 
     fun fillIndicatorsFor(submissions: List<Submission>) {
         for (submission in submissions) {
-            val assignment = assignmentRepository.getById(submission.assignmentId)
+            val assignment = assignmentRepository.findById(submission.assignmentId)
+                .orElseThrow { EntityNotFoundException("Assignment ${submission.assignmentId} not found") }
             submission.reportElements = submissionReportRepository.findBySubmissionId(submission.id)
             submission.overdue = assignment.overdue(submission)
             submission.buildReport?.let {

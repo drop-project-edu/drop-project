@@ -17,11 +17,11 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject
+package org.dropproject.config
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.dropProject.filters.ControllerRequestsLoggingFilter
+import org.dropproject.filters.ControllerRequestsLoggingFilter
 
 
 @Configuration

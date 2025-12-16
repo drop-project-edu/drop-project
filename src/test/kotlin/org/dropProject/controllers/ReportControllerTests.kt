@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.controllers
+package org.dropproject.controllers
 
 import net.lingala.zip4j.ZipFile
 import org.apache.commons.io.FileUtils
@@ -27,7 +27,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
+import org.dropproject.config.DropProjectProperties
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.core.io.ResourceLoader
@@ -44,15 +44,15 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import java.io.File
 import java.nio.file.Files
-import org.dropProject.TestsHelper
-import org.dropProject.dao.*
-import org.dropProject.data.*
-import org.dropProject.extensions.formatDefault
-import org.dropProject.forms.SubmissionMethod
-import org.dropProject.repository.*
-import org.dropProject.services.AssignmentService
-import org.dropProject.services.PlagiarismComparison
-import org.dropProject.services.ZipService
+import org.dropproject.TestsHelper
+import org.dropproject.dao.*
+import org.dropproject.data.*
+import org.dropproject.extensions.formatDefault
+import org.dropproject.forms.SubmissionMethod
+import org.dropproject.repository.*
+import org.dropproject.services.AssignmentService
+import org.dropproject.services.PlagiarismComparison
+import org.dropproject.services.ZipService
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
 import java.util.*
@@ -66,11 +66,8 @@ import kotlin.collections.LinkedHashMap
 @ActiveProfiles("test")
 class ReportControllerTests {
 
-    @Value("\${mavenizedProjects.rootLocation}")
-    val mavenizedProjectsRootLocation: String = ""
-
-    @Value("\${storage.rootLocation}")
-    val submissionsRootLocation: String = ""
+    @Autowired
+    lateinit var dropProjectProperties: DropProjectProperties
 
     @Autowired
     lateinit var mvc: MockMvc
@@ -110,7 +107,7 @@ class ReportControllerTests {
 
     @Before
     fun setup() {
-        var folder = File(mavenizedProjectsRootLocation)
+        var folder = File(dropProjectProperties.mavenizedProjects.rootLocation)
         if (folder.exists()) {
             folder.deleteRecursively()
         }
@@ -155,12 +152,12 @@ class ReportControllerTests {
 
     @After
     fun deleteMavenizedFolder() {
-        var folder = File(mavenizedProjectsRootLocation)
+        var folder = File(dropProjectProperties.mavenizedProjects.rootLocation)
         if (folder.exists()) {
             folder.deleteRecursively()
         }
 
-        val submissionsFolder = File(submissionsRootLocation)
+        val submissionsFolder = File(dropProjectProperties.storage.rootLocation)
         if (submissionsFolder.exists()) {
             submissionsFolder.deleteRecursively()
         }
@@ -170,10 +167,10 @@ class ReportControllerTests {
     @DirtiesContext
     fun reportIsNotAccessibleToStudents() {
 
-        val reportResult = this.mvc.perform(get("/report/testJavaProj")
+        this.mvc.perform(get("/report/testJavaProj")
             .with(user(STUDENT_1)))
-            .andExpect(status().isForbidden)
-            .andReturn()
+            .andExpect(status().isOk)
+            .andExpect(forwardedUrl("/access-denied.html"))
     }
 
     @Test
@@ -241,7 +238,7 @@ class ReportControllerTests {
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", defaultAssignmentId, STUDENT_1)
 
-        this.mvc.perform(get("/buildReport/$submissionId"))
+        this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
             .andExpect(status().isOk())
 
         this.mvc.perform(
@@ -339,7 +336,7 @@ class ReportControllerTests {
     @DirtiesContext
     fun downloadOriginalProjectFromGitSubmission() {
 
-        val assignment = assignmentRepository.getById("sampleJavaProject")
+        val assignment = assignmentRepository.findById("sampleJavaProject").get()
         assignment.submissionMethod = SubmissionMethod.GIT
         assignmentRepository.save(assignment)
 
@@ -361,7 +358,7 @@ class ReportControllerTests {
     @DirtiesContext
     fun downloadMavenProjectFromGitSubmission() {
 
-        val assignment = assignmentRepository.getById("sampleJavaProject")
+        val assignment = assignmentRepository.findById("sampleJavaProject").get()
         assignment.submissionMethod = SubmissionMethod.GIT
         assignmentRepository.save(assignment)
 
@@ -385,7 +382,7 @@ class ReportControllerTests {
     @DirtiesContext
     fun downloadMavenizedAllFromGitSubmissions() {
 
-        val assignment = assignmentRepository.getById("sampleJavaProject")
+        val assignment = assignmentRepository.findById("sampleJavaProject").get()
         assignment.submissionMethod = SubmissionMethod.GIT
         assignmentRepository.save(assignment)
 
@@ -426,7 +423,7 @@ class ReportControllerTests {
     @DirtiesContext
     fun leaderboardOK() {
 
-        val assignment = assignmentRepository.getById(defaultAssignmentId)
+        val assignment = assignmentRepository.findById(defaultAssignmentId).get()
         assignment.showLeaderBoard = true
         assignment.leaderboardType = LeaderboardType.ELLAPSED
         assignmentRepository.save(assignment)
@@ -538,7 +535,7 @@ class ReportControllerTests {
     @DirtiesContext
     fun exportCSVWithStudentTests() {
 
-        val assignment = assignmentRepository.getById(defaultAssignmentId)
+        val assignment = assignmentRepository.findById(defaultAssignmentId).get()
         assignment.acceptsStudentTests = true
         assignment.minStudentTests = 2
         assignmentRepository.save(assignment)
@@ -588,7 +585,7 @@ class ReportControllerTests {
     @DirtiesContext
     fun exportCSVWithMandatoryTests() {
 
-        val assignment = assignmentRepository.getById(defaultAssignmentId)
+        val assignment = assignmentRepository.findById(defaultAssignmentId).get()
 
         // first, edit the assignment to add a mandatory test suffix
         assignment.mandatoryTestsSuffix = "_OBG"
@@ -1109,7 +1106,7 @@ class ReportControllerTests {
             listOf(Pair("student1", "Student 1"))
         )
 
-        val reportResult = this.mvc.perform(get("/submissions/?assignmentId=testJavaProj&groupId=1")
+        val reportResult = this.mvc.perform(get("/submissions?assignmentId=testJavaProj&groupId=1")
             .with(user(TEACHER_1)))
             .andExpect(status().isOk())
             .andReturn()

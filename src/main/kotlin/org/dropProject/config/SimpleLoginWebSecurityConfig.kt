@@ -17,13 +17,13 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject
+package org.dropproject.config
 
-import org.dropProject.security.DropProjectSecurityConfig
-import org.dropProject.security.PersonalTokenAuthenticationManager
+import org.dropproject.security.DropProjectSecurityConfig
+import org.dropproject.security.PersonalTokenAuthenticationManager
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
+import org.dropproject.config.DropProjectProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
@@ -33,35 +33,38 @@ import org.springframework.core.io.ResourceLoader
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.core.userdetails.User
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.provisioning.InMemoryUserDetailsManager
+import org.springframework.security.web.SecurityFilterChain
 import org.springframework.stereotype.Component
 import java.util.*
 import java.util.logging.Logger
 
 @Component
-class InMemoryUserDetailsManagerFactory {
+class InMemoryUserDetailsManagerFactory(
+    val resourceLoader: ResourceLoader,
+    val dropProjectProperties: DropProjectProperties
+) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
-    @Autowired
-    lateinit var resourceLoader: ResourceLoader
-
-    @Value("\${dp.config.location:}")
-    val configLocationFolder: String = ""
-
+    @Bean
     fun inMemoryUserDetailsManager(): InMemoryUserDetailsManager {
 
         LOG.info("Using inMemoryAuthentication")
 
         val usersList = mutableListOf<UserDetails>()
 
-        val loadFromConfig = configLocationFolder.isNotEmpty() && resourceLoader.getResource("file:${configLocationFolder}/users.csv").exists()
+        val loadFromConfig =
+            dropProjectProperties.config.location.isNotEmpty() && resourceLoader.getResource("file:${dropProjectProperties.config.location}/users.csv")
+                .exists()
         val loadFromRoot = resourceLoader.getResource("classpath:users.csv").exists()
 
         if (loadFromConfig || loadFromRoot) {
-            val filenameAsResource = if (loadFromConfig) "file:${configLocationFolder}/users.csv" else "classpath:users.csv"
+            val filenameAsResource =
+                if (loadFromConfig) "file:${dropProjectProperties.config.location}/users.csv" else "classpath:users.csv"
             LOG.info("Found ${filenameAsResource}. Will load user details from there.")
 
             val usersFile = resourceLoader.getResource(filenameAsResource).inputStream.bufferedReader()
@@ -81,7 +84,9 @@ class InMemoryUserDetailsManagerFactory {
 
             usersList.add(User.withUsername("student1").password("{noop}123").roles("STUDENT").build())
             usersList.add(User.withUsername("teacher1").password("{noop}123").roles("TEACHER").build())
-            usersList.add(User.withUsername("admin").password("{noop}123").roles("TEACHER", "DROP_PROJECT_ADMIN").build())
+            usersList.add(
+                User.withUsername("admin").password("{noop}123").roles("TEACHER", "DROP_PROJECT_ADMIN").build()
+            )
         }
 
         return InMemoryUserDetailsManager(usersList)
@@ -91,27 +96,23 @@ class InMemoryUserDetailsManagerFactory {
 
 @Profile("!deisi & !oauth2 & !lti")
 @Configuration
-@EnableWebSecurity
-@Order(1)
-class SimpleLoginWebSecurityConfig(val manager: PersonalTokenAuthenticationManager,
-                                   val inMemoryUserDetailsManagerFactory: InMemoryUserDetailsManagerFactory) : DropProjectSecurityConfig(manager) {
+@EnableMethodSecurity(prePostEnabled = true)
+class SimpleLoginWebSecurityConfig(val manager: PersonalTokenAuthenticationManager) :
+    DropProjectSecurityConfig(manager) {
 
-    override fun configure(http: HttpSecurity) {
-
-        super.configure(http)
-
+    @Bean
+    fun filterChain(http: HttpSecurity): SecurityFilterChain {
+        configure(http)
         http
-                .csrf().disable().httpBasic()
-                .and().formLogin()
-                .loginPage("/login")
-                .permitAll()
-                .and().logout()
-                .permitAll()
+            .csrf { it.disable() }
+            .httpBasic { }
+            .formLogin { 
+                it.loginPage("/login").permitAll() 
+            }
+            .logout { it.permitAll() }
+
+        return http.build()
     }
 
-    @Autowired
-    fun configureGlobal(auth: AuthenticationManagerBuilder) {
-        auth.userDetailsService(inMemoryUserDetailsManagerFactory.inMemoryUserDetailsManager())
-    }
 
 }

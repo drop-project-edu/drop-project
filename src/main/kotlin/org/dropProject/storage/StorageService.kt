@@ -17,9 +17,9 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.storage
+package org.dropproject.storage
 
-import org.dropProject.dao.Submission
+import org.dropproject.dao.Submission
 import org.springframework.web.multipart.MultipartFile
 import java.io.File
 

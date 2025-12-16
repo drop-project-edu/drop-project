@@ -1,22 +1,22 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 
-<head th:replace="layout/layout :: head (pageTitle='Drop Project - Build report')">
+<head th:replace="~{layout/layout :: head (pageTitle='Drop Project - Build report')}">
 </head>
 
 <body>
 
-<div th:replace="layout/layout :: header"></div>
+<div th:replace="~{layout/layout :: header}"></div>
 <style>
     .table > tbody > tr > td {
         vertical-align: middle;
     }
 </style>
 
-<!--/*@thymesVar id="gitSubmission" type="org.dropProject.dao.GitSubmission"*/-->
-<!--/*@thymesVar id="assignment" type="org.dropProject.dao.Assignment"*/-->
-<!--/*@thymesVar id="summary" type="org.dropProject.dao.SubmissionReport"*/-->
-<!--/*@thymesVar id="submission" type="org.dropProject.dao.Submission"*/-->
+<!--/*@thymesVar id="gitSubmission" type="org.dropproject.dao.GitSubmission"*/-->
+<!--/*@thymesVar id="assignment" type="org.dropproject.dao.Assignment"*/-->
+<!--/*@thymesVar id="summary" type="org.dropproject.dao.SubmissionReport"*/-->
+<!--/*@thymesVar id="submission" type="org.dropproject.dao.Submission"*/-->
 <div class="container" style="max-width: 900px; margin-bottom: 65px">
 
     <div class="alert alert-info" th:text="${message}" th:if="${message}" />
@@ -90,7 +90,7 @@
         </form>
     </div>
 
-    <a th:href="@{'/upload/' + ${assignment.id}}" th:if="${submission.getStatus() == T(org.dropProject.dao.SubmissionStatus).VALIDATED}" class="btn btn-primary">
+    <a th:href="@{'/upload/' + ${assignment.id}}" th:if="${submission.getStatus() == T(org.dropproject.dao.SubmissionStatus).VALIDATED}" class="btn btn-primary">
         <i class="glyphicon glyphicon-upload"></i> Submit new project
     </a>
 
@@ -254,12 +254,12 @@
     </table>
     </div>
 
-    <a th:href="@{'/upload/' + ${assignment.id}}" th:if="${submission.getStatus() == T(org.dropProject.dao.SubmissionStatus).VALIDATED}" class="btn btn-primary">
+    <a th:href="@{'/upload/' + ${assignment.id}}" th:if="${submission.getStatus() == T(org.dropproject.dao.SubmissionStatus).VALIDATED}" class="btn btn-primary">
         <i class="glyphicon glyphicon-upload"></i> Submit new project
     </a>
     <div>&nbsp;</div>
 
-    <!--/*@thymesVar id="buildReport" type="org.dropProject.data.BuildReport"*/-->
+    <!--/*@thymesVar id="buildReport" type="org.dropproject.data.BuildReport"*/-->
     <div class="panel panel-default" th:if="${buildReport != null and readmeHTML != null and isTeacher}">
         <div class="panel-heading">
         <a data-toggle="collapse" href="#collapseReadme"
@@ -279,7 +279,7 @@
     </div>
 </div>
 
-<div th:replace="layout/layout :: footer"></div>
+<div th:replace="~{layout/layout :: footer}"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-confirmation2@2.4.2/bootstrap-confirmation.min.js"></script>
 <script>

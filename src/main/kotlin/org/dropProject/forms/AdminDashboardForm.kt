@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.forms
+package org.dropproject.forms
 
 /**
  * Represents the contents of a form used to perform Administrative tasks over [Submission]s (for example, interrupt

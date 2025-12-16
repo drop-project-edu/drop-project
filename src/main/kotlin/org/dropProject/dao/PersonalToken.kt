@@ -17,11 +17,11 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.dao
+package org.dropproject.dao
 
-import org.dropProject.services.AssignmentValidator
+import org.dropproject.services.AssignmentValidator
 import java.util.*
-import javax.persistence.*
+import jakarta.persistence.*
 
 /**
  * Enum that represents the status of a personal token.
@@ -41,7 +41,7 @@ enum class TokenStatus {
  */
 @Entity
 data class PersonalToken(
-    @Id @GeneratedValue
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
 
     @Column(nullable = false, updatable = false)

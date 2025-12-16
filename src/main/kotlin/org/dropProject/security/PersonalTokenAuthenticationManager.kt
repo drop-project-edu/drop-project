@@ -17,10 +17,10 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.security
+package org.dropproject.security
 
-import org.dropProject.dao.TokenStatus
-import org.dropProject.repository.PersonalTokenRepository
+import org.dropproject.dao.TokenStatus
+import org.dropproject.repository.PersonalTokenRepository
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.CredentialsExpiredException
 import org.springframework.security.authentication.InternalAuthenticationServiceException

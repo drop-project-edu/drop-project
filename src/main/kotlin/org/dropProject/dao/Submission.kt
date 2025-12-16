@@ -17,17 +17,17 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.dao
+package org.dropproject.dao
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonView
-import org.dropProject.data.JSONViews
-import org.dropProject.data.JUnitSummary
-import org.dropProject.services.JUnitMethodResult
+import org.dropproject.data.JSONViews
+import org.dropproject.data.JUnitSummary
+import org.dropproject.services.JUnitMethodResult
 import java.math.BigDecimal
 import java.text.SimpleDateFormat
 import java.util.*
-import javax.persistence.*
+import jakarta.persistence.*
 
 /**
  * Enum represening the possible statuses that a Submission can be in.
@@ -92,7 +92,7 @@ enum class SubmissionMode {
 
 @Entity @JsonInclude(JsonInclude.Include.NON_EMPTY)
 data class Submission(
-        @Id @GeneratedValue
+        @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
         @JsonView(JSONViews.StudentAPI::class)
         val id: Long = 0,
         val submissionId: String? = null,
@@ -186,6 +186,10 @@ data class Submission(
         if (!dontUpdateStatusDate) {
             this.statusDate = Date()
         }
+    }
+
+    fun getSubmissionDateAsTimestamp(): Long {
+        return submissionDate.time
     }
 
     fun submitterShortName(): String {

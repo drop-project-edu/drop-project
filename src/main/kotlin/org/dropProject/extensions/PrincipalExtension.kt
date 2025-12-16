@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.extensions
+package org.dropproject.extensions
 
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken
 import java.security.Principal

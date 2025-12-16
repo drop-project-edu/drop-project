@@ -17,16 +17,16 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject
+package org.dropproject.config
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Description
-import org.thymeleaf.extras.springsecurity5.dialect.SpringSecurityDialect
-import org.thymeleaf.spring5.SpringTemplateEngine
-import org.thymeleaf.spring5.templateresolver.SpringResourceTemplateResolver
+import org.thymeleaf.extras.springsecurity6.dialect.SpringSecurityDialect
+import org.thymeleaf.spring6.SpringTemplateEngine
+import org.thymeleaf.spring6.templateresolver.SpringResourceTemplateResolver
 import org.thymeleaf.templatemode.TemplateMode
 import org.thymeleaf.templateresolver.ITemplateResolver
 
@@ -47,13 +47,12 @@ class ThymeleafConfig() {
         engine.addTemplateResolver(xmlTemplateResolver(appCtx))
 
         engine.addDialect(SpringSecurityDialect())
-        // engine.afterPropertiesSet() TODO: is this needed?
         return engine
     }
 
 
     @Bean
-    fun xmlTemplateResolver(appCtx: ApplicationContext): SpringResourceTemplateResolver {
+    fun xmlTemplateResolver(appCtx: ApplicationContext): ITemplateResolver {
         val templateResolver = SpringResourceTemplateResolver()
         templateResolver.setApplicationContext(appCtx)
         templateResolver.prefix = "classpath:/templatesXML/"
@@ -66,7 +65,7 @@ class ThymeleafConfig() {
     }
 
     @Bean
-    fun htmlTemplateResolver(appCtx: ApplicationContext): SpringResourceTemplateResolver {
+    fun htmlTemplateResolver(appCtx: ApplicationContext): ITemplateResolver {
         val templateResolver = SpringResourceTemplateResolver()
         templateResolver.setApplicationContext(appCtx)
         templateResolver.prefix = thymeleafPrefix

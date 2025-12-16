@@ -17,10 +17,10 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.data
+package org.dropproject.data
 
 import com.fasterxml.jackson.annotation.JsonView
-import org.dropProject.dao.Assignment
+import org.dropproject.dao.Assignment
 
 data class AssignmentInfoResponse (
     @JsonView(JSONViews.StudentAPI::class)

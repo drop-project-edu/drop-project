@@ -17,16 +17,16 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.controllers
+package org.dropproject.controllers
 
-import org.dropProject.TestsHelper
-import org.dropProject.dao.Assignee
-import org.dropProject.dao.Assignment
-import org.dropProject.dao.AssignmentVisibility
-import org.dropProject.dao.Language
-import org.dropProject.forms.SubmissionMethod
-import org.dropProject.repository.AssigneeRepository
-import org.dropProject.repository.AssignmentRepository
+import org.dropproject.TestsHelper
+import org.dropproject.dao.Assignee
+import org.dropproject.dao.Assignment
+import org.dropproject.dao.AssignmentVisibility
+import org.dropproject.dao.Language
+import org.dropproject.forms.SubmissionMethod
+import org.dropproject.repository.AssigneeRepository
+import org.dropproject.repository.AssignmentRepository
 import org.hamcrest.Matchers.*
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -73,6 +73,7 @@ class StudentAPIControllerTests: APIControllerTests {
             gitRepositoryFolder = "testJavaProj")
         assignmentRepository.save(assignment01)
         assigneeRepository.save(Assignee(assignmentId = "testJavaProj", authorUserId = "student1"))
+        assigneeRepository.save(Assignee(assignmentId = "testJavaProj", authorUserId = "student2"))
 
         val assignment02 = Assignment(id = "testKotlinProj", name = "Test Project (for automatic tests)",
             packageName = "org.dropProject.sampleAssignments.testKotlinProj", ownerUserId = "teacher1",
@@ -174,21 +175,8 @@ class StudentAPIControllerTests: APIControllerTests {
                 .contentType(MediaType.APPLICATION_JSON)
                 .header("authorization", testsHelper.header("student2", token)))
             .andExpect(status().isOk)
-            .andExpect(content().json("""
-                [
-                    {
-                        "id": "testJavaProjPublic",
-                        "name": "Test Project (for automatic tests)",
-                        "packageName": "org.dropProject.sampleAssignments.testProj",
-                        "dueDate": null,
-                        "submissionMethod": "UPLOAD",
-                        "language": "JAVA",
-                        "active": true
-                    }
-                ]
-            """.trimIndent()))
-            .andExpect(jsonPath("$[0].instructions.format", `is`("HTML")))
-            .andExpect(jsonPath("$[0].instructions.body", stringContainsInOrder("<h2>Sample Java Assignment</h2>")))
+            .andExpect(jsonPath("$.length()", `is`(2)))
+            .andExpect(jsonPath("$[*].id", containsInAnyOrder("testJavaProj", "testJavaProjPublic")))
 
         // println(result.getResponse().getContentAsString());
     }
@@ -304,6 +292,15 @@ class StudentAPIControllerTests: APIControllerTests {
             .andExpect(content().json("""
                 [
                     {
+                        "id": "testJavaProj",
+                        "name": "Test Project (for automatic tests)",
+                        "packageName": "org.dropProject.sampleAssignments.testProj",
+                        "dueDate": null,
+                        "submissionMethod": "UPLOAD",
+                        "language": "JAVA",
+                        "active": true
+                    },
+                    {
                         "id": "testJavaProjPublic",
                         "name": "Test Project (for automatic tests)",
                         "packageName": "org.dropProject.sampleAssignments.testProj",
@@ -320,10 +317,10 @@ class StudentAPIControllerTests: APIControllerTests {
                     }
                 ]
             """.trimIndent()))
-            .andExpect(jsonPath("$[0].instructions.format", `is`("HTML")))
-            .andExpect(jsonPath("$[0].instructions.body", stringContainsInOrder("<h2>Sample Java Assignment</h2>")))
             .andExpect(jsonPath("$[1].instructions.format", `is`("HTML")))
-            .andExpect(jsonPath("$[1].instructions.body", stringContainsInOrder("<h1>Sample Kotlin Assignment</h1>")))
+            .andExpect(jsonPath("$[1].instructions.body", stringContainsInOrder("<h2>Sample Java Assignment</h2>")))
+            .andExpect(jsonPath("$[2].instructions.format", `is`("HTML")))
+            .andExpect(jsonPath("$[2].instructions.body", stringContainsInOrder("<h1>Sample Kotlin Assignment</h1>")))
             .andReturn()
 
 //         println(result.getResponse().getContentAsString());

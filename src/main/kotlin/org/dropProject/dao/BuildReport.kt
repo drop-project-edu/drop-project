@@ -17,9 +17,9 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.dao
+package org.dropproject.dao
 
-import javax.persistence.*
+import jakarta.persistence.*
 
 /**
  * Represents an [Assignment]'s "Build Report".
@@ -29,7 +29,7 @@ import javax.persistence.*
  */
 @Entity
 data class BuildReport(
-        @Id @GeneratedValue
+        @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
         val id: Long = 0,
 
         @Column(columnDefinition = "LONGTEXT", nullable = false)

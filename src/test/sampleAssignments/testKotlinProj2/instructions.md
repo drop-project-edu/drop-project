@@ -7,7 +7,7 @@ The source of this assignment is available on https://github.com/drop-project-ed
 ## Instructions
 
 * Create a Kotlin project in your IDE with the structure depicted at the end of this page. 
-In particular, you must create a package `org.dropproject.samples.samplekotlinassignment` and
+In particular, you must create a package `org.dropProject.samples.samplekotlinassignment` and
 create a `Main.kt` in that package.
 
 

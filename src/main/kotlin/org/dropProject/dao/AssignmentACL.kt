@@ -17,12 +17,10 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.dao
+package org.dropproject.dao
 
-import javax.persistence.Column
-import javax.persistence.Entity
-import javax.persistence.GeneratedValue
-import javax.persistence.Id
+import jakarta.persistence.*
+
 
 /**
  * Represents the association between an [Assignment] and a user that can access it.
@@ -32,9 +30,10 @@ import javax.persistence.Id
  * @userId is a String, identifying the user
  */
 @Entity
+@Table(name = "assignment_acl")  // for some reason, hibernate creates an assignmentacl table if I don't put this
 data class AssignmentACL(
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
 
     @Column(length = 50)

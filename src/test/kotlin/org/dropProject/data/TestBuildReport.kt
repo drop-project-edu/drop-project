@@ -17,30 +17,35 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.data
+package org.dropproject.data
 
-import org.dropProject.dao.Assignment
-import org.dropProject.dao.Language
-import org.dropProject.forms.SubmissionMethod
-import org.dropProject.services.BuildReportBuilder
+import org.dropproject.dao.Assignment
+import org.dropproject.dao.Language
+import org.dropproject.forms.SubmissionMethod
+import org.dropproject.services.BuildReportBuilder
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.core.io.ResourceLoader
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 
 
 @RunWith(SpringRunner::class)
+@SpringBootTest
+@TestPropertySource(locations=["classpath:drop-project-test.properties"])
 @ActiveProfiles("test")
 class TestBuildReport {
 
     @Autowired
     lateinit var resourceLoader: ResourceLoader
 
-    val buildReportBuilder = BuildReportBuilder()
+    @Autowired
+    lateinit var buildReportBuilder: BuildReportBuilder
 
     private val dummyJavaAssignment = Assignment(id = "testJavaProj", name = "Test Project (for automatic tests)",
             packageName = "org.testProj", ownerUserId = "teacher1",

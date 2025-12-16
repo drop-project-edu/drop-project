@@ -17,15 +17,16 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.services
+package org.dropproject.services
 
+import jakarta.persistence.EntityNotFoundException
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import org.dropProject.dao.*
-import org.dropProject.data.BuildReport
-import org.dropProject.data.TestType
-import org.dropProject.repository.*
+import org.dropproject.dao.*
+import org.dropproject.data.BuildReport
+import org.dropproject.data.TestType
+import org.dropproject.repository.*
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.charset.Charset
@@ -181,7 +182,7 @@ class BuildWorker(
                     }
                 }
 
-                val buildReportDB = buildReportRepository.save(org.dropProject.dao.BuildReport(
+                val buildReportDB = buildReportRepository.save(org.dropproject.dao.BuildReport(
                         buildReport = buildReport.mavenOutput()))
                 submission.buildReport = buildReportDB
 
@@ -272,7 +273,8 @@ class BuildWorker(
 
         submission.gitSubmissionId?.let {
             gitSubmissionId ->
-                val gitSubmission = gitSubmissionRepository.getById(gitSubmissionId)
+                val gitSubmission = gitSubmissionRepository.findById(gitSubmissionId)
+                    .orElseThrow { EntityNotFoundException("GitSubmission ${gitSubmissionId} not found") }
                 gitSubmission.lastSubmissionId = submission.id
         }
 

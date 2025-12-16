@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.security
+package org.dropproject.security
 
 import org.springframework.security.authentication.AbstractAuthenticationToken
 

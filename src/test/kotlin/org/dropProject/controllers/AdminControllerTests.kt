@@ -17,19 +17,18 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.controllers
+package org.dropproject.controllers
 
-import org.dropProject.TestsHelper
-import org.dropProject.dao.Assignment
-import org.dropProject.dao.AssignmentTag
-import org.dropProject.dao.Submission
-import org.dropProject.dao.SubmissionStatus
-import org.dropProject.forms.SubmissionMethod
-import org.dropProject.repository.AssignmentRepository
-import org.dropProject.repository.AssignmentTagRepository
-import org.dropProject.repository.AssignmentTagsRepository
-import org.dropProject.repository.SubmissionRepository
-import org.dropProject.services.AssignmentService
+import org.dropproject.TestsHelper
+import org.dropproject.dao.Assignment
+import org.dropproject.dao.AssignmentTag
+import org.dropproject.dao.Submission
+import org.dropproject.dao.SubmissionStatus
+import org.dropproject.forms.SubmissionMethod
+import org.dropproject.repository.AssignmentRepository
+import org.dropproject.repository.AssignmentTagRepository
+import org.dropproject.repository.SubmissionRepository
+import org.dropproject.services.AssignmentService
 import org.junit.Assert.assertEquals
 import org.junit.FixMethodOrder
 import org.junit.Test
@@ -70,9 +69,6 @@ class AdminControllerTests {
 
     @Autowired
     lateinit var assignmentTagRepository : AssignmentTagRepository
-
-    @Autowired
-    lateinit var assignmentTagsRepository : AssignmentTagsRepository
 
     @Autowired
     lateinit var assignmentService : AssignmentService
@@ -186,7 +182,5 @@ class AdminControllerTests {
         // Verify that the tag was deleted
         assertEquals(1, assignmentTagRepository.count()) // Only one tag should remain
         assertEquals("tag1", assignmentTagRepository.findAll()[0].name)
-        assertEquals(1, assignmentTagsRepository.count())
-
     }
 }

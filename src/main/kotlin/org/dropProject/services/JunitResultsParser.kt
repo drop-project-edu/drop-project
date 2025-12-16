@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.services
+package org.dropproject.services
 
 import com.fasterxml.jackson.annotation.JsonView
 import org.apache.maven.plugin.surefire.log.api.PrintStreamLogger
@@ -26,9 +26,9 @@ import org.apache.maven.plugins.surefire.report.TestSuiteXmlParser
 import org.springframework.stereotype.Service
 import java.io.InputStreamReader
 import org.apache.maven.plugins.surefire.report.ReportTestSuite
-import org.dropProject.Constants
-import org.dropProject.dao.Assignment
-import org.dropProject.data.JSONViews
+import org.dropproject.Constants
+import org.dropproject.dao.Assignment
+import org.dropproject.data.JSONViews
 import java.io.ByteArrayInputStream
 import java.util.*
 

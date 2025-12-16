@@ -17,12 +17,12 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.dao
+package org.dropproject.dao
 
 import com.fasterxml.jackson.annotation.JsonView
-import org.dropProject.data.JSONViews
+import org.dropproject.data.JSONViews
 import java.util.HashSet
-import javax.persistence.*
+import jakarta.persistence.*
 
 /**
  * Represents a set of [Author]s (for example, students) that interact with Drop Project as a group.
@@ -33,7 +33,7 @@ import javax.persistence.*
  */
 @Entity
 data class ProjectGroup(
-        @Id @GeneratedValue
+        @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
         @JsonView(JSONViews.TeacherAPI::class)
         val id: Long = 0
 ){

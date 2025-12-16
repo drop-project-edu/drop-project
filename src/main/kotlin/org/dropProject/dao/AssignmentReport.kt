@@ -17,10 +17,10 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.dao
+package org.dropproject.dao
 
-import org.dropProject.services.AssignmentValidator
-import javax.persistence.*
+import org.dropproject.services.AssignmentValidator
+import jakarta.persistence.*
 
 /**
  * Represents a report of information that was generated during an [Assignment]'s validation. This information will be
@@ -34,7 +34,7 @@ import javax.persistence.*
  */
 @Entity
 data class AssignmentReport(
-        @Id @GeneratedValue
+        @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
         val id: Long = 0,
 
         @Column(nullable = false, length = 50)

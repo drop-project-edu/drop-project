@@ -5,7 +5,7 @@
 
 	<groupId>org.dropProject</groupId>
 	<artifactId>drop-project</artifactId>
-	<version>0.9.9-beta.2</version>
+	<version>1.0.0-beta.3</version>
 	<packaging>jar</packaging>
 
 	<name>DropProject</name>
@@ -18,7 +18,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.7.18</version>
+		<version>3.4.8</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
@@ -27,13 +27,21 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>17</java.version>
-		<kotlin.version>1.9.22</kotlin.version>
-		<start-class>org.dropProject.DropProjectApplication</start-class>
+		<kotlin.version>2.1.21</kotlin.version>
+		<start-class>org.dropproject.DropProjectApplication</start-class>
 		<license.licenseName>apache_v2</license.licenseName>
-		<orchid.version>0.21.0</orchid.version>
+		<orchid.version>0.21.1</orchid.version>
+		<antlr.version>4.13.0</antlr.version>
 	</properties>
 
 	<dependencies>
+		<!-- ANTLR version override to fix version mismatch warning -->
+		<dependency>
+			<groupId>org.antlr</groupId>
+			<artifactId>antlr4-runtime</artifactId>
+			<version>${antlr.version}</version>
+		</dependency>
+		
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-thymeleaf</artifactId>
@@ -62,11 +70,7 @@
 			<groupId>org.jetbrains.kotlin</groupId>
 			<artifactId>kotlin-reflect</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate-java8</artifactId>
-			<version>${hibernate.version}</version>
-		</dependency>
+		
 		<dependency>
 			<groupId>net.lingala.zip4j</groupId>
 			<artifactId>zip4j</artifactId>
@@ -112,6 +116,10 @@
 					<groupId>com.jcraft</groupId>
 					<artifactId>jsch</artifactId>
 				</exclusion>
+				<exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
+				</exclusion>
 			</exclusions>
 		</dependency>
 		<!-- override jsch dependency from git client to a newer maintained fork -->
@@ -124,7 +132,7 @@
 		<!-- spring security for thymeleaf -->
 		<dependency>
 			<groupId>org.thymeleaf.extras</groupId>
-			<artifactId>thymeleaf-extras-springsecurity5</artifactId>
+			<artifactId>thymeleaf-extras-springsecurity6</artifactId>
 			<!--			<version>2.1.3.RELEASE</version>-->
 		</dependency>
 
@@ -159,12 +167,6 @@
 			<version>0.22.0</version>
 		</dependency>
 
-		<!-- for oauth authentication -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-oauth2-client</artifactId>
-		</dependency>
-
 		<!-- for parsing Java source files -->
 		<dependency>
 			<groupId>com.thoughtworks.qdox</groupId>
@@ -178,45 +180,30 @@
 			<version>1.23.6</version>
 		</dependency>
 
-		<!-- caching -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-cache</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>javax.cache</groupId>
-			<artifactId>cache-api</artifactId>
-			<version>1.1.1</version>
-		</dependency>
-		<dependency>
-			<groupId>net.sf.ehcache</groupId>
+			<groupId>org.ehcache</groupId>
 			<artifactId>ehcache</artifactId>
-			<version>2.10.9.2</version>
+			<version>3.10.8</version>
 		</dependency>
 
 		<!-- json processing -->
 		<dependency>
 			<groupId>com.fasterxml.jackson.module</groupId>
 			<artifactId>jackson-module-kotlin</artifactId>
-			<version>2.12.2</version>
+			<!-- version managed by Spring Boot -->
 		</dependency>
 
-		<!-- swagger for api documentation -->
+        <!-- swagger for api documentation -->
 		<dependency>
-			<groupId>io.springfox</groupId>
-			<artifactId>springfox-swagger2</artifactId>
-			<version>3.0.0</version>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>2.7.0</version>
 		</dependency>
-		<dependency>
-			<groupId>io.springfox</groupId>
-			<artifactId>springfox-boot-starter</artifactId>
-			<version>3.0.0</version>
-		</dependency>
-		<dependency>
-			<groupId>io.springfox</groupId>
-			<artifactId>springfox-swagger-ui</artifactId>
-			<version>3.0.0</version>
-		</dependency>
+		
 
 		<!-- plagiarism checker -->
 		<dependency>
@@ -242,9 +229,9 @@
 
 		<!-- LTI (in particular, moodle) support -->
 		<dependency>
-			<groupId>pt.ulusofona.deisi</groupId>
+			<groupId>org.dropproject</groupId>
 			<artifactId>spring-boot-lti-advantage-for-dp</artifactId>
-			<version>1.0.1</version>
+			<version>1.0.2</version>
 			<exclusions>
 				<exclusion>
 					<groupId>edu.uoc.elc.lti</groupId>
@@ -308,7 +295,7 @@
 		<dependency>
 			<groupId>com.mysql</groupId>
 			<artifactId>mysql-connector-j</artifactId>
-			<version>8.0.33</version>
+			<version>8.2.0</version>
 			<scope>runtime</scope>
 		</dependency>
 
@@ -320,7 +307,6 @@
 		<dependency>
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-test</artifactId>
-			<version>4.0.0.RELEASE</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -335,26 +321,27 @@
 			<version>${kotlin.version}</version>
 			<scope>test</scope>
 		</dependency>
-
-
-		<!-- this is necessary to build a war file that is both
-		      executable and deployable into an external container -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-tomcat</artifactId>
-			<scope>provided</scope>
-		</dependency>
 	</dependencies>
 
+	<profiles>
+		<profile>
+			<id>build-war</id>
+			<dependencies>
+				<dependency>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-tomcat</artifactId>
+					<scope>provided</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+	</profiles>
+
 	<pluginRepositories>
+		<!-- this is needed only because of orchid -->
 		<pluginRepository>
 			<id>jcenter</id>
 			<name>JCenter</name>
 			<url>https://jcenter.bintray.com/</url>
-		</pluginRepository>
-		<pluginRepository>
-			<id>kotlinx</id>
-			<url>https://kotlin.bintray.com/kotlinx</url>
 		</pluginRepository>
 	</pluginRepositories>
 
@@ -377,7 +364,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-war-plugin</artifactId>
-				<version>3.2.2</version>
+				<version>3.4.0</version>
 				<executions>
 					<execution>
 						<id>war</id>
@@ -435,30 +422,21 @@
 				</dependencies>
 			</plugin>
 			<plugin>
-				<groupId>org.apache.tomcat.maven</groupId>
-				<artifactId>tomcat7-maven-plugin</artifactId>
-				<version>2.2</version>
-				<configuration>
-					<port>8080</port>
-					<path>/</path>
-				</configuration>
-			</plugin>
-			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>3.0.0-M3</version>
+				<version>3.5.3</version>
 				<dependencies>
 					<dependency>
 						<groupId>org.apache.maven.surefire</groupId>
 						<artifactId>surefire-junit47</artifactId>
-						<version>3.0.0-M3</version>
+						<version>3.5.3</version>
 					</dependency>
 				</dependencies>
 			</plugin>
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>0.8.7</version>
+				<version>0.8.13</version>
 				<executions>
 					<execution>
 						<goals>
@@ -480,12 +458,12 @@
 						<configuration>
 							<rules>
 								<rule>
-									<element>PACKAGE</element>
+									<element>BUNDLE</element>
 									<limits>
 										<limit>
 											<counter>LINE</counter>
 											<value>COVEREDRATIO</value>
-											<minimum>0.50</minimum>
+											<minimum>0.75</minimum>
 										</limit>
 									</limits>
 								</rule>
@@ -595,6 +573,22 @@
 						<goals>
 							<goal>orchid</goal>
 						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>com.github.ozsie</groupId>
+				<artifactId>detekt-maven-plugin</artifactId>
+				<version>1.23.8</version>
+				<executions>
+					<execution>
+						<phase>verify</phase>
+						<goals>
+							<goal>check</goal>
+						</goals>
+						<configuration>
+							<config>detekt.yml</config>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>

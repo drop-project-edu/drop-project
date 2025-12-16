@@ -17,19 +17,19 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.controllers
+package org.dropproject.controllers
 
 
-import org.dropProject.dao.*
-import org.dropProject.extensions.getContent
-import org.dropProject.forms.SubmissionMethod
-import org.dropProject.repository.*
-import org.dropProject.services.AssignmentService
-import org.dropProject.services.AssignmentTeacherFiles
-import org.dropProject.services.GitClient
+import org.dropproject.dao.*
+import org.dropproject.extensions.getContent
+import org.dropproject.forms.SubmissionMethod
+import org.dropproject.repository.*
+import org.dropproject.services.AssignmentService
+import org.dropproject.services.AssignmentTeacherFiles
+import org.dropproject.services.GitClient
 import org.eclipse.jgit.api.Git
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
+import org.dropproject.config.DropProjectProperties
 import org.springframework.context.ApplicationListener
 import org.springframework.context.annotation.Profile
 import org.springframework.context.event.ContextRefreshedEvent
@@ -59,7 +59,8 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
                                  val gitClient: GitClient,
                                  val resourceLoader: ResourceLoader,
                                  val assignmentService: AssignmentService,
-                                 val assignmentTeacherFiles: AssignmentTeacherFiles) : ApplicationListener<ContextRefreshedEvent> {
+                                 val assignmentTeacherFiles: AssignmentTeacherFiles,
+                                 val dropProjectProperties: DropProjectProperties) : ApplicationListener<ContextRefreshedEvent> {
 
     companion object {
         val sampleJavaAssignmentPrivateKey = """
@@ -104,15 +105,6 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
-    @Value("\${dropProject.maven.home}")
-    val mavenHome : String = ""
-
-    @Value("\${dropProject.maven.repository}")
-    val mavenRepository : String = ""
-
-    @Value("\${assignments.rootLocation}")
-    val assignmentsRootLocation: String = ""
-
     /**
      * This function is executed when DP starts running.
      *
@@ -122,8 +114,8 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
     override fun onApplicationEvent(event: ContextRefreshedEvent) {
 
         LOG.info("************ Starting Drop Project **************")
-        LOG.info("Maven home: ${mavenHome}")
-        LOG.info("Maven repository: ${mavenRepository}")
+        LOG.info("Maven home: ${dropProjectProperties.maven.home}")
+        LOG.info("Maven repository: ${dropProjectProperties.maven.repository}")
         LOG.info("Environment variables:")
         for ((key, value) in System.getenv()) {
             LOG.info("\t$key : $value")
@@ -167,12 +159,17 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
         val gitRepository = assignment.gitRepositoryUrl
         var connected = false
         try {
-            val directory = File(assignmentsRootLocation, assignment.id)
+            val directory = File(dropProjectProperties.assignments.rootLocation, assignment.id)
             if (directory.exists()) {
                 directory.deleteRecursively()
             }
             gitClient.clone(gitRepository, directory, assignment.gitRepositoryPrivKey!!.toByteArray())
             LOG.info("[${assignment.id}] Successfuly cloned ${gitRepository} to ${directory}")
+
+            // update hash
+            val git = Git.open(File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder))
+            assignment.gitCurrentHash = gitClient.getLastCommitInfo(git)?.sha1
+
             // only save if it successfully cloned the assignment
             assignmentRepository.save(assignment)
 
@@ -250,13 +247,15 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
 
         val gitRepository = assignment.gitRepositoryUrl
         try {
-            val directory = File(assignmentsRootLocation, assignment.id)
+            val directory = File(dropProjectProperties.assignments.rootLocation, assignment.id)
             if (directory.exists()) {
                 directory.deleteRecursively()
             }
             gitClient.clone(gitRepository, directory, assignment.gitRepositoryPrivKey!!.toByteArray())
             LOG.info("[${assignment.id}] Successfuly cloned ${gitRepository} to ${directory}")
-            val git = Git.open(File(assignmentsRootLocation, assignment.gitRepositoryFolder))
+
+            // update hash
+            val git = Git.open(File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder))
             assignment.gitCurrentHash = gitClient.getLastCommitInfo(git)?.sha1
 
             // only save if it successfully cloned the assignment

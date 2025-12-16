@@ -17,9 +17,9 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.dao
+package org.dropproject.dao
 
-import javax.persistence.*
+import jakarta.persistence.*
 
 /**
  * Represents an [Assignment]'s JUnit test method/function.
@@ -32,7 +32,7 @@ import javax.persistence.*
 @Entity
 data class AssignmentTestMethod(
         @Id
-        @GeneratedValue
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
         val id: Long = 0,
 
         @ManyToOne
@@ -41,4 +41,16 @@ data class AssignmentTestMethod(
 
         val testClass: String,
         val testMethod: String
-)
+) {
+        override fun equals(other: Any?): Boolean {
+                if (this === other) return true
+                if (javaClass != other?.javaClass) return false
+
+                other as AssignmentTestMethod
+
+                return id == other.id
+        }
+
+        override fun hashCode() = id.hashCode()
+
+}

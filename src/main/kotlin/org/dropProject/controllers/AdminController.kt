@@ -17,24 +17,25 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.controllers
+package org.dropproject.controllers
 
-import org.dropProject.AsyncConfigurer
-import org.dropProject.dao.AssignmentTag
-import org.dropProject.dao.SubmissionStatus
-import org.dropProject.forms.AdminDashboardForm
-import org.dropProject.repository.AssignmentTagRepository
-import org.dropProject.repository.AssignmentTagsRepository
-import org.dropProject.repository.SubmissionRepository
-import org.dropProject.services.MavenInvoker
+import org.dropproject.config.AsyncConfigurer
+import org.dropproject.dao.AssignmentTag
+import org.dropproject.dao.SubmissionStatus
+import org.dropproject.forms.AdminDashboardForm
+import org.dropproject.repository.AssignmentTagRepository
+import org.dropproject.repository.SubmissionRepository
+import org.dropproject.services.MavenInvoker
+import org.dropproject.services.SubmissionService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Controller
 import org.springframework.ui.ModelMap
 import org.springframework.validation.BindingResult
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.mvc.support.RedirectAttributes
-import javax.transaction.Transactional
-import javax.validation.Valid
+import org.springframework.transaction.annotation.Transactional
+import jakarta.validation.Valid
+import org.dropproject.repository.AssignmentRepository
 
 /**
  * AdminController contains MVC controller functions that handle requests related with DP's administration
@@ -44,9 +45,10 @@ import javax.validation.Valid
 @RequestMapping("/admin")
 class AdminController(val mavenInvoker: MavenInvoker,
                       val submissionRepository: SubmissionRepository,
+                      val assignmentRepository: AssignmentRepository,
                       val assignmentTagRepository: AssignmentTagRepository,
-                      val assignmentTagsRepository: AssignmentTagsRepository,
-                      val asyncConfigurer: AsyncConfigurer) {
+                      val asyncConfigurer: AsyncConfigurer,
+                      val submissionService: SubmissionService) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
@@ -122,7 +124,7 @@ class AdminController(val mavenInvoker: MavenInvoker,
     @GetMapping("/tags")
     fun showTags(model: ModelMap): String {
         val tagsWithUsage: List<Pair<AssignmentTag,Long>> = assignmentTagRepository.findAll().map { tag ->
-            val usageCount = assignmentTagsRepository.countAssignmentTagsByTagId(tag.id) // Assuming 'assignments' is a list of associated entities
+            val usageCount = assignmentRepository.countByTags_Id(tag.id)
             Pair(tag, usageCount)
         }
 
@@ -134,14 +136,44 @@ class AdminController(val mavenInvoker: MavenInvoker,
     @PostMapping("/deleteTag")
     @Transactional
     fun deleteTag(@RequestParam("tagId") tagId: Long, redirectAttributes: RedirectAttributes): String {
-        val tag = assignmentTagRepository.findById(tagId)
-        if (tag.isPresent) {
-            assignmentTagsRepository.removeAllByTagId(tag.get().id)
-            assignmentTagRepository.delete(tag.get())
-            redirectAttributes.addFlashAttribute("message", "Tag deleted successfully.")
-        } else {
+        val tag = assignmentTagRepository.findById(tagId).orElse(null)
+        if (tag == null) {
             redirectAttributes.addFlashAttribute("error", "Tag not found.")
+            return "redirect:/admin/tags"
         }
+
+        // Unlink from all assignments to avoid FK violations on join table
+        // Because we are in a transaction, accessing the lazy collection is safe
+        val affected = mutableListOf<String>()
+        for (assignment in tag.assignments.toList()) { // copy to avoid concurrent modification
+            assignment.tags.remove(tag)
+            affected += assignment.id
+        }
+
+        // Now delete the tag itself
+        assignmentTagRepository.delete(tag)
+
+        redirectAttributes.addFlashAttribute("message", "Tag deleted successfully.")
         return "redirect:/admin/tags"
+    }
+
+    /**
+     * Controller that handles requests for cleaning up non-final submission files.
+     * Removes all files related to non-final submissions for a given assignment.
+     * 
+     * TODO: This should remove non-final submissions for groups where there is already a submission marked as final
+     * 
+     * @param assignmentId is a String, identifying the assignment to cleanup
+     * @return A String identifying the relevant View
+     */
+    @PostMapping("/cleanup/{assignmentId}")
+    fun cleanup(@PathVariable assignmentId: String): String {
+        LOG.info("Removing all non-final submission files related to ${assignmentId}")
+
+        val nonFinalSubmissions = submissionRepository.findByAssignmentIdAndMarkedAsFinal(assignmentId, false)
+        submissionService.deleteMavenizedFolderFor(nonFinalSubmissions)
+
+        // TODO: Should show a toast saying how many files were deleted
+        return "redirect:/report/${assignmentId}"
     }
 }

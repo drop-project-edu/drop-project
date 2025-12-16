@@ -17,13 +17,13 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropProject.repository
+package org.dropproject.repository
 
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.transaction.annotation.Transactional
-import org.dropProject.dao.Assignee
-import org.dropProject.dao.PersonalToken
-import org.dropProject.dao.TokenStatus
+import org.dropproject.dao.Assignee
+import org.dropproject.dao.PersonalToken
+import org.dropproject.dao.TokenStatus
 
 /**
  * Provides functions to query [PersonalToken]s
