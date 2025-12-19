@@ -91,6 +91,9 @@ class ReportControllerTests {
     lateinit var authorRepository: AuthorRepository
 
     @Autowired
+    lateinit var projectGroupRepository: ProjectGroupRepository
+
+    @Autowired
     private lateinit var testsHelper: TestsHelper
 
     @Autowired
@@ -629,6 +632,70 @@ class ReportControllerTests {
                 )
             )
 
+    }
+
+    @Test
+    @DirtiesContext
+    fun exportCSVWithGitRepository() {
+
+        val assignment = assignmentRepository.findById(defaultAssignmentId).get()
+        assignment.submissionMethod = SubmissionMethod.GIT
+        assignmentRepository.save(assignment)
+
+        val now = Date()
+        val nowStr = now.formatDefault()
+
+        // Create entities for 3 students using a loop to reduce duplication
+        val students = listOf(1, 2, 3)
+        students.forEach { studentNum ->
+            // Create ProjectGroup
+            val group = ProjectGroup()
+            projectGroupRepository.save(group)
+
+            // Create Author with group reference (Author is the owning side of the relationship)
+            val author = Author(name = "Student $studentNum", number = "student$studentNum", group = group)
+            authorRepository.save(author)
+
+            // Create GitSubmission with repository URL
+            val gitSubmission = GitSubmission(
+                assignmentId = defaultAssignmentId,
+                submitterUserId = "student$studentNum",
+                gitRepositoryUrl = "git@github.com:student$studentNum/project$studentNum.git",
+                group = group
+            )
+            gitSubmissionRepository.save(gitSubmission)
+
+            // Create Submission referencing GitSubmission
+            val submission = Submission(
+                gitSubmissionId = gitSubmission.id,
+                submissionDate = now,
+                submitterUserId = "student$studentNum",
+                status = SubmissionStatus.VALIDATED.code,
+                statusDate = now,
+                assignmentId = defaultAssignmentId,
+                assignmentGitHash = null,
+                markedAsFinal = true
+            )
+            submission.group = group
+            submissionRepository.save(submission)
+        }
+
+        this.mvc.perform(
+            get("/exportCSV/testJavaProj?ellapsed=false")
+                .with(user(TEACHER_1))
+        )
+            .andExpect(status().isOk())
+            .andExpect(content().contentType("application/csv"))
+            .andExpect(content().string(
+                """
+                    submission id;student id;student name;project structure;compilation;code quality;submission date;# submissions;overdue;repository_url
+                    1;student1;Student 1;;;;${nowStr};1;false;https://github.com/student1/project1
+                    2;student2;Student 2;;;;${nowStr};1;false;https://github.com/student2/project2
+                    3;student3;Student 3;;;;${nowStr};1;false;https://github.com/student3/project3
+                    
+                    """.trimIndent()
+            ))
+            .andReturn()
     }
 
     @Test
