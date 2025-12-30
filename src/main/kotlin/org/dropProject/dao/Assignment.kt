@@ -82,6 +82,7 @@ enum class AssignmentVisibility {
  * @property dueDate is an optional [LocalDateTime] with the submission deadline
  * @property submissionMethod is a [SubmissionMethod]
  * @property language is the programming [Language] that the code should be written in
+ * @property submissionStructure is a [SubmissionStructure], indicating the expected project structure for student submissions
  * @property acceptsStudentTests is a Boolean, indicating if the students are allowed to submit their own unit tests
  * @property minStudentTests is an optional Integer, indicating the minimum number of unit tests that students are
  * asked to implement
@@ -132,6 +133,10 @@ data class Assignment(
     @Column(nullable = false)
     @JsonView(JSONViews.StudentAPI::class)
     var language: Language = Language.JAVA,
+
+    @Column(nullable = false)
+    @JsonView(JSONViews.StudentAPI::class)
+    var submissionStructure: SubmissionStructure = SubmissionStructure.COMPACT,
 
     var acceptsStudentTests: Boolean = false,
     var minStudentTests: Int? = null,

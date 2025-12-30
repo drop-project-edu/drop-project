@@ -192,7 +192,8 @@ class UploadController(
         model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.realName(), assignment.id)
         model["instructionsFragment"] = assignmentTeacherFiles.getInstructions(assignment).body //quick fix
         model["packageTree"] = assignmentTeacherFiles.buildPackageTree(
-                assignment.packageName, assignment.language, assignment.acceptsStudentTests)
+                assignment.packageName, assignment.language,
+                assignment.submissionStructure, assignment.acceptsStudentTests)
 
         if (assignment.cooloffPeriod != null && !request.isUserInRole("TEACHER")) {
             val lastSubmission = submissionService.getLastSubmission(principal, assignmentId)
@@ -408,7 +409,8 @@ class UploadController(
         model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.realName(), assignment.id)
         model["instructionsFragment"] = assignmentTeacherFiles.getInstructions(assignment).body //quick fix
         model["packageTree"] = assignmentTeacherFiles.buildPackageTree(
-                assignment.packageName, assignment.language, assignment.acceptsStudentTests)
+                assignment.packageName, assignment.language,
+                assignment.submissionStructure, assignment.acceptsStudentTests)
 
         if (gitRepositoryUrl.isNullOrBlank()) {
             model["gitRepoErrorMsg"] = i18n.getMessage("student.git.setup.must-fill-url", null, currentLocale)

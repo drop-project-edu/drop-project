@@ -46,6 +46,7 @@ import java.io.File
 import java.nio.file.Files
 import org.dropproject.TestsHelper
 import org.dropproject.dao.*
+import org.dropproject.dao.Language
 import org.dropproject.data.*
 import org.dropproject.extensions.formatDefault
 import org.dropproject.forms.SubmissionMethod
@@ -258,7 +259,7 @@ class ReportControllerTests {
     fun downloadOriginalProject() {
 
         val originalZipFile =
-            zipService.createZipFromFolder("original", resourceLoader.getResource("file:src/test/sampleProjects/projectCompilationErrors").file)
+            zipService.createZipFromFolder("original", resourceLoader.getResource("file:src/test/sampleProjects/compact/java/projectCompilationErrors").file)
         originalZipFile.deleteOnExit()
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", defaultAssignmentId, STUDENT_1)
@@ -432,7 +433,7 @@ class ReportControllerTests {
         assignmentRepository.save(assignment)
 
         // we start with two authors
-        val projectRoot = resourceLoader.getResource("file:src/test/sampleProjects/projectOK").file
+        val projectRoot = resourceLoader.getResource("file:src/test/sampleProjects/compact/java/projectOK").file
         val path = File(projectRoot, "AUTHORS.txt").toPath()
         val lines = Files.readAllLines(path)
         assertEquals("student1;Student 1", lines[0])
@@ -1288,8 +1289,8 @@ class ReportControllerTests {
             gitRepositoryFolder = "testKotlinProj2")
         assignmentRepository.save(assignmentKotlin)
 
-        testsHelper.uploadProject(this.mvc, "projectKotlinOK", "testKotlinProj", STUDENT_1)
-        testsHelper.uploadProject(this.mvc, "projectKotlinOK2", "testKotlinProj", STUDENT_2)
+        testsHelper.uploadProject(this.mvc, "projectKotlinOK", "testKotlinProj", STUDENT_1, language  = Language.KOTLIN)
+        testsHelper.uploadProject(this.mvc, "projectKotlinOK2", "testKotlinProj", STUDENT_2, language  = Language.KOTLIN)
 
         val mvcResult = this.mvc.perform(get("/checkPlagiarism/testKotlinProj").with(user(TEACHER_1)))
             .andExpect(status().isOk)

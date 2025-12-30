@@ -332,6 +332,7 @@ class AssignmentController(
     private fun createAssignmentBasedOnForm(assignmentForm: AssignmentForm, principal: Principal): Assignment {
         val newAssignment = Assignment(id = assignmentForm.assignmentId!!, name = assignmentForm.assignmentName!!,
             packageName = assignmentForm.assignmentPackage, language = assignmentForm.language!!,
+            submissionStructure = assignmentForm.submissionStructure,
             dueDate = if (assignmentForm.dueDate != null) java.sql.Timestamp.valueOf(assignmentForm.dueDate) else null,
             acceptsStudentTests = assignmentForm.acceptsStudentTests,
             minStudentTests = assignmentForm.minStudentTests,
@@ -454,6 +455,7 @@ class AssignmentController(
             assignmentTags = assignment.tagsStr?.joinToString(),
             assignmentPackage = assignment.packageName,
             language = assignment.language,
+            submissionStructure = assignment.submissionStructure,
             dueDate = assignment.dueDate?.toInstant()?.atZone(ZoneId.systemDefault())?.toLocalDateTime(),
             submissionMethod = assignment.submissionMethod,
             gitRepositoryUrl = assignment.gitRepositoryUrl,

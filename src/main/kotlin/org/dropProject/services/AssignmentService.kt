@@ -301,6 +301,7 @@ class AssignmentService(
         existingAssignment.name = assignmentForm.assignmentName!!
         existingAssignment.packageName = assignmentForm.assignmentPackage
         existingAssignment.language = assignmentForm.language!!
+        existingAssignment.submissionStructure = assignmentForm.submissionStructure
         existingAssignment.dueDate = if (assignmentForm.dueDate != null) java.sql.Timestamp.valueOf(assignmentForm.dueDate) else null
         existingAssignment.submissionMethod = assignmentForm.submissionMethod!!
         existingAssignment.acceptsStudentTests = assignmentForm.acceptsStudentTests

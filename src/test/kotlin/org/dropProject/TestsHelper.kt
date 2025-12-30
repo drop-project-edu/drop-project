@@ -21,6 +21,8 @@ package org.dropproject
 
 import org.dropproject.dao.Assignment
 import org.dropproject.dao.AssignmentVisibility
+import org.dropproject.dao.Language
+import org.dropproject.dao.SubmissionStructure
 import org.dropproject.repository.AssignmentRepository
 import org.dropproject.repository.GitSubmissionRepository
 import org.dropproject.repository.SubmissionRepository
@@ -265,9 +267,11 @@ class TestsHelper {
     // returns the submission id
     fun uploadProject(mvc: MockMvc, projectName: String, assignmentId: String, uploader: User,
                       authors: List<Pair<String,String>>? = null,
-                      expectedResultMatcher: ResultMatcher = MockMvcResultMatchers.status().isOk()): String {
+                      expectedResultMatcher: ResultMatcher = MockMvcResultMatchers.status().isOk(),
+                      submissionStructure: SubmissionStructure = SubmissionStructure.COMPACT,
+                      language: Language = Language.JAVA): String {
 
-        val multipartFile = prepareFile(projectName, authors)
+        val multipartFile = prepareFile(projectName, submissionStructure, language, authors)
 
         val contentString = mvc.perform(MockMvcRequestBuilders.multipart("/upload")
                 .file(multipartFile)
@@ -287,9 +291,11 @@ class TestsHelper {
 
     // returns the submission id
     fun uploadProjectByAPI(mvc: MockMvc, projectName: String, assignmentId: String, uploader: Pair<String,String>,
-                      authors: List<Pair<String,String>>? = null): Int {
+                      authors: List<Pair<String,String>>? = null,
+                      submissionStructure: SubmissionStructure = SubmissionStructure.COMPACT,
+                      language: Language = Language.JAVA): Int {
 
-        val multipartFile = prepareFile(projectName, authors)
+        val multipartFile = prepareFile(projectName, submissionStructure, language, authors)
         val (username, token) = uploader
 
         val contentString = mvc.perform(MockMvcRequestBuilders.multipart("/api/student/submissions/new")
@@ -304,8 +310,22 @@ class TestsHelper {
         return contentJSON.getInt("submissionId")
     }
 
-    private fun prepareFile(projectName: String, authors: List<Pair<String,String>>? = null): MockMultipartFile {
-        val projectFolder = resourceLoader.getResource("file:src/test/sampleProjects/$projectName").file
+    private fun getProjectPath(projectName: String, submissionStructure: SubmissionStructure, language: Language): String {
+        val structure = when (submissionStructure) {
+            SubmissionStructure.COMPACT -> "compact"
+            SubmissionStructure.MAVEN -> "maven"
+        }
+        val lang = when (language) {
+            Language.JAVA -> "java"
+            Language.KOTLIN -> "kotlin"
+        }
+
+        return "file:src/test/sampleProjects/$structure/$lang/$projectName"
+    }
+
+    private fun prepareFile(projectName: String, submissionStructure: SubmissionStructure, language: Language,
+                           authors: List<Pair<String,String>>? = null): MockMultipartFile {
+        val projectFolder = resourceLoader.getResource(getProjectPath(projectName, submissionStructure, language)).file
         val authorsFile = File(projectFolder, "AUTHORS.txt")
         val authorsBackupFile = File(projectFolder, "AUTHORS.txt.bak")
         if (authors != null) {
@@ -336,7 +356,9 @@ class TestsHelper {
         return multipartFile
     }
 
-    fun makeSeveralSubmissions(projectNames: List<String>, mvc: MockMvc, submissionDate: Date? = null) {
+    fun makeSeveralSubmissions(projectNames: List<String>, mvc: MockMvc, submissionDate: Date? = null,
+                              submissionStructure: SubmissionStructure = SubmissionStructure.COMPACT,
+                              language: Language = Language.JAVA) {
 
         if (projectNames.size > 5) {
             throw Exception("This function is not prepared for more than 5 submissions")
@@ -348,7 +370,7 @@ class TestsHelper {
 
         for ((index, projectName) in projectNames.withIndex()) {
 
-            val projectRoot = resourceLoader.getResource("file:src/test/sampleProjects/$projectName").file
+            val projectRoot = resourceLoader.getResource(getProjectPath(projectName, submissionStructure, language)).file
             val path = File(projectRoot, "AUTHORS.txt").toPath()
             val lines = Files.readAllLines(path)
             Assert.assertEquals("student1;Student 1", lines[0])
@@ -364,7 +386,8 @@ class TestsHelper {
                     else -> throw Exception("Not possible")
                 }
 
-                uploadProject(mvc, projectName, defaultAssignmentId, authors.first, authors.second)
+                uploadProject(mvc, projectName, defaultAssignmentId, authors.first, authors.second,
+                             submissionStructure = submissionStructure, language = language)
 
             } finally {
                 // restore original AUTHORS.txt

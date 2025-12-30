@@ -113,6 +113,17 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
     }
 
     /**
+     * Gets the teacher's pom.xml file for an assignment.
+     *
+     * @param assignment the Assignment to get the pom.xml for
+     * @return File representing the teacher's pom.xml
+     */
+    fun getTeacherPomFile(assignment: Assignment): File {
+        val assignmentFolder = File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder)
+        return File(assignmentFolder, "pom.xml")
+    }
+
+    /**
      * Builds a String with the expected project structure for an [Assignment], in order to help students configure
      * their projects.
      *
@@ -122,22 +133,48 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
      *
      * @return a String
      */
-    fun buildPackageTree(packageName: String?, language: Language, hasStudentTests: Boolean = false): String {
+    fun buildPackageTree(packageName: String?, language: Language,
+                         submissionStructure: SubmissionStructure,
+                         hasStudentTests: Boolean = false): String {
 
         val packages = packageName.orEmpty().split(".")
         val mainFile = if (language == Language.JAVA) "Main.java" else "Main.kt"
+        val folder = if (language == Language.JAVA) "java" else "kotlin"
 
         var packagesTree = i18n.getMessage("student.upload.form.tree1", null, currentLocale) + System.lineSeparator()
-        packagesTree += "+ src" + System.lineSeparator()
-        var indent = 3
-        for (packagePart in packages) {
-            packagesTree += "|" + "-".repeat(indent) + " " + packagePart + System.lineSeparator()
-            indent += 3
+
+        when (submissionStructure) {
+            SubmissionStructure.COMPACT -> {
+                packagesTree += "+ src" + System.lineSeparator()
+                var indent = 3
+                for (packagePart in packages) {
+                    packagesTree += "|" + "-".repeat(indent) + " " + packagePart + System.lineSeparator()
+                    indent += 3
+                }
+                packagesTree += "|" + "-".repeat(indent) + " ${mainFile}" + System.lineSeparator()
+                packagesTree += "|" + "-".repeat(indent) + " ...   (${i18n.getMessage("student.upload.form.tree2", null, currentLocale)})" + System.lineSeparator()
+            }
+            SubmissionStructure.MAVEN -> {
+                packagesTree += "+ src" + System.lineSeparator()
+                packagesTree += "|--- main" + System.lineSeparator()
+                packagesTree += "|------ ${folder}" + System.lineSeparator()
+                var indent = 9
+                for (packagePart in packages) {
+                    packagesTree += "|" + "-".repeat(indent) + " " + packagePart + System.lineSeparator()
+                    indent += 3
+                }
+                packagesTree += "|" + "-".repeat(indent) + " ${mainFile}" + System.lineSeparator()
+                packagesTree += "|" + "-".repeat(indent) + " ...   (${i18n.getMessage("student.upload.form.tree2", null, currentLocale)})" + System.lineSeparator()
+
+                if (hasStudentTests) {
+                    packagesTree += "|--- test" + System.lineSeparator()
+                    packagesTree += "|------ ${folder}" + System.lineSeparator()
+                    packagesTree += "|--------- ...   (student tests)" + System.lineSeparator()
+                }
+            }
         }
 
-        packagesTree += "|" + "-".repeat(indent) + " ${mainFile}" + System.lineSeparator()
-        packagesTree += "|" + "-".repeat(indent) + " ...   (${i18n.getMessage("student.upload.form.tree2", null, currentLocale)})" + System.lineSeparator()
-        if (hasStudentTests) {
+        if (hasStudentTests && submissionStructure == SubmissionStructure.COMPACT) {
             packagesTree += "+ test-files" + System.lineSeparator()
             packagesTree += "|--- somefile1.txt" + System.lineSeparator()
             packagesTree += "|--- ...   (${i18n.getMessage("student.upload.form.tree3", null, currentLocale)})" + System.lineSeparator()

@@ -72,6 +72,24 @@
             </div>
         </div>
 
+        <div class="form-group" th:classappend="${#fields.hasErrors('submissionStructure')} ? 'has-error' : ''">
+            <label for="submissionStructure" class="col-sm-3 control-label">Submission Structure</label>
+            <div class="col-sm-9">
+                <select th:field="*{submissionStructure}" class="form-control" id="submissionStructure">
+                    <option th:each="structure : ${T(org.dropproject.dao.SubmissionStructure).values()}"
+                            th:value="${structure}"
+                            th:text="${structure.description}">
+                    </option>
+                </select>
+                <p class="help-block" th:if="${#fields.hasErrors('submissionStructure')}" th:errors="*{submissionStructure}">Error</p>
+                <p class="help-block" th:if="${!#fields.hasErrors('submissionStructure')}">
+                    Expected structure for student submissions.<br/>
+                    <strong>Compact:</strong> src/&lt;package&gt;/... &nbsp;&nbsp;&nbsp;&nbsp;
+                    <strong>Maven:</strong> src/main/{java|kotlin}/&lt;package&gt;/...
+                </p>
+            </div>
+        </div>
+
         <div class="form-group" th:classappend="${#fields.hasErrors('submissionMethod')} ? 'has-error' : ''">
             <label for="submissionMethod" class="col-sm-3 control-label">Submission Method</label>
             <div class="col-sm-9">
