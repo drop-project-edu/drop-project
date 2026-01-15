@@ -230,7 +230,7 @@ class SubmissionService(
         val originalFilename = file.originalFilename ?: throw IllegalArgumentException("Missing originalFilename")
 
         if (!originalFilename.endsWith(".zip", ignoreCase = true)) {
-            return ResponseEntity.internalServerError().body(SubmissionResult(error="O ficheiro tem que ser um .zip")) // TODO language
+            return ResponseEntity.internalServerError().body(SubmissionResult(error=i18n.getMessage("error.file.not.zip", null, currentLocale)))
         }
 
         LOG.debug("[${principal.realName()}] uploaded ${originalFilename}")
@@ -357,7 +357,7 @@ class SubmissionService(
 
         // check for AUTHORS.txt file
         if (!authorsFile.existsCaseSensitive()) {
-            throw InvalidProjectStructureException("O projecto não contém o ficheiro AUTHORS.txt na raiz")  // TODO language
+            throw InvalidProjectStructureException(i18n.getMessage("error.authors.missing", null, currentLocale))
         }
 
         // check the encoding of AUTHORS.txt
@@ -376,12 +376,11 @@ class SubmissionService(
                 .forEach { parts -> run {
 
                     if (parts[0].isBlank()) {
-                        throw InvalidProjectStructureException("O número de aluno tem que estar preenchido para todos os elementos do grupo")
+                        throw InvalidProjectStructureException(i18n.getMessage("error.authors.number.blank", null, currentLocale))
                     }
 
                     if (parts[1][0].isDigit() || parts[1].split(" ").size <= 1) {
-                        throw InvalidProjectStructureException("Cada linha tem que ter o formato NUMERO_ALUNO;NOME_ALUNO. " +
-                                "O nome do aluno deve incluir o primeiro e último nome.")  // TODO language
+                        throw InvalidProjectStructureException(i18n.getMessage("error.authors.format.invalid", null, currentLocale))
                     }
 
                     authors.add(AuthorDetails(parts[1].trim(), parts[0].sanitize()))
@@ -390,8 +389,7 @@ class SubmissionService(
 
             // check for duplicate authors
             if (authorIDs.size < authors.size) {
-                throw InvalidProjectStructureException("O ficheiro AUTHORS.txt não está correcto. " +
-                        "Contém autores duplicados.")  // TODO language
+                throw InvalidProjectStructureException(i18n.getMessage("error.authors.duplicates", null, currentLocale))
             }
 
         } catch (e: Exception) {
@@ -405,8 +403,7 @@ class SubmissionService(
         }
 
         if (authors.isEmpty()) {
-            throw InvalidProjectStructureException("O ficheiro AUTHORS.txt não está correcto. " +
-                    "Tem que conter uma linha por aluno, tendo cada linha o número e o nome separados por ';'")  // TODO language
+            throw InvalidProjectStructureException(i18n.getMessage("error.authors.empty", null, currentLocale))
         } else {
             return authors
         }
@@ -486,29 +483,29 @@ class SubmissionService(
     private fun checkCompactProjectStructure(projectFolder: File, assignment: Assignment): List<String> {
         val erros = ArrayList<String>()
         if (!File(projectFolder, "src").existsCaseSensitive()) {
-            erros.add("O projecto não contém uma pasta 'src' na raiz") // TODO language
+            erros.add(i18n.getMessage("error.compact.missing.src", null, currentLocale))
         }
 
         val packageName = assignment.packageName.orEmpty().replace(".","/")
 
         if (!File(projectFolder, "src/${packageName}").existsCaseSensitive()) {
-            erros.add("O projecto não contém uma pasta 'src/${packageName}'") // TODO language
+            erros.add(i18n.getMessage("error.compact.missing.package", arrayOf(packageName), currentLocale))
         }
 
         val mainFile = if (assignment.language == Language.JAVA) "Main.java" else "Main.kt"
         if (!File(projectFolder, "src/${packageName}/${mainFile}").existsCaseSensitive()) {
-            erros.add("O projecto não contém o ficheiro ${mainFile} na pasta 'src/${packageName}'") // TODO language
+            erros.add(i18n.getMessage("error.compact.missing.main", arrayOf(mainFile, packageName), currentLocale))
         }
 
         if (File(projectFolder, "src")
                 .walkTopDown()
                 .find { it.name.startsWith("TestTeacher") } != null) {
-            erros.add("O projecto contém ficheiros cujo nome começa por 'TestTeacher'") // TODO language
+            erros.add(i18n.getMessage("error.structure.testteacher.forbidden", null, currentLocale))
         }
 
         val readme = File(projectFolder, "README.md")
         if (readme.exists() && !readme.isFile) {
-            erros.add("O projecto contém uma pasta README.md mas devia ser um ficheiro") // TODO language
+            erros.add(i18n.getMessage("error.structure.readme.not.file", null, currentLocale))
         }
 
         if (File(projectFolder, "src")
@@ -516,7 +513,7 @@ class SubmissionService(
                 .filter { it.extension in listOf("java", "kt") }
                 .filter { !it.name.startsWith("Test") }
                 .any { containsSearchString(it, "org.junit") }) {
-            erros.add("As classes de teste devem começar com a palavra Test (exemplo: TestCar)") // TODO language
+            erros.add(i18n.getMessage("error.structure.test.naming", null, currentLocale))
         }
 
         return erros
@@ -527,7 +524,7 @@ class SubmissionService(
 
         // Check for pom.xml
         if (!File(projectFolder, "pom.xml").exists()) {
-            erros.add("Maven projects must include a pom.xml file in the root directory")
+            erros.add(i18n.getMessage("error.maven.missing.pom", null, currentLocale))
             return erros  // Cannot proceed without pom.xml
         }
 
@@ -535,33 +532,37 @@ class SubmissionService(
 
         // Check for src/main/{java|kotlin}
         if (!File(projectFolder, "src/main/$folder").existsCaseSensitive()) {
-            erros.add("O projecto não contém uma pasta 'src/main/$folder'")
+            erros.add(i18n.getMessage("error.maven.missing.src.main", arrayOf(folder), currentLocale))
         }
 
         val packageName = assignment.packageName.orEmpty().replace(".", "/")
 
         // Check for package structure
         if (!File(projectFolder, "src/main/$folder/$packageName").existsCaseSensitive()) {
-            erros.add("O projecto não contém uma pasta 'src/main/$folder/$packageName'")
+            erros.add(i18n.getMessage("error.maven.missing.package", arrayOf(folder, packageName), currentLocale))
         }
 
-        // Check for Main file
-        val mainFile = if (assignment.language == Language.JAVA) "Main.java" else "Main.kt"
-        if (!File(projectFolder, "src/main/$folder/$packageName/$mainFile").existsCaseSensitive()) {
-            erros.add("O projecto não contém o ficheiro $mainFile na pasta 'src/main/$folder/$packageName'")
+        // Check for Spring Boot application class
+        val hasSpringBootApp = File(projectFolder, "src/main/$folder")
+            .walkTopDown()
+            .filter { it.extension in listOf("java", "kt") }
+            .any { containsSearchString(it, "@SpringBootApplication") }
+
+        if (!hasSpringBootApp) {
+            erros.add(i18n.getMessage("error.maven.missing.springboot", null, currentLocale))
         }
 
         // Check for TestTeacher* files (security check)
         if (File(projectFolder, "src")
                 .walkTopDown()
                 .find { it.name.startsWith("TestTeacher") } != null) {
-            erros.add("O projecto contém ficheiros cujo nome começa por 'TestTeacher'")
+            erros.add(i18n.getMessage("error.structure.testteacher.forbidden", null, currentLocale))
         }
 
         // Check README is a file, not directory
         val readme = File(projectFolder, "README.md")
         if (readme.exists() && !readme.isFile) {
-            erros.add("O projecto contém uma pasta README.md mas devia ser um ficheiro")
+            erros.add(i18n.getMessage("error.structure.readme.not.file", null, currentLocale))
         }
 
         // Check that all test classes are in src/test, not src/main
@@ -569,7 +570,7 @@ class SubmissionService(
                 .walkTopDown()
                 .filter { it.extension in listOf("java", "kt") }
                 .any { it.name.startsWith("Test") }) {
-            erros.add("As classes de teste (que começam com 'Test') devem estar em src/test/$folder, não em src/main/$folder")
+            erros.add(i18n.getMessage("error.maven.tests.in.main", arrayOf(folder), currentLocale))
         }
 
         return erros
