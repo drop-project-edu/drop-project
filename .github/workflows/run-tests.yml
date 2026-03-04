@@ -1,37 +1,36 @@
 name: Run Tests
 
-on: [push]
+on:
+  push:
+  pull_request:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up JDK 17
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
-#       uncomment this when github actions don't find maven
+          cache: 'maven'
       - name: Check maven version
         run: mvn --version
-      - name: Cache Maven packages
-        uses: actions/cache@v3
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
+      - name: Set DP_M2_HOME
+        run: echo "DP_M2_HOME=$(mvn -v | grep 'Maven home' | cut -d' ' -f3-)" >> $GITHUB_ENV
       - name: Build with Maven
         env:
-          DP_M2_HOME: /usr/share/apache-maven-3.9.12
           DP_MVN_REPO: ~/.m2
         run: mvn --batch-mode --update-snapshots verify
-      - name: Upload coverage to codecov
-        uses: codecov/codecov-action@v1.2.1
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
         with:
-          file: ./target/site/jacoco/jacoco.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./target/site/jacoco/jacoco.xml
           flags: unittests
+          fail_ci_if_error: false
 
 #      - name: Upload war file to github releases
 #        uses: AButler/upload-release-assets@v2.0
