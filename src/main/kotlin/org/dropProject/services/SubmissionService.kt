@@ -655,6 +655,12 @@ class SubmissionService(
             }
         }
 
+        // Copy main resources folder if exists (Maven standard: src/main/resources)
+        val mainResourcesFolder = File(projectFolder, "src/main/resources")
+        if (mainResourcesFolder.exists()) {
+            FileUtils.copyDirectory(mainResourcesFolder, File(mavenizedProjectFolder, "src/main/resources"))
+        }
+
         // Copy test resources folder if exists (Maven standard: src/test/resources)
         val testResourcesFolder = File(projectFolder, "src/test/resources")
         if (testResourcesFolder.exists()) {
