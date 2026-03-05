@@ -105,10 +105,14 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
         // TODO: should change artifactId in pom.xml with the group-id...
 
         val rootFolder = File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder)
+        val srcMainFolder = File(rootFolder, "src/main").absolutePath
+        val gitFolder     = File(rootFolder, ".git").absolutePath
+        val targetFolder  = File(rootFolder, "target").absolutePath
+
         FileUtils.copyDirectory(rootFolder, mavenizedProjectFolder) {
-            !it.absolutePath.startsWith("${rootFolder.absolutePath}/src/main") &&
-                    !it.absolutePath.startsWith("${rootFolder.absolutePath}/.git") &&
-                    !it.absolutePath.startsWith("${rootFolder.absolutePath}/target")
+            !it.absolutePath.startsWith(srcMainFolder) &&
+                    !it.absolutePath.startsWith(gitFolder) &&
+                    !it.absolutePath.startsWith(targetFolder)
         }
     }
 
