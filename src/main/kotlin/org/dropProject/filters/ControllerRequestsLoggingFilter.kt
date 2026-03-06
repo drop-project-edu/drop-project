@@ -19,8 +19,11 @@
  */
 package org.dropproject.filters
 
+import org.dropproject.extensions.realName
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.filter.AbstractRequestLoggingFilter
 import jakarta.servlet.http.HttpServletRequest
+import java.security.Principal
 
 class ControllerRequestsLoggingFilter : AbstractRequestLoggingFilter() {
 
@@ -35,6 +38,18 @@ class ControllerRequestsLoggingFilter : AbstractRequestLoggingFilter() {
                 !request.requestURI.orEmpty().endsWith(".js") &&
                 !request.requestURI.orEmpty().endsWith(".ico") &&
                 !request.requestURI.orEmpty().endsWith(".png");
+    }
+
+    // Spring's AbstractRequestLoggingFilter builds the log message using request.remoteUser (= principal.name).
+    // When using the oauth2 profile with GitHub, principal.name is the numeric GitHub internal ID, not the username.
+    // We override createMessage() to replace it with the real GitHub login via realName().
+    override fun createMessage(request: HttpServletRequest, prefix: String, suffix: String): String {
+        val message = super.createMessage(request, prefix, suffix)
+        val auth = SecurityContextHolder.getContext().authentication
+        return if (auth is Principal) {
+            val realName = (auth as Principal).realName()
+            if (realName != auth.name) message.replace("user=${auth.name}", "user=$realName") else message
+        } else message
     }
 
     override fun beforeRequest(request: HttpServletRequest, message: String) {
