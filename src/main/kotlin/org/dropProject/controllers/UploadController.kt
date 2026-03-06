@@ -495,7 +495,7 @@ class UploadController(
             try {
                 val projectFolder = File(dropProjectProperties.storage.gitLocation, gitSubmission.getFolderRelativeToStorageRoot())
                 val git = gitClient.clone(gitRepository, projectFolder, gitSubmission.gitRepositoryPrivKey!!.toByteArray())
-                LOG.info("[${gitSubmission}] Successfuly cloned ${gitRepository} to ${projectFolder}")
+                LOG.info("[gitSubmission:${gitSubmission.id}] Successfuly cloned ${gitRepository} to ${projectFolder}")
                 model["cloned"] = true
 
                 // check that exists an AUTHORS.txt
