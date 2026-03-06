@@ -28,6 +28,9 @@ import org.dropproject.services.JUnitMethodResultType
 import org.dropproject.services.JUnitResults
 import org.dropproject.services.JacocoResults
 import org.slf4j.LoggerFactory
+import org.springframework.context.MessageSource
+import org.springframework.context.NoSuchMessageException
+import org.springframework.context.i18n.LocaleContextHolder
 import java.math.BigDecimal
 
 /**
@@ -62,7 +65,8 @@ data class BuildReport(val mavenOutputLines: List<String>,
                        val mavenizedProjectFolder: String,
                        val assignment: Assignment,
                        val junitResults: List<JUnitResults>,
-                       val jacocoResults: List<JacocoResults>) {
+                       val jacocoResults: List<JacocoResults>,
+                       @com.fasterxml.jackson.annotation.JsonIgnore val messageSource: MessageSource? = null) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
@@ -518,37 +522,24 @@ data class BuildReport(val mavenOutputLines: List<String>,
      * @return a String with the "converted" error message
      */
     private fun translateDetektError(originalError: String) : String {
-
-        // error messages are in this format:
+        // Error messages are in this format:
         // VariableMinLength - [Variable names should be at least 3 characters long.] at Main.kt:24:9
+        // Extract the rule name and location, then look up a localized message from the resource bundle.
+        val regex = Regex("([^\\s]+) - \\[.*?] (at .*:\\d+:\\d+)")
 
-        // use a regex to extract the VariableMinLength and the "at Main.kt:24:9"
-        val regex = Regex("([^\\s]+) - \\[.*?\\] (at .*:\\d+:\\d+)")
-
-        // Replace the matched patterns with the desired format
         val sanitizedError = regex.replace(originalError) { matchResult ->
-            // Construct the output string using the captured groups
-            "${matchResult.groupValues[1]} ${matchResult.groupValues[2]}"
+            val ruleName = matchResult.groupValues[1]
+            val location = matchResult.groupValues[2]
+            val message = messageSource?.let {
+                try {
+                    it.getMessage("detekt.$ruleName", null, LocaleContextHolder.getLocale())
+                } catch (e: NoSuchMessageException) {
+                    null
+                }
+            }
+            "${message ?: ruleName} $location"
         }
 
-        // TODO language
-        return sanitizedError
-                .replace("VariableNaming ", "Nome da variável deve começar por letra minúscula. " +
-                        "Caso o nome tenha mais do que uma palavra, as palavras seguintes devem ser capitalizadas (iniciadas por uma maiúscula) ")
-                .replace("FunctionNaming ", "Nome da função deve começar por letra minúscula. " +
-                        "Caso o nome tenha mais do que uma palavra, as palavras seguintes devem ser capitalizadas (iniciadas por uma maiúscula) ")
-                .replace("FunctionParameterNaming ", "Nome do parâmetro de função deve começar por letra minúscula. " +
-                        "Caso o nome tenha mais do que uma palavra, as palavras seguintes devem ser capitalizadas (iniciadas por uma maiúscula) ")
-                .replace("VariableMinLength ", "Nome da variável demasiado pequeno ")
-                .replace("VarCouldBeVal ", "Variável imutável declarada com var ")
-                .replace("MandatoryBracesIfStatements ", "Instrução 'if' sem chaveta ")
-                .replace("ComplexCondition ", "Condição demasiado complexa ")
-                .replace("StringLiteralDuplication ", "String duplicada. Deve ser usada uma constante ")
-                .replace("NestedBlockDepth ", "Demasiados níveis de blocos dentro de blocos ")
-                .replace("UnsafeCallOnNullableType ", "Não é permitido usar o !! pois pode causar crashes ")
-                .replace("MaxLineLength ", "Linha demasiado comprida ")
-                .replace("LongMethod ", "Função com demasiadas linhas de código ")
-                .replace("ForbiddenKeywords ", "Utilização de instruções proibidas ")
-                .replace(escapeSequenceRegex, "")  // remove extra escape characters used for coloring
+        return sanitizedError.replace(escapeSequenceRegex, "")  // remove extra escape characters used for coloring
     }
 }
