@@ -1909,6 +1909,14 @@ class UploadControllerTests {
         @Suppress("UNCHECKED_CAST")
         val structureErrors = reportResult.modelAndView!!.modelMap["structureErrors"] as List<String>
         assertTrue("Structure errors should be empty", structureErrors.isEmpty())
+
+        // Verify main resources are copied to the mavenized folder
+        val submissionDB = submissionRepository.findById(submissionId.toLong()).get()
+        val mavenizedFolder = File(dropProjectProperties.mavenizedProjects.rootLocation,
+            Submission.relativeUploadFolder("testJavaProj", submissionDB.submissionDate))
+        val mavenizedProjectFolder = File(mavenizedFolder, "${submissionDB.submissionId}-mavenized")
+        assertTrue("src/main/resources/application.properties should be copied to mavenized folder",
+            File(mavenizedProjectFolder, "src/main/resources/application.properties").exists())
     }
 
     @Test
