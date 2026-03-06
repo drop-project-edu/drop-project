@@ -188,9 +188,9 @@ class UploadKotlinControllerTests {
         assertEquals("checkstyle should have 3 errors", buildResult.checkstyleErrors.size, 3)
         assertThat(buildResult.checkstyleErrors,
                 CoreMatchers.hasItems(
-                        "Nome do parâmetro de função deve começar por letra minúscula. Caso o nome tenha mais do que uma palavra, as palavras seguintes devem ser capitalizadas (iniciadas por uma maiúscula) at Main.kt:20:14",
-                        "Nome da variável deve começar por letra minúscula. Caso o nome tenha mais do que uma palavra, as palavras seguintes devem ser capitalizadas (iniciadas por uma maiúscula) at Main.kt:34:9",
-                        "Nome da função deve começar por letra minúscula. Caso o nome tenha mais do que uma palavra, as palavras seguintes devem ser capitalizadas (iniciadas por uma maiúscula) at Main.kt:20:5",
+                        "Function parameter name should start with a lowercase letter. If the name has more than one word, subsequent words should be capitalized at Main.kt:20:14",
+                        "Variable name should start with a lowercase letter. If the name has more than one word, subsequent words should be capitalized at Main.kt:34:9",
+                        "Function name should start with a lowercase letter. If the name has more than one word, subsequent words should be capitalized at Main.kt:20:5",
                 ))
 
         assert(buildResult.hasJUnitErrors() == false)
