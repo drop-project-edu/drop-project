@@ -79,6 +79,9 @@ class MavenInvoker(
 
         val request = DefaultInvocationRequest()
         request.baseDirectory = mavenizedProjectFolder
+        if (dropProjectProperties.maven.useCurrentJdk) {
+            request.javaHome = File(System.getProperty("java.home"))
+        }
         request.isDebug = false
         request.isBatchMode = true
         if (principalName != null) {

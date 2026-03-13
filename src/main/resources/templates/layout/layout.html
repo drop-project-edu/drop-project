@@ -89,14 +89,14 @@
                 <ul class="nav navbar-nav navbar-right">
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown2" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <span class="glyphicon glyphicon-user"></span> <span th:text="${username}"></span><span class="caret"></span>
+                            <span class="glyphicon glyphicon-user"></span> <span id="currentUsername" th:text="${username}"></span><span class="caret"></span>
                         </a>
                         <ul class="dropdown-menu">
                             <li>
-                                <a th:href="@{/personalToken}" th:text="#{menu.access-tokens}">Access tokens</a>
+                                <a id="menuAccessTokens" th:href="@{/personalToken}" th:text="#{menu.access-tokens}">Access tokens</a>
                             </li>
                             <li>
-                                <a th:href="@{/mySubmissions}" th:text="#{menu.my-history}">My history</a>
+                                <a id="menuMyHistory" th:href="@{/mySubmissions}" th:text="#{menu.my-history}">My history</a>
                             </li>
                             <div class="divider"></div>
                             <li>

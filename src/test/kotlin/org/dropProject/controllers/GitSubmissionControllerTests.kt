@@ -270,9 +270,9 @@ class GitSubmissionControllerTests {
                 .with(user(STUDENT_2)))
                 .andExpect(status().isOk())
                 .andExpect(view().name("student-setup-git"))
-                .andExpect(model().attribute("error", "O projecto localizado no repositório " +
-                        "git@github.com:palves-ulht/sampleJavaAssignment.git tem uma " +
-                        "estrutura inválida: O projecto não contém o ficheiro AUTHORS.txt na raiz"))
+                .andExpect(model().attribute("error", "The project in repository " +
+                        "git@github.com:palves-ulht/sampleJavaAssignment.git has an invalid structure: " +
+                        "The project does not contain the AUTHORS.txt file in the root"))
 
         val updatedGitSubmission = gitSubmissionRepository.findById(1).get()
         assertFalse(updatedGitSubmission.connected)

@@ -60,7 +60,8 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
                                  val resourceLoader: ResourceLoader,
                                  val assignmentService: AssignmentService,
                                  val assignmentTeacherFiles: AssignmentTeacherFiles,
-                                 val dropProjectProperties: DropProjectProperties) : ApplicationListener<ContextRefreshedEvent> {
+                                 val dropProjectProperties: DropProjectProperties,
+                                 val environment: org.springframework.core.env.Environment) : ApplicationListener<ContextRefreshedEvent> {
 
     companion object {
         val sampleJavaAssignmentPrivateKey = """
@@ -116,11 +117,36 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
         LOG.info("************ Starting Drop Project **************")
         LOG.info("Maven home: ${dropProjectProperties.maven.home}")
         LOG.info("Maven repository: ${dropProjectProperties.maven.repository}")
+        LOG.info("Maven use current JDK: ${dropProjectProperties.maven.useCurrentJdk}")
+        LOG.info("Java home (running JVM): ${System.getProperty("java.home")}")
         LOG.info("Environment variables:")
         for ((key, value) in System.getenv()) {
             LOG.info("\t$key : $value")
         }
         LOG.info("*************************************************")
+
+        if (!environment.activeProfiles.contains("dev")) {
+            val logPath = environment.getProperty("logging.file.path", "logs")
+            println("Logging to ${logPath}/dp.log. To see logs in the console, run with the 'dev' profile: mvn spring-boot:run -Dspring-boot.run.profiles=dev")
+        }
+
+        validateJavaVersionForSecurityManager()
+
+        // Abort all pending submissions since they can't continue after a restart
+        val pendingStatuses = listOf(SubmissionStatus.SUBMITTED.code, SubmissionStatus.SUBMITTED_FOR_REBUILD.code, SubmissionStatus.REBUILDING.code)
+        var abortedCount = 0
+        for (status in pendingStatuses) {
+            val pendingSubmissions = submissionRepository.findByStatusOrderByStatusDate(status)
+            for (submission in pendingSubmissions) {
+                LOG.info("Aborting pending submission ${submission.id} (status: ${submission.getStatus()})")
+                submission.setStatus(SubmissionStatus.ABORTED_BY_TIMEOUT)
+                submissionRepository.save(submission)
+                abortedCount++
+            }
+        }
+        if (abortedCount > 0) {
+            LOG.info("Aborted ${abortedCount} pending submission(s)")
+        }
 
         // It it's a fresh instance, create two initial assignments (one in Java and the other in Kotlin) just to play
         val assignments = assignmentRepository.findAll()
@@ -328,6 +354,25 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
                 xmlReport = (resourceLoader.getResource("classpath:/initialData/${submissionName}JUnitXml.txt")as ClassPathResource).getContent()))
 
         return submission.id
+    }
+
+    private fun validateJavaVersionForSecurityManager() {
+        val javaVersion = Runtime.version().feature()
+        if (javaVersion >= 24) {
+            val errorMessage = "Java ${javaVersion} detected. The SecurityManager was removed in Java 24 (JEP 486) " +
+                    "and Drop Project requires it to sandbox student submissions. Please use Java 17-23."
+            LOG.error(errorMessage)
+            throw IllegalStateException(errorMessage)
+        }
+        if (javaVersion >= 18) {
+            val securityManagerFlag = System.getProperty("java.security.manager")
+            if (securityManagerFlag != "allow") {
+                val errorMessage = "Java ${javaVersion} detected. The SecurityManager requires the JVM flag " +
+                        "-Djava.security.manager=allow to be set. Please add this flag to the JVM arguments."
+                LOG.error(errorMessage)
+                throw IllegalStateException(errorMessage)
+            }
+        }
     }
 
     /**

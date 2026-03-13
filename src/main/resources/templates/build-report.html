@@ -164,7 +164,7 @@
     <table class="table table-bordered" th:if="${buildReport != null and !buildReport.checkstyleErrors.empty}">
         <thead>
         <tr>
-            <th>Code Quality (checkstyle) Errors</th>
+            <th th:text="${assignment.language.name() == 'KOTLIN'} ? 'Code Quality (Detekt) Errors' : 'Code Quality (Checkstyle) Errors'">Code Quality Errors</th>
         </tr>
         </thead>
         <tbody>

@@ -21,24 +21,24 @@ Several checks are performed on each project:
 
 ## Requirements
 
-* Java 17+ JDK (a compiler is needed)
+* Java 17-23 JDK (a compiler is needed). Java 24+ is not supported since the SecurityManager was removed (JEP 486). If using Java 18-23, the JVM flag `-Djava.security.manager=allow` must be set.
 * Maven
-* Servlet Engine (Tested with tomcat and jetty)
-* MySQL
+* Relational database (tested with MySQL but should work with any RDBMS)
 
 ## Current limitations
 
-* Only works for Java 8+ / Kotlin non-maven projects
+* Only works for Java 8+ / Kotlin projects
 
 ## How does it work?
 
 Most of the work is done by a Maven Invoker, running several goals on the project.
 The results are collected into a report that is viewable by the student and the teacher.
 
-Projects must not be maven projects because they are "mavenized" by the server, after uploading.
-In this context, "mavenizing", means copying the files into a proper Maven folder structure (e.g. putting the sources
-into `/src/main/java`), mixing the student files with the teacher unit tests and adding a `pom.xml`
-(also provided by the teacher).
+Projects can be either simple (non-Maven) projects or Maven projects. Simple projects are "mavenized" by the server
+after uploading. In this context, "mavenizing" means copying the files into a proper Maven folder structure (e.g.
+putting the sources into `/src/main/java`), mixing the student files with the teacher unit tests and adding a `pom.xml`
+(also provided by the teacher). Maven projects, on the other hand, are expected to already include a valid `pom.xml`
+and follow the standard Maven folder structure.
 
 Since checking a project may take some time, it is done asynchronously - the student submits the file and must come
 back later to check the report.
@@ -49,97 +49,27 @@ This video explains how to create a simple Java assignment in Drop Project. It s
 
 https://www.youtube.com/watch?v=65IwIBuMDlE
 
-## Quick start
+## Running your own Drop Project instance
 
-After cloning the repository, change the following properties:
-
-    dropProject.maven.home=<path_to_maven_home>
-    dropProject.maven.repository=<path_to_maven_repository>
-
-in the following files:
-
-     src/main/resources/drop-project.properties
-     src/test/resources/drop-project-test.properties 
-
-Note:
-
-* Configuring the first file will allow you to run Drop Project.
-* Configuring the second file will allow you to run Drop Project's unit tests.
-* Linux users: the Maven Home is usually in `/usr/share/maven` (otherwise, try: `whereis maven`) and the Maven Repository is in `/home/<USERNAME>/.m2`
-* Windows users: the Maven Home is the installation directory and the Maven Repository is in `c:\Users\<USERNAME>\.m2`
-
-And run the embedded tomcat runner:
-
-    mvn spring-boot:run
-
-The application should now be accessible on [http://localhost:8080](http://localhost:8080)
-
-## Running with docker
-
-### Demo mode (in memory database)
+### Using Docker (in-memory database)
 
     docker run -p 8080:8080 ghcr.io/drop-project-edu/drop-project:latest
 
-### Demo mode (using mysql)
+### Using Docker with MySQL
 
-Clone the project and in the root folder execute:
+For a full guide on deploying with Docker (environment variables, volumes, optional settings), see [docker-deployment.md](docker-deployment.md).
 
+Quick start:
+
+    cd deploy
     docker compose up
 
 The application should now be accessible on [http://localhost:8080](http://localhost:8080)
-
-### Demo mode (using mysql, building from sources)
-
-    docker compose -f docker-compose-dev.yml up
-
-## Running on GitHub Codespaces
-
-You can run Drop Project on [GitHub Codespaces](https://github.com/features/codespaces) by clicking the button below:
-
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/drop-project-edu/drop-project)
-
-This will open a new codespace with Drop Project already cloned.
-
-To run Drop Project, open a terminal in the codespace and in the root directory execute:
-
-    docker compose -f docker-compose-dev.yml up
-
-Once the server is running, you can access the application using either of the following methods:
-
-* Navigate to the Ports tab (located next to the Terminal tab in the bottom panel). Find port 8080, hover over the "Local Address" column, and click the globe icon (Open in Browser).
-
-* Hold Ctrl (or Cmd on macOS) and click the link http://localhost:8080 directly inside the Codespace.
 
 ## Documentation
 
 [https://drop-project-edu.github.io/drop-project/](https://drop-project-edu.github.io/drop-project/)
 
-To generate source code documentation, run:
-
-    mvn dokka:dokka
-
-The generated documentation will be available in the following folder:
-
-    target/dokka/drop-project/index.html
-
-## Unit Tests
-
-To execute the unit tests, run:
-
-    mvn test
-
-## Unit Test Coverage
-
-To measure the unit test coverage, run:
-
-    mvn jacoco:report
-
-Note: to run the coverage measurement, you must first run the unit tests themselves.
-
-The test coverage report will be available in the following folder:
-
-    target/site/jacoco/index.html
-    
 ## API
 
 Some services are accessible through an API, protected by personal tokens.
@@ -187,6 +117,10 @@ By default, you'll be assigned the student role.
 If you wish to experiment with the teacher role, send me an email and I'll be happy to assign you that role.
 
 [Playground](https://playground.dropproject.org/)
+
+## Development
+
+For instructions on building from source, running tests, and generating documentation, see [development.md](development.md).
 
 ## Citation
 

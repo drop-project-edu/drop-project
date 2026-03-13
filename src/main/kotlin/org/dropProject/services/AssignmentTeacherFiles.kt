@@ -105,11 +105,26 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
         // TODO: should change artifactId in pom.xml with the group-id...
 
         val rootFolder = File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder)
+        val srcMainFolder = File(rootFolder, "src/main").absolutePath
+        val gitFolder     = File(rootFolder, ".git").absolutePath
+        val targetFolder  = File(rootFolder, "target").absolutePath
+
         FileUtils.copyDirectory(rootFolder, mavenizedProjectFolder) {
-            !it.absolutePath.startsWith("${rootFolder.absolutePath}/src/main") &&
-                    !it.absolutePath.startsWith("${rootFolder.absolutePath}/.git") &&
-                    !it.absolutePath.startsWith("${rootFolder.absolutePath}/target")
+            !it.absolutePath.startsWith(srcMainFolder) &&
+                    !it.absolutePath.startsWith(gitFolder) &&
+                    !it.absolutePath.startsWith(targetFolder)
         }
+    }
+
+    /**
+     * Gets the teacher's pom.xml file for an assignment.
+     *
+     * @param assignment the Assignment to get the pom.xml for
+     * @return File representing the teacher's pom.xml
+     */
+    fun getTeacherPomFile(assignment: Assignment): File {
+        val assignmentFolder = File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder)
+        return File(assignmentFolder, "pom.xml")
     }
 
     /**
@@ -122,22 +137,52 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
      *
      * @return a String
      */
-    fun buildPackageTree(packageName: String?, language: Language, hasStudentTests: Boolean = false): String {
+    fun buildPackageTree(packageName: String?, language: Language,
+                         submissionStructure: SubmissionStructure,
+                         hasStudentTests: Boolean = false): String {
 
         val packages = packageName.orEmpty().split(".")
         val mainFile = if (language == Language.JAVA) "Main.java" else "Main.kt"
+        val applicationFile = if (language == Language.JAVA) "SomethingApplication.java" else "SomethingApplication.kt"
+        val folder = if (language == Language.JAVA) "java" else "kotlin"
 
         var packagesTree = i18n.getMessage("student.upload.form.tree1", null, currentLocale) + System.lineSeparator()
-        packagesTree += "+ src" + System.lineSeparator()
-        var indent = 3
-        for (packagePart in packages) {
-            packagesTree += "|" + "-".repeat(indent) + " " + packagePart + System.lineSeparator()
-            indent += 3
+
+        when (submissionStructure) {
+            SubmissionStructure.COMPACT -> {
+                packagesTree += "+ src" + System.lineSeparator()
+                var indent = 3
+                for (packagePart in packages) {
+                    packagesTree += "|" + "-".repeat(indent) + " " + packagePart + System.lineSeparator()
+                    indent += 3
+                }
+                packagesTree += "|" + "-".repeat(indent) + " ${mainFile}" + System.lineSeparator()
+                packagesTree += "|" + "-".repeat(indent) + " ...   (${i18n.getMessage("student.upload.form.tree2", null, currentLocale)})" + System.lineSeparator()
+            }
+            SubmissionStructure.MAVEN -> {
+                packagesTree += "pom.xml" + System.lineSeparator()
+                packagesTree += "+ src" + System.lineSeparator()
+                packagesTree += "|--- main" + System.lineSeparator()
+                packagesTree += "|------ ${folder}" + System.lineSeparator()
+                var indent = 9
+                for (packagePart in packages) {
+                    packagesTree += "|" + "-".repeat(indent) + " " + packagePart + System.lineSeparator()
+                    indent += 3
+                }
+                packagesTree += "|" + "-".repeat(indent) + " ${applicationFile}   (@SpringBootApplication)" + System.lineSeparator()
+                packagesTree += "|" + "-".repeat(indent) + " ...   (${i18n.getMessage("student.upload.form.tree2", null, currentLocale)})" + System.lineSeparator()
+                packagesTree += "|------ resources" + System.lineSeparator()
+                packagesTree += "|--------- application.properties" + System.lineSeparator()
+                packagesTree += "|--- test" + System.lineSeparator()
+                packagesTree += "|------ ${folder}" + System.lineSeparator()
+                if (hasStudentTests) {
+                    packagesTree += "|--------- ...   (student tests)" + System.lineSeparator()
+                }
+                packagesTree += "|------ resources" + System.lineSeparator()
+            }
         }
 
-        packagesTree += "|" + "-".repeat(indent) + " ${mainFile}" + System.lineSeparator()
-        packagesTree += "|" + "-".repeat(indent) + " ...   (${i18n.getMessage("student.upload.form.tree2", null, currentLocale)})" + System.lineSeparator()
-        if (hasStudentTests) {
+        if (hasStudentTests && submissionStructure == SubmissionStructure.COMPACT) {
             packagesTree += "+ test-files" + System.lineSeparator()
             packagesTree += "|--- somefile1.txt" + System.lineSeparator()
             packagesTree += "|--- ...   (${i18n.getMessage("student.upload.form.tree3", null, currentLocale)})" + System.lineSeparator()

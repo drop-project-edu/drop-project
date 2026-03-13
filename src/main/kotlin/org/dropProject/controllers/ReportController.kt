@@ -631,6 +631,8 @@ class ReportController(
             throw IllegalAccessError("Assignment reports can only be accessed by their owner or authorized teachers")
         }
 
+        val isGitBasedAssignment = assignment.submissionMethod == SubmissionMethod.GIT
+
         var headersCSV = LinkedHashSet(mutableListOf("submission id","student id","student name","project structure", "compilation", "code quality"))
         var resultCSV = ""
 
@@ -716,6 +718,22 @@ class ReportController(
 
                 headersCSV.add("overdue")
                 resultCSV += ";" + submission.overdue
+
+                // Add repository URL for Git-based assignments (last column)
+                if (isGitBasedAssignment) {
+                    headersCSV.add("repository_url")
+                    if (submission.gitSubmissionId != null) {
+                        val gitSubmission = gitSubmissionRepository.findById(submission.gitSubmissionId!!).orElse(null)
+                        if (gitSubmission != null) {
+                            val repositoryUrl = gitClient.convertSSHGithubURLtoHttpURL(gitSubmission.gitRepositoryUrl)
+                            resultCSV += ";${repositoryUrl}"
+                        } else {
+                            resultCSV += ";"
+                        }
+                    } else {
+                        resultCSV += ";"
+                    }
+                }
 
                 resultCSV += "\n"
             }

@@ -85,7 +85,8 @@ class SubmissionService(
     val zipService: ZipService,
     val assignmentRepository: AssignmentRepository,
     val dropProjectProperties: DropProjectProperties,
-    val cooloffOverrideService: CooloffOverrideService
+    val cooloffOverrideService: CooloffOverrideService,
+    val pomValidator: PomValidator
 ) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
@@ -197,6 +198,11 @@ class SubmissionService(
             throw IllegalArgumentException("this assignment doesnt accept upload submissions")
         }
 
+        // Block API submissions for Maven-structured assignments
+        if (submissionMode == SubmissionMode.API && assignment.submissionStructure == SubmissionStructure.MAVEN) {
+            throw IllegalArgumentException("API submissions are not supported for Maven-structured assignments. Please use the web interface.")
+        }
+
         // TODO: Validate assignment due date
 
         if (!request.isUserInRole("TEACHER")) {
@@ -224,7 +230,7 @@ class SubmissionService(
         val originalFilename = file.originalFilename ?: throw IllegalArgumentException("Missing originalFilename")
 
         if (!originalFilename.endsWith(".zip", ignoreCase = true)) {
-            return ResponseEntity.internalServerError().body(SubmissionResult(error="O ficheiro tem que ser um .zip")) // TODO language
+            return ResponseEntity.internalServerError().body(SubmissionResult(error=i18n.getMessage("error.file.not.zip", null, currentLocale)))
         }
 
         LOG.debug("[${principal.realName()}] uploaded ${originalFilename}")
@@ -351,7 +357,7 @@ class SubmissionService(
 
         // check for AUTHORS.txt file
         if (!authorsFile.existsCaseSensitive()) {
-            throw InvalidProjectStructureException("O projecto não contém o ficheiro AUTHORS.txt na raiz")  // TODO language
+            throw InvalidProjectStructureException(i18n.getMessage("error.authors.missing", null, currentLocale))
         }
 
         // check the encoding of AUTHORS.txt
@@ -370,12 +376,11 @@ class SubmissionService(
                 .forEach { parts -> run {
 
                     if (parts[0].isBlank()) {
-                        throw InvalidProjectStructureException("O número de aluno tem que estar preenchido para todos os elementos do grupo")
+                        throw InvalidProjectStructureException(i18n.getMessage("error.authors.number.blank", null, currentLocale))
                     }
 
                     if (parts[1][0].isDigit() || parts[1].split(" ").size <= 1) {
-                        throw InvalidProjectStructureException("Cada linha tem que ter o formato NUMERO_ALUNO;NOME_ALUNO. " +
-                                "O nome do aluno deve incluir o primeiro e último nome.")  // TODO language
+                        throw InvalidProjectStructureException(i18n.getMessage("error.authors.format.invalid", null, currentLocale))
                     }
 
                     authors.add(AuthorDetails(parts[1].trim(), parts[0].sanitize()))
@@ -384,8 +389,7 @@ class SubmissionService(
 
             // check for duplicate authors
             if (authorIDs.size < authors.size) {
-                throw InvalidProjectStructureException("O ficheiro AUTHORS.txt não está correcto. " +
-                        "Contém autores duplicados.")  // TODO language
+                throw InvalidProjectStructureException(i18n.getMessage("error.authors.duplicates", null, currentLocale))
             }
 
         } catch (e: Exception) {
@@ -399,8 +403,7 @@ class SubmissionService(
         }
 
         if (authors.isEmpty()) {
-            throw InvalidProjectStructureException("O ficheiro AUTHORS.txt não está correcto. " +
-                    "Tem que conter uma linha por aluno, tendo cada linha o número e o nome separados por ';'")  // TODO language
+            throw InvalidProjectStructureException(i18n.getMessage("error.authors.empty", null, currentLocale))
         } else {
             return authors
         }
@@ -477,32 +480,32 @@ class SubmissionService(
         }
     }
 
-    private fun checkProjectStructure(projectFolder: File, assignment: Assignment): List<String> {
+    private fun checkCompactProjectStructure(projectFolder: File, assignment: Assignment): List<String> {
         val erros = ArrayList<String>()
         if (!File(projectFolder, "src").existsCaseSensitive()) {
-            erros.add("O projecto não contém uma pasta 'src' na raiz") // TODO language
+            erros.add(i18n.getMessage("error.compact.missing.src", null, currentLocale))
         }
 
         val packageName = assignment.packageName.orEmpty().replace(".","/")
 
         if (!File(projectFolder, "src/${packageName}").existsCaseSensitive()) {
-            erros.add("O projecto não contém uma pasta 'src/${packageName}'") // TODO language
+            erros.add(i18n.getMessage("error.compact.missing.package", arrayOf(packageName), currentLocale))
         }
 
         val mainFile = if (assignment.language == Language.JAVA) "Main.java" else "Main.kt"
         if (!File(projectFolder, "src/${packageName}/${mainFile}").existsCaseSensitive()) {
-            erros.add("O projecto não contém o ficheiro ${mainFile} na pasta 'src/${packageName}'") // TODO language
+            erros.add(i18n.getMessage("error.compact.missing.main", arrayOf(mainFile, packageName), currentLocale))
         }
 
         if (File(projectFolder, "src")
                 .walkTopDown()
                 .find { it.name.startsWith("TestTeacher") } != null) {
-            erros.add("O projecto contém ficheiros cujo nome começa por 'TestTeacher'") // TODO language
+            erros.add(i18n.getMessage("error.structure.testteacher.forbidden", null, currentLocale))
         }
 
         val readme = File(projectFolder, "README.md")
         if (readme.exists() && !readme.isFile) {
-            erros.add("O projecto contém uma pasta README.md mas devia ser um ficheiro") // TODO language
+            erros.add(i18n.getMessage("error.structure.readme.not.file", null, currentLocale))
         }
 
         if (File(projectFolder, "src")
@@ -510,10 +513,177 @@ class SubmissionService(
                 .filter { it.extension in listOf("java", "kt") }
                 .filter { !it.name.startsWith("Test") }
                 .any { containsSearchString(it, "org.junit") }) {
-            erros.add("As classes de teste devem começar com a palavra Test (exemplo: TestCar)") // TODO language
+            erros.add(i18n.getMessage("error.structure.test.naming", null, currentLocale))
         }
 
         return erros
+    }
+
+    private fun checkMavenProjectStructure(projectFolder: File, assignment: Assignment): List<String> {
+        val erros = ArrayList<String>()
+
+        // Check for pom.xml
+        if (!File(projectFolder, "pom.xml").exists()) {
+            erros.add(i18n.getMessage("error.maven.missing.pom", null, currentLocale))
+            return erros  // Cannot proceed without pom.xml
+        }
+
+        val folder = if (assignment.language == Language.JAVA) "java" else "kotlin"
+
+        // Check for src/main/{java|kotlin}
+        if (!File(projectFolder, "src/main/$folder").existsCaseSensitive()) {
+            erros.add(i18n.getMessage("error.maven.missing.src.main", arrayOf(folder), currentLocale))
+        }
+
+        val packageName = assignment.packageName.orEmpty().replace(".", "/")
+
+        // Check for package structure
+        if (!File(projectFolder, "src/main/$folder/$packageName").existsCaseSensitive()) {
+            erros.add(i18n.getMessage("error.maven.missing.package", arrayOf(folder, packageName), currentLocale))
+        }
+
+        // Check for TestTeacher* files (security check)
+        if (File(projectFolder, "src")
+                .walkTopDown()
+                .find { it.name.startsWith("TestTeacher") } != null) {
+            erros.add(i18n.getMessage("error.structure.testteacher.forbidden", null, currentLocale))
+        }
+
+        // Check README is a file, not directory
+        val readme = File(projectFolder, "README.md")
+        if (readme.exists() && !readme.isFile) {
+            erros.add(i18n.getMessage("error.structure.readme.not.file", null, currentLocale))
+        }
+
+        // Check that all test classes are in src/test, not src/main
+        if (File(projectFolder, "src/main")
+                .walkTopDown()
+                .filter { it.extension in listOf("java", "kt") }
+                .any { it.name.startsWith("Test") }) {
+            erros.add(i18n.getMessage("error.maven.tests.in.main", arrayOf(folder), currentLocale))
+        }
+
+        return erros
+    }
+
+    private fun checkProjectStructure(projectFolder: File, assignment: Assignment): List<String> {
+        val errors = when (assignment.submissionStructure) {
+            SubmissionStructure.COMPACT -> checkCompactProjectStructure(projectFolder, assignment)
+            SubmissionStructure.MAVEN -> {
+                val structureErrors = checkMavenProjectStructure(projectFolder, assignment).toMutableList()
+
+                // Only validate POM if structure validation passes
+                if (structureErrors.isEmpty()) {
+                    val studentPom = File(projectFolder, "pom.xml")
+                    val teacherPom = assignmentTeacherFiles.getTeacherPomFile(assignment)
+
+                    val pomValidation = pomValidator.validateStudentPom(studentPom, teacherPom,
+                                                                         assignment.acceptsStudentTests)
+                    if (!pomValidation.isValid) {
+                        structureErrors.addAll(pomValidation.errors)
+                    }
+                }
+                structureErrors
+            }
+        }
+
+        return errors
+    }
+
+    /**
+     * Mavenizes a compact-structure submission (src/<package>/) to Maven structure (src/main/{java|kotlin}/).
+     */
+    private fun mavenizeCompactStructure(projectFolder: File, mavenizedProjectFolder: File, assignment: Assignment) {
+        val folder = if (assignment.language == Language.JAVA) "java" else "kotlin"
+
+        // Copy student source files from src/ to src/main/{java|kotlin}/
+        FileUtils.copyDirectory(File(projectFolder, "src"), File(mavenizedProjectFolder, "src/main/$folder")) {
+            it.isDirectory || (it.isFile() && !it.name.startsWith("Test")) // exclude TestXXX classes
+        }
+
+        // Copy student test files if accepted
+        if (assignment.acceptsStudentTests) {
+            FileUtils.copyDirectory(File(projectFolder, "src"), File(mavenizedProjectFolder, "src/test/$folder")) {
+                it.isDirectory || (it.isFile() && it.name.startsWith("Test")) // include TestXXX classes
+            }
+        }
+
+        // Copy test-files folder
+        val testFilesFolder = File(projectFolder, "test-files")
+        if (testFilesFolder.exists()) {
+            FileUtils.copyDirectory(testFilesFolder, File(mavenizedProjectFolder, "test-files"))
+        }
+
+        // Copy AUTHORS.txt
+        FileUtils.copyFile(File(projectFolder, "AUTHORS.txt"), File(mavenizedProjectFolder, "AUTHORS.txt"))
+
+        // Copy teacher files (includes pom.xml, teacher tests)
+        assignmentTeacherFiles.copyTeacherFilesTo(assignment, mavenizedProjectFolder)
+
+        // Copy student README if exists (overwrites teacher's)
+        if (File(projectFolder, "README.md").exists()) {
+            FileUtils.copyFile(File(projectFolder, "README.md"), File(mavenizedProjectFolder, "README.md"))
+        } else if (File(projectFolder, "README.txt").exists()) {
+            FileUtils.copyFile(File(projectFolder, "README.txt"), File(mavenizedProjectFolder, "README.txt"))
+        }
+
+        // Copy student images
+        projectFolder.listFiles { file -> file.extension in listOf("png", "jpg", "jpeg", "gif") }
+            ?.forEach { FileUtils.copyFile(it, File(mavenizedProjectFolder, it.name)) }
+    }
+
+    /**
+     * Mavenizes a Maven-structure submission (src/main/{java|kotlin}/) by copying files to mavenized folder.
+     */
+    private fun mavenizeMavenStructure(projectFolder: File, mavenizedProjectFolder: File, assignment: Assignment) {
+        val folder = if (assignment.language == Language.JAVA) "java" else "kotlin"
+
+        // Copy student source files (already in src/main/{java|kotlin}/)
+        FileUtils.copyDirectory(File(projectFolder, "src/main/$folder"),
+                               File(mavenizedProjectFolder, "src/main/$folder")) {
+            it.isDirectory || (it.isFile() && !it.name.startsWith("Test"))
+        }
+
+        // Copy student test files if accepted (already in src/test/{java|kotlin}/)
+        if (assignment.acceptsStudentTests) {
+            val studentTestDir = File(projectFolder, "src/test/$folder")
+            if (studentTestDir.exists()) {
+                FileUtils.copyDirectory(studentTestDir,
+                                       File(mavenizedProjectFolder, "src/test/$folder")) {
+                    it.isDirectory || (it.isFile() && it.name.startsWith("Test"))
+                }
+            }
+        }
+
+        // Copy main resources folder if exists (Maven standard: src/main/resources)
+        val mainResourcesFolder = File(projectFolder, "src/main/resources")
+        if (mainResourcesFolder.exists()) {
+            FileUtils.copyDirectory(mainResourcesFolder, File(mavenizedProjectFolder, "src/main/resources"))
+        }
+
+        // Copy test resources folder if exists (Maven standard: src/test/resources)
+        val testResourcesFolder = File(projectFolder, "src/test/resources")
+        if (testResourcesFolder.exists()) {
+            FileUtils.copyDirectory(testResourcesFolder, File(mavenizedProjectFolder, "src/test/resources"))
+        }
+
+        // Copy AUTHORS.txt
+        FileUtils.copyFile(File(projectFolder, "AUTHORS.txt"), File(mavenizedProjectFolder, "AUTHORS.txt"))
+
+        // Copy teacher files (includes teacher's pom.xml and teacher tests)
+        // NOTE: Teacher pom.xml is used since student's was validated to match
+        assignmentTeacherFiles.copyTeacherFilesTo(assignment, mavenizedProjectFolder)
+
+        // Copy student README if exists (overwrites teacher's)
+        if (File(projectFolder, "README.md").exists()) {
+            FileUtils.copyFile(File(projectFolder, "README.md"), File(mavenizedProjectFolder, "README.md"))
+        } else if (File(projectFolder, "README.txt").exists()) {
+            FileUtils.copyFile(File(projectFolder, "README.txt"), File(mavenizedProjectFolder, "README.txt"))
+        }
+
+        // Copy student images
+        projectFolder.listFiles { file -> file.extension in listOf("png", "jpg", "jpeg", "gif") }
+            ?.forEach { FileUtils.copyFile(it, File(mavenizedProjectFolder, it.name)) }
     }
 
     /**
@@ -526,53 +696,18 @@ class SubmissionService(
      */
     private fun mavenize(projectFolder: File, submission: Submission, assignment: Assignment, teacherRebuild: Boolean = false): File {
         val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission, teacherRebuild)
-
         mavenizedProjectFolder.deleteRecursively()
 
-        val folder = if (assignment.language == Language.JAVA) "java" else "kotlin"
-
-        // first copy the project files submitted by the students
-        FileUtils.copyDirectory(File(projectFolder, "src"), File(mavenizedProjectFolder, "src/main/${folder}")) {
-            it.isDirectory || (it.isFile() && !it.name.startsWith("Test")) // exclude TestXXX classes
-        }
-        if (assignment.acceptsStudentTests) {
-            FileUtils.copyDirectory(File(projectFolder, "src"), File(mavenizedProjectFolder, "src/test/${folder}")) {
-                it.isDirectory || (it.isFile() && it.name.startsWith("Test")) // include TestXXX classes
-            }
+        when (assignment.submissionStructure) {
+            SubmissionStructure.COMPACT -> mavenizeCompactStructure(projectFolder, mavenizedProjectFolder, assignment)
+            SubmissionStructure.MAVEN -> mavenizeMavenStructure(projectFolder, mavenizedProjectFolder, assignment)
         }
 
-        val testFilesFolder = File(projectFolder, "test-files")
-        if (testFilesFolder.exists()) {
-            FileUtils.copyDirectory(File(projectFolder, "test-files"), File(mavenizedProjectFolder, "test-files"))
-        }
-        FileUtils.copyFile(File(projectFolder, "AUTHORS.txt"),File(mavenizedProjectFolder, "AUTHORS.txt"))
-
-        // next, copy the project files submitted by the teachers (will override eventually the student files)
-        assignmentTeacherFiles.copyTeacherFilesTo(assignment, mavenizedProjectFolder)
-
-        // if the students have a README file (either .md or .txt), copy it over the teacher's README
-        if (File(projectFolder, "README.md").exists()) {
-            FileUtils.copyFile(File(projectFolder, "README.md"), File(mavenizedProjectFolder, "README.md"))
-        } else if (File(projectFolder, "README.txt").exists()) {
-            FileUtils.copyFile(File(projectFolder, "README.txt"), File(mavenizedProjectFolder, "README.txt"))
-        }
-
-        // if the students have images in the root folder, copy them as well
-        projectFolder.
-        listFiles { file -> file.extension in listOf("png", "jpg", "jpeg", "gif") }
-            ?.forEach { FileUtils.copyFile(it, File(mavenizedProjectFolder, it.name))
-            }
-
-        if (submission.gitSubmissionId == null && deleteOriginalProjectFolder) {  // don't delete git submissions
-            FileUtils.deleteDirectory(projectFolder)  // TODO: This seems duplicate with the lines below...
-        }
-
-        // finally remove the original project folder (the zip file is still kept)
-        if (!(assignment.id.startsWith("testJavaProj") ||
-                    assignment.id.startsWith("sample") ||
-                    assignment.id.startsWith("testKotlinProj") ||  // exclude projects used for automatic tests
-                    submission.gitSubmissionId != null)) {   // exclude git submissions
-            projectFolder.deleteRecursively()
+        // Finally remove the original project folder (the zip file is still kept)
+        // On Windows, Maven locks files preventing deletion, so skip cleanup
+        val isWindows = System.getProperty("os.name").lowercase().contains("win")
+        if (!isWindows && submission.gitSubmissionId == null && deleteOriginalProjectFolder) {  // don't delete git submissions
+            FileUtils.deleteDirectory(projectFolder)
         }
 
         return mavenizedProjectFolder

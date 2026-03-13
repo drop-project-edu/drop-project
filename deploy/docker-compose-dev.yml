@@ -29,8 +29,8 @@ services:
 
   drop-project:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: deploy/Dockerfile
     restart: unless-stopped
     env_file: ".env"
     volumes:

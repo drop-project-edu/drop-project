@@ -87,7 +87,9 @@ data class DropProjectProperties(
         /** Maven home directory */
         val home: String = "",
         /** Maven local repository */
-        val repository: String = ""
+        val repository: String = "",
+        /** Force Maven to use the same Java version running Drop Project */
+        val useCurrentJdk: Boolean = true
     )
 
     data class Admin(

@@ -22,6 +22,7 @@ package org.dropproject.forms
 import org.dropproject.dao.AssignmentVisibility
 import org.dropproject.dao.Language
 import org.dropproject.dao.LeaderboardType
+import org.dropproject.dao.SubmissionStructure
 import org.dropproject.dao.TestVisibility
 import org.springframework.format.annotation.DateTimeFormat
 import java.time.LocalDateTime
@@ -52,6 +53,9 @@ data class AssignmentForm(
 
         @field:NotNull(message = "Error: Language must not be empty")
         var language: Language? = null,
+
+        @field:NotNull(message = "Error: Submission Structure must not be empty")
+        var submissionStructure: SubmissionStructure = SubmissionStructure.COMPACT,
 
         @field:DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
         var dueDate: LocalDateTime? = null,

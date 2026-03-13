@@ -184,15 +184,16 @@ class UploadController(
             .orElseThrow { throw ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found") }
 
         // Check authorization (403 if unauthorized)
-        if (!authorizationService.canAccessAssignment(assignmentId, principal.name, request.isUserInRole("TEACHER"))) {
-            throw AccessDeniedException("User ${principal.name} is not authorized to access assignment $assignmentId")
+        if (!authorizationService.canAccessAssignment(assignmentId, principal.realName(), request.isUserInRole("TEACHER"))) {
+            throw AccessDeniedException("User ${principal.realName()} is not authorized to access assignment $assignmentId")
         }
 
         model["assignment"] = assignment
         model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.realName(), assignment.id)
         model["instructionsFragment"] = assignmentTeacherFiles.getInstructions(assignment).body //quick fix
         model["packageTree"] = assignmentTeacherFiles.buildPackageTree(
-                assignment.packageName, assignment.language, assignment.acceptsStudentTests)
+                assignment.packageName, assignment.language,
+                assignment.submissionStructure, assignment.acceptsStudentTests)
 
         if (assignment.cooloffPeriod != null && !request.isUserInRole("TEACHER")) {
             val lastSubmission = submissionService.getLastSubmission(principal, assignmentId)
@@ -400,15 +401,16 @@ class UploadController(
         val assignment = assignmentRepository.findById(assignmentId).orElse(null) ?: throw AssignmentNotFoundException(assignmentId)
         
         // Check authorization (403 if unauthorized)
-        if (!authorizationService.canAccessAssignment(assignmentId, principal.name, request.isUserInRole("TEACHER"))) {
-            throw AccessDeniedException("User ${principal.name} is not authorized to access assignment $assignmentId")
+        if (!authorizationService.canAccessAssignment(assignmentId, principal.realName(), request.isUserInRole("TEACHER"))) {
+            throw AccessDeniedException("User ${principal.realName()} is not authorized to access assignment $assignmentId")
         }
 
         model["assignment"] = assignment
         model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.realName(), assignment.id)
         model["instructionsFragment"] = assignmentTeacherFiles.getInstructions(assignment).body //quick fix
         model["packageTree"] = assignmentTeacherFiles.buildPackageTree(
-                assignment.packageName, assignment.language, assignment.acceptsStudentTests)
+                assignment.packageName, assignment.language,
+                assignment.submissionStructure, assignment.acceptsStudentTests)
 
         if (gitRepositoryUrl.isNullOrBlank()) {
             model["gitRepoErrorMsg"] = i18n.getMessage("student.git.setup.must-fill-url", null, currentLocale)
@@ -493,7 +495,7 @@ class UploadController(
             try {
                 val projectFolder = File(dropProjectProperties.storage.gitLocation, gitSubmission.getFolderRelativeToStorageRoot())
                 val git = gitClient.clone(gitRepository, projectFolder, gitSubmission.gitRepositoryPrivKey!!.toByteArray())
-                LOG.info("[${gitSubmission}] Successfuly cloned ${gitRepository} to ${projectFolder}")
+                LOG.info("[gitSubmission:${gitSubmission.id}] Successfuly cloned ${gitRepository} to ${projectFolder}")
                 model["cloned"] = true
 
                 // check that exists an AUTHORS.txt
@@ -532,7 +534,7 @@ class UploadController(
 
             } catch (ipse: InvalidProjectStructureException) {
                 LOG.info("Invalid project structure: ${ipse.message}")
-                model["error"] = "O projecto localizado no repositório ${gitRepository} tem uma estrutura inválida: ${ipse.message}"
+                model["error"] = i18n.getMessage("student.git.setup.invalid-structure", arrayOf(gitRepository, ipse.message), currentLocale)
                 model["gitSubmission"] = gitSubmission
                 return "student-setup-git"
             } catch (e: Exception) {
@@ -610,8 +612,8 @@ class UploadController(
         val assignment = assignmentRepository.findById(gitSubmission.assignmentId).orElse(null)
         
         // Check authorization (403 if unauthorized)  
-        if (!authorizationService.canAccessAssignmentByGitSubmissionId(gitSubmissionId, principal.name, request.isUserInRole("TEACHER"))) {
-            throw AccessDeniedException("User ${principal.name} is not authorized to access git submission $gitSubmissionId")
+        if (!authorizationService.canAccessAssignmentByGitSubmissionId(gitSubmissionId, principal.realName(), request.isUserInRole("TEACHER"))) {
+            throw AccessDeniedException("User ${principal.realName()} is not authorized to access git submission $gitSubmissionId")
         }
 
         if (assignment.cooloffPeriod != null && !request.isUserInRole("TEACHER")) {

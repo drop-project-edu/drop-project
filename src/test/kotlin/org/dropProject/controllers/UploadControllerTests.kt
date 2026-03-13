@@ -244,8 +244,8 @@ class UploadControllerTests {
         @Suppress("UNCHECKED_CAST")
         val structureErrors = reportResult.modelAndView!!.modelMap["structureErrors"] as List<String>
         assertThat(structureErrors,
-                CoreMatchers.hasItems("O projecto não contém uma pasta 'src/org/dropProject/sampleAssignments/testProj'",
-                        "O projecto não contém o ficheiro Main.java na pasta 'src/org/dropProject/sampleAssignments/testProj'"))
+                hasItems("The project does not contain a 'src/org/dropProject/sampleAssignments/testProj' folder",
+                        "The project does not contain the Main.java file in the 'src/org/dropProject/sampleAssignments/testProj' folder"))
     }
 
 
@@ -267,8 +267,7 @@ class UploadControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val structureErrors = reportResult.modelAndView!!.modelMap["structureErrors"] as List<String>
-        assertThat(structureErrors,
-                CoreMatchers.hasItems("O projecto contém uma pasta README.md mas devia ser um ficheiro"))
+        assertThat(structureErrors, hasItems("The project contains a README.md folder but it should be a file"))
     }
 
 
@@ -314,8 +313,13 @@ class UploadControllerTests {
                 .with(user(STUDENT_1)))
                 .andExpect(status().isOk)
                 .andExpect(view().name("student-upload-form"))
+                // Accept both +2 and +1 minutes because a minute boundary
+                // may be crossed between the upload and this assertion
                 .andExpect(model().attribute("coolOffEnd",
-                        now.plusMinutes(2).format(DateTimeFormatter.ofPattern("HH:mm"))))
+                        anyOf(
+                            equalTo(now.plusMinutes(2).format(DateTimeFormatter.ofPattern("HH:mm"))),
+                            equalTo(now.plusMinutes(1).format(DateTimeFormatter.ofPattern("HH:mm")))
+                        )))
     }
 
     @Test
@@ -328,13 +332,19 @@ class UploadControllerTests {
 
         testsHelper.uploadProject(this.mvc, "projectCheckstyleErrors", "testJavaProj", STUDENT_1)
         val now = LocalTime.now()
+        val formatter = DateTimeFormatter.ofPattern("HH:mm")
 
         this.mvc.perform(get("/upload/testJavaProj")
                 .with(user(STUDENT_1)))
                 .andExpect(status().isOk)
                 .andExpect(view().name("student-upload-form"))
+                // Accept both +10 and +9 minutes because a minute boundary
+                // may be crossed between the upload and this assertion
                 .andExpect(model().attribute("coolOffEnd",
-                        now.plusMinutes(10).format(DateTimeFormatter.ofPattern("HH:mm"))))
+                        anyOf(
+                            equalTo(now.plusMinutes(10).format(formatter)),
+                            equalTo(now.plusMinutes(9).format(formatter))
+                        )))
     }
 
     @Test
@@ -509,7 +519,7 @@ class UploadControllerTests {
     @DirtiesContext
     fun uploadInGroupAndThenInAnotherGroup() {
 
-        val projectRoot = resourceLoader.getResource("file:src/test/sampleProjects/projectCompilationErrors").file
+        val projectRoot = resourceLoader.getResource("file:src/test/sampleProjects/compact/java/projectCompilationErrors").file
 
         this.mvc.perform(get("/upload/testJavaProj")
                 .with(user(STUDENT_1)))
@@ -864,7 +874,7 @@ class UploadControllerTests {
     @DirtiesContext
     fun uploadGroupWithDuplicateMembers() {
 
-        val projectRoot = resourceLoader.getResource("file:src/test/sampleProjects/projectCompilationErrors").file
+        val projectRoot = resourceLoader.getResource("file:src/test/sampleProjects/compact/java/projectCompilationErrors").file
 
         this.mvc.perform(get("/upload/testJavaProj")
                 .with(user(STUDENT_1)))
@@ -895,7 +905,7 @@ class UploadControllerTests {
                     .param("async", "false")
                     .with(user(STUDENT_1)))
                     .andExpect(status().isInternalServerError())
-                    .andExpect(content().json("{ \"error\": \"O ficheiro AUTHORS.txt não está correcto. Contém autores duplicados.\"}"))
+                    .andExpect(content().json("{ \"error\": \"The AUTHORS.txt file is not correct. It contains duplicate authors.\"}"))
 
         } finally {
             val writer = Files.newBufferedWriter(path)
@@ -1710,7 +1720,7 @@ class UploadControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val structureErrors = reportResult.modelAndView!!.modelMap["structureErrors"] as List<String>
-        assertThat(structureErrors, hasItems("As classes de teste devem começar com a palavra Test (exemplo: TestCar)"))
+        assertThat(structureErrors, hasItems("Test classes must start with the word Test (example: TestCar)"))
     }
 
     @Test
@@ -1819,7 +1829,7 @@ class UploadControllerTests {
     @DirtiesContext
     fun `upload without authentication should return 401 unauthorized`() {
         // Create a mock multipart file by manually creating the zip
-        val projectFolder = resourceLoader.getResource("file:src/test/sampleProjects/projectOK").file
+        val projectFolder = resourceLoader.getResource("file:src/test/sampleProjects/compact/java/projectOK").file
         val zipFile = zipService.createZipFromFolder("test", projectFolder)
         zipFile.deleteOnExit()
         val mockFile = MockMultipartFile("file", zipFile.name, "application/zip", zipFile.readBytes())
@@ -1848,8 +1858,13 @@ class UploadControllerTests {
             .with(user(STUDENT_1)))
             .andExpect(status().isOk)
             .andExpect(view().name("student-upload-form"))
+            // Accept both +10 and +9 minutes because a minute boundary
+            // may be crossed between the upload and this assertion
             .andExpect(model().attribute("coolOffEnd",
-                now.plusMinutes(10).format(DateTimeFormatter.ofPattern("HH:mm"))))
+                anyOf(
+                    equalTo(now.plusMinutes(10).format(DateTimeFormatter.ofPattern("HH:mm"))),
+                    equalTo(now.plusMinutes(9).format(DateTimeFormatter.ofPattern("HH:mm")))
+                )))
 
         // Teacher disables cooloff for 30 minutes
         this.mvc.perform(post("/assignment/cooloff/${assignment.id}/disable")
@@ -1862,6 +1877,223 @@ class UploadControllerTests {
             .andExpect(status().isOk)
             .andExpect(view().name("student-upload-form"))
             .andExpect(model().attributeDoesNotExist("coolOffEnd"))
+    }
+
+    // ===================================
+    // Maven Submission Tests
+    // ===================================
+
+    @Test
+    @DirtiesContext
+    fun `upload Maven project with correct structure and pom`() {
+
+        val assignment = assignmentRepository.findById("testJavaProj").get()
+        assignment.submissionStructure = SubmissionStructure.MAVEN
+        assignmentRepository.save(assignment)
+
+        val submissionId = testsHelper.uploadProject(this.mvc, "projectOK-maven", "testJavaProj", STUDENT_1,
+            submissionStructure = assignment.submissionStructure, language = assignment.language)
+
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
+            .andExpect(status().isOk())
+            .andReturn()
+
+        @Suppress("UNCHECKED_CAST")
+        val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
+        assertEquals("Summary should be 5 lines", 5, summary.size)
+        assertEquals("projectStructure should be OK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
+        assertEquals("projectStructure should be OK (value)", "OK", summary[0].reportValue)
+        assertEquals("compilation should be OK (key)", Indicator.COMPILATION, summary[1].indicator)
+        assertEquals("compilation should be OK (value)", "OK", summary[1].reportValue)
+
+        @Suppress("UNCHECKED_CAST")
+        val structureErrors = reportResult.modelAndView!!.modelMap["structureErrors"] as List<String>
+        assertTrue("Structure errors should be empty", structureErrors.isEmpty())
+
+        // Verify main resources are copied to the mavenized folder
+        val submissionDB = submissionRepository.findById(submissionId.toLong()).get()
+        val mavenizedFolder = File(dropProjectProperties.mavenizedProjects.rootLocation,
+            Submission.relativeUploadFolder("testJavaProj", submissionDB.submissionDate))
+        val mavenizedProjectFolder = File(mavenizedFolder, "${submissionDB.submissionId}-mavenized")
+        assertTrue("src/main/resources/application.properties should be copied to mavenized folder",
+            File(mavenizedProjectFolder, "src/main/resources/application.properties").exists())
+    }
+
+    @Test
+    @DirtiesContext
+    fun `upload Maven project with invalid structure`() {
+
+        val assignment = assignmentRepository.findById("testJavaProj").get()
+        assignment.submissionStructure = SubmissionStructure.MAVEN
+        assignmentRepository.save(assignment)
+
+        val submissionId = testsHelper.uploadProject(this.mvc, "projectInvalidStructure1-maven", "testJavaProj", STUDENT_1,
+            submissionStructure = assignment.submissionStructure, language = assignment.language)
+
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
+            .andExpect(status().isOk())
+            .andReturn()
+
+        @Suppress("UNCHECKED_CAST")
+        val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
+        assertEquals("Summary should be 1 line", 1, summary.size)
+        assertEquals("projectStructure should be NOK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
+        assertEquals("projectStructure should be NOK (value)", "NOK", summary[0].reportValue)
+
+        @Suppress("UNCHECKED_CAST")
+        val structureErrors = reportResult.modelAndView!!.modelMap["structureErrors"] as List<String>
+        assertTrue("Should have structure errors", structureErrors.isNotEmpty())
+        assertThat(structureErrors,
+            hasItems("The project does not contain a 'src/main/java/org/dropProject/sampleAssignments/testProj' folder"))
+    }
+
+    @Test
+    @DirtiesContext
+    fun `upload Maven project without pom xml`() {
+
+        val assignment = assignmentRepository.findById("testJavaProj").get()
+        assignment.submissionStructure = SubmissionStructure.MAVEN
+        assignmentRepository.save(assignment)
+
+        // Upload a compact project (no pom.xml) to a Maven assignment
+        val submissionId = testsHelper.uploadProject(this.mvc, "projectOK", "testJavaProj", STUDENT_1,
+            submissionStructure = SubmissionStructure.COMPACT, language = Language.JAVA)
+
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
+            .andExpect(status().isOk())
+            .andReturn()
+
+        @Suppress("UNCHECKED_CAST")
+        val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
+        assertEquals("Summary should be 1 line", 1, summary.size)
+        assertEquals("projectStructure should be NOK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
+        assertEquals("projectStructure should be NOK (value)", "NOK", summary[0].reportValue)
+
+        @Suppress("UNCHECKED_CAST")
+        val structureErrors = reportResult.modelAndView!!.modelMap["structureErrors"] as List<String>
+        assertTrue("Should have error about missing pom.xml",
+            structureErrors.any { it.contains("pom.xml", ignoreCase = true) })
+    }
+
+    @Test
+    @DirtiesContext
+    fun `upload Maven project with JUnit errors`() {
+
+        val assignment = assignmentRepository.findById("testJavaProj").get()
+        assignment.submissionStructure = SubmissionStructure.MAVEN
+        assignmentRepository.save(assignment)
+
+        val submissionId = testsHelper.uploadProject(this.mvc, "projectJUnitErrors-maven", "testJavaProj", STUDENT_1,
+            submissionStructure = assignment.submissionStructure, language = assignment.language)
+
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
+            .andExpect(status().isOk())
+            .andReturn()
+
+        @Suppress("UNCHECKED_CAST")
+        val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
+        assertEquals("Summary should be 5 lines", 5, summary.size)
+        assertEquals("projectStructure should be OK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
+        assertEquals("projectStructure should be OK (value)", "OK", summary[0].reportValue)
+        assertEquals("compilation should be OK (key)", Indicator.COMPILATION, summary[1].indicator)
+        assertEquals("compilation should be OK (value)", "OK", summary[1].reportValue)
+        assertEquals("checkstyle should be OK (key)", Indicator.CHECKSTYLE, summary[2].indicator)
+        assertEquals("checkstyle should be OK (value)", "OK", summary[2].reportValue)
+        assertEquals("junit should be NOK (key)", Indicator.TEACHER_UNIT_TESTS, summary[3].indicator)
+        assertEquals("junit should be NOK (value)", "NOK", summary[3].reportValue)
+
+        val buildResult = reportResult.modelAndView!!.modelMap["buildReport"] as BuildReport
+        assertTrue("Should have JUnit errors", buildResult.hasJUnitErrors(TestType.TEACHER) == true)
+    }
+
+    @Test
+    @DirtiesContext
+    fun `upload Maven project with checkstyle errors`() {
+
+        val assignment = assignmentRepository.findById("testJavaProj").get()
+        assignment.submissionStructure = SubmissionStructure.MAVEN
+        assignmentRepository.save(assignment)
+
+        val submissionId = testsHelper.uploadProject(this.mvc, "projectCheckstyleErrors-maven", "testJavaProj", STUDENT_1,
+            submissionStructure = assignment.submissionStructure, language = assignment.language)
+
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
+            .andExpect(status().isOk())
+            .andReturn()
+
+        @Suppress("UNCHECKED_CAST")
+        val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
+        assertTrue("Summary should have at least 4 lines", summary.size >= 4)
+        assertEquals("projectStructure should be OK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
+        assertEquals("projectStructure should be OK (value)", "OK", summary[0].reportValue)
+        assertEquals("compilation should be OK (key)", Indicator.COMPILATION, summary[1].indicator)
+        assertEquals("compilation should be OK (value)", "OK", summary[1].reportValue)
+        assertEquals("checkstyle should be NOK (key)", Indicator.CHECKSTYLE, summary[2].indicator)
+        assertEquals("checkstyle should be NOK (value)", "NOK", summary[2].reportValue)
+
+        val buildResult = reportResult.modelAndView!!.modelMap["buildReport"] as BuildReport
+        assertTrue("Should have checkstyle errors", buildResult.checkstyleErrors.isNotEmpty())
+    }
+
+    @Test
+    @DirtiesContext
+    fun `upload Kotlin Maven project`() {
+        val assignment = Assignment(
+            id = "testKotlinProj", name = "Test Project (for automatic tests)",
+            packageName = "org.dropproject.samples.samplekotlinassignment",
+            language = Language.KOTLIN,
+            ownerUserId = "teacher1",
+            submissionMethod = SubmissionMethod.UPLOAD,
+            active = true,
+            submissionStructure = SubmissionStructure.MAVEN,  // <<< Maven structure
+            gitRepositoryUrl = "git://dummy",
+            gitRepositoryFolder = "testKotlinProj"
+        )
+        assignmentRepository.save(assignment)
+
+        val submissionId = testsHelper.uploadProject(this.mvc, "projectKotlinOK-maven", "testKotlinProj", STUDENT_1,
+            submissionStructure = assignment.submissionStructure, language = assignment.language)
+
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
+            .andExpect(status().isOk())
+            .andReturn()
+
+        @Suppress("UNCHECKED_CAST")
+        val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
+        assertTrue("Summary should have at least 1 line", summary.isNotEmpty())
+        assertEquals("projectStructure should be OK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
+        assertEquals("projectStructure should be OK (value)", "OK", summary[0].reportValue)
+
+        @Suppress("UNCHECKED_CAST")
+        val structureErrors = reportResult.modelAndView!!.modelMap["structureErrors"] as List<String>
+        assertTrue("Structure errors should be empty", structureErrors.isEmpty())
+    }
+
+    @Test
+    @DirtiesContext
+    fun `compact project should be rejected by Maven assignment`() {
+
+        val assignment = assignmentRepository.findById("testJavaProj").get()
+        assignment.submissionStructure = SubmissionStructure.MAVEN
+        assignmentRepository.save(assignment)
+
+        // Upload a compact project to a Maven assignment
+        val submissionId = testsHelper.uploadProject(this.mvc, "projectOK", "testJavaProj", STUDENT_1,
+            submissionStructure = SubmissionStructure.COMPACT, language = Language.JAVA)
+
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
+            .andExpect(status().isOk())
+            .andReturn()
+
+        @Suppress("UNCHECKED_CAST")
+        val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
+        assertEquals("Summary should be 1 line", 1, summary.size)
+        assertEquals("projectStructure should be NOK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
+        assertEquals("projectStructure should be NOK (value)", "NOK", summary[0].reportValue)
+
+        @Suppress("UNCHECKED_CAST")
+        val structureErrors = reportResult.modelAndView!!.modelMap["structureErrors"] as List<String>
+        assertTrue("Should have errors about missing Maven structure", structureErrors.isNotEmpty())
     }
 }
 

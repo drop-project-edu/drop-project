@@ -54,7 +54,7 @@ class TestSubmissionService {
             submissionService.getProjectAuthors(File("src/test/sampleAUTHORS_TXT/without_id.txt"))
             fail("Should have thrown an exception")
         } catch (e: InvalidProjectStructureException) {
-            assertEquals("O número de aluno tem que estar preenchido para todos os elementos do grupo", e.message)
+            assertEquals("The student number must be filled in for all group members", e.message)
         }
     }
 

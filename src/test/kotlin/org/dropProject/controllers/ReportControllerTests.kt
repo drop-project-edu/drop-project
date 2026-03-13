@@ -46,6 +46,7 @@ import java.io.File
 import java.nio.file.Files
 import org.dropproject.TestsHelper
 import org.dropproject.dao.*
+import org.dropproject.dao.Language
 import org.dropproject.data.*
 import org.dropproject.extensions.formatDefault
 import org.dropproject.forms.SubmissionMethod
@@ -89,6 +90,9 @@ class ReportControllerTests {
 
     @Autowired
     lateinit var authorRepository: AuthorRepository
+
+    @Autowired
+    lateinit var projectGroupRepository: ProjectGroupRepository
 
     @Autowired
     private lateinit var testsHelper: TestsHelper
@@ -255,7 +259,7 @@ class ReportControllerTests {
     fun downloadOriginalProject() {
 
         val originalZipFile =
-            zipService.createZipFromFolder("original", resourceLoader.getResource("file:src/test/sampleProjects/projectCompilationErrors").file)
+            zipService.createZipFromFolder("original", resourceLoader.getResource("file:src/test/sampleProjects/compact/java/projectCompilationErrors").file)
         originalZipFile.deleteOnExit()
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", defaultAssignmentId, STUDENT_1)
@@ -429,7 +433,7 @@ class ReportControllerTests {
         assignmentRepository.save(assignment)
 
         // we start with two authors
-        val projectRoot = resourceLoader.getResource("file:src/test/sampleProjects/projectOK").file
+        val projectRoot = resourceLoader.getResource("file:src/test/sampleProjects/compact/java/projectOK").file
         val path = File(projectRoot, "AUTHORS.txt").toPath()
         val lines = Files.readAllLines(path)
         assertEquals("student1;Student 1", lines[0])
@@ -629,6 +633,70 @@ class ReportControllerTests {
                 )
             )
 
+    }
+
+    @Test
+    @DirtiesContext
+    fun exportCSVWithGitRepository() {
+
+        val assignment = assignmentRepository.findById(defaultAssignmentId).get()
+        assignment.submissionMethod = SubmissionMethod.GIT
+        assignmentRepository.save(assignment)
+
+        val now = Date()
+        val nowStr = now.formatDefault()
+
+        // Create entities for 3 students using a loop to reduce duplication
+        val students = listOf(1, 2, 3)
+        students.forEach { studentNum ->
+            // Create ProjectGroup
+            val group = ProjectGroup()
+            projectGroupRepository.save(group)
+
+            // Create Author with group reference (Author is the owning side of the relationship)
+            val author = Author(name = "Student $studentNum", number = "student$studentNum", group = group)
+            authorRepository.save(author)
+
+            // Create GitSubmission with repository URL
+            val gitSubmission = GitSubmission(
+                assignmentId = defaultAssignmentId,
+                submitterUserId = "student$studentNum",
+                gitRepositoryUrl = "git@github.com:student$studentNum/project$studentNum.git",
+                group = group
+            )
+            gitSubmissionRepository.save(gitSubmission)
+
+            // Create Submission referencing GitSubmission
+            val submission = Submission(
+                gitSubmissionId = gitSubmission.id,
+                submissionDate = now,
+                submitterUserId = "student$studentNum",
+                status = SubmissionStatus.VALIDATED.code,
+                statusDate = now,
+                assignmentId = defaultAssignmentId,
+                assignmentGitHash = null,
+                markedAsFinal = true
+            )
+            submission.group = group
+            submissionRepository.save(submission)
+        }
+
+        this.mvc.perform(
+            get("/exportCSV/testJavaProj?ellapsed=false")
+                .with(user(TEACHER_1))
+        )
+            .andExpect(status().isOk())
+            .andExpect(content().contentType("application/csv"))
+            .andExpect(content().string(
+                """
+                    submission id;student id;student name;project structure;compilation;code quality;submission date;# submissions;overdue;repository_url
+                    1;student1;Student 1;;;;${nowStr};1;false;https://github.com/student1/project1
+                    2;student2;Student 2;;;;${nowStr};1;false;https://github.com/student2/project2
+                    3;student3;Student 3;;;;${nowStr};1;false;https://github.com/student3/project3
+                    
+                    """.trimIndent()
+            ))
+            .andReturn()
     }
 
     @Test
@@ -1221,8 +1289,8 @@ class ReportControllerTests {
             gitRepositoryFolder = "testKotlinProj2")
         assignmentRepository.save(assignmentKotlin)
 
-        testsHelper.uploadProject(this.mvc, "projectKotlinOK", "testKotlinProj", STUDENT_1)
-        testsHelper.uploadProject(this.mvc, "projectKotlinOK2", "testKotlinProj", STUDENT_2)
+        testsHelper.uploadProject(this.mvc, "projectKotlinOK", "testKotlinProj", STUDENT_1, language  = Language.KOTLIN)
+        testsHelper.uploadProject(this.mvc, "projectKotlinOK2", "testKotlinProj", STUDENT_2, language  = Language.KOTLIN)
 
         val mvcResult = this.mvc.perform(get("/checkPlagiarism/testKotlinProj").with(user(TEACHER_1)))
             .andExpect(status().isOk)

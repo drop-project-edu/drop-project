@@ -20,6 +20,7 @@
 package org.dropproject.services
 
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.MessageSource
 import org.springframework.stereotype.Service
 import org.dropproject.dao.Assignment
 import org.dropproject.dao.JUnitReport
@@ -42,7 +43,8 @@ class BuildReportBuilder(
     val junitResultsParser: JunitResultsParser,
     val jacocoResultsParser: JacocoResultsParser,
     val jUnitReportRepository: JUnitReportRepository,
-    val jacocoReportRepository: JacocoReportRepository
+    val jacocoReportRepository: JacocoReportRepository,
+    val messageSource: MessageSource
 ) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
@@ -101,6 +103,6 @@ class BuildReportBuilder(
                 emptyList<JacocoResults>()
             }
 
-        return BuildReport(mavenOutputLines, mavenizedProjectFolder, assignment, jUnitResults, jacocoResults)
+        return BuildReport(mavenOutputLines, mavenizedProjectFolder, assignment, jUnitResults, jacocoResults, messageSource)
     }
 }

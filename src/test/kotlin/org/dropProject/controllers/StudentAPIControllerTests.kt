@@ -24,6 +24,7 @@ import org.dropproject.dao.Assignee
 import org.dropproject.dao.Assignment
 import org.dropproject.dao.AssignmentVisibility
 import org.dropproject.dao.Language
+import org.dropproject.dao.SubmissionStructure
 import org.dropproject.forms.SubmissionMethod
 import org.dropproject.repository.AssigneeRepository
 import org.dropproject.repository.AssignmentRepository
@@ -324,6 +325,41 @@ class StudentAPIControllerTests: APIControllerTests {
             .andReturn()
 
 //         println(result.getResponse().getContentAsString());
+    }
+
+    @Test
+    @DirtiesContext
+    fun `try to upload to Maven assignment via API should fail`() {
+
+        // Create Maven assignment
+        val mavenAssignment = Assignment(
+            id = "testMavenProjAPI",
+            name = "Test Maven Project",
+            packageName = "org.dropProject.sampleAssignments.testProj",
+            ownerUserId = "teacher1",
+            submissionMethod = SubmissionMethod.UPLOAD,
+            active = true,
+            submissionStructure = SubmissionStructure.MAVEN,  // <<< Maven structure
+            gitRepositoryUrl = "git://dummy",
+            gitRepositoryFolder = "sampleJavaProject"
+        )
+        assignmentRepository.save(mavenAssignment)
+        assigneeRepository.save(Assignee(assignmentId = "testMavenProjAPI", authorUserId = "student1"))
+
+        val token = generateToken("student1", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")), mvc)
+
+        // Try to upload via API
+        val projectFolder = testsHelper.resourceLoader.getResource("file:src/test/sampleProjects/maven/java/projectOK-maven").file
+        val zipFile = testsHelper.zipService.createZipFromFolder("test", projectFolder)
+        zipFile.deleteOnExit()
+
+        this.mvc.perform(
+            org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/api/student/submissions/new")
+                .file(org.springframework.mock.web.MockMultipartFile("file", zipFile.name, "application/zip", zipFile.readBytes()))
+                .param("assignmentId", "testMavenProjAPI")
+                .header("authorization", testsHelper.header("student1", token)))
+            .andExpect(status().isInternalServerError)
+            .andExpect(jsonPath("$.error", containsString("API submissions are not supported for Maven-structured assignments")))
     }
 
 }

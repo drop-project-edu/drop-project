@@ -6,3 +6,5 @@ mavenized-projects-test
 mavenized-projects
 *.zip
 /src/main/resources/config
+.env
+backups

@@ -31,7 +31,7 @@ import kotlin.jvm.Transient
 enum class Indicator(val code: String, val description: String) {
     PROJECT_STRUCTURE("PS", "Project Structure"),
     COMPILATION("C", "Compilation"),
-    CHECKSTYLE("CS", "Code Quality (Checkstyle)"),
+    CHECKSTYLE("CS", "Code Quality"),
     TEACHER_UNIT_TESTS("TT", "Teacher Unit Tests"),
     STUDENT_UNIT_TESTS("ST", "Student Unit Tests"),
     HIDDEN_UNIT_TESTS("HT", "Teacher Hidden Unit Tests");

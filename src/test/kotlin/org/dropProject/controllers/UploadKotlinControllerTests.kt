@@ -24,6 +24,7 @@ import org.dropproject.dao.Assignment
 import org.dropproject.dao.Indicator
 import org.dropproject.dao.Language
 import org.dropproject.dao.SubmissionReport
+import org.dropproject.dao.SubmissionStructure
 import org.dropproject.data.BuildReport
 import org.dropproject.forms.SubmissionMethod
 import org.dropproject.repository.AssignmentRepository
@@ -117,7 +118,9 @@ class UploadKotlinControllerTests {
     @DirtiesContext
     fun submitProjectOK() {
 
-        val submissionId = testsHelper.uploadProject(this.mvc,"projectKotlinNoPackageOK", "testKotlinProj", STUDENT_1)
+        val assignment = assignmentRepository.findById("testKotlinProj").get()
+        val submissionId = testsHelper.uploadProject(this.mvc,"projectKotlinNoPackageOK", "testKotlinProj", STUDENT_1,
+            submissionStructure = assignment.submissionStructure, language = assignment.language)
 
         val reportResult = this.mvc.perform(get("/buildReport/$submissionId")
                 .with(user(STUDENT_1)))
@@ -154,7 +157,9 @@ class UploadKotlinControllerTests {
     @DirtiesContext
     fun submitProjectStyleErrors1() {
 
-        val submissionId = testsHelper.uploadProject(this.mvc,"projectKotlinWithStyleErrors", "testKotlinProj", STUDENT_1)
+        val assignment = assignmentRepository.findById("testKotlinProj").get()
+        val submissionId = testsHelper.uploadProject(this.mvc,"projectKotlinWithStyleErrors", "testKotlinProj", STUDENT_1,
+            submissionStructure = assignment.submissionStructure, language = assignment.language)
 
         val reportResult = this.mvc.perform(get("/buildReport/$submissionId")
                 .with(user(STUDENT_1)))
@@ -183,9 +188,9 @@ class UploadKotlinControllerTests {
         assertEquals("checkstyle should have 3 errors", buildResult.checkstyleErrors.size, 3)
         assertThat(buildResult.checkstyleErrors,
                 CoreMatchers.hasItems(
-                        "Nome do parâmetro de função deve começar por letra minúscula. Caso o nome tenha mais do que uma palavra, as palavras seguintes devem ser capitalizadas (iniciadas por uma maiúscula) at Main.kt:20:14",
-                        "Nome da variável deve começar por letra minúscula. Caso o nome tenha mais do que uma palavra, as palavras seguintes devem ser capitalizadas (iniciadas por uma maiúscula) at Main.kt:34:9",
-                        "Nome da função deve começar por letra minúscula. Caso o nome tenha mais do que uma palavra, as palavras seguintes devem ser capitalizadas (iniciadas por uma maiúscula) at Main.kt:20:5",
+                        "Function parameter name should start with a lowercase letter. If the name has more than one word, subsequent words should be capitalized at Main.kt:20:14",
+                        "Variable name should start with a lowercase letter. If the name has more than one word, subsequent words should be capitalized at Main.kt:34:9",
+                        "Function name should start with a lowercase letter. If the name has more than one word, subsequent words should be capitalized at Main.kt:20:5",
                 ))
 
         assert(buildResult.hasJUnitErrors() == false)
@@ -198,7 +203,9 @@ class UploadKotlinControllerTests {
     @DirtiesContext
     fun submitProjectCompilationError() {
 
-        val submissionId = testsHelper.uploadProject(this.mvc,"projectKotlinCompilationError", "testKotlinProj", STUDENT_1)
+        val assignment = assignmentRepository.findById("testKotlinProj").get()
+        val submissionId = testsHelper.uploadProject(this.mvc,"projectKotlinCompilationError", "testKotlinProj", STUDENT_1,
+            submissionStructure = assignment.submissionStructure, language = assignment.language)
 
         val reportResult = this.mvc.perform(get("/buildReport/$submissionId")
             .with(user(STUDENT_1)))
@@ -218,7 +225,9 @@ class UploadKotlinControllerTests {
     @DirtiesContext
     fun submitProjectAndCheckREADME() {
 
-        val submissionId = testsHelper.uploadProject(this.mvc,"projectKotlinOK", "testKotlinProj2", STUDENT_1)
+        val assignment = assignmentRepository.findById("testKotlinProj2").get()
+        val submissionId = testsHelper.uploadProject(this.mvc,"projectKotlinOK", "testKotlinProj2", STUDENT_1,
+            submissionStructure = assignment.submissionStructure, language = assignment.language)
 
         val reportResult = this.mvc.perform(get("/buildReport/$submissionId")
             .with(user(STUDENT_1)))
