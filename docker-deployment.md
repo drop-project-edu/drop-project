@@ -159,6 +159,23 @@ For GitHub OAuth or LTI/Moodle integration, see the
 [Authentication and Authorization](https://github.com/drop-project-edu/drop-project/wiki/Authentication-and-Authorization)
 wiki page.
 
+## Health monitoring
+
+Drop Project exposes a health endpoint at `/actuator/health` that returns `{"status":"UP"}` when the application is
+running normally, or `{"status":"DOWN"}` if a problem is detected. By default, the disk-space check triggers when free
+disk drops below **500 MB** — you can override this with `management.health.diskspace.threshold=1GB` (or any size) in
+your `conf/drop-project.properties`. The endpoint is protected by the same authentication as the rest of the app, so to
+allow an uptime monitor such as [UptimeRobot](https://uptimerobot.com) to reach it, set a dedicated username and
+password in your `.env` file:
+
+```properties
+DROP_PROJECT_ACTUATOR_USERNAME=actuator
+DROP_PROJECT_ACTUATOR_PASSWORD=your-secret-password
+```
+
+UptimeRobot can then use **HTTP Basic** authentication when polling `https://yourapp.com/actuator/health` with keyword
+`UP`.
+
 ## Updating
 
 Pull the latest Drop Project image and recreate the container:
