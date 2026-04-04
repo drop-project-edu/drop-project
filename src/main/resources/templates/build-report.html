@@ -193,7 +193,12 @@
             <th>JUnit Summary (Student Tests)</th>
         </tr>
         <tr th:if="${isTeacher and !buildReport.jacocoResults.isEmpty()}">
-            <td>Coverage: <span th:text="${buildReport.jacocoResults[0].lineCoveragePercent}"></span>&percnt; <small>(Only visible to teacher)</small></td>
+            <td>Coverage: <span th:text="${buildReport.jacocoResults[0].lineCoveragePercent}"></span>&percnt;
+                <small th:if="${!assignment.coverageVisibleToStudents}">(Only visible to teacher)</small>
+            </td>
+        </tr>
+        <tr th:if="${!isTeacher and assignment.coverageVisibleToStudents and !buildReport.jacocoResults.isEmpty()}">
+            <td>Coverage: <span th:text="${buildReport.jacocoResults[0].lineCoveragePercent}"></span>&percnt;</td>
         </tr>
         </thead>
         <tbody>

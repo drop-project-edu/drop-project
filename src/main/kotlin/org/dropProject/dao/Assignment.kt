@@ -88,6 +88,7 @@ enum class AssignmentVisibility {
  * asked to implement
  * @property calculateStudentTestsCoverage is an optional Boolean, indicating if the test coverage should be calculated
  * for student's own tests
+ * @property coverageVisibleToStudents is an optional Boolean, indicating if the coverage results should be visible to students
  * @property cooloffPeriod is an optional Integer with the number of minutes that students must wait between consecutive
  * submissions
  * @property maxMemoryMb is an optional Integer, indicating the maximum number of Mb that the student's code can use
@@ -141,6 +142,7 @@ data class Assignment(
     var acceptsStudentTests: Boolean = false,
     var minStudentTests: Int? = null,
     var calculateStudentTestsCoverage: Boolean = false,
+    var coverageVisibleToStudents: Boolean = false,
     var hiddenTestsVisibility: TestVisibility? = null,
     var mandatoryTestsSuffix: String? = null,
     var cooloffPeriod: Int? = null, // minutes

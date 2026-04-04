@@ -307,6 +307,7 @@ class AssignmentService(
         existingAssignment.acceptsStudentTests = assignmentForm.acceptsStudentTests
         existingAssignment.minStudentTests = assignmentForm.minStudentTests
         existingAssignment.calculateStudentTestsCoverage = assignmentForm.calculateStudentTestsCoverage
+        existingAssignment.coverageVisibleToStudents = assignmentForm.coverageVisibleToStudents
         existingAssignment.mandatoryTestsSuffix = assignmentForm.mandatoryTestsSuffix
         existingAssignment.cooloffPeriod = assignmentForm.cooloffPeriod
         existingAssignment.maxMemoryMb = assignmentForm.maxMemoryMb
