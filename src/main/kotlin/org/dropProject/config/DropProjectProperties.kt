@@ -61,7 +61,10 @@ data class DropProjectProperties(
     val footer: Footer = Footer(),
     
     /** MCP configuration */
-    val mcp: Mcp = Mcp()
+    val mcp: Mcp = Mcp(),
+
+    /** Actuator configuration */
+    val actuator: Actuator = Actuator()
 ) {
 
     data class Storage(
@@ -120,6 +123,13 @@ data class DropProjectProperties(
     data class Mcp(
         /** Enable or disable MCP endpoints */
         val enabled: Boolean = true
+    )
+
+    data class Actuator(
+        /** Username for accessing the /actuator/health endpoint */
+        val username: String = "",
+        /** Password for accessing the /actuator/health endpoint */
+        val password: String = ""
     )
 
     override fun toString(): String {
