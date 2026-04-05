@@ -37,22 +37,20 @@ class ActuatorSecurityConfig(val dropProjectProperties: DropProjectProperties) {
     @Bean
     @Order(1)
     fun actuatorFilterChain(http: HttpSecurity): SecurityFilterChain {
+        val actuatorUser = User.withUsername(dropProjectProperties.actuator.username)
+            .password("{noop}${dropProjectProperties.actuator.password}")
+            .roles("ACTUATOR")
+            .build()
+        val userDetailsService = InMemoryUserDetailsManager(actuatorUser)
+
         http
             .securityMatcher(AntPathRequestMatcher("/actuator/**"))
             .authorizeHttpRequests { it.anyRequest().hasRole("ACTUATOR") }
             .httpBasic { }
+            .userDetailsService(userDetailsService)
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .csrf { it.disable() }
 
         return http.build()
-    }
-
-    @Bean
-    fun actuatorUserDetailsManager(): InMemoryUserDetailsManager {
-        val user = User.withUsername(dropProjectProperties.actuator.username)
-            .password("{noop}${dropProjectProperties.actuator.password}")
-            .roles("ACTUATOR")
-            .build()
-        return InMemoryUserDetailsManager(user)
     }
 }
