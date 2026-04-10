@@ -41,6 +41,7 @@ import org.springframework.transaction.annotation.Transactional
 import jakarta.validation.Valid
 import org.dropproject.repository.AssignmentRepository
 import java.io.File
+import org.springframework.data.domain.PageRequest
 
 /**
  * AdminController contains MVC controller functions that handle requests related with DP's administration
@@ -170,8 +171,9 @@ class AdminController(val mavenInvoker: MavenInvoker,
      * space, sorted by total size descending.
      */
     @GetMapping("/diskUsage")
-    fun showDiskUsage(model: ModelMap): String {
-        val assignments = assignmentRepository.findAll()
+    fun showDiskUsage(model: ModelMap,
+                      @RequestParam(defaultValue = "50") maxResults: Int): String {
+        val assignments = assignmentRepository.findAll(PageRequest.of(0, maxResults)).content
         val total = assignments.size
         LOG.info("Computing disk usage for $total assignments")
 
@@ -182,13 +184,24 @@ class AdminController(val mavenInvoker: MavenInvoker,
             val gitFolder = File(dropProjectProperties.storage.gitLocation, assignment.id)
             val mavenizedFolder = File(dropProjectProperties.mavenizedProjects.rootLocation, assignment.id)
 
+            fun sizeOf(folder: File): Long =
+                try { FileUtils.sizeOfDirectory(folder) }
+                catch (e: java.io.UncheckedIOException) {
+                    if (e.cause is java.nio.file.AccessDeniedException) {
+                        LOG.warn("Access denied reading disk usage for ${folder.absolutePath}: ${e.cause?.message}")
+                        0L
+                    } else throw e
+                }
+
             val submissionsSize =
-                (if (uploadFolder.exists()) FileUtils.sizeOfDirectory(uploadFolder) else 0L) +
-                (if (gitFolder.exists()) FileUtils.sizeOfDirectory(gitFolder) else 0L)
-            val mavenizedSize = if (mavenizedFolder.exists()) FileUtils.sizeOfDirectory(mavenizedFolder) else 0L
+                (if (uploadFolder.exists()) sizeOf(uploadFolder) else 0L) +
+                        (if (gitFolder.exists()) sizeOf(gitFolder) else 0L)
+            val mavenizedSize = if (mavenizedFolder.exists()) sizeOf(mavenizedFolder) else 0L
 
             val junitDbSize = junitReportRepository.getTotalXmlSizeByAssignmentId(assignment.id) ?: 0L
             val buildReportDbSize = submissionRepository.getTotalBuildReportSizeByAssignmentId(assignment.id) ?: 0L
+
+            LOG.info("Assignment ${assignment.id}: submissionsSize=$submissionsSize, mavenizedSize=$mavenizedSize, junitDbSize=$junitDbSize, buildReportDbSize=$buildReportDbSize")
 
             AssignmentDiskUsage(
                 assignmentId = assignment.id,
