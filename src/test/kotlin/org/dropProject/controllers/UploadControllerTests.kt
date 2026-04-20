@@ -2095,6 +2095,32 @@ class UploadControllerTests {
         val structureErrors = reportResult.modelAndView!!.modelMap["structureErrors"] as List<String>
         assertTrue("Should have errors about missing Maven structure", structureErrors.isNotEmpty())
     }
+
+    @Test
+    @DirtiesContext
+    fun uploadProjectInvalidStructure_IndicatorsShouldBeVisibleInReport() {
+
+        val submissionId = testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", "testJavaProj", STUDENT_1)
+
+        // status should remain VALIDATED
+        val submissionFromDB = submissionRepository.findById(submissionId.toLong()).get()
+        assertEquals(SubmissionStatus.VALIDATED, submissionFromDB.getStatus())
+
+        // check that the report page shows the PROJECT_STRUCTURE indicator
+        val reportResult = this.mvc.perform(get("/report/testJavaProj").with(user(TEACHER_1)))
+            .andExpect(status().isOk)
+            .andReturn()
+
+        @Suppress("UNCHECKED_CAST")
+        val submissions = reportResult.modelAndView!!.modelMap["submissions"] as List<SubmissionInfo>
+        assertEquals(1, submissions.size)
+
+        val lastSubmission = submissions[0].lastSubmission
+        assertNotNull("reportElements should not be null", lastSubmission.reportElements)
+        assertTrue("reportElements should not be empty", lastSubmission.reportElements!!.isNotEmpty())
+        assertEquals(Indicator.PROJECT_STRUCTURE, lastSubmission.reportElements!![0].indicator)
+        assertEquals("NOK", lastSubmission.reportElements!![0].reportValue)
+    }
 }
 
 
