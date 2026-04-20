@@ -27,7 +27,7 @@ import org.dropproject.repository.AssignmentRepository
 import org.dropproject.repository.GitSubmissionRepository
 import org.dropproject.repository.SubmissionRepository
 import org.dropproject.services.ZipService
-import org.json.JSONObject
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.Assert
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.io.ResourceLoader
@@ -280,13 +280,13 @@ class TestsHelper {
                 .andExpect(expectedResultMatcher)
                 .andReturn().response.contentAsString
 
-        val contentJSON = JSONObject(contentString)
+        val contentJSON = ObjectMapper().readTree(contentString)
 
         if (contentJSON.has("error")) {
-            return contentJSON.getString("error");
+            return contentJSON.get("error").asText()
         }
 
-        return contentJSON.getString("submissionId")
+        return contentJSON.get("submissionId").asText()
     }
 
     // returns the submission id
@@ -305,9 +305,9 @@ class TestsHelper {
             .andExpect(MockMvcResultMatchers.status().isOk)
             .andReturn().response.contentAsString
 
-        val contentJSON = JSONObject(contentString)
+        val contentJSON = ObjectMapper().readTree(contentString)
 
-        return contentJSON.getInt("submissionId")
+        return contentJSON.get("submissionId").asInt()
     }
 
     private fun getProjectPath(projectName: String, submissionStructure: SubmissionStructure, language: Language): String {
