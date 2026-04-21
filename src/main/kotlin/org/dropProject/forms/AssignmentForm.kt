@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,6 +29,7 @@ import java.time.LocalDateTime
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotEmpty
 import jakarta.validation.constraints.NotNull
+import jakarta.validation.constraints.Pattern
 
 /**
  * Enum that represents the submission methods that are available in DP.
@@ -42,52 +43,36 @@ enum class SubmissionMethod {
  */
 data class AssignmentForm(
         @field:NotEmpty(message = "Error: Assignment Id must not be empty")
+        @field:Pattern(regexp = "^[a-zA-Z0-9_-]+$", message = "Error: Assignment Id must only contain letters, numbers, hyphens and underscores")
         var assignmentId: String? = null,
-
         @field:NotEmpty(message = "Error: Assignment Name must not be empty")
         var assignmentName: String? = null,
-
         var assignmentTags: String? = null,  // comma separated list. e.g. "project,18/19"
-
         var assignmentPackage: String? = null,
-
         @field:NotNull(message = "Error: Language must not be empty")
         var language: Language? = null,
-
         @field:NotNull(message = "Error: Submission Structure must not be empty")
         var submissionStructure: SubmissionStructure = SubmissionStructure.COMPACT,
-
         @field:DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
         var dueDate: LocalDateTime? = null,
-
         var acceptsStudentTests: Boolean = false,
         var minStudentTests: Int? = null,
         var calculateStudentTestsCoverage: Boolean = false,
         var hiddenTestsVisibility: TestVisibility? = null,
         var mandatoryTestsSuffix: String? = null,
         var cooloffPeriod: Int? = null,
-
         @field:Min(value=32, message="Error: Max memory must be >= 32")
         var maxMemoryMb: Int? = null,
-
         var leaderboardType: LeaderboardType? = null,
-
         var assignees: String? = null,
-
         var editMode: Boolean = false,
-
         @field:NotNull(message = "Error: Submission Method must not be empty")
         var submissionMethod: SubmissionMethod? = null,
-
         @field:NotEmpty(message = "Error: Git repository must not be empty")
         var gitRepositoryUrl: String? = null,
-
         var acl: String? = null,
-
         var minGroupSize: Int? = null,
         var maxGroupSize: Int? = null,
         var exceptions: String? = null,
-
         var visibility: AssignmentVisibility = AssignmentVisibility.ONLY_BY_LINK
 )
-    
