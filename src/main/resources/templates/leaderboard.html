@@ -51,7 +51,7 @@
 
             <td th:if="${!isTeacher}" th:text="${submission.group.id}"></td>
             <td th:if="${isTeacher}">
-                <a th:href="@{/submissions/(assignmentId=${submission.assignmentId},groupId=${submission.group.id})}"
+                <a th:href="@{/submissions(assignmentId=${submission.assignmentId},groupId=${submission.group.id})}"
                    th:text="${submission.group.id}" th:title="${submission.group.authorsNameStr()}"></a>
             </td>
 
