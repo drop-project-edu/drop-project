@@ -836,8 +836,10 @@ class AssignmentController(
      */
     @RequestMapping(value = ["/toggle-status/{assignmentId}"], method = [(RequestMethod.GET), (RequestMethod.POST)])
     @Transactional  // this is needed since checkAssignmentFiles will insert assignmentTestMethods in the BD
-    fun toggleAssignmentStatus(@PathVariable assignmentId: String, redirectAttributes: RedirectAttributes,
-                               principal: Principal): String {
+    fun toggleAssignmentStatus(@PathVariable assignmentId: String,
+                           @RequestParam(name = "tags", required = false) tags: String?,
+                           redirectAttributes: RedirectAttributes,
+                           principal: Principal): String {
 
         val assignment = assignmentRepository.findById(assignmentId)
             .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
@@ -853,7 +855,7 @@ class AssignmentController(
             // check if it has been setup for git connection and if there is a repository folder
             if (!File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder).exists()) {
                 redirectAttributes.addFlashAttribute("error", "Can't mark assignment as active since it is not connected to a git repository.")
-                return "redirect:/assignment/my"
+                return if (tags != null) "redirect:/assignment/my?tags=$tags" else "redirect:/assignment/my"
             }
 
             val report = assignmentTeacherFiles.checkAssignmentFiles(assignment, principal)
@@ -878,7 +880,7 @@ class AssignmentController(
         assignmentRepository.save(assignment)
 
         redirectAttributes.addFlashAttribute("message", "Assignment was marked ${if (assignment.active) "active" else "inactive"}")
-        return "redirect:/assignment/my"
+        return if (tags != null) "redirect:/assignment/my?tags=$tags" else "redirect:/assignment/my"
     }
 
     /**
@@ -1193,6 +1195,7 @@ class AssignmentController(
         model["allTags"] = assignmentTagRepository.findAll()
             .map { it.selected = tags?.split(",")?.contains(it.name) ?: false; it }
             .sortedBy { it.name }
+model["currentTags"] = tags ?: ""
     }
 
 
