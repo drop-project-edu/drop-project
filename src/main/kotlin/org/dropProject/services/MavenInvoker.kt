@@ -88,6 +88,9 @@ class MavenInvoker(
             dpArgLine += " -DdropProject.currentUserId=${principalName}"
         }
 
+        // added this line to force the checkstyle to use English as the primary language
+        request.mavenOpts = "-Duser.language=en -Duser.country=US"
+
         if (securityManagerEnabled) {
             dpArgLine += " -Djava.security.manager=org.dropproject.security.SandboxSecurityManager"
             dpArgLine += " -DdropProject.maven.repository=${File(dropProjectProperties.maven.repository).absolutePath}"

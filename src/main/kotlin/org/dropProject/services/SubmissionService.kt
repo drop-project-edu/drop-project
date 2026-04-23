@@ -127,11 +127,10 @@ class SubmissionService(
             }
 
             if (retrieveReport) {
-                lastSubmission.buildReport?.let {
-                        buildReportDB ->
-                    val reportElements = submissionReportRepository.findBySubmissionId(lastSubmission.id)
-                    lastSubmission.reportElements = reportElements
+                val reportElements = submissionReportRepository.findBySubmissionId(lastSubmission.id)
+                lastSubmission.reportElements = reportElements
 
+                lastSubmission.buildReport?.let { buildReportDB ->
                     val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(lastSubmission,
                         lastSubmission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
                     val buildReport = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
@@ -142,7 +141,6 @@ class SubmissionService(
                     if (buildReport.jacocoResults.isNotEmpty()) {
                         lastSubmission.coverage = buildReport.jacocoResults[0].lineCoveragePercent
                     }
-
                     lastSubmission.testResults = buildReport.testResults()
                 }
             }
