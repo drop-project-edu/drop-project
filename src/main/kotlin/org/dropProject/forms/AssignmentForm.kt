@@ -29,6 +29,7 @@ import java.time.LocalDateTime
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotEmpty
 import jakarta.validation.constraints.NotNull
+import jakarta.validation.constraints.Pattern
 
 /**
  * Enum that represents the submission methods that are available in DP.
@@ -42,6 +43,7 @@ enum class SubmissionMethod {
  */
 data class AssignmentForm(
         @field:NotEmpty(message = "Error: Assignment Id must not be empty")
+        @field:Pattern(regexp = "^[a-zA-Z0-9_-]+$", message = "Error: Assignment Id must only contain letters, numbers, hyphens and underscores")
         var assignmentId: String? = null,
 
         @field:NotEmpty(message = "Error: Assignment Name must not be empty")
