@@ -2090,7 +2090,6 @@ class AssignmentControllerTests {
     @WithMockUser("teacher1", roles = ["TEACHER"])
     @DirtiesContext
     fun test_33_createAssignmentWithACLContainingSpaces() {
-
         mvc.perform(
             post("/assignment/new")
                 .param("assignmentId", "assignmentId")
@@ -2105,12 +2104,10 @@ class AssignmentControllerTests {
             .andExpect(view().name("assignment-form"))
             .andExpect(model().attributeHasFieldErrors("assignmentForm", "acl"))
     }
-
     @Test
     @WithMockUser("teacher1", roles = ["TEACHER"])
     @DirtiesContext
     fun test_34_createAssignmentWithACLContainingSemicolons() {
-
         mvc.perform(
             post("/assignment/new")
                 .param("assignmentId", "assignmentId")
@@ -2125,5 +2122,28 @@ class AssignmentControllerTests {
             .andExpect(view().name("assignment-form"))
             .andExpect(model().attributeHasFieldErrors("assignmentForm", "acl"))
     }
+
+
+@Test
+    @WithMockUser("teacher1", roles = ["TEACHER"])
+    @DirtiesContext
+    fun test_tagFilterPreservedAfterToggle() {
+        val assignment = Assignment(
+            id = "testJavaProj", name = "Test Project (for automatic tests)",
+            packageName = "org.testProj", ownerUserId = "teacher1",
+            submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
+            gitRepositoryFolder = "testJavaProj"
+        )
+        assignmentRepository.save(assignment)
+
+        // toggle with tags parameter - should redirect preserving the tag
+        this.mvc.perform(
+            post("/assignment/toggle-status/testJavaProj")
+                .param("tags", "sample")
+                .with(user(TEACHER_1))
+        )
+            .andExpect(status().isFound)
+            .andExpect(header().string("Location", "/assignment/my?tags=sample"))
+    }
 }
-    
+>>>>>>> 465854d (test: add test for tag filter preservation after toggling assignment status (#89))
