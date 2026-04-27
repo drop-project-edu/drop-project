@@ -248,7 +248,7 @@ class SubmissionService(
             if (assignment.projectGroupRestrictions != null) {
                 val restrictions = assignment.projectGroupRestrictions!!
                 if (authors.size !in restrictions.minGroupSize .. (restrictions.maxGroupSize ?: 50) &&
-                    !restrictions.exceptionsAsList().contains(principal.realName())) {
+                    !restrictions.exceptionsAsList().contains(principal.realName())) && !request.isUserInRole("TEACHER") {
                     throw InvalidProjectGroupException(i18n.getMessage("student.submit.invalidGroup",
                         arrayOf(restrictions.minGroupSize, restrictions.maxGroupSize ?: 50), currentLocale))
                 }
