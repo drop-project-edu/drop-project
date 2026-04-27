@@ -30,6 +30,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ModelAttribute
 import java.security.Principal
 import jakarta.servlet.http.HttpServletRequest
+import org.springframework.beans.factory.annotation.Value
 
 @ControllerAdvice
 class GlobalControllerAdvice(
@@ -80,6 +81,18 @@ class GlobalControllerAdvice(
                     userDetailsManager.userExists("teacher1")
         } else {
             return false
+        }
+    }
+
+    @ControllerAdvice
+    class GlobalModelAttributes(
+        @Value("\${drop-project.assets.local:false}")
+        private val useLocalAssets: Boolean
+    ) {
+
+        @ModelAttribute("useLocalAssets")
+        fun useLocalAssets(): Boolean {
+            return useLocalAssets
         }
     }
 

@@ -33,7 +33,15 @@
 </div>
 
 <div th:replace="~{layout/layout :: footer}"></div>
-<script src="https://cdn.jsdelivr.net/gh/xcash/bootstrap-autocomplete@v2.3.5/dist/latest/bootstrap-autocomplete.min.js"></script>
+
+<script th:if="${useLocalAssets}"
+        th:src="@{/vendor/bootstrap-autocomplete.min.js}">
+</script>
+
+<script th:if="${!useLocalAssets}"
+        src="https://cdn.jsdelivr.net/gh/xcash/bootstrap-autocomplete@v2.3.5/dist/latest/bootstrap-autocomplete.min.js">
+</script>
+
 <script>
     $(document).ready(function() {
         $('.basicAutoSelect').autoComplete({
