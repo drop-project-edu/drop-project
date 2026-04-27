@@ -1366,6 +1366,6 @@ class ReportControllerTests {
             .andReturn()
 
         val content = result.response.contentAsString
-        assert(!content.contains("/submissions/?")) { "URL should not contain /submissions/? - extra slash found before query string" }
+        assert(content.contains("/submissions?assignmentId=")) { "URL should contain /submissions?assignmentId= -  no extra slash found before query string" }
     }
 }
