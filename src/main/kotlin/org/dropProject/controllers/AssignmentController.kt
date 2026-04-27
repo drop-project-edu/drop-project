@@ -827,7 +827,7 @@ class AssignmentController(
         return "redirect:/assignment/my"
     }
 
-    /**
+/**
      * Controller that allows toggling the status of an [Assignment] between "active" and "inactive".
      * @param assignmentId is a String representing the relevant Assignment
      * @param redirectAttributes is a RedirectAttributes
@@ -837,50 +837,40 @@ class AssignmentController(
     @RequestMapping(value = ["/toggle-status/{assignmentId}"], method = [(RequestMethod.GET), (RequestMethod.POST)])
     @Transactional  // this is needed since checkAssignmentFiles will insert assignmentTestMethods in the BD
     fun toggleAssignmentStatus(@PathVariable assignmentId: String,
-                           @RequestParam(name = "tags", required = false) tags: String?,
-                           redirectAttributes: RedirectAttributes,
-                           principal: Principal): String {
-
+                               @RequestParam(name = "tags", required = false) tags: String?,
+                               redirectAttributes: RedirectAttributes,
+                               principal: Principal): String {
         val assignment = assignmentRepository.findById(assignmentId)
             .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
-
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
-
         if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
             throw IllegalAccessException("Assignments can only be changed by their owner or authorized teachers")
         }
-
+        val redirectUrl = if (tags != null) "redirect:/assignment/my?tags=$tags" else "redirect:/assignment/my"
         if (!assignment.active) {
-
             // check if it has been setup for git connection and if there is a repository folder
             if (!File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder).exists()) {
                 redirectAttributes.addFlashAttribute("error", "Can't mark assignment as active since it is not connected to a git repository.")
-                return if (tags != null) "redirect:/assignment/my?tags=$tags" else "redirect:/assignment/my"
+                return redirectUrl
             }
-
             val report = assignmentTeacherFiles.checkAssignmentFiles(assignment, principal)
-
             // store the report in the DB (first, clear the previous report)
             assignmentReportRepository.deleteByAssignmentId(assignmentId)
             report.forEach {
                 assignmentReportRepository.save(AssignmentReport(assignmentId = assignmentId, type = it.type,
                     message = it.message, description = it.description))
             }
-
             if (report.any { it.type == AssignmentValidator.InfoType.ERROR }) {  // TODO: Should it be warnings also??
                 assignmentRepository.save(assignment)  // assignment.buildResult was updated
-
                 redirectAttributes.addFlashAttribute("error", "Assignment has problems. Please check the 'Validation Report'")
                 LOG.info("Assignment has problems. Please check the 'Validation Report'")
                 return "redirect:/assignment/info/${assignmentId}"
             }
         }
-
         assignment.active = !assignment.active
         assignmentRepository.save(assignment)
-
         redirectAttributes.addFlashAttribute("message", "Assignment was marked ${if (assignment.active) "active" else "inactive"}")
-        return if (tags != null) "redirect:/assignment/my?tags=$tags" else "redirect:/assignment/my"
+        return redirectUrl
     }
 
     /**
@@ -1175,8 +1165,7 @@ class AssignmentController(
         return ResponseEntity.ok(mapOf("success" to true, "message" to "Cooloff re-enabled"))
     }
 
-
-    /**
+/**
      * Collects [Assignment]s that have certain [tags] into the [model].
      * @param model is a [ModelMap] that will be populated with information to use in a View.
      * @param tags is a String containing the names of multiple tags. Each tag name is separated by a comma. Only the
@@ -1184,20 +1173,15 @@ class AssignmentController(
      */
     private fun listMyFilteredAssignments(principal: Principal, tags: String?, model: ModelMap, archived: Boolean) {
         var assignments = assignmentService.getMyAssignments(principal, archived)
-
         if (tags != null) {
             val tagsParam = tags.split(",")
             assignments = assignments.filter { it.tagsStr?.intersect(tagsParam)?.size == tagsParam.size }
         }
-
         model["assignments"] = assignments // ordered client-side
         model["archived"] = archived
         model["allTags"] = assignmentTagRepository.findAll()
             .map { it.selected = tags?.split(",")?.contains(it.name) ?: false; it }
             .sortedBy { it.name }
-model["currentTags"] = tags ?: ""
+        model["currentTags"] = tags ?: ""
     }
-
-
-
 }

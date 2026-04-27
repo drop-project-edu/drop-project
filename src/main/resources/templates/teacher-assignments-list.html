@@ -55,7 +55,7 @@
             <td th:if="${assignment.lastSubmissionDate == null}">-</td>
             <td th:if="${!archived}" class="text-center" th:data-order="${assignment.active}">
                 <form th:action="@{'/assignment/toggle-status/' + ${assignment.id}}" method="post" style="display: inline;">
-                    <input type="hidden" name="tags" th:value="${currentTags}"/>
+<input type="hidden" name="tags" th:value="${currentTags}"/>
                     <input type="checkbox" th:attr="data-assignment-id=${assignment.id}" th:checked="${assignment.active}"
                            onChange="
                             if (this.checked) {
