@@ -1344,6 +1344,20 @@ class ReportControllerTests {
         assignment.leaderboardType = LeaderboardType.ELLAPSED
         assignmentRepository.save(assignment)
 
+        val projectRoot = resourceLoader.getResource("file:src/test/sampleProjects/compact/java/projectOK").file
+        val path = File(projectRoot, "AUTHORS.txt").toPath()
+        val lines = Files.readAllLines(path)
+
+        try {
+            testsHelper.uploadProject(this.mvc, "projectOK", defaultAssignmentId, STUDENT_1)
+        } finally {
+            val writer = Files.newBufferedWriter(path)
+            writer.write(lines[0])
+            writer.newLine()
+            writer.write(lines[1])
+            writer.close()
+        }
+
         val result = this.mvc.perform(
             get("/leaderboard/testJavaProj")
                 .with(user(TEACHER_1))
@@ -1352,6 +1366,6 @@ class ReportControllerTests {
             .andReturn()
 
         val content = result.response.contentAsString
-        assert(!content.contains("@{/submissions/(")) { "URL should not contain @{/submissions/( - extra slash found" }
+        assert(!content.contains("/submissions/?")) { "URL should not contain /submissions/? - extra slash found before query string" }
     }
 }
