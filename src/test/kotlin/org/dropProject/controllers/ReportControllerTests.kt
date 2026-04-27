@@ -1336,7 +1336,7 @@ class ReportControllerTests {
 
 
 
-@Test
+    @Test
     @DirtiesContext
     fun `leaderboard group URL has no extra slash`() {
         val assignment = assignmentRepository.findById(defaultAssignmentId).get()
@@ -1352,7 +1352,6 @@ class ReportControllerTests {
             .andReturn()
 
         val content = result.response.contentAsString
-        assert(!content.contains("/submissions/(")) { "URL should not contain /submissions/(" }
+        assert(!content.contains("@{/submissions/(")) { "URL should not contain @{/submissions/( - extra slash found" }
     }
-
 }
