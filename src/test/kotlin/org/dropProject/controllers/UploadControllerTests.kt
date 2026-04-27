@@ -2183,6 +2183,54 @@ class UploadControllerTests {
         assertEquals(Indicator.PROJECT_STRUCTURE, lastSubmission.reportElements!![0].indicator)
         assertEquals("NOK", lastSubmission.reportElements!![0].reportValue)
     }
+
+    @Test
+    @DirtiesContext
+    fun `upload project with nested folder in zip should return error`() {
+
+        // Create a temp folder simulating the wrong zip structure:
+        // outerFolder/
+        //   └── my-project/
+        //       ├── src/
+        //       └── AUTHORS.txt
+        val tempDirectory = File(System.getProperty("java.io.tmpdir"))
+        val zipCreationTime = System.currentTimeMillis()
+
+        val projectFolder = File(tempDirectory, "my-project-$zipCreationTime")
+        projectFolder.mkdir()
+        File(projectFolder, "src").mkdir()
+        File(projectFolder, "AUTHORS.txt").apply {
+            createNewFile()
+            writeText("student1;Student 1")
+        }
+
+        val outerFolder = File(tempDirectory, "outer-$zipCreationTime")
+        outerFolder.mkdir()
+        projectFolder.copyRecursively(File(outerFolder, projectFolder.name))
+
+        // Zip the outer folder (wrong structure)
+        val zipFile = zipService.createZipFromFolder("bad-submission-$zipCreationTime", outerFolder)
+        zipFile.deleteOnExit()
+
+        val multipartFile = MockMultipartFile("file", zipFile.name, "application/zip", zipFile.readBytes())
+
+        this.mvc.perform(
+            multipart("/upload")
+                .file(multipartFile)
+                .param("assignmentId", "testJavaProj")
+                .param("async", "false")
+                .with(user(STUDENT_1))
+        )
+            .andExpect(status().isInternalServerError)
+            .andExpect(content().string(
+                """{"error":"Please make sure that AUTHORS.txt is placed directly in the root of the ZIP, and that your ZIP does not contain an extra top-level folder (e.g., project-name/AUTHORS.txt)."}"""
+            ))
+
+        // clean-up
+        projectFolder.deleteRecursively()
+        outerFolder.deleteRecursively()
+        zipFile.delete()
+    }
 }
 
 

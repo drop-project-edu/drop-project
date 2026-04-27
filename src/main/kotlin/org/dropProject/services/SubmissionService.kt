@@ -241,9 +241,13 @@ class SubmissionService(
                 val directories = topLevelEntries.filter {
                     it.isDirectory && !it.name.startsWith("__MACOSX") && !it.name.startsWith(".")
                 }
-                val files = topLevelEntries.filter { it.isFile }
 
-                if (directories.size == 1 && files.all { it.extension.equals("txt", ignoreCase = true) }) {
+                val hasAuthorsInRoot = File(projectFolder, "AUTHORS.txt").existsCaseSensitive()
+                val hasSingleDirectory = directories.size == 1
+                val hasAuthorsInsideDirectory = hasSingleDirectory &&
+                        File(directories[0], "AUTHORS.txt").existsCaseSensitive()
+
+                if (!hasAuthorsInRoot && hasSingleDirectory && hasAuthorsInsideDirectory) {
                     return ResponseEntity.internalServerError()
                         .body(SubmissionResult(error = i18n.getMessage("error.zip.wrapped.folder", null, currentLocale)))
                 }
