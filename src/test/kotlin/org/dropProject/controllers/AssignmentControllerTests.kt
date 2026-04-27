@@ -2086,6 +2086,7 @@ class AssignmentControllerTests {
         }
     }
 
+
     @Test
     @WithMockUser("teacher1", roles = ["TEACHER"])
     @DirtiesContext
@@ -2110,7 +2111,6 @@ class AssignmentControllerTests {
     @WithMockUser("teacher1", roles = ["TEACHER"])
     @DirtiesContext
     fun test_34_createAssignmentWithACLContainingSemicolons() {
-
         mvc.perform(
             post("/assignment/new")
                 .param("assignmentId", "assignmentId")
@@ -2119,11 +2119,27 @@ class AssignmentControllerTests {
                 .param("language", "JAVA")
                 .param("submissionMethod", "UPLOAD")
                 .param("gitRepositoryUrl", sampleJavaAssignmentRepo)
-                .param("acl", "teacher2;teacher3")  // semicolon instead of comma
+                .param("acl", "teacher2;teacher3")
         )
             .andExpect(status().isOk())
             .andExpect(view().name("assignment-form"))
             .andExpect(model().attributeHasFieldErrors("assignmentForm", "acl"))
     }
+
+    @Test
+    @WithMockUser("teacher1", roles = ["TEACHER"])
+    @DirtiesContext
+    fun test_assignmentIdWithBackslashIsRejected() {
+        mvc.perform(
+            post("/assignment/new")
+                .param("assignmentId", "test\\assignment")
+                .param("assignmentName", "Test Assignment")
+                .param("language", "JAVA")
+                .param("submissionMethod", "UPLOAD")
+                .param("gitRepositoryUrl", "git@github.com:user/test.git")
+        )
+            .andExpect(status().isOk)
+            .andExpect(view().name("assignment-form"))
+            .andExpect(model().attributeHasFieldErrors("assignmentForm", "assignmentId"))
+    }
 }
-    
