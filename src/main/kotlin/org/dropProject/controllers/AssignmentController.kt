@@ -294,6 +294,16 @@ class AssignmentController(
         if (!(assignmentForm.acl.isNullOrBlank())) {
             val userIds = assignmentForm.acl!!.split(",")
 
+            // Validate each userId
+            for (userId in userIds) {
+                val trimmedUserId = userId.trim()
+                if (trimmedUserId.contains(" ") || trimmedUserId.contains(";")) {
+                    bindingResult.rejectValue("acl", "acl.invalidFormat",
+                        "Error: User IDs must be comma-separated. '$trimmedUserId' contains invalid characters (spaces or semicolons).")
+                    return "assignment-form"
+                }
+            }
+
             // first delete existing to prevent duplicates
             assignmentACLRepository.deleteByAssignmentId(assignmentForm.assignmentId!!)
 

@@ -2085,5 +2085,45 @@ class AssignmentControllerTests {
             }
         }
     }
+
+    @Test
+    @WithMockUser("teacher1", roles = ["TEACHER"])
+    @DirtiesContext
+    fun test_33_createAssignmentWithACLContainingSpaces() {
+
+        mvc.perform(
+            post("/assignment/new")
+                .param("assignmentId", "assignmentId")
+                .param("assignmentName", "assignmentName")
+                .param("assignmentPackage", "assignmentPackage")
+                .param("language", "JAVA")
+                .param("submissionMethod", "UPLOAD")
+                .param("gitRepositoryUrl", sampleJavaAssignmentRepo)
+                .param("acl", "teacher2 teacher3")  // space instead of comma
+        )
+            .andExpect(status().isOk())
+            .andExpect(view().name("assignment-form"))
+            .andExpect(model().attributeHasFieldErrors("assignmentForm", "acl"))
+    }
+
+    @Test
+    @WithMockUser("teacher1", roles = ["TEACHER"])
+    @DirtiesContext
+    fun test_34_createAssignmentWithACLContainingSemicolons() {
+
+        mvc.perform(
+            post("/assignment/new")
+                .param("assignmentId", "assignmentId")
+                .param("assignmentName", "assignmentName")
+                .param("assignmentPackage", "assignmentPackage")
+                .param("language", "JAVA")
+                .param("submissionMethod", "UPLOAD")
+                .param("gitRepositoryUrl", sampleJavaAssignmentRepo)
+                .param("acl", "teacher2;teacher3")  // semicolon instead of comma
+        )
+            .andExpect(status().isOk())
+            .andExpect(view().name("assignment-form"))
+            .andExpect(model().attributeHasFieldErrors("assignmentForm", "acl"))
+    }
 }
     
