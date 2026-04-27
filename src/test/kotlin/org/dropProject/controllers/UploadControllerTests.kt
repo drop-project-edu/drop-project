@@ -1705,6 +1705,21 @@ class UploadControllerTests {
 
     @Test
     @DirtiesContext
+    fun `upload group project as teacher`() {
+
+        val projectGroupRestrictions = ProjectGroupRestrictions(minGroupSize = 2, maxGroupSize = 2)
+        projectGroupRestrictionsRepository.save(projectGroupRestrictions)
+
+        val assignment = assignmentRepository.findById("testJavaProj").get()
+        assignment.projectGroupRestrictions = projectGroupRestrictions
+        assignmentRepository.save(assignment)
+
+        testsHelper.uploadProject(this.mvc, "projectOKTeacher", "testJavaProj", TEACHER_1,
+            expectedResultMatcher = status().isOk())
+    }
+
+    @Test
+    @DirtiesContext
     fun `upload a project with test classes that dont follow the TestXXX convention should show an error`() {
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectWithStudentTestNotValid", "testJavaProj", STUDENT_1)
