@@ -2105,12 +2105,11 @@ class AssignmentControllerTests {
             .andExpect(status().isOk())
             .andExpect(view().name("assignment-form"))
             .andExpect(model().attributeHasFieldErrors("assignmentForm", "acl"))
-    }
-
+}
     @Test
     @WithMockUser("teacher1", roles = ["TEACHER"])
     @DirtiesContext
-    fun test_34_createAssignmentWithACLContainingSemicolons() {
+    fun test_33_createAssignmentWithACLContainingSpaces() {
         mvc.perform(
             post("/assignment/new")
                 .param("assignmentId", "assignmentId")
@@ -2119,7 +2118,7 @@ class AssignmentControllerTests {
                 .param("language", "JAVA")
                 .param("submissionMethod", "UPLOAD")
                 .param("gitRepositoryUrl", sampleJavaAssignmentRepo)
-                .param("acl", "teacher2;teacher3")
+                .param("acl", "teacher2 teacher3")
         )
             .andExpect(status().isOk())
             .andExpect(view().name("assignment-form"))
