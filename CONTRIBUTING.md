@@ -24,9 +24,16 @@ before implementation work begins.
    something you'd like to work on. If the issue doesn't exist yet, create one first.
 2. **Show interest** — If the issue is unassigned, leave a comment expressing your interest and wait for a maintainer to
    assign it to you. This lets others know it's being worked on.
-3. **Fork the repository** and create a branch.
-4. **Make your changes** (see [development.md](development.md) for setup instructions).
-5. **Submit a pull request** referencing the issue (e.g., `Closes #42`).
+3. **Fork the repository** and create a branch. If the issue has a milestone assigned, submit your PR against the branch
+   named after that milestone (e.g., `v1.2.0`). If that branch doesn't exist yet, ask a maintainer to create it before
+   you start.
+4. **Make your changes** (see [development.md](development.md) for setup instructions):
+   - Write clean, focused code that addresses only the scope of the issue.
+   - Add or update tests to cover your changes — PRs without tests may be rejected.
+   - Update or add documentation if necessary.
+   - Run the full test suite locally and make sure all tests pass before opening a PR.
+   - Keep commits small and descriptive; each commit should represent a single logical change.
+5. **Submit a pull request** referencing the issue (e.g., `Fixes #42`).
 
 ## License
 
