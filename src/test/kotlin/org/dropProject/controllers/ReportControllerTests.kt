@@ -1333,4 +1333,26 @@ class ReportControllerTests {
             .andExpect(status().isNotFound)
     }
 
+
+
+
+@Test
+    @DirtiesContext
+    fun `leaderboard group URL has no extra slash`() {
+        val assignment = assignmentRepository.findById(defaultAssignmentId).get()
+        assignment.showLeaderBoard = true
+        assignment.leaderboardType = LeaderboardType.ELLAPSED
+        assignmentRepository.save(assignment)
+
+        val result = this.mvc.perform(
+            get("/leaderboard/testJavaProj")
+                .with(user(TEACHER_1))
+        )
+            .andExpect(status().isOk)
+            .andReturn()
+
+        val content = result.response.contentAsString
+        assert(!content.contains("/submissions/(")) { "URL should not contain /submissions/(" }
+    }
+
 }
