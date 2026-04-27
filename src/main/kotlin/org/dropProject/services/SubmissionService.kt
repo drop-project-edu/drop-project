@@ -235,6 +235,20 @@ class SubmissionService(
         val projectFolder: File? = storageService.store(file, assignment.id)
 
         if (projectFolder != null) {
+
+            val topLevelEntries = projectFolder.listFiles()
+            if (topLevelEntries != null) {
+                val directories = topLevelEntries.filter {
+                    it.isDirectory && !it.name.startsWith("__MACOSX") && !it.name.startsWith(".")
+                }
+                val files = topLevelEntries.filter { it.isFile }
+
+                if (directories.size == 1 && files.all { it.extension.equals("txt", ignoreCase = true) }) {
+                    return ResponseEntity.internalServerError()
+                        .body(SubmissionResult(error = i18n.getMessage("error.zip.wrapped.folder", null, currentLocale)))
+                }
+            }
+
             val authors = getProjectAuthors(File(projectFolder, "AUTHORS.txt"))
             LOG.info("[${authors.joinToString(separator = "|")}] Received ${originalFilename}")
 
