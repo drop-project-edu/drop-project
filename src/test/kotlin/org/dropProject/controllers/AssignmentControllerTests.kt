@@ -2124,7 +2124,7 @@ class AssignmentControllerTests {
     }
 
 
-@Test
+    @Test
     @WithMockUser("teacher1", roles = ["TEACHER"])
     @DirtiesContext
     fun test_tagFilterPreservedAfterToggle() {
