@@ -20,6 +20,8 @@
 package org.dropproject.repository
 
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
 import org.springframework.transaction.annotation.Transactional
 import org.dropproject.dao.JUnitReport
 import org.dropproject.dao.ProjectGroup
@@ -35,4 +37,7 @@ interface JUnitReportRepository : JpaRepository<JUnitReport, Long> {
 
     @Transactional
     fun deleteBySubmissionId(submissionId: Long)
+
+    @Query("SELECT SUM(LENGTH(jr.xmlReport)) FROM JUnitReport jr WHERE jr.submissionId IN (SELECT s.id FROM Submission s WHERE s.assignmentId = :assignmentId)")
+    fun getTotalXmlSizeByAssignmentId(@Param("assignmentId") assignmentId: String): Long?
 }

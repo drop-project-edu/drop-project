@@ -61,6 +61,7 @@ import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers.print
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import java.io.File
 import java.nio.file.Files
@@ -2094,6 +2095,67 @@ class UploadControllerTests {
         @Suppress("UNCHECKED_CAST")
         val structureErrors = reportResult.modelAndView!!.modelMap["structureErrors"] as List<String>
         assertTrue("Should have errors about missing Maven structure", structureErrors.isNotEmpty())
+    }
+
+    @Test
+    @DirtiesContext
+    fun `coverage is only visible to teacher when coverageVisibleToStudents is false`() {
+
+        val assignment = Assignment(id = "testJavaProjWithCoverage",
+            name = "Test Project (for automatic tests with coverage)",
+            packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
+            submissionMethod = SubmissionMethod.UPLOAD, active = true,
+            acceptsStudentTests = true,
+            minStudentTests = 1,
+            calculateStudentTestsCoverage = true,
+            coverageVisibleToStudents = false,   // <<< key for this test
+            gitRepositoryUrl = "git://dummy",
+            gitRepositoryFolder = "testJavaProjWithCoverage")
+        assignmentRepository.save(assignment)
+
+        val submissionId = testsHelper.uploadProject(this.mvc, "projectWith1StudentTest", assignment.id, STUDENT_1)
+
+        // student should NOT see coverage
+        this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
+            .andExpect(status().isOk())
+            .andExpect(content().string(not(containsString("Coverage:"))))
+
+        // teacher should see coverage with "(Only visible to teacher)" note
+        this.mvc.perform(get("/buildReport/$submissionId").with(user(TEACHER_1)))
+            .andExpect(status().isOk())
+            .andDo(print())
+            .andExpect(content().string(containsString("Coverage: <span>25</span>&percnt;")))
+            .andExpect(content().string(containsString("Only visible to teacher")))
+    }
+
+    @Test
+    @DirtiesContext
+    fun `coverage is visible to students when coverageVisibleToStudents is true`() {
+
+        val assignment = Assignment(id = "testJavaProjWithCoverage",
+            name = "Test Project (for automatic tests with coverage)",
+            packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
+            submissionMethod = SubmissionMethod.UPLOAD, active = true,
+            acceptsStudentTests = true,
+            minStudentTests = 1,
+            calculateStudentTestsCoverage = true,
+            coverageVisibleToStudents = true,    // <<< key for this test
+            gitRepositoryUrl = "git://dummy",
+            gitRepositoryFolder = "testJavaProjWithCoverage")
+        assignmentRepository.save(assignment)
+
+        val submissionId = testsHelper.uploadProject(this.mvc, "projectWith1StudentTest", assignment.id, STUDENT_1)
+
+        // student should see coverage
+        this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("Coverage:")))
+
+        // teacher should see coverage without "(Only visible to teacher)" note
+        this.mvc.perform(get("/buildReport/$submissionId").with(user(TEACHER_1)))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("Coverage:")))
+            .andExpect(content().string(not(containsString("Only visible to teacher"))))
     }
 }
 

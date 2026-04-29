@@ -67,4 +67,7 @@ interface SubmissionRepository : JpaRepository<Submission, Long> {
     fun deleteAllByAssignmentId(assignmentId: String)
 
     fun findByGroupIn(groups: List<ProjectGroup>): List<Submission>
+
+    @Query("SELECT SUM(LENGTH(s.buildReport.buildReport)) FROM Submission s WHERE s.assignmentId = :assignmentId AND s.buildReport IS NOT NULL")
+    fun getTotalBuildReportSizeByAssignmentId(@Param("assignmentId") assignmentId: String): Long?
 }

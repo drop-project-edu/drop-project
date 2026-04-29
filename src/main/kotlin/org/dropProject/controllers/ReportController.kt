@@ -32,6 +32,7 @@ import org.dropproject.forms.SubmissionMethod
 import org.dropproject.repository.*
 import org.dropproject.services.*
 import org.dropproject.storage.StorageService
+import org.eclipse.jgit.api.Git
 import org.slf4j.LoggerFactory
 import org.dropproject.config.DropProjectProperties
 import org.springframework.beans.factory.annotation.Value
@@ -271,18 +272,31 @@ class ReportController(
                 if (zFile.exists()) {
                     zFile.delete();
                 }
-                val zipFile = ZipFile(zFile)
-                val zipParameters = ZipParameters()
-                zipParameters.isIncludeRootFolder = false
-                zipParameters.compressionLevel = CompressionLevel.ULTRA
-                zipFile.addFolder(repositoryFolder, zipParameters)
-//                zipFile.createZipFileFromFolder(repositoryFolder, zipParameters, false, -1)
 
-                LOG.info("Created ${zipFile.file.absolutePath}")
+                val hash = reportService.submissionGitInfoRepository.getBySubmissionId(submission.id)?.gitCommitHash
+                val git = Git.open(repositoryFolder)
+                val currentBranch = git.repository.branch
+                try {
+                    if (hash != null) {
+                        git.checkout().setName(hash).call()
+                    }
 
-                response.setHeader("Content-Disposition", "attachment; filename=${zipFilename}.zip")
+                    val zipFile = ZipFile(zFile.absolutePath)
+                    val zipParameters = ZipParameters()
+                    zipParameters.isIncludeRootFolder = false
+                    zipParameters.compressionLevel = CompressionLevel.ULTRA
+                    zipFile.addFolder(repositoryFolder, zipParameters)
 
-                return FileSystemResource(zipFile.file)
+                    LOG.info("Created ${zipFile.file.absolutePath}")
+
+                    response.setHeader("Content-Disposition", "attachment; filename=${zipFilename}.zip")
+
+                    return FileSystemResource(zipFile.file)
+                } finally {
+                    if (hash != null) {
+                        git.checkout().setName(currentBranch).call()
+                    }
+                }
             }
 
         } else {

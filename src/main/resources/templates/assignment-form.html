@@ -122,6 +122,11 @@
                         <input th:field="*{calculateStudentTestsCoverage}" type="checkbox" id="calculateStudentTestsCoverage" /> <strong>Calculate coverage of student tests?</strong>
                     </label>
                 </div>
+                <div class="col-sm-12" id="coverageVisibleToStudentsDiv" th:style="${assignmentForm.calculateStudentTestsCoverage} ? '' : 'display:none'">
+                    <label style="padding-left: 20px;">
+                        <input th:field="*{coverageVisibleToStudents}" type="checkbox" id="coverageVisibleToStudents" /> Coverage visible to students?
+                    </label>
+                </div>
                 <div class="col-sm-12">
                     <p class="help-block" th:if="${#fields.hasErrors('acceptsStudentTests')}" th:errors="*{acceptsStudentTests}">Error</p>
                     <p class="help-block" th:if="${!#fields.hasErrors('acceptsStudentTests')}">Check this you are asking your
@@ -296,6 +301,15 @@
     // Check whenever the select value changes
     $('#visibility').change(function() {
         toggleAssignees();
+    });
+
+    $('#calculateStudentTestsCoverage').change(function() {
+        if ($(this).is(':checked')) {
+            $('#coverageVisibleToStudentsDiv').show();
+        } else {
+            $('#coverageVisibleToStudentsDiv').hide();
+            $('#coverageVisibleToStudents').prop('checked', false);
+        }
     });
     /*]]>*/
 </script>
