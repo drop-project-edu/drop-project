@@ -787,10 +787,10 @@ class AssignmentService(
 
     }
 
-    fun isAuthorizedTeacher(assignmentId: String, principalName: String): Boolean {
-        val assignment = assignmentRepository.findByIdOrNull(assignmentId)
-        return assignment != null && (assignment.ownerUserId == principalName ||
-                assignmentACLRepository.existsByAssignmentIdAndUserId(assignmentId, principalName))
+    fun isAuthorizedTeacher(assignment: Assignment, principalName: String, request: HttpServletRequest): Boolean {
+        return request.isUserInRole("TEACHER") &&
+                (assignment.ownerUserId == principalName ||
+                        assignmentACLRepository.existsByAssignmentIdAndUserId(assignment.id, principalName))
     }
 
     /**
@@ -802,9 +802,6 @@ class AssignmentService(
      * @throws If the user is not allowed to access the Assignment, an [AccessDeniedException] will be thrown.
      */
     fun checkAssignees(assignmentId: String, principalName: String) {
-        if (isAuthorizedTeacher(assignmentId, principalName)) {
-            return
-        }
 
         if (assigneeRepository.existsByAssignmentId(assignmentId)) {
             // if it enters here, it means this assignment has a white list

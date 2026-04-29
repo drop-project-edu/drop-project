@@ -201,8 +201,8 @@ class SubmissionService(
             throw IllegalArgumentException("API submissions are not supported for Maven-structured assignments. Please use the web interface.")
         }
 
-        val isAuthorizedTeacher = assignmentService.isAuthorizedTeacher(assignment.id, principal.realName())
-        val isTeacher = request.isUserInRole("TEACHER") || isAuthorizedTeacher
+        val isAuthorizedTeacher = request.isUserInRole("TEACHER") &&
+                assignmentService.isAuthorizedTeacher(assignment, principal.realName(), request)
 
         // TODO: Validate assignment due date
 
@@ -276,7 +276,7 @@ class SubmissionService(
             }
 
             // check if all group members are in the assignment's whitelist
-            assignmentService.checkGroupMembersInWhitelist(assignment.id, authors.map { it.number }, i18n, currentLocale, isTeacher)
+            assignmentService.checkGroupMembersInWhitelist(assignment.id, authors.map { it.number }, i18n, currentLocale, isAuthorizedTeacher)
 
             val group = projectGroupService.getOrCreateProjectGroup(authors)
 

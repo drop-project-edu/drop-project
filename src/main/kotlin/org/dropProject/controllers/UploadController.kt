@@ -183,14 +183,13 @@ class UploadController(
         val assignment = assignmentRepository.findById(assignmentId)
             .orElseThrow { throw ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found") }
 
-        val isTeacher = request.isUserInRole("TEACHER")
-        val isAuthorizedTeacher = assignmentService.isAuthorizedTeacher(assignmentId, principal.realName())
+        val isAuthorizedTeacher = request.isUserInRole("TEACHER") &&
+                assignmentService.isAuthorizedTeacher(assignment, principal.realName(), request)
         // Check authorization (403 if unauthorized)
-        if (!authorizationService.canAccessAssignment(assignmentId, principal.realName(), isTeacher || isAuthorizedTeacher)) {
+        if (!authorizationService.canAccessAssignment(assignmentId, principal.realName(),isAuthorizedTeacher)) {
             throw AccessDeniedException("User ${principal.realName()} is not authorized to access assignment $assignmentId")
         }
 
-        model["isTeacher"] = isTeacher
         model["assignment"] = assignment
         model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.realName(), assignment.id)
         model["instructionsFragment"] = assignmentTeacherFiles.getInstructions(assignment).body //quick fix
@@ -613,9 +612,11 @@ class UploadController(
         // Check if git submission exists first (404 if not)
         val gitSubmission = gitSubmissionRepository.findById(gitSubmissionId.toLong()).orElse(null) ?: throw SubmissionNotFoundException(gitSubmissionId.toLong())
         val assignment = assignmentRepository.findById(gitSubmission.assignmentId).orElse(null)
-        
-        val isAuthorizedTeacher = assignmentService.isAuthorizedTeacher(assignment.id, principal.realName())
-        // Check authorization (403 if unauthorized)  
+
+        val isAuthorizedTeacher = request.isUserInRole("TEACHER") &&
+                assignmentService.isAuthorizedTeacher(assignment, principal.realName(), request)
+
+        // Check authorization (403 if unauthorized)
         if (!authorizationService.canAccessAssignmentByGitSubmissionId(gitSubmissionId, principal.realName(), isAuthorizedTeacher)) {
             throw AccessDeniedException("User ${principal.realName()} is not authorized to access git submission $gitSubmissionId")
         }
