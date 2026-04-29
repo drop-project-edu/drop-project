@@ -238,6 +238,24 @@ class SubmissionService(
         val projectFolder: File? = storageService.store(file, assignment.id)
 
         if (projectFolder != null) {
+
+            val topLevelEntries = projectFolder.listFiles()
+            if (topLevelEntries != null) {
+                val directories = topLevelEntries.filter {
+                    it.isDirectory && !it.name.startsWith("__MACOSX") && !it.name.startsWith(".")
+                }
+
+                val hasAuthorsInRoot = File(projectFolder, "AUTHORS.txt").existsCaseSensitive()
+                val hasSingleDirectory = directories.size == 1
+                val hasAuthorsInsideDirectory = hasSingleDirectory &&
+                        File(directories[0], "AUTHORS.txt").existsCaseSensitive()
+
+                if (!hasAuthorsInRoot && hasSingleDirectory && hasAuthorsInsideDirectory) {
+                    return ResponseEntity.internalServerError()
+                        .body(SubmissionResult(error = i18n.getMessage("error.zip.wrapped.folder", null, currentLocale)))
+                }
+            }
+
             val authors = getProjectAuthors(File(projectFolder, "AUTHORS.txt"))
             LOG.info("[${authors.joinToString(separator = "|")}] Received ${originalFilename}")
 
@@ -251,7 +269,7 @@ class SubmissionService(
             if (assignment.projectGroupRestrictions != null) {
                 val restrictions = assignment.projectGroupRestrictions!!
                 if (authors.size !in restrictions.minGroupSize .. (restrictions.maxGroupSize ?: 50) &&
-                    !restrictions.exceptionsAsList().contains(principal.realName())) {
+                    !restrictions.exceptionsAsList().contains(principal.realName()) && !request.isUserInRole("TEACHER")) {
                     throw InvalidProjectGroupException(i18n.getMessage("student.submit.invalidGroup",
                         arrayOf(restrictions.minGroupSize, restrictions.maxGroupSize ?: 50), currentLocale))
                 }
