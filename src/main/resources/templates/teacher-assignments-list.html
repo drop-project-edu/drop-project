@@ -7,7 +7,6 @@
 </head>
 
 <body>
-#feito
 <link th:if="${useLocalAssets}"
       th:href="@{/vendor/bootstrap-select.css}"
       rel="stylesheet"/>
@@ -130,8 +129,17 @@
 
 <div th:replace="~{layout/layout :: footer}"></div>
 
-<script src="//cdn.jsdelivr.net/npm/bootstrap-confirmation2@2.4.2/bootstrap-confirmation.min.js"></script>
-<script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.2/js/bootstrap-select.js"></script>
+<script th:if="${useLocalAssets}"
+        th:src="@{/vendor/bootstrap-confirmation.min.js}"></script>
+
+<script th:if="${!useLocalAssets}"
+        src="//cdn.jsdelivr.net/npm/bootstrap-confirmation2@2.4.2/bootstrap-confirmation.min.js"></script>
+
+<script th:if="${useLocalAssets}"
+        th:src="@{/vendor/bootstrap-select.js}"></script>
+
+<script th:if="${!useLocalAssets}"
+        src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.2/js/bootstrap-select.js"></script>
 <script th:if="${!assignments.isEmpty()}">
     $(document).ready(function() {
         $('[data-toggle=confirmation]').confirmation({
