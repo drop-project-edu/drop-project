@@ -1333,4 +1333,39 @@ class ReportControllerTests {
             .andExpect(status().isNotFound)
     }
 
+
+
+
+    @Test
+    @DirtiesContext
+    fun `leaderboard group URL has no extra slash`() {
+        val assignment = assignmentRepository.findById(defaultAssignmentId).get()
+        assignment.showLeaderBoard = true
+        assignment.leaderboardType = LeaderboardType.ELLAPSED
+        assignmentRepository.save(assignment)
+
+        val projectRoot = resourceLoader.getResource("file:src/test/sampleProjects/compact/java/projectOK").file
+        val path = File(projectRoot, "AUTHORS.txt").toPath()
+        val lines = Files.readAllLines(path)
+
+        try {
+            testsHelper.uploadProject(this.mvc, "projectOK", defaultAssignmentId, STUDENT_1)
+        } finally {
+            val writer = Files.newBufferedWriter(path)
+            writer.write(lines[0])
+            writer.newLine()
+            writer.write(lines[1])
+            writer.close()
+        }
+
+        val result = this.mvc.perform(
+            get("/leaderboard/testJavaProj")
+                .with(user(TEACHER_1))
+        )
+            .andExpect(status().isOk)
+            .andReturn()
+
+        val content = result.response.contentAsString
+        assert(content.contains("/submissions?assignmentId=")) { "URL should contain /submissions?assignmentId= -  no extra slash found before query string" }
+    }
 }

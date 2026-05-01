@@ -787,6 +787,12 @@ class AssignmentService(
 
     }
 
+    fun isAuthorizedTeacher(assignment: Assignment, principalName: String, request: HttpServletRequest): Boolean {
+        return request.isUserInRole("TEACHER") &&
+                (assignment.ownerUserId == principalName ||
+                        assignmentACLRepository.existsByAssignmentIdAndUserId(assignment.id, principalName))
+    }
+
     /**
      * Checks if a certain user can access a certain [Assignment]. Only relevant for Assignments that have access
      * control lists.
@@ -796,6 +802,7 @@ class AssignmentService(
      * @throws If the user is not allowed to access the Assignment, an [AccessDeniedException] will be thrown.
      */
     fun checkAssignees(assignmentId: String, principalName: String) {
+
         if (assigneeRepository.existsByAssignmentId(assignmentId)) {
             // if it enters here, it means this assignment has a white list
             // let's check if the current user belongs to the white list
@@ -811,11 +818,17 @@ class AssignmentService(
      * @param groupMembers is a List of author IDs (student numbers) representing the group members
      * @param i18n is the MessageSource for internationalization
      * @param currentLocale is the current Locale for message formatting
+     * @param isTeacher is a Boolean indicating if the submitter is a teacher
      * @throws InvalidProjectGroupException if any group member is not in the whitelist
      */
     fun checkGroupMembersInWhitelist(assignmentId: String, groupMembers: List<String>,
                                      i18n: org.springframework.context.MessageSource,
-                                     currentLocale: java.util.Locale) {
+                                     currentLocale: java.util.Locale,
+                                     isTeacher: Boolean = false) {
+        if (isTeacher) {
+            return
+        }
+
         if (assigneeRepository.existsByAssignmentId(assignmentId)) {
             // if it enters here, it means this assignment has a white list
             // let's check if all group members belong to the white list

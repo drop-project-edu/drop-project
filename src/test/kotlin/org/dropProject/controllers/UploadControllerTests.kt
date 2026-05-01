@@ -62,6 +62,7 @@ import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers.print
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import java.io.File
 import java.nio.file.Files
@@ -95,6 +96,9 @@ class UploadControllerTests {
     lateinit var jUnitReportRepository: JUnitReportRepository
 
     @Autowired
+    lateinit var assignmentACLRepository: AssignmentACLRepository
+
+    @Autowired
     lateinit var assignmentRepository: AssignmentRepository
 
     @Autowired
@@ -122,6 +126,7 @@ class UploadControllerTests {
     val STUDENT_2 = User("student2", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
     val STUDENT_3 = User("student3", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
     val TEACHER_1 = User("teacher1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
+    val TEACHER_2 = User("teacher2", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
 
     @Before
     fun setup() {
@@ -1705,6 +1710,21 @@ class UploadControllerTests {
 
     @Test
     @DirtiesContext
+    fun `upload group project as teacher`() {
+
+        val projectGroupRestrictions = ProjectGroupRestrictions(minGroupSize = 2, maxGroupSize = 2)
+        projectGroupRestrictionsRepository.save(projectGroupRestrictions)
+
+        val assignment = assignmentRepository.findById("testJavaProj").get()
+        assignment.projectGroupRestrictions = projectGroupRestrictions
+        assignmentRepository.save(assignment)
+
+        testsHelper.uploadProject(this.mvc, "projectOKTeacher", "testJavaProj", TEACHER_1,
+            expectedResultMatcher = status().isOk())
+    }
+
+    @Test
+    @DirtiesContext
     fun `upload a project with test classes that dont follow the TestXXX convention should show an error`() {
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectWithStudentTestNotValid", "testJavaProj", STUDENT_1)
@@ -2182,6 +2202,167 @@ class UploadControllerTests {
         assertTrue("reportElements should not be empty", lastSubmission.reportElements!!.isNotEmpty())
         assertEquals(Indicator.PROJECT_STRUCTURE, lastSubmission.reportElements!![0].indicator)
         assertEquals("NOK", lastSubmission.reportElements!![0].reportValue)
+    }
+
+    @Test
+    @DirtiesContext
+    fun `teacher can submit to private assignment with whitelist`() {
+
+        // 1. Vai buscar o assignment 'testJavaProj' (dono é teacher1)
+        val assignment = assignmentRepository.findById("testJavaProj").get()
+        assignment.visibility = AssignmentVisibility.PRIVATE   // Define como privadopo
+        assignmentRepository.save(assignment)
+
+        // 2. Adiciona o student1 à whitelist
+        assigneeRepository.save(
+            Assignee(
+                assignmentId = "testJavaProj",
+                authorUserId = "student1"
+            )
+        )
+
+        // 3. Tenta submeter como teacher1 (que é o dono mas NÃO está na whitelist)
+        val submissionId = testsHelper.uploadProject(
+            this.mvc,
+            "projectOK",
+            "testJavaProj",
+            TEACHER_1,
+            authors = listOf("teacher1" to "Teacher 1")
+        )
+
+        // 4. Verifica se obteve um ID de submissão válido (sucesso)
+        try {
+            submissionId.toLong()
+        } catch (e: Exception) {
+            fail("Deveria ter conseguido submeter, mas deu erro: $submissionId")
+        }
+
+    }
+
+
+    @Test
+    @DirtiesContext
+    fun `teacher2 cannot submit to private assignment without whitelist or authorized people`() {
+
+        // 1. Tornar o assignment privado
+        val assignment = assignmentRepository.findById("testJavaProj").get()
+        assignment.visibility = AssignmentVisibility.PRIVATE
+        assignmentRepository.save(assignment)
+
+        // 2. Adicionar apenas student1 à whitelist
+        assigneeRepository.save(
+            Assignee(
+                assignmentId = "testJavaProj",
+                authorUserId = "student1"
+            )
+        )
+        // 3. Tentar submeter → deve falhar com 403 Forbidden
+        // Como o GlobalExceptionHandler retorna uma String simples (não JSON) no 403, 
+        // o uploadProject vai lançar uma exceção ao tentar fazer o parse do JSON.
+        try {
+            testsHelper.uploadProject(
+                this.mvc,
+                "projectOK",
+                "testJavaProj",
+                TEACHER_2,
+                authors = listOf("teacher2" to "Teacher 2"),
+                expectedResultMatcher = status().isForbidden
+            )
+            fail("Deveria ter lançado uma exceção de parsing pois a resposta 403 não é JSON")
+        } catch (e: Exception) {
+
+        }
+    }
+
+    @Test
+    @DirtiesContext
+    fun `teacher2 can submit to private assignment when in authorized people but not in whitelist`() {
+
+        // 1. Tornar o assignment privado
+        val assignment = assignmentRepository.findById("testJavaProj").get()
+        assignment.visibility = AssignmentVisibility.PRIVATE
+        assignmentRepository.save(assignment)
+
+        // 2. Adicionar apenas student1 à whitelist
+        assigneeRepository.save(
+            Assignee(
+                assignmentId = "testJavaProj",
+                authorUserId = "student1"
+            )
+        )
+
+        // 3. Adicionar teacher2 à ACL (Lista de professores autorizados)
+        assignmentACLRepository.save(
+            AssignmentACL(
+                assignmentId = "testJavaProj",
+                userId = "teacher2"
+            )
+        )
+
+        // 4. Tentar submeter → deve ter sucesso
+        val submissionId = testsHelper.uploadProject(
+            this.mvc,
+            "projectOK",
+            "testJavaProj",
+            TEACHER_2,
+            authors = listOf("teacher2" to "Teacher 2")
+        )
+
+        // 5. Verifica se obteve um ID de submissão válido
+        try {
+            submissionId.toLong()
+        } catch (e: Exception) {
+            fail("Deveria ter conseguido submeter (está na ACL), mas deu erro: $submissionId")
+        }
+
+        val submissionDB = submissionRepository.findById(submissionId.toLong()).get()
+        assertEquals("teacher2", submissionDB.submitterUserId)
+    }
+
+    fun `upload project with nested folder in zip should return error`() {
+
+        // Create a temp folder simulating the wrong zip structure:
+        // outerFolder/
+        //   └── my-project/
+        //       ├── src/
+        //       └── AUTHORS.txt
+        val tempDirectory = File(System.getProperty("java.io.tmpdir"))
+        val zipCreationTime = System.currentTimeMillis()
+
+        val projectFolder = File(tempDirectory, "my-project-$zipCreationTime")
+        projectFolder.mkdir()
+        File(projectFolder, "src").mkdir()
+        File(projectFolder, "AUTHORS.txt").apply {
+            createNewFile()
+            writeText("student1;Student 1")
+        }
+
+        val outerFolder = File(tempDirectory, "outer-$zipCreationTime")
+        outerFolder.mkdir()
+        projectFolder.copyRecursively(File(outerFolder, projectFolder.name))
+
+        // Zip the outer folder (wrong structure)
+        val zipFile = zipService.createZipFromFolder("bad-submission-$zipCreationTime", outerFolder)
+        zipFile.deleteOnExit()
+
+        val multipartFile = MockMultipartFile("file", zipFile.name, "application/zip", zipFile.readBytes())
+
+        this.mvc.perform(
+            multipart("/upload")
+                .file(multipartFile)
+                .param("assignmentId", "testJavaProj")
+                .param("async", "false")
+                .with(user(STUDENT_1))
+        )
+            .andExpect(status().isInternalServerError)
+            .andExpect(content().string(
+                """{"error":"Please make sure that AUTHORS.txt is placed directly in the root of the ZIP, and that your ZIP does not contain an extra top-level folder (e.g., project-name/AUTHORS.txt)."}"""
+            ))
+
+        // clean-up
+        projectFolder.deleteRecursively()
+        outerFolder.deleteRecursively()
+        zipFile.delete()
     }
 }
 
