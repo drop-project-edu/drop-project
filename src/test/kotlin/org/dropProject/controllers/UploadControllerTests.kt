@@ -62,6 +62,7 @@ import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers.print
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import java.io.File
 import java.nio.file.Files
@@ -95,6 +96,9 @@ class UploadControllerTests {
     lateinit var jUnitReportRepository: JUnitReportRepository
 
     @Autowired
+    lateinit var assignmentACLRepository: AssignmentACLRepository
+
+    @Autowired
     lateinit var assignmentRepository: AssignmentRepository
 
     @Autowired
@@ -122,6 +126,7 @@ class UploadControllerTests {
     val STUDENT_2 = User("student2", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
     val STUDENT_3 = User("student3", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
     val TEACHER_1 = User("teacher1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
+    val TEACHER_2 = User("teacher2", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
 
     @Before
     fun setup() {
@@ -2201,6 +2206,119 @@ class UploadControllerTests {
 
     @Test
     @DirtiesContext
+    fun `teacher can submit to private assignment with whitelist`() {
+
+        // 1. Vai buscar o assignment 'testJavaProj' (dono é teacher1)
+        val assignment = assignmentRepository.findById("testJavaProj").get()
+        assignment.visibility = AssignmentVisibility.PRIVATE   // Define como privadopo
+        assignmentRepository.save(assignment)
+
+        // 2. Adiciona o student1 à whitelist
+        assigneeRepository.save(
+            Assignee(
+                assignmentId = "testJavaProj",
+                authorUserId = "student1"
+            )
+        )
+
+        // 3. Tenta submeter como teacher1 (que é o dono mas NÃO está na whitelist)
+        val submissionId = testsHelper.uploadProject(
+            this.mvc,
+            "projectOK",
+            "testJavaProj",
+            TEACHER_1,
+            authors = listOf("teacher1" to "Teacher 1")
+        )
+
+        // 4. Verifica se obteve um ID de submissão válido (sucesso)
+        try {
+            submissionId.toLong()
+        } catch (e: Exception) {
+            fail("Deveria ter conseguido submeter, mas deu erro: $submissionId")
+        }
+
+    }
+
+
+    @Test
+    @DirtiesContext
+    fun `teacher2 cannot submit to private assignment without whitelist or authorized people`() {
+
+        // 1. Tornar o assignment privado
+        val assignment = assignmentRepository.findById("testJavaProj").get()
+        assignment.visibility = AssignmentVisibility.PRIVATE
+        assignmentRepository.save(assignment)
+
+        // 2. Adicionar apenas student1 à whitelist
+        assigneeRepository.save(
+            Assignee(
+                assignmentId = "testJavaProj",
+                authorUserId = "student1"
+            )
+        )
+        // 3. Tentar submeter → deve falhar com 403 Forbidden
+        // Como o GlobalExceptionHandler retorna uma String simples (não JSON) no 403, 
+        // o uploadProject vai lançar uma exceção ao tentar fazer o parse do JSON.
+        try {
+            testsHelper.uploadProject(
+                this.mvc,
+                "projectOK",
+                "testJavaProj",
+                TEACHER_2,
+                authors = listOf("teacher2" to "Teacher 2"),
+                expectedResultMatcher = status().isForbidden
+            )
+            fail("Deveria ter lançado uma exceção de parsing pois a resposta 403 não é JSON")
+        } catch (e: Exception) {
+
+        }
+    }
+
+    @Test
+    @DirtiesContext
+    fun `teacher2 can submit to private assignment when in authorized people but not in whitelist`() {
+
+        // 1. Tornar o assignment privado
+        val assignment = assignmentRepository.findById("testJavaProj").get()
+        assignment.visibility = AssignmentVisibility.PRIVATE
+        assignmentRepository.save(assignment)
+
+        // 2. Adicionar apenas student1 à whitelist
+        assigneeRepository.save(
+            Assignee(
+                assignmentId = "testJavaProj",
+                authorUserId = "student1"
+            )
+        )
+
+        // 3. Adicionar teacher2 à ACL (Lista de professores autorizados)
+        assignmentACLRepository.save(
+            AssignmentACL(
+                assignmentId = "testJavaProj",
+                userId = "teacher2"
+            )
+        )
+
+        // 4. Tentar submeter → deve ter sucesso
+        val submissionId = testsHelper.uploadProject(
+            this.mvc,
+            "projectOK",
+            "testJavaProj",
+            TEACHER_2,
+            authors = listOf("teacher2" to "Teacher 2")
+        )
+
+        // 5. Verifica se obteve um ID de submissão válido
+        try {
+            submissionId.toLong()
+        } catch (e: Exception) {
+            fail("Deveria ter conseguido submeter (está na ACL), mas deu erro: $submissionId")
+        }
+
+        val submissionDB = submissionRepository.findById(submissionId.toLong()).get()
+        assertEquals("teacher2", submissionDB.submitterUserId)
+    }
+
     fun `upload project with nested folder in zip should return error`() {
 
         // Create a temp folder simulating the wrong zip structure:

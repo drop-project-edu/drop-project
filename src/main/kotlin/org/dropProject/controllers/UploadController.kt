@@ -183,8 +183,10 @@ class UploadController(
         val assignment = assignmentRepository.findById(assignmentId)
             .orElseThrow { throw ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found") }
 
+        val isAuthorizedTeacher = request.isUserInRole("TEACHER") &&
+                assignmentService.isAuthorizedTeacher(assignment, principal.realName(), request)
         // Check authorization (403 if unauthorized)
-        if (!authorizationService.canAccessAssignment(assignmentId, principal.realName(), request.isUserInRole("TEACHER"))) {
+        if (!authorizationService.canAccessAssignment(assignmentId, principal.realName(),isAuthorizedTeacher)) {
             throw AccessDeniedException("User ${principal.realName()} is not authorized to access assignment $assignmentId")
         }
 
@@ -195,7 +197,7 @@ class UploadController(
                 assignment.packageName, assignment.language,
                 assignment.submissionStructure, assignment.acceptsStudentTests)
 
-        if (assignment.cooloffPeriod != null && !request.isUserInRole("TEACHER")) {
+        if (assignment.cooloffPeriod != null && !isAuthorizedTeacher) {
             val lastSubmission = submissionService.getLastSubmission(principal, assignmentId)
             if (lastSubmission != null) {
                 val nextSubmissionTime = submissionService.calculateCoolOff(lastSubmission, assignment)
@@ -610,13 +612,16 @@ class UploadController(
         // Check if git submission exists first (404 if not)
         val gitSubmission = gitSubmissionRepository.findById(gitSubmissionId.toLong()).orElse(null) ?: throw SubmissionNotFoundException(gitSubmissionId.toLong())
         val assignment = assignmentRepository.findById(gitSubmission.assignmentId).orElse(null)
-        
-        // Check authorization (403 if unauthorized)  
-        if (!authorizationService.canAccessAssignmentByGitSubmissionId(gitSubmissionId, principal.realName(), request.isUserInRole("TEACHER"))) {
+
+        val isAuthorizedTeacher = request.isUserInRole("TEACHER") &&
+                assignmentService.isAuthorizedTeacher(assignment, principal.realName(), request)
+
+        // Check authorization (403 if unauthorized)
+        if (!authorizationService.canAccessAssignmentByGitSubmissionId(gitSubmissionId, principal.realName(), isAuthorizedTeacher)) {
             throw AccessDeniedException("User ${principal.realName()} is not authorized to access git submission $gitSubmissionId")
         }
 
-        if (assignment.cooloffPeriod != null && !request.isUserInRole("TEACHER")) {
+        if (assignment.cooloffPeriod != null && !isAuthorizedTeacher) {
             val lastSubmission = submissionService.getLastSubmission(principal, assignment.id)
             if (lastSubmission != null) {
                 val nextSubmissionTime = submissionService.calculateCoolOff(lastSubmission, assignment)
