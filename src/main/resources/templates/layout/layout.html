@@ -5,9 +5,28 @@
     <meta name="viewport" content="width=device-with, initial-scale=1.0"/>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta http-equiv="refresh" content="15" th:if="${autoRefresh}"/>
-    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" />
-    <link href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet"/>
-    <link href="//cdn.datatables.net/1.10.19/css/dataTables.bootstrap.min.css" rel="stylesheet"/>
+
+    <link th:if="${useLocalAssets}"
+          th:href="@{/vendor/bootstrap.min.css}"
+          rel="stylesheet"/>
+    <link th:if="${!useLocalAssets}"
+          href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+          rel="stylesheet"/>
+
+    <link th:if="${useLocalAssets}"
+          th:href="@{/vendor/all.min.css}"
+          rel="stylesheet"/>
+    <link th:if="${!useLocalAssets}"
+          href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+          rel="stylesheet"/>
+
+    <link th:if="${useLocalAssets}"
+          th:href="@{/vendor/dataTables.bootstrap.min.css}"
+          rel="stylesheet"/>
+    <link th:if="${!useLocalAssets}"
+          href="//cdn.datatables.net/1.10.19/css/dataTables.bootstrap.min.css"
+          rel="stylesheet"/>
+
     <link th:href="@{/css/dropzone.css}" rel="stylesheet" />
     <link th:href="@{/css/dropproject.css}" rel="stylesheet" />
     <link th:href="@{/css/bootstrap-tagsinput.css}" rel="stylesheet" />
@@ -128,10 +147,25 @@
             </p>
         </div>
 
-        <script src="//code.jquery.com/jquery-2.2.4.min.js"></script>
-        <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-        <script src="//cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
-        <script src="//cdn.datatables.net/1.10.19/js/dataTables.bootstrap.min.js"></script>
+        <script th:if="${useLocalAssets}"
+                th:src="@{/vendor/jquery-4.0.0.min.js}"></script>
+        <script th:if="${!useLocalAssets}"
+                src="//code.jquery.com/jquery-2.2.4.min.js"></script>
+
+        <script th:if="${useLocalAssets}"
+                th:src="@{/vendor/bootstrap.min.js}"></script>
+        <script th:if="${!useLocalAssets}"
+                src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+        <script th:if="${useLocalAssets}"
+                th:src="@{/vendor/jquery.dataTables.min.js}"></script>
+        <script th:if="${!useLocalAssets}"
+                src="//cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+
+        <script th:if="${useLocalAssets}"
+                th:src="@{/vendor/files/dataTables.bootstrap.min.js}"></script>
+        <script th:if="${!useLocalAssets}"
+                src="//cdn.datatables.net/1.10.19/js/dataTables.bootstrap.min.js"></script>
     </div>
 </body>
 </html>

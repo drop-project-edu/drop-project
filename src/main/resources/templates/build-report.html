@@ -193,12 +193,7 @@
             <th>JUnit Summary (Student Tests)</th>
         </tr>
         <tr th:if="${isTeacher and !buildReport.jacocoResults.isEmpty()}">
-            <td>Coverage: <span th:text="${buildReport.jacocoResults[0].lineCoveragePercent}"></span>&percnt;
-                <small th:if="${!assignment.coverageVisibleToStudents}">(Only visible to teacher)</small>
-            </td>
-        </tr>
-        <tr th:if="${!isTeacher and assignment.coverageVisibleToStudents and !buildReport.jacocoResults.isEmpty()}">
-            <td>Coverage: <span th:text="${buildReport.jacocoResults[0].lineCoveragePercent}"></span>&percnt;</td>
+            <td>Coverage: <span th:text="${buildReport.jacocoResults[0].lineCoveragePercent}"></span>&percnt; <small>(Only visible to teacher)</small></td>
         </tr>
         </thead>
         <tbody>
@@ -286,7 +281,13 @@
 
 <div th:replace="~{layout/layout :: footer}"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap-confirmation2@2.4.2/bootstrap-confirmation.min.js"></script>
+<script th:if="${useLocalAssets}"
+        th:src="@{/vendor/bootstrap-confirmation.min.js}">
+</script>
+
+<script th:unless="${useLocalAssets}"
+        src="https://cdn.jsdelivr.net/npm/bootstrap-confirmation2@2.4.2/bootstrap-confirmation.min.js">
+</script>
 <script>
     $('[data-toggle=confirmation]').confirmation({
         rootSelector: '[data-toggle=confirmation]'
