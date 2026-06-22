@@ -34,6 +34,12 @@ class AuthorizationService(
     private val gitSubmissionRepository: GitSubmissionRepository
 ) {
 
+    fun isOwnerOrACL(assignmentId: String, principalName: String): Boolean {
+        val assignment = assignmentRepository.findById(assignmentId).orElse(null) ?: return false
+        return assignment.ownerUserId == principalName ||
+            assignmentACLRepository.existsByAssignmentIdAndUserId(assignmentId, principalName)
+    }
+
     fun canAccessAssignment(assignmentId: String, userId: String, isTeacher: Boolean): Boolean {
         val assignment = assignmentRepository.findById(assignmentId)
             .orElseThrow { throw ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found") }

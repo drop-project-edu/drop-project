@@ -30,6 +30,7 @@ import org.dropproject.extensions.formatDefault
 import org.dropproject.extensions.realName
 import org.dropproject.forms.SubmissionMethod
 import org.dropproject.repository.*
+import org.dropproject.security.RequiresAssignmentOwnerOrACL
 import org.dropproject.services.*
 import org.dropproject.storage.StorageService
 import org.slf4j.LoggerFactory
@@ -97,6 +98,7 @@ class ReportController(
      * @param request is an [HttpServletRequest]
      * @return A String with the name of the relevant View
      */
+    @RequiresAssignmentOwnerOrACL
     @RequestMapping(value = ["/signalledSubmissions/{assignmentId}"], method = [(RequestMethod.GET)])
     fun getSignaledGroupsOrSubmissions(@PathVariable assignmentId: String, model: ModelMap,
                                        principal: Principal, request: HttpServletRequest): String {
@@ -117,6 +119,7 @@ class ReportController(
      * @param request is an [HttpServletRequest]
      * @return A String with the name of the relevant View
      */
+    @RequiresAssignmentOwnerOrACL
     @RequestMapping(value = ["/report/{assignmentId}"], method = [(RequestMethod.GET)])
     fun getReport(@PathVariable assignmentId: String, model: ModelMap,
                   principal: Principal, request: HttpServletRequest): String {
@@ -136,6 +139,7 @@ class ReportController(
      * @param request is an [HttpServletRequest]
      * @return A String with the name of the relevant View
      */
+    @RequiresAssignmentOwnerOrACL
     @RequestMapping(value = ["/testMatrix/{assignmentId}"], method = [(RequestMethod.GET)])
     fun getTestMatrix(@PathVariable assignmentId: String, model: ModelMap,
                       principal: Principal, request: HttpServletRequest): String {
@@ -298,6 +302,7 @@ class ReportController(
      * @param response is an [HttpServletResponse]
      * @return A [FileSystemResource] containing a [ZipFile]
      */
+    @RequiresAssignmentOwnerOrACL
     @RequestMapping(value = ["/downloadOriginalAll/{assignmentId}"],
         method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
     @ResponseBody
@@ -306,11 +311,6 @@ class ReportController(
 
         val assignment = assignmentRepository.findById(assignmentId).orElse(null)
             ?: throw IllegalArgumentException("assignment ${assignmentId} is not registered")
-        val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
-
-        if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
-            throw IllegalAccessError("Assignment reports can only be accessed by their owner or authorized teachers")
-        }
 
         if (assignment.submissionMethod != SubmissionMethod.UPLOAD) {
             throw IllegalArgumentException("downloadOriginalAll is only implemented for assignments whose submissions are through upload")
@@ -370,6 +370,7 @@ class ReportController(
      * @param response is an [HttpServletResponse]
      * @return A [FileSystemResource] containing a [ZipFile]
      */
+    @RequiresAssignmentOwnerOrACL
     @RequestMapping(value = ["/downloadMavenizedAll/{assignmentId}"],
         method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
     @ResponseBody
@@ -378,11 +379,6 @@ class ReportController(
 
         val assignment = assignmentRepository.findById(assignmentId).orElse(null)
             ?: throw IllegalArgumentException("assignment ${assignmentId} is not registered")
-        val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
-
-        if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
-            throw IllegalAccessError("Assignment reports can only be accessed by their owner or authorized teachers")
-        }
 
         val submissionInfoList = submissionService.getSubmissionsList(assignment)
         val modulesList = mutableListOf<String>()
@@ -459,16 +455,12 @@ class ReportController(
 
     }
 
+    @RequiresAssignmentOwnerOrACL
     @RequestMapping(value = ["/checkPlagiarism/{assignmentId}"], method = [(RequestMethod.GET)])
     fun checkPlagiarism(@PathVariable assignmentId: String, model: ModelMap, principal: Principal): String {
 
         val assignment = assignmentRepository.findById(assignmentId).orElse(null)
             ?: throw IllegalArgumentException("assignment ${assignmentId} is not registered")
-        val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
-
-        if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
-            throw IllegalAccessError("Assignment reports can only be accessed by their owner or authorized teachers")
-        }
 
         val submissionInfos = submissionService.getSubmissionsList(assignment, retrieveReport = false)
 
@@ -513,6 +505,7 @@ class ReportController(
     }
 
 
+    @RequiresAssignmentOwnerOrACL
     @RequestMapping(value = ["/downloadPlagiarismMatchReport/{assignmentId}"],
         method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
     @ResponseBody
@@ -521,11 +514,6 @@ class ReportController(
 
         val assignment = assignmentRepository.findById(assignmentId).orElse(null)
             ?: throw IllegalArgumentException("assignment ${assignmentId} is not registered")
-        val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
-
-        if (principal.realName() != assignment.ownerUserId && acl.find { it.userId == principal.realName() } == null) {
-            throw IllegalAccessError("Plagiarism match reports can only be accessed by their owner or authorized teachers")
-        }
 
         val tempDir = FileSystemResource(System.getProperty("java.io.tmpdir")).file
         val plagiarismReportFile = File(tempDir, "dp-jplag-${assignmentId}-report.zip")
@@ -620,16 +608,12 @@ class ReportController(
      * @param assignmentId is a String, identifying the relevant Assignment
      * @return A ResponseEntity<String>
      */
+    @RequiresAssignmentOwnerOrACL
     @RequestMapping(value = ["/exportCSV/{assignmentId}"], method = [(RequestMethod.GET)])
     fun exportCSV(@PathVariable assignmentId: String,
                   @RequestParam(name="ellapsed", defaultValue = "true") includeEllapsed: Boolean, principal: Principal): ResponseEntity<String> {
 
         val assignment = assignmentRepository.findById(assignmentId).orElse(null)
-        val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
-
-        if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
-            throw IllegalAccessError("Assignment reports can only be accessed by their owner or authorized teachers")
-        }
 
         val isGitBasedAssignment = assignment.submissionMethod == SubmissionMethod.GIT
 
