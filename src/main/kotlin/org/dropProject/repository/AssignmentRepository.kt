@@ -53,4 +53,7 @@ interface AssignmentRepository : JpaRepository<Assignment, String> {
     fun findAllByNumSubmissions(numSubmissions: Int): List<Assignment>
 
     fun countByTags_Id(tagId: Long): Long
+
+    @EntityGraph(attributePaths = ["tags", "assignmentTestMethods"])
+    fun findAllByArchivedFalseOrderById(): List<Assignment>
 }

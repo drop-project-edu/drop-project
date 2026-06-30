@@ -61,6 +61,19 @@ class AdminController(val mavenInvoker: MavenInvoker,
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
     /**
+     * Controller to handle HTTP GET requests for the admin assignments list page.
+     * Shows all non-archived assignments across all users.
+     * @param model is a [ModelMap] that will be populated with information to use in a View
+     * @return A String with the name of the relevant View
+     */
+    @RequestMapping(value = ["/assignments"], method = [(RequestMethod.GET)])
+    fun listAllAssignments(model: ModelMap): String {
+        model["assignments"] = assignmentRepository.findAllByArchivedFalseOrderById()
+        model["allTags"] = assignmentTagRepository.findAll().sortedBy { it.name }
+        return "admin-assignments-list"
+    }
+
+    /**
      * Controller to handle HTTP GET requests related with the admin dashboard.
      * @param modelMap is a [ModelMap] that will be populated with the information to use in a View
      * @return A String with the name of the relevant View

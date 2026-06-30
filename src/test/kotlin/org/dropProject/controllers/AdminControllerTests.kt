@@ -25,6 +25,12 @@ import org.dropproject.dao.AssignmentTag
 import org.dropproject.dao.Submission
 import org.dropproject.dao.SubmissionStatus
 import org.dropproject.forms.SubmissionMethod
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.hasSize
+import org.hamcrest.Matchers.hasItem
+import org.hamcrest.Matchers.not
+import org.hamcrest.beans.HasPropertyWithValue.hasProperty
+import org.hamcrest.CoreMatchers.`is`
 import org.dropproject.repository.AssignmentRepository
 import org.dropproject.repository.AssignmentTagRepository
 import org.dropproject.repository.SubmissionRepository
@@ -46,6 +52,7 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl
 
 @RunWith(SpringRunner::class)
 @AutoConfigureMockMvc
@@ -182,5 +189,68 @@ class AdminControllerTests {
         // Verify that the tag was deleted
         assertEquals(1, assignmentTagRepository.count()) // Only one tag should remain
         assertEquals("tag1", assignmentTagRepository.findAll()[0].name)
+    }
+
+    @Test
+    @WithMockUser("admin", roles = ["DROP_PROJECT_ADMIN"])
+    @DirtiesContext
+    fun `test getAllAssignments shows only non-archived assignments`() {
+        val activeAssignment = Assignment(id = "activeProj", name = "Active Project",
+            packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
+            submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
+            gitRepositoryFolder = "activeProj")
+        val archivedAssignment = Assignment(id = "archivedProj", name = "Archived Project",
+            packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher2",
+            submissionMethod = SubmissionMethod.UPLOAD, active = false, archived = true,
+            gitRepositoryUrl = "git://dummyRepo", gitRepositoryFolder = "archivedProj")
+        assignmentRepository.save(activeAssignment)
+        assignmentRepository.save(archivedAssignment)
+
+        val result = mvc.perform(get("/admin/assignments"))
+            .andExpect(status().isOk)
+            .andExpect(view().name("admin-assignments-list"))
+            .andReturn()
+
+        @Suppress("UNCHECKED_CAST")
+        val assignments = result.modelAndView!!.modelMap["assignments"] as List<Assignment>
+
+        assertEquals(1, assignments.size)
+        assertEquals("activeProj", assignments[0].id)
+        assertEquals("teacher1", assignments[0].ownerUserId)
+    }
+
+    @Test
+    @WithMockUser("admin", roles = ["DROP_PROJECT_ADMIN"])
+    @DirtiesContext
+    fun `test getAllAssignments shows assignments from all owners`() {
+        val assignment1 = Assignment(id = "proj-teacher1", name = "Project Teacher 1",
+            packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
+            submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
+            gitRepositoryFolder = "proj-teacher1")
+        val assignment2 = Assignment(id = "proj-teacher2", name = "Project Teacher 2",
+            packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher2",
+            submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
+            gitRepositoryFolder = "proj-teacher2")
+        assignmentRepository.save(assignment1)
+        assignmentRepository.save(assignment2)
+
+        val result = mvc.perform(get("/admin/assignments"))
+            .andExpect(status().isOk)
+            .andReturn()
+
+        @Suppress("UNCHECKED_CAST")
+        val assignments = result.modelAndView!!.modelMap["assignments"] as List<Assignment>
+
+        assertEquals(2, assignments.size)
+        assertEquals("teacher1", assignments.find { it.id == "proj-teacher1" }?.ownerUserId)
+        assertEquals("teacher2", assignments.find { it.id == "proj-teacher2" }?.ownerUserId)
+    }
+
+    @Test
+    @WithMockUser("teacher1", roles = ["TEACHER"])
+    @DirtiesContext
+    fun `test getAllAssignments is forbidden for non-admins`() {
+        mvc.perform(get("/admin/assignments"))
+            .andExpect(forwardedUrl("/access-denied.html"))
     }
 }
