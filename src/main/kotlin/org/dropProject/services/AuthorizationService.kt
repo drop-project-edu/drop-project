@@ -19,10 +19,12 @@
  */
 package org.dropproject.services
 
+import org.dropproject.extensions.realName
 import org.dropproject.repository.AssignmentACLRepository
 import org.dropproject.repository.AssignmentRepository
 import org.dropproject.repository.GitSubmissionRepository
 import org.springframework.http.HttpStatus
+import org.springframework.security.core.Authentication
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
 
@@ -34,10 +36,11 @@ class AuthorizationService(
     private val gitSubmissionRepository: GitSubmissionRepository
 ) {
 
-    fun isOwnerOrACL(assignmentId: String, principalName: String): Boolean {
+    fun isOwnerOrACL(assignmentId: String, authentication: Authentication): Boolean {
+        val userId = (authentication as java.security.Principal).realName()
         val assignment = assignmentRepository.findById(assignmentId).orElse(null) ?: return false
-        return assignment.ownerUserId == principalName ||
-            assignmentACLRepository.existsByAssignmentIdAndUserId(assignmentId, principalName)
+        return assignment.ownerUserId == userId ||
+            assignmentACLRepository.existsByAssignmentIdAndUserId(assignmentId, userId)
     }
 
     fun canAccessAssignment(assignmentId: String, userId: String, isTeacher: Boolean): Boolean {

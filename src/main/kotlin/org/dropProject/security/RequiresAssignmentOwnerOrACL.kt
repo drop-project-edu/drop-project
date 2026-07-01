@@ -27,5 +27,5 @@ import org.springframework.security.access.prepost.PreAuthorize
  */
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
-@PreAuthorize("hasRole('DROP_PROJECT_ADMIN') or @authorizationService.isOwnerOrACL(#assignmentId, authentication.name)")
+@PreAuthorize("hasRole('DROP_PROJECT_ADMIN') or @authorizationService.isOwnerOrACL(#assignmentId, authentication)")
 annotation class RequiresAssignmentOwnerOrACL

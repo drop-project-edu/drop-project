@@ -69,7 +69,6 @@ class AdminController(val mavenInvoker: MavenInvoker,
     @RequestMapping(value = ["/assignments"], method = [(RequestMethod.GET)])
     fun listAllAssignments(model: ModelMap): String {
         model["assignments"] = assignmentRepository.findAllByArchivedFalseOrderById()
-        model["allTags"] = assignmentTagRepository.findAll().sortedBy { it.name }
         return "admin-assignments-list"
     }
 

@@ -613,7 +613,8 @@ class ReportController(
     fun exportCSV(@PathVariable assignmentId: String,
                   @RequestParam(name="ellapsed", defaultValue = "true") includeEllapsed: Boolean, principal: Principal): ResponseEntity<String> {
 
-        val assignment = assignmentRepository.findById(assignmentId).orElse(null)
+        val assignment = assignmentRepository.findById(assignmentId)
+            .orElseThrow { IllegalArgumentException("Assignment $assignmentId not found") }
 
         val isGitBasedAssignment = assignment.submissionMethod == SubmissionMethod.GIT
 
@@ -743,7 +744,8 @@ class ReportController(
     fun getLeaderboard(@PathVariable assignmentId: String, model: ModelMap,
                        principal: Principal, request: HttpServletRequest): String {
 
-        val assignment = assignmentRepository.findById(assignmentId).orElse(null)
+        val assignment = assignmentRepository.findById(assignmentId)
+            .orElseThrow { IllegalArgumentException("Assignment $assignmentId not found") }
         if (!assignment.showLeaderBoard) {
             throw AccessDeniedException("Leaderboard for this assignment is not turned on")
         } else {
