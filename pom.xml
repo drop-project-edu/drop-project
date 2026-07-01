@@ -411,6 +411,7 @@
 				<configuration>
 					<args>
 						<arg>-Xjsr305=strict</arg>
+						<arg>-java-parameters</arg>
 					</args>
 					<compilerPlugins>
 						<plugin>spring</plugin>

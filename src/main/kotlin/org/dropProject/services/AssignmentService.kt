@@ -40,6 +40,7 @@ import org.eclipse.jgit.api.Git
 import org.kohsuke.github.GitHub
 import org.slf4j.LoggerFactory
 import org.dropproject.config.DropProjectProperties
+import org.dropproject.security.RequiresAssignmentOwnerOrACL
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.scheduling.annotation.Async
@@ -131,6 +132,7 @@ class AssignmentService(
      * - "testMatrix" - meaning that the data is being loaded for the "Test Matrix" page; and
      * - "signalledSubmissions" - meaning that the data is being loaded for the "Signalled Groups" page.
      */
+    @RequiresAssignmentOwnerOrACL
     fun getAllSubmissionsForAssignment(assignmentId: String, principal: Principal, model: ModelMap,
                                        request: HttpServletRequest, includeTestDetails: Boolean = false,
                                        mode: String) {
@@ -138,12 +140,6 @@ class AssignmentService(
             .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
 
         model["assignment"] = assignment
-
-        val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
-
-        if (principal.realName() != assignment.ownerUserId && acl.find { it.userId == principal.realName() } == null) {
-            throw IllegalAccessError("Assignment reports can only be accessed by their owner or authorized teachers")
-        }
 
         val submissionInfoList = submissionService.getSubmissionsList(assignment)
 
@@ -852,6 +848,7 @@ class AssignmentService(
      * @throws EntityNotFoundException if the assignment is not found
      * @throws IllegalAccessException if the user is not authorized to access the assignment
      */
+    @RequiresAssignmentOwnerOrACL
     @Transactional(readOnly = true)  // because of assignment.tags forced loading
     fun getAssignmentDetailData(assignmentId: String, principal: Principal, isAdmin: Boolean): AssignmentDetailResponse {
         val assignment = assignmentRepository.findById(assignmentId)
@@ -860,11 +857,6 @@ class AssignmentService(
         val assignees = assigneeRepository.findByAssignmentIdOrderByAuthorUserId(assignmentId)
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
         val assignmentReports = assignmentReportRepository.findByAssignmentId(assignmentId)
-
-        // Authorization check
-        if (principal.realName() != assignment.ownerUserId && acl.find { it.userId == principal.realName() } == null) {
-            throw IllegalAccessException("Assignments can only be accessed by their owner or authorized teachers")
-        }
 
         val tests = assignmentTestMethodRepository.findByAssignmentId(assignmentId)
         

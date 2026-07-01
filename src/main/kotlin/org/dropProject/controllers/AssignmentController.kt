@@ -36,6 +36,7 @@ import org.dropproject.extensions.realName
 import org.dropproject.forms.AssignmentForm
 import org.dropproject.forms.SubmissionMethod
 import org.dropproject.repository.*
+import org.dropproject.security.RequiresAssignmentOwnerOrACL
 import org.dropproject.services.*
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.RefNotAdvertisedException
@@ -383,6 +384,7 @@ class AssignmentController(
      *
      * @return a String with the name of the relevant View
      */
+    @RequiresAssignmentOwnerOrACL
     @RequestMapping(value = ["/info/{assignmentId}"], method = [(RequestMethod.GET)])
     fun getAssignmentDetail(@PathVariable assignmentId: String, model: ModelMap, principal: Principal, request: HttpServletRequest): String {
 
@@ -429,6 +431,7 @@ class AssignmentController(
      *
      * @return a String with the name of the relevant View
      */
+    @RequiresAssignmentOwnerOrACL
     @RequestMapping(value = ["/edit/{assignmentId}"], method = [(RequestMethod.GET)])
     @Transactional(readOnly = true)  // because of assignment.tags
     fun getEditAssignmentForm(@PathVariable assignmentId: String, model: ModelMap, principal: Principal): String {
@@ -437,10 +440,6 @@ class AssignmentController(
             .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
 
         val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
-
-        if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
-            throw IllegalAccessException("Assignments can only be changed by their owner or authorized teachers")
-        }
 
         val assignmentForm = createAssignmentFormBasedOnAssignment(assignment, acl)
 
@@ -510,6 +509,7 @@ class AssignmentController(
      *
      * @return a ResponseEntity<String>
      */
+    @RequiresAssignmentOwnerOrACL
     @RequestMapping(value = ["/refresh-git/{assignmentId}"], method = [(RequestMethod.POST)])
     fun refreshAssignmentGitRepository(@PathVariable assignmentId: String,
                                        principal: Principal): ResponseEntity<String> {
@@ -517,12 +517,6 @@ class AssignmentController(
         // check that it exists
         val assignment = assignmentRepository.findById(assignmentId)
             .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
-
-        val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
-
-        if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
-            throw IllegalAccessException("Assignments can only be refreshed by their owner or authorized teachers")
-        }
 
         if (assignment.gitRepositoryPrivKey == null) {
             LOG.warn("Unable to pull git repository for ${assignmentId} because private key is null")
@@ -580,6 +574,7 @@ class AssignmentController(
      *
      * @return a String with the name of the relevant View
      */
+    @RequiresAssignmentOwnerOrACL
     @RequestMapping(value = ["/setup-git/{assignmentId}"], method = [(RequestMethod.GET)])
     fun setupAssignmentToGitRepository(@PathVariable assignmentId: String,
                                        @RequestParam(name = "reconnect", required = false) reconnect: Boolean = false,
@@ -587,12 +582,6 @@ class AssignmentController(
 
         val assignment = assignmentRepository.findById(assignmentId)
             .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
-
-        val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
-
-        if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
-            throw IllegalAccessException("Assignments can only be changed by their owner or authorized teachers")
-        }
 
         if (reconnect) {
             // clear git keys
@@ -629,6 +618,7 @@ class AssignmentController(
      * @param principal is a [Principal] representing the user making the request
      * @return A String with the name of the relevant View
      */
+    @RequiresAssignmentOwnerOrACL
     @RequestMapping(value = ["/setup-git/{assignmentId}"], method = [(RequestMethod.POST)])
     fun connectAssignmentToGitRepository(@PathVariable assignmentId: String,
                                          @RequestParam(name = "reconnect", required = false) reconnect: Boolean = false,
@@ -637,12 +627,6 @@ class AssignmentController(
 
         val assignment = assignmentRepository.findById(assignmentId)
             .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
-
-        val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
-
-        if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
-            throw IllegalAccessException("Assignments can only be changed by their owner or authorized teachers")
-        }
 
         if (assignment.gitRepositoryPrivKey == null) {
             LOG.warn("gitRepositoryUrl is null???")
@@ -846,6 +830,7 @@ class AssignmentController(
      * @param principal is a [Principal] representing the user making the request
      * @return A String with the name of the relevant View
      */
+    @RequiresAssignmentOwnerOrACL
     @RequestMapping(value = ["/toggle-status/{assignmentId}"], method = [(RequestMethod.GET), (RequestMethod.POST)])
     @Transactional  // this is needed since checkAssignmentFiles will insert assignmentTestMethods in the BD
     fun toggleAssignmentStatus(@PathVariable assignmentId: String,
@@ -856,12 +841,6 @@ class AssignmentController(
 
         val assignment = assignmentRepository.findById(assignmentId)
             .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
-
-        val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
-
-        if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
-            throw IllegalAccessException("Assignments can only be changed by their owner or authorized teachers")
-        }
 
         if (!assignment.active) {
 
@@ -903,6 +882,7 @@ class AssignmentController(
      * @param principal is a [Principal] representing the user making the request
      * @return A String with the name of the relevant View
      */
+    @RequiresAssignmentOwnerOrACL
     @RequestMapping(value = ["/archive/{assignmentId}"], method = [(RequestMethod.POST)])
     fun archiveAssignment(@PathVariable assignmentId: String,
                           redirectAttributes: RedirectAttributes,
@@ -911,12 +891,6 @@ class AssignmentController(
         // check that it exists
         val assignment = assignmentRepository.findById(assignmentId)
             .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
-
-        val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
-
-        if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
-            throw IllegalAccessException("Assignments can only be archived by their owner or authorized teachers")
-        }
 
         assignment.archived = true
         assignmentRepository.save(assignment)
@@ -937,6 +911,7 @@ class AssignmentController(
      * @param principal is a [Principal] representing the user making the request
      * @return A String with the name of the relevant View
      */
+    @RequiresAssignmentOwnerOrACL
     @RequestMapping(value = ["/markAllAsFinal/{assignmentId}"], method = [(RequestMethod.POST)])
     fun markAllSubmissionsAsFinal(@PathVariable assignmentId: String,
                                   redirectAttributes: RedirectAttributes,
@@ -944,12 +919,6 @@ class AssignmentController(
 
         val assignment = assignmentRepository.findById(assignmentId)
             .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
-
-        val acl = assignmentACLRepository.findByAssignmentId(assignment.id)
-
-        if (principal.realName() != assignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
-            throw IllegalAccessException("Submissions can only be marked as final by the assignment owner or authorized teachers")
-        }
 
         val submissionInfoList = submissionService.getSubmissionsList(assignment)
         submissionInfoList.forEach {
@@ -972,6 +941,7 @@ class AssignmentController(
      * @param assignmentId is a String, identifying the relevant Assignment
      * @return A ResponseEntity<String>
      */
+    @RequiresAssignmentOwnerOrACL
     @RequestMapping(value = ["/export/{assignmentId}"], method = [(RequestMethod.GET)])
     fun startAssignmentExport(@PathVariable assignmentId: String,
                               @RequestParam(name="includeSubmissions", required = false) includeSubmissions: Boolean = false,
@@ -979,12 +949,6 @@ class AssignmentController(
 
         val assignment = assignmentRepository.findById(assignmentId).orElse(null) ?:
         throw IllegalArgumentException("assignment ${assignmentId} is not registered")
-
-        val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
-
-        if (principal.realName() != assignment.ownerUserId && acl.find { it.userId == principal.realName() } == null) {
-            throw IllegalAccessException("Exporting assignments is restricted to their owner or authorized teachers")
-        }
 
         val taskId = "${System.currentTimeMillis()}"
 
@@ -1106,6 +1070,8 @@ class AssignmentController(
      * @param principal The authenticated user
      * @return ResponseEntity with success or error message
      */
+    // Not annotated with @RequiresAssignmentOwnerOrACL: this is a JSON/AJAX endpoint that returns
+    // its own structured error body, which would be lost if Spring's AccessDeniedHandler intercepted it.
     @RequestMapping(value = ["/cooloff/{assignmentId}/disable"], method = [RequestMethod.POST])
     @ResponseBody
     fun disableCooloff(
@@ -1158,6 +1124,7 @@ class AssignmentController(
      * @param principal The authenticated user
      * @return ResponseEntity with success or error message
      */
+    // Not annotated with @RequiresAssignmentOwnerOrACL: same reason as disableCooloff above.
     @RequestMapping(value = ["/cooloff/{assignmentId}/enable"], method = [RequestMethod.POST])
     @ResponseBody
     fun enableCooloff(

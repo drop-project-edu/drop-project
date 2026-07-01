@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout/layout :: head (pageTitle='Drop Project - All assignments')}">
+</head>
+
+<body>
+<div th:replace="~{layout/layout :: header}"></div>
+
+<div class="container" style="max-width: 900px">
+
+    <h1 class="page-header">All Non-Archived Assignments</h1>
+
+    <table class="table myDataTable">
+        <thead>
+        <tr>
+            <th>Assignment ID</th>
+            <th>Tags</th>
+            <th>Owner</th>
+            <th>Last submission</th>
+            <th>Visibility</th>
+            <th>Submissions</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!--/*@thymesVar id="assignments" type="java.util.ArrayList<org.dropproject.dao.Assignment>"*/-->
+        <tr th:each="assignment : ${assignments}">
+            <td th:text="${assignment.id}" th:title="${assignment.name}"></td>
+            <td class="space-between">
+                <span th:each="tag: ${assignment.tagsStr}" th:text="${tag}" class="label label-info" />
+            </td>
+            <td th:text="${assignment.ownerUserId}"></td>
+            <td th:if="${assignment.lastSubmissionDate != null}"
+                th:text="${#dates.format(assignment.lastSubmissionDate, 'dd/MMM HH:mm')}"
+                th:title="${#dates.format(assignment.lastSubmissionDate, 'dd/MM/yy HH:mm')}"
+                th:data-order="${assignment.getLastSubmissionDateAsTimestamp()}" class="text-center"></td>
+            <td th:if="${assignment.lastSubmissionDate == null}">-</td>
+            <td class="text-center">
+                <i th:if="${assignment.visibility == T(org.dropproject.dao.AssignmentVisibility).PUBLIC}" class="fa fa-globe" aria-hidden="true"
+                   title="Everyone can see"></i>
+                <i th:if="${assignment.visibility == T(org.dropproject.dao.AssignmentVisibility).ONLY_BY_LINK}" class="fa fa-link" aria-hidden="true"
+                   title="Must have a direct link"></i>
+                <i th:if="${assignment.visibility == T(org.dropproject.dao.AssignmentVisibility).PRIVATE}" class="fa fa-lock" aria-hidden="true"
+                   title="Only authorized users can see"></i>
+            </td>
+            <td class="text-center">
+                <a class="btn btn-default btn-sm" th:href="@{'/report/' + ${assignment.id}}"
+                   th:text="${assignment.numSubmissions}"></a>
+                <span class="glyphicon glyphicon-user" aria-hidden="true" th:text="${assignment.numUniqueSubmitters}"></span>
+            </td>
+            <td class="text-center text-nowrap">
+                <a th:href="@{'/assignment/info/' + ${assignment.id}}">
+                    <span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span>
+                </a>
+                <a th:href="@{'/leaderboard/' + ${assignment.id}}" th:if="${assignment.showLeaderBoard}" alt="Show leaderboard">
+                    <img th:src="@{/img/trophy_16.png}" alt="Leaderboard" />
+                </a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+</div>
+
+<div th:replace="~{layout/layout :: footer}"></div>
+
+<script th:if="${!assignments.isEmpty()}" th:inline="none">
+    $(document).ready(function() {
+        $('.myDataTable').DataTable({
+            "paging": false,
+            "ordering": true,
+            "order": [[3, 'desc']],
+            "info": false,
+            "searching": true,
+            "columnDefs": [
+                {
+                    "targets": [1, 2, 4, 5, 6],
+                    "orderable": false
+                }
+            ]
+        });
+    });
+</script>
+
+</body>
+</html>
