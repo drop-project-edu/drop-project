@@ -47,7 +47,7 @@ class AsyncConfig(
             LOG.info("Changed async execution timeout to $value seconds")
         }
 
-    var asyncThreadPoolSize: Int = 1
+    var asyncThreadPoolSize: Int = dropProjectProperties.async.threadPoolSize
         set(value) {
             field = value
             scheduler.poolSize = value
@@ -70,7 +70,7 @@ class AsyncConfig(
         LOG.info("Initializing task scheduler")
 
         scheduler = CancellableTaskScheduler(dropProjectProperties.async.timeout * 1000L)
-        scheduler.poolSize = 1
+        scheduler.poolSize = dropProjectProperties.async.threadPoolSize
         scheduler.initialize()
         return scheduler
     }

@@ -19,7 +19,10 @@
  */
 package org.dropproject.config
 
+import jakarta.validation.Valid
+import jakarta.validation.constraints.Min
 import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.validation.annotation.Validated
 
 /**
  * Configuration properties for DropProject application.
@@ -30,6 +33,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties
  * Note: LTI properties are kept separate and continue to use @Value annotations
  * as they are profile-specific and managed differently.
  */
+@Validated
 @ConfigurationProperties(prefix = "drop-project")
 data class DropProjectProperties(
     
@@ -49,7 +53,7 @@ data class DropProjectProperties(
     val admin: Admin = Admin(),
     
     /** Async configuration */
-    val async: Async = Async(),
+    @field:Valid val async: Async = Async(),
     
     /** GitHub integration */
     val github: GitHub = GitHub(),
@@ -102,7 +106,10 @@ data class DropProjectProperties(
 
     data class Async(
         /** Maximum time in seconds for async tasks (such as maven execution) */
-        val timeout: Int = 180
+        val timeout: Int = 180,
+        /** Number of threads in the async task executor thread pool */
+        @field:Min(value = 1, message = "drop-project.async.thread-pool-size must be at least 1")
+        val threadPoolSize: Int = 1
     )
 
     data class GitHub(
