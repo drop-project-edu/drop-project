@@ -102,7 +102,9 @@ data class DropProjectProperties(
 
     data class Async(
         /** Maximum time in seconds for async tasks (such as maven execution) */
-        val timeout: Int = 180
+        val timeout: Int = 180,
+        /** Number of threads in the async task executor thread pool */
+        val threadPoolSize: Int = 1
     )
 
     data class GitHub(
