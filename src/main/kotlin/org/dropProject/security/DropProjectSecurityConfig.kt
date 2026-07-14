@@ -57,7 +57,7 @@ open class DropProjectSecurityConfig(val apiAuthenticationManager: PersonalToken
      */
     open fun getPublicUrls() = listOf("/upload/**/public/**", "/login", "/loginFromDEISI", "/access-denied.html", "/error", "/h2-console/**",
         "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs",
-        "/css/**", "/js/**", "/img/**", "/favicon.ico")
+        "/css/**", "/js/**", "/img/**", "/favicon.ico", "/vendor/*")
 
     protected fun configure(http: HttpSecurity): HttpSecurity {
         http
