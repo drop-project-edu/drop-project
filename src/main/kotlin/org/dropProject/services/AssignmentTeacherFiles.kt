@@ -100,11 +100,12 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
         return instructions
     }
 
-    fun copyTeacherFilesTo(assignment: Assignment, mavenizedProjectFolder: File) {
+    fun copyTeacherFilesTo(assignment: Assignment, mavenizedProjectFolder: File, teacherFilesFolder: File? = null) {
 
         // TODO: should change artifactId in pom.xml with the group-id...
 
-        val rootFolder = File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder)
+        val rootFolder = teacherFilesFolder
+            ?: File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder)
         val srcMainFolder = File(rootFolder, "src/main").absolutePath
         val gitFolder     = File(rootFolder, ".git").absolutePath
         val targetFolder  = File(rootFolder, "target").absolutePath

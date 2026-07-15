@@ -19,18 +19,33 @@
  */
 package org.dropproject
 
+import net.lingala.zip4j.ZipFile
+import org.apache.commons.io.FileUtils
+import org.dropproject.config.DropProjectProperties
 import org.dropproject.dao.Assignment
 import org.dropproject.dao.AssignmentVisibility
+import org.dropproject.dao.Author
+import org.dropproject.dao.GitSubmission
 import org.dropproject.dao.Language
+import org.dropproject.dao.ProjectGroup
+import org.dropproject.dao.Submission
+import org.dropproject.dao.SubmissionGitInfo
+import org.dropproject.dao.SubmissionStatus
 import org.dropproject.dao.SubmissionStructure
+import org.dropproject.forms.SubmissionMethod
 import org.dropproject.repository.AssignmentRepository
+import org.dropproject.repository.AuthorRepository
 import org.dropproject.repository.GitSubmissionRepository
+import org.dropproject.repository.ProjectGroupRepository
+import org.dropproject.repository.SubmissionGitInfoRepository
 import org.dropproject.repository.SubmissionRepository
 import org.dropproject.services.ZipService
+import org.eclipse.jgit.api.Git
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.Assert
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.io.ResourceLoader
+import org.springframework.http.MediaType
 import org.springframework.mock.web.MockMultipartFile
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.User
@@ -422,4 +437,129 @@ class TestsHelper {
 
     fun header(username: String, personalToken: String) =
         "basic ${Base64.getEncoder().encodeToString("$username:$personalToken".toByteArray())}"
+
+    // copies the sampleJavaProject fixture into a new folder under the assignments root location and turns
+    // it into a real local git repo with two commits, the second one changing a teacher test file
+    // (marked with "MARKER-NEW"). Returns the saved Assignment together with both commit hashes.
+    fun createHistoricalAssignment(assignmentRepository: AssignmentRepository, dropProjectProperties: DropProjectProperties,
+                                   newAssignmentId: String = "historicalTeacherFilesTest"): Triple<Assignment, String, String> {
+        val assignmentFolder = File(dropProjectProperties.assignments.rootLocation, newAssignmentId)
+        FileUtils.copyDirectory(
+            File(dropProjectProperties.assignments.rootLocation, "sampleJavaProject"),
+            assignmentFolder
+        )
+
+        val git = Git.init().setDirectory(assignmentFolder).call()
+        git.add().addFilepattern(".").call()
+        val commitOld = git.commit().setMessage("initial teacher files").call()
+
+        val teacherTestFile = File(
+            assignmentFolder,
+            "src/test/java/org/dropProject/samples/sampleJavaAssignment/TestTeacherProject.java"
+        )
+        teacherTestFile.writeText(
+            teacherTestFile.readText()
+                .replace("public class TestTeacherProject", "// MARKER-NEW\npublic class TestTeacherProject")
+        )
+        git.add().addFilepattern(".").call()
+        val commitNew = git.commit().setMessage("teacher updated the tests").call()
+        git.close()
+
+        val assignment = Assignment(
+            id = newAssignmentId, name = "Historical Teacher Files Test",
+            packageName = "org.dropProject.samples.sampleJavaAssignment", ownerUserId = "teacher1",
+            submissionMethod = SubmissionMethod.GIT, active = true,
+            gitRepositoryUrl = "git@github.com:teacher1/$newAssignmentId.git",
+            gitRepositoryFolder = newAssignmentId,
+            gitCurrentHash = commitNew.name
+        )
+        assignmentRepository.save(assignment)
+
+        return Triple(assignment, commitOld.name, commitNew.name)
+    }
+
+    // creates a GitSubmission backed by a real local git repo with two commits, the second one changing
+    // the student's source file (marked with "MARKER-STUDENT-CODE-1" / "MARKER-STUDENT-CODE-2").
+    // Returns the saved GitSubmission together with both commit hashes.
+    fun createHistoricalGitSubmission(gitSubmissionRepository: GitSubmissionRepository,
+                                      projectGroupRepository: ProjectGroupRepository,
+                                      authorRepository: AuthorRepository,
+                                      dropProjectProperties: DropProjectProperties,
+                                      assignment: Assignment): Triple<GitSubmission, String, String> {
+        val group = ProjectGroup()
+        projectGroupRepository.save(group)
+        authorRepository.save(Author(name = "Student 1", number = "student1", group = group))
+
+        val gitSubmission = GitSubmission(
+            assignmentId = assignment.id, submitterUserId = "student1",
+            gitRepositoryUrl = "git@github.com:student1/${assignment.id}.git", group = group
+        )
+        gitSubmissionRepository.save(gitSubmission)
+
+        val studentRepoFolder =
+            File(dropProjectProperties.storage.gitLocation, gitSubmission.getFolderRelativeToStorageRoot())
+        studentRepoFolder.mkdirs()
+        val git = Git.init().setDirectory(studentRepoFolder).call()
+
+        File(studentRepoFolder, "AUTHORS.txt").writeText("student1;Student 1")
+        val mainFile = File(studentRepoFolder, "src/org/dropProject/samples/sampleJavaAssignment/Main.java")
+        mainFile.parentFile.mkdirs()
+        mainFile.writeText(
+            """
+            package org.dropProject.samples.sampleJavaAssignment;
+            public class Main {
+                // MARKER-STUDENT-CODE-1
+            }
+            """.trimIndent()
+        )
+        git.add().addFilepattern(".").call()
+        val commitA = git.commit().setMessage("first student commit").call()
+
+        mainFile.writeText(mainFile.readText().replace("MARKER-STUDENT-CODE-1", "MARKER-STUDENT-CODE-2"))
+        git.add().addFilepattern(".").call()
+        val commitB = git.commit().setMessage("second student commit").call()
+        git.close()
+
+        return Triple(gitSubmission, commitA.name, commitB.name)
+    }
+
+    // saves a Submission + matching SubmissionGitInfo, pairing a student commit with the teacher-files
+    // commit that was active in the assignment at that time
+    fun saveHistoricalSubmission(submissionGitInfoRepository: SubmissionGitInfoRepository,
+                                 gitSubmission: GitSubmission, assignment: Assignment,
+                                 assignmentGitHash: String, studentCommitHash: String,
+                                 submissionDate: Date): Submission {
+        val submission = Submission(
+            gitSubmissionId = gitSubmission.id, submissionDate = submissionDate,
+            submitterUserId = "student1", status = SubmissionStatus.VALIDATED.code, statusDate = submissionDate,
+            assignmentId = assignment.id, assignmentGitHash = assignmentGitHash, markedAsFinal = true
+        )
+        submission.group = gitSubmission.group
+        submissionRepository.save(submission)
+        submissionGitInfoRepository.save(SubmissionGitInfo(submissionId = submission.id, gitCommitHash = studentCommitHash))
+        return submission
+    }
+
+    fun downloadMavenProjectZip(mvc: MockMvc, submissionId: Long, teacher: User = TEACHER_1): ByteArray {
+        return mvc.perform(
+            MockMvcRequestBuilders.get("/downloadMavenProject/$submissionId")
+                .contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE)
+                .with(user(teacher))
+        )
+            .andExpect(MockMvcResultMatchers.status().isOk)
+            .andReturn()
+            .response.contentAsByteArray
+    }
+
+    fun zipEntryContent(zipBytes: ByteArray, entrySuffix: String): String {
+        val tempZipFile = File.createTempFile("downloaded", ".zip")
+        try {
+            FileUtils.writeByteArrayToFile(tempZipFile, zipBytes)
+            val zip = ZipFile(tempZipFile)
+            val header = zip.fileHeaders.first { it.fileName.endsWith(entrySuffix) }
+            return zip.getInputStream(header).bufferedReader().readText()
+        } finally {
+            tempZipFile.delete()
+        }
+    }
 }

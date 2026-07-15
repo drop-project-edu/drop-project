@@ -612,7 +612,8 @@ class SubmissionService(
     /**
      * Mavenizes a compact-structure submission (src/<package>/) to Maven structure (src/main/{java|kotlin}/).
      */
-    private fun mavenizeCompactStructure(projectFolder: File, mavenizedProjectFolder: File, assignment: Assignment) {
+    private fun mavenizeCompactStructure(projectFolder: File, mavenizedProjectFolder: File, assignment: Assignment,
+                                          teacherFilesFolder: File? = null) {
         val folder = if (assignment.language == Language.JAVA) "java" else "kotlin"
 
         // Copy student source files from src/ to src/main/{java|kotlin}/
@@ -637,7 +638,7 @@ class SubmissionService(
         FileUtils.copyFile(File(projectFolder, "AUTHORS.txt"), File(mavenizedProjectFolder, "AUTHORS.txt"))
 
         // Copy teacher files (includes pom.xml, teacher tests)
-        assignmentTeacherFiles.copyTeacherFilesTo(assignment, mavenizedProjectFolder)
+        assignmentTeacherFiles.copyTeacherFilesTo(assignment, mavenizedProjectFolder, teacherFilesFolder)
 
         // Copy student README if exists (overwrites teacher's)
         if (File(projectFolder, "README.md").exists()) {
@@ -654,7 +655,8 @@ class SubmissionService(
     /**
      * Mavenizes a Maven-structure submission (src/main/{java|kotlin}/) by copying files to mavenized folder.
      */
-    private fun mavenizeMavenStructure(projectFolder: File, mavenizedProjectFolder: File, assignment: Assignment) {
+    private fun mavenizeMavenStructure(projectFolder: File, mavenizedProjectFolder: File, assignment: Assignment,
+                                        teacherFilesFolder: File? = null) {
         val folder = if (assignment.language == Language.JAVA) "java" else "kotlin"
 
         // Copy student source files (already in src/main/{java|kotlin}/)
@@ -691,7 +693,7 @@ class SubmissionService(
 
         // Copy teacher files (includes teacher's pom.xml and teacher tests)
         // NOTE: Teacher pom.xml is used since student's was validated to match
-        assignmentTeacherFiles.copyTeacherFilesTo(assignment, mavenizedProjectFolder)
+        assignmentTeacherFiles.copyTeacherFilesTo(assignment, mavenizedProjectFolder, teacherFilesFolder)
 
         // Copy student README if exists (overwrites teacher's)
         if (File(projectFolder, "README.md").exists()) {
@@ -730,6 +732,22 @@ class SubmissionService(
         }
 
         return mavenizedProjectFolder
+    }
+
+    /**
+     * Mavenizes [projectFolder] into [mavenizedProjectFolder] using the teacher files found in
+     * [teacherFilesFolder], instead of the assignment's live/current teacher files and instead of the
+     * cached mavenized folder normally associated with a submission.
+     *
+     * Used to rebuild, on-demand, a faithful historical copy of a submission that isn't the group's
+     * last one, since the shared cached mavenized folder always reflects the most recently built commit.
+     */
+    fun mavenizeForDownload(projectFolder: File, mavenizedProjectFolder: File, assignment: Assignment,
+                            teacherFilesFolder: File) {
+        when (assignment.submissionStructure) {
+            SubmissionStructure.COMPACT -> mavenizeCompactStructure(projectFolder, mavenizedProjectFolder, assignment, teacherFilesFolder)
+            SubmissionStructure.MAVEN -> mavenizeMavenStructure(projectFolder, mavenizedProjectFolder, assignment, teacherFilesFolder)
+        }
     }
 
     fun deleteMavenizedFolderFor(submissions: List<Submission>) {

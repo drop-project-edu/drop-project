@@ -86,6 +86,9 @@ class ReportControllerTests {
     lateinit var submissionRepository: SubmissionRepository
 
     @Autowired
+    lateinit var submissionGitInfoRepository: SubmissionGitInfoRepository
+
+    @Autowired
     lateinit var assignmentTestMethodRepository: AssignmentTestMethodRepository
 
     @Autowired
@@ -380,6 +383,45 @@ class ReportControllerTests {
             .andReturn()
 
         assertTrue(result.response.contentLength > 5000)   // just to make sure we don't get an empty file
+    }
+
+    @Test
+    @DirtiesContext
+    fun `download maven project for a previous git submission uses historical code and teacher files`() {
+
+        val assignmentFolder = File(dropProjectProperties.assignments.rootLocation, "historicalTeacherFilesTest")
+        try {
+            // create an assignment with two commits: a copy of sampleJavaProject and then a change "MARKER-NEW"
+            val (assignment, assignmentCommitOld, assignmentCommitNew) =
+                testsHelper.createHistoricalAssignment(assignmentRepository, dropProjectProperties)
+            // create a submission with two commits: "MARKER-STUDENT-CODE-1" and then "MARKER-STUDENT-CODE-2"
+            val (gitSubmission, studentCommitA, studentCommitB) =
+                testsHelper.createHistoricalGitSubmission(
+                    gitSubmissionRepository, projectGroupRepository, authorRepository, dropProjectProperties, assignment
+                )
+
+            val now = Date()
+            // first submission associated with the first assignment commit and the first student commit
+            val submission1 = testsHelper.saveHistoricalSubmission(
+                submissionGitInfoRepository, gitSubmission, assignment, assignmentCommitOld, studentCommitA, now
+            )
+            // second submission associated with the second assignment commit and the second student commit
+            val submission2 = testsHelper.saveHistoricalSubmission(
+                submissionGitInfoRepository, gitSubmission, assignment, assignmentCommitNew, studentCommitB, Date(now.time + 60000)
+            )
+
+            assertTrue(submission2.submissionDate.after(submission1.submissionDate))
+
+            // downloading the OLDER submission must trigger the on-demand rebuild path, reflecting
+            // both the older student commit and the teacher files as they were at that time
+            val zip1 = testsHelper.downloadMavenProjectZip(mvc, submission1.id)
+            assertTrue(testsHelper.zipEntryContent(zip1, "Main.java").contains("MARKER-STUDENT-CODE-1"))
+            assertFalse(testsHelper.zipEntryContent(zip1, "Main.java").contains("MARKER-STUDENT-CODE-2"))
+            assertFalse(testsHelper.zipEntryContent(zip1, "TestTeacherProject.java").contains("MARKER-NEW"))
+
+        } finally {
+            FileUtils.deleteQuietly(assignmentFolder)
+        }
     }
 
     @Test

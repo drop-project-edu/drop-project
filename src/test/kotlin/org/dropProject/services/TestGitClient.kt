@@ -19,11 +19,16 @@
  */
 package org.dropproject.services
 
+import org.apache.commons.io.FileUtils
+import org.eclipse.jgit.api.Git
+import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit4.SpringRunner
+import java.io.File
+import java.nio.file.Files
 
 
 @RunWith(SpringRunner::class)
@@ -31,6 +36,14 @@ import org.springframework.test.context.junit4.SpringRunner
 class TestGitClient {
 
     val gitClient = GitClient()
+
+    private val foldersToCleanup = mutableListOf<File>()
+
+    @After
+    fun cleanup() {
+        foldersToCleanup.forEach { FileUtils.deleteQuietly(it) }
+        foldersToCleanup.clear()
+    }
 
     @Test
     fun testCheckValidGithubURL() {
@@ -50,5 +63,94 @@ class TestGitClient {
 
     }
 
+    // creates a local (non-bare) git repository with two commits over the same file, and returns
+    // the repository folder together with each commit's hash
+    private fun createLocalGitRepoWithTwoCommits(): Triple<File, String, String> {
+        val repoFolder = Files.createTempDirectory("dp-test-repo-").toFile()
+        foldersToCleanup.add(repoFolder)
+
+        Git.init().setDirectory(repoFolder).call().use { git ->
+            val file = File(repoFolder, "file.txt")
+
+            file.writeText("content-A")
+            git.add().addFilepattern("file.txt").call()
+            val commitA = git.commit().setMessage("commit A").call()
+
+            file.writeText("content-B")
+            git.add().addFilepattern("file.txt").call()
+            val commitB = git.commit().setMessage("commit B").call()
+
+            return Triple(repoFolder, commitA.name, commitB.name)
+        }
+    }
+
+    @Test
+    fun testCloneRepositoryAtCommit_returnsContentOfTheGivenCommit() {
+
+        val (repoFolder, commitA, commitB) = createLocalGitRepoWithTwoCommits()
+
+        val cloneAtA = gitClient.cloneRepositoryAtCommit(repoFolder, commitA)
+        foldersToCleanup.add(cloneAtA)
+        assertEquals("content-A", File(cloneAtA, "file.txt").readText())
+
+        val cloneAtB = gitClient.cloneRepositoryAtCommit(repoFolder, commitB)
+        foldersToCleanup.add(cloneAtB)
+        assertEquals("content-B", File(cloneAtB, "file.txt").readText())
+    }
+
+    @Test
+    fun testCloneRepositoryAtCommit_nullHashReturnsHead() {
+
+        val (repoFolder, _, _) = createLocalGitRepoWithTwoCommits()
+
+        val cloneAtHead = gitClient.cloneRepositoryAtCommit(repoFolder, null)
+        foldersToCleanup.add(cloneAtHead)
+        assertEquals("content-B", File(cloneAtHead, "file.txt").readText())
+    }
+
+    @Test
+    fun testCloneRepositoryAtCommit_doesNotMutateSourceRepository() {
+
+        val (repoFolder, commitA, _) = createLocalGitRepoWithTwoCommits()
+
+        val sourceBranchBefore = Git.open(repoFolder).use { it.repository.branch }
+        val sourceContentBefore = File(repoFolder, "file.txt").readText()
+
+        val clone = gitClient.cloneRepositoryAtCommit(repoFolder, commitA)
+        foldersToCleanup.add(clone)
+
+        // the clone reflects the older commit...
+        assertEquals("content-A", File(clone, "file.txt").readText())
+
+        // ...but the source repository (its branch and working tree) was never touched
+        val sourceBranchAfter = Git.open(repoFolder).use { it.repository.branch }
+        val sourceContentAfter = File(repoFolder, "file.txt").readText()
+        assertEquals(sourceBranchBefore, sourceBranchAfter)
+        assertEquals(sourceContentBefore, sourceContentAfter)
+        assertEquals("content-B", sourceContentAfter)
+    }
+
+    @Test
+    fun testCloneRepositoryAtCommit_concurrentClonesOfDifferentCommitsDontInterfere() {
+
+        val (repoFolder, commitA, commitB) = createLocalGitRepoWithTwoCommits()
+
+        var cloneAtA: File? = null
+        var cloneAtB: File? = null
+
+        val threadA = Thread { cloneAtA = gitClient.cloneRepositoryAtCommit(repoFolder, commitA) }
+        val threadB = Thread { cloneAtB = gitClient.cloneRepositoryAtCommit(repoFolder, commitB) }
+
+        threadA.start()
+        threadB.start()
+        threadA.join()
+        threadB.join()
+
+        foldersToCleanup.add(cloneAtA!!)
+        foldersToCleanup.add(cloneAtB!!)
+
+        assertEquals("content-A", File(cloneAtA, "file.txt").readText())
+        assertEquals("content-B", File(cloneAtB, "file.txt").readText())
+    }
 
 }

@@ -36,6 +36,7 @@ import org.springframework.stereotype.Service
 import org.dropproject.extensions.formatDefault
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.nio.file.Files
 import java.util.*
 import org.eclipse.jgit.lib.Repository
 import org.eclipse.jgit.treewalk.CanonicalTreeParser
@@ -148,6 +149,26 @@ class GitClient {
                     .setTransportConfigCallback(MyTransportConfigCallback(privateKey))
                     .call();
         return git
+    }
+
+    /**
+     * Clones [sourceRepositoryFolder] into a fresh temporary folder and, if [commitHash] is not null,
+     * checks out that commit there. The source repository is never touched. The caller owns the
+     * returned folder and is responsible for deleting it.
+     *
+     * @return the temporary [File] folder containing the clone
+     */
+    fun cloneRepositoryAtCommit(sourceRepositoryFolder: File, commitHash: String?): File {
+        val tempFolder = Files.createTempDirectory("dp-clone-").toFile()
+        Git.cloneRepository()
+            .setURI(sourceRepositoryFolder.toURI().toString())
+            .setDirectory(tempFolder)
+            .call().use { clonedGit ->
+                if (commitHash != null) {
+                    clonedGit.checkout().setName(commitHash).call()
+                }
+            }
+        return tempFolder
     }
 
     /**
