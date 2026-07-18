@@ -22,6 +22,7 @@ package org.dropproject.controllers
 import org.dropproject.TestsHelper
 import org.dropproject.dao.Assignment
 import org.dropproject.dao.AssignmentTag
+import org.dropproject.dao.RebuildStatus
 import org.dropproject.dao.Submission
 import org.dropproject.dao.SubmissionStatus
 import org.dropproject.forms.SubmissionMethod
@@ -33,6 +34,7 @@ import org.hamcrest.beans.HasPropertyWithValue.hasProperty
 import org.hamcrest.CoreMatchers.`is`
 import org.dropproject.repository.AssignmentRepository
 import org.dropproject.repository.AssignmentTagRepository
+import org.dropproject.repository.RebuildStatusRepository
 import org.dropproject.repository.SubmissionRepository
 import org.dropproject.services.AssignmentService
 import org.junit.Assert.assertEquals
@@ -70,6 +72,9 @@ class AdminControllerTests {
 
     @Autowired
     lateinit var submissionRepository : SubmissionRepository
+
+    @Autowired
+    lateinit var rebuildStatusRepository : RebuildStatusRepository
 
     @Autowired
     lateinit var assignmentRepository : AssignmentRepository
@@ -139,6 +144,46 @@ class AdminControllerTests {
         this.mvc.perform(post("/admin/abort/1"))
                 .andExpect(status().isFound)
                 .andExpect(header().string("Location", "/admin/showPending"))
+    }
+
+    @Test
+    @WithMockUser("admin",roles=["DROP_PROJECT_ADMIN"])
+    @DirtiesContext
+    fun test_03_showPendingIncludesRebuildingAndSubmittedForRebuild() {
+
+        val assignment01 = Assignment(id = "testJavaProj", name = "Test Project (for automatic tests)",
+                packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
+                submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
+                gitRepositoryFolder = "testJavaProj")
+        assignmentRepository.save(assignment01)
+        testsHelper.makeSeveralSubmissions(listOf("projectInvalidStructure1", "projectInvalidStructure1"), mvc)
+
+        // simulate a submission stuck rebuilding...
+        val rebuildingSubmission = submissionRepository.findById(1).get()
+        rebuildingSubmission.setStatus(SubmissionStatus.REBUILDING, dontUpdateStatusDate = true)
+        submissionRepository.save(rebuildingSubmission)
+        rebuildStatusRepository.save(RebuildStatus(submission = rebuildingSubmission))
+
+        // ...and another one that's still waiting to be picked up for a "rebuild full"
+        val submittedForRebuild = submissionRepository.findById(2).get()
+        submittedForRebuild.setStatus(SubmissionStatus.SUBMITTED_FOR_REBUILD)
+        submissionRepository.save(submittedForRebuild)
+
+        val result = this.mvc.perform(get("/admin/showPending"))
+                .andExpect(status().isOk)
+                .andReturn()
+
+        @Suppress("UNCHECKED_CAST")
+        val submissions = result.modelAndView!!.modelMap["pendingSubmissions"] as List<Submission>
+        assertEquals(setOf(1L, 2L), submissions.map { it.id }.toSet())
+
+        // aborting the stuck rebuild should also clear its RebuildStatus tracking row
+        this.mvc.perform(post("/admin/abort/1"))
+                .andExpect(status().isFound)
+                .andExpect(header().string("Location", "/admin/showPending"))
+
+        assertEquals(SubmissionStatus.ABORTED_BY_TIMEOUT, submissionRepository.findById(1).get().getStatus())
+        assertEquals(null, rebuildStatusRepository.findBySubmissionId(1))
     }
 
     @Test

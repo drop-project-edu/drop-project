@@ -96,6 +96,10 @@
 
     <div class="alert alert-error" th:if="${error}">
     <span th:text="${error}"/><i th:if="${autoRefresh}" class="fa fa-spinner fa-spin" style="font-size:24px"></i>
+    <form th:if="${isTeacher} and ${isRebuilding}" class="inline" method="post"
+          th:action="@{'/abortRebuild/' + ${submission.id}}" style="display:inline; margin-left: 10px;">
+        <input type="submit" value="Abort rebuild" class="btn btn-default btn-xs"/>
+    </form>
     </div>
 
     <div th:if="${error == null}">

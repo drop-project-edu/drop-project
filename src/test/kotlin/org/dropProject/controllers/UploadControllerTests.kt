@@ -93,6 +93,9 @@ class UploadControllerTests {
     lateinit var submissionRepository: SubmissionRepository
 
     @Autowired
+    lateinit var rebuildStatusRepository: RebuildStatusRepository
+
+    @Autowired
     lateinit var jUnitReportRepository: JUnitReportRepository
 
     @Autowired
@@ -1591,13 +1594,56 @@ class UploadControllerTests {
         val submission = submissionRepository.findById(submissionId.toLong()).get()
         assertEquals(SubmissionStatus.VALIDATED, submission.getStatus())
 
+        // sanity check: a normal (non-rebuild) submission never gets a RebuildStatus tracking row
+        assertNull(rebuildStatusRepository.findBySubmissionId(submissionId.toLong()))
+
         this.mvc.perform(post("/rebuild/$submissionId")
                 .with(user(TEACHER_1)))
                 .andExpect(status().isFound)
                 .andExpect(header().string("Location", "/buildReport/$submissionId"))
 
         val updatedSubmission = submissionRepository.findById(submissionId.toLong()).get()
-        assertEquals(SubmissionStatus.VALIDATED, updatedSubmission.getStatus())
+        assertEquals(SubmissionStatus.VALIDATED_REBUILT, updatedSubmission.getStatus())
+
+        // the RebuildStatus tracking row created when the rebuild started must be cleaned up once it finishes
+        // (in the "test" profile, checkProject runs synchronously, so by the time the request above returns,
+        // the rebuild has already fully completed and its tracking row should be gone)
+        assertNull(rebuildStatusRepository.findBySubmissionId(submissionId.toLong()))
+    }
+
+    @Test
+    @DirtiesContext
+    fun abortRebuild() {
+        val submissionId = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
+
+        // simulate a rebuild that got stuck: force the submission into REBUILDING and give it a tracking row,
+        // as UploadController.rebuild() would have done when it started
+        val submission = submissionRepository.findById(submissionId.toLong()).get()
+        submission.setStatus(SubmissionStatus.REBUILDING, dontUpdateStatusDate = true)
+        submissionRepository.save(submission)
+        rebuildStatusRepository.save(RebuildStatus(submission = submission))
+
+        this.mvc.perform(post("/abortRebuild/$submissionId")
+                .with(user(TEACHER_1)))
+                .andExpect(status().isFound)
+                .andExpect(header().string("Location", "/buildReport/$submissionId"))
+
+        val abortedSubmission = submissionRepository.findById(submissionId.toLong()).get()
+        assertEquals(SubmissionStatus.ABORTED_BY_TIMEOUT, abortedSubmission.getStatus())
+        assertNull(rebuildStatusRepository.findBySubmissionId(submissionId.toLong()))
+
+        // aborting a submission that has already reached a terminal, non-aborted status must be a no-op (guards
+        // against a stale "Abort" click on the build report page clobbering a result that has since completed)
+        val otherSubmissionId = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_2)
+        assertEquals(SubmissionStatus.VALIDATED, submissionRepository.findById(otherSubmissionId.toLong()).get().getStatus())
+
+        this.mvc.perform(post("/abortRebuild/$otherSubmissionId")
+                .with(user(TEACHER_1)))
+                .andExpect(status().isFound)
+                .andExpect(header().string("Location", "/buildReport/$otherSubmissionId"))
+
+        val unchangedSubmission = submissionRepository.findById(otherSubmissionId.toLong()).get()
+        assertEquals(SubmissionStatus.VALIDATED, unchangedSubmission.getStatus())
     }
 
     @Test

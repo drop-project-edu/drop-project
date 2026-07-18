@@ -57,7 +57,8 @@ class BuildWorker(
         val buildReportRepository: BuildReportRepository,
         val jUnitReportRepository: JUnitReportRepository,
         val jacocoReportRepository: JacocoReportRepository,
-        val buildReportBuilder: BuildReportBuilder) {
+        val buildReportBuilder: BuildReportBuilder,
+        val rebuildStatusRepository: RebuildStatusRepository) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
@@ -279,6 +280,10 @@ class BuildWorker(
         }
 
         submissionRepository.save(submission)
+
+        if (rebuildByTeacher) {
+            rebuildStatusRepository.deleteBySubmissionId(submission.id)
+        }
     }
 
     /**

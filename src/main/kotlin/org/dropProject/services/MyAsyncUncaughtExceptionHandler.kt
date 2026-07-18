@@ -25,6 +25,7 @@ import org.springframework.aop.interceptor.SimpleAsyncUncaughtExceptionHandler
 import org.springframework.stereotype.Service
 import org.dropproject.dao.Submission
 import org.dropproject.dao.SubmissionStatus
+import org.dropproject.repository.RebuildStatusRepository
 import org.dropproject.repository.SubmissionRepository
 import org.slf4j.LoggerFactory
 import java.lang.reflect.Method
@@ -34,6 +35,7 @@ import kotlin.reflect.full.memberFunctions
 
 @Service
 class MyAsyncUncaughtExceptionHandler(val submissionRepository: SubmissionRepository,
+                                      val rebuildStatusRepository: RebuildStatusRepository,
                                       val pendingTasks: PendingTasks): SimpleAsyncUncaughtExceptionHandler() {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
@@ -59,6 +61,7 @@ class MyAsyncUncaughtExceptionHandler(val submissionRepository: SubmissionReposi
                 val submission = params[2] as Submission
                 submission.setStatus(SubmissionStatus.FAILED)
                 submissionRepository.save(submission)
+                rebuildStatusRepository.deleteBySubmissionId(submission.id)
             }
 
             else -> super.handleUncaughtException(ex, method, *params)

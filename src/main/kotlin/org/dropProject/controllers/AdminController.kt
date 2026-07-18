@@ -115,7 +115,9 @@ class AdminController(val mavenInvoker: MavenInvoker,
      */
     @RequestMapping(value = ["/showPending"], method = [(RequestMethod.GET)])
     fun showPendingSubmissions(model: ModelMap): String {
-        val pendingSubmissions = submissionRepository.findByStatusOrderByStatusDate(SubmissionStatus.SUBMITTED.code)
+        val pendingStatuses = listOf(SubmissionStatus.SUBMITTED.code, SubmissionStatus.SUBMITTED_FOR_REBUILD.code,
+            SubmissionStatus.REBUILDING.code)
+        val pendingSubmissions = submissionRepository.findByStatusInOrderByStatusDate(pendingStatuses)
         model["pendingSubmissions"] = pendingSubmissions
         return "admin-pending-submissions"
     }
@@ -131,8 +133,7 @@ class AdminController(val mavenInvoker: MavenInvoker,
                         redirectAttributes: RedirectAttributes): String {
 
         val submission = submissionRepository.findById(submissionId).get()
-        submission.setStatus(SubmissionStatus.ABORTED_BY_TIMEOUT)
-        submissionRepository.save(submission)
+        submissionService.abortSubmission(submission)
 
         LOG.info("Aborted submission ${submissionId}")
 

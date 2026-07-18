@@ -184,6 +184,8 @@ class ReportController(
         model["assignment"] = buildReport.assignment
 
         model["submission"] = buildReport.submission
+        model["isRebuilding"] = buildReport.submission?.getStatus() in listOf(
+            SubmissionStatus.REBUILDING, SubmissionStatus.SUBMITTED_FOR_REBUILD)
         model["gitSubmission"] = buildReport.gitSubmission
         model["gitRepository"] = buildReport.gitRepository
         model["gitRepositoryWithHash"] = buildReport.gitRepositoryWithHash

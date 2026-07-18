@@ -86,7 +86,8 @@ class SubmissionService(
     val assignmentRepository: AssignmentRepository,
     val dropProjectProperties: DropProjectProperties,
     val cooloffOverrideService: CooloffOverrideService,
-    val pomValidator: PomValidator
+    val pomValidator: PomValidator,
+    val rebuildStatusRepository: RebuildStatusRepository
 ) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
@@ -492,6 +493,9 @@ class SubmissionService(
             if (teacherRebuild) {
                 submission.setStatus(SubmissionStatus.REBUILDING, dontUpdateStatusDate = true)
                 submissionRepository.save(submission)
+
+                rebuildStatusRepository.deleteBySubmissionId(submission.id)
+                rebuildStatusRepository.save(RebuildStatus(submission = submission))
             }
 
             buildWorker.checkProject(mavenizedProjectFolder, authorsStr, submission, rebuildByTeacher = teacherRebuild,
@@ -844,5 +848,22 @@ class SubmissionService(
         }
 
         return savedSubmission
+    }
+
+    /**
+     * Aborts a [Submission] if it's still pending (SUBMITTED, SUBMITTED_FOR_REBUILD or REBUILDING), setting its
+     * status to ABORTED_BY_TIMEOUT and clearing any [RebuildStatus] tracking row. If it has already reached a
+     * terminal status (e.g. the background validation finished in the meantime), this is a no-op, so a stale
+     * "Abort" click doesn't clobber an already-completed result.
+     *
+     * @param submission is the [Submission] to abort
+     */
+    fun abortSubmission(submission: Submission) {
+        val pendingStatuses = listOf(SubmissionStatus.SUBMITTED, SubmissionStatus.SUBMITTED_FOR_REBUILD, SubmissionStatus.REBUILDING)
+        if (submission.getStatus() in pendingStatuses) {
+            submission.setStatus(SubmissionStatus.ABORTED_BY_TIMEOUT)
+            submissionRepository.save(submission)
+            rebuildStatusRepository.deleteBySubmissionId(submission.id)
+        }
     }
 }

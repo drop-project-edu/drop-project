@@ -23,6 +23,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import org.dropproject.dao.SubmissionStatus
 import org.dropproject.repository.AssignmentRepository
+import org.dropproject.repository.RebuildStatusRepository
 import org.dropproject.repository.SubmissionRepository
 import org.slf4j.LoggerFactory
 import org.dropproject.config.DropProjectProperties
@@ -37,6 +38,7 @@ import java.util.logging.Logger
 @Component
 class ScheduledTasks(
         val submissionRepository: SubmissionRepository,
+        val rebuildStatusRepository: RebuildStatusRepository,
         val assignmentRepository: AssignmentRepository,
         val gitClient: GitClient,
         val dropProjectProperties: DropProjectProperties
@@ -50,14 +52,31 @@ class ScheduledTasks(
 
         LOG.info("Checking expired submissions")
 
-        // check for processes in the submitted state (i.e., pending validation) that were submitted more than 1 hour ago
         val sometimeAgo = Date(System.currentTimeMillis() - 3600 * 1000)
 
-        val expiredSubmissions = submissionRepository.findByStatusAndStatusDateBefore(SubmissionStatus.SUBMITTED.code, sometimeAgo)
+        // check for processes in the submitted (or submitted-for-rebuild) state that were left in that state for
+        // more than 1 hour. Both of these have an accurate statusDate, since it's set when they're created.
+        val pendingStatuses = listOf(SubmissionStatus.SUBMITTED.code, SubmissionStatus.SUBMITTED_FOR_REBUILD.code)
+        val expiredSubmissions = submissionRepository.findByStatusInAndStatusDateBefore(pendingStatuses, sometimeAgo)
         for (expiredSubmission in expiredSubmissions) {
             LOG.info("Cleaning up expired submission ${expiredSubmission.id} submitted at ${expiredSubmission.statusDate}")
             expiredSubmission.setStatus(SubmissionStatus.ABORTED_BY_TIMEOUT)
             submissionRepository.save(expiredSubmission)
+        }
+
+        // separately check for rebuilds that were left running for more than 1 hour. These can't be detected through
+        // Submission.statusDate, since entering the REBUILDING status deliberately doesn't update it (so that
+        // "rebuild without changing anything" doesn't affect the submission's visible date). RebuildStatus tracks
+        // the actual rebuild start time instead.
+        val expiredRebuilds = rebuildStatusRepository.findByStartedAtBefore(sometimeAgo)
+        for (expiredRebuild in expiredRebuilds) {
+            val submission = expiredRebuild.submission
+            if (submission.getStatus() == SubmissionStatus.REBUILDING) {
+                LOG.info("Cleaning up expired rebuild of submission ${submission.id} started at ${expiredRebuild.startedAt}")
+                submission.setStatus(SubmissionStatus.ABORTED_BY_TIMEOUT)
+                submissionRepository.save(submission)
+            }
+            rebuildStatusRepository.deleteBySubmissionId(submission.id)
         }
     }
 

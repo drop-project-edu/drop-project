@@ -87,7 +87,8 @@ class UploadController(
         val i18n: MessageSource,
         val authorizationService: AuthorizationService,
         val dropProjectProperties: DropProjectProperties,
-        val cooloffOverrideService: CooloffOverrideService
+        val cooloffOverrideService: CooloffOverrideService,
+        val rebuildStatusRepository: RebuildStatusRepository
         ) {
 
     @Value("\${spring.web.locale}")
@@ -290,8 +291,12 @@ class UploadController(
         submission.setStatus(SubmissionStatus.REBUILDING, dontUpdateStatusDate = true)
         submissionService.saveSubmissionAndUpdateAssignmentMetrics(submission)
 
+        rebuildStatusRepository.deleteBySubmissionId(submission.id)
+        rebuildStatusRepository.save(RebuildStatus(submission = submission))
+
         buildWorker.checkProject(mavenizedProjectFolder, authors.joinToString(separator = "|"), submission,
                 dontChangeStatusDate = true,
+                rebuildByTeacher = true,
                 principalName = principal.realName())
 
         return "redirect:/buildReport/${submissionId}";
@@ -329,6 +334,25 @@ class UploadController(
                 asyncExecutor, teacherRebuild = true, principal = principal)
 
         return "redirect:/buildReport/${rebuiltSubmission.id}";
+    }
+
+    /**
+     * Controller that allows a teacher to abort a rebuild that is currently in progress (started either through
+     * "rebuild" or "rebuildFull"), from the same build report page where they're waiting for the result.
+     *
+     * @param submissionId is a Long, identifying the student's Submission
+     *
+     * @return a String identifying the relevant View
+     */
+    @RequestMapping(value = ["/abortRebuild/{submissionId}"], method = [(RequestMethod.POST)])
+    fun abortRebuild(@PathVariable submissionId: Long) : String {
+
+        val submission = submissionRepository.findById(submissionId).orElse(null) ?: throw SubmissionNotFoundException(submissionId)
+
+        LOG.info("Aborting rebuild of submission ${submissionId}")
+        submissionService.abortSubmission(submission)
+
+        return "redirect:/buildReport/${submissionId}"
     }
 
     /**
