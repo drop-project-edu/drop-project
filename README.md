@@ -2,7 +2,7 @@
 
 # Drop Project - Continuous Auto-Grader
 
-![Build Status](https://github.com/drop-project-edu/drop-project/workflows/Run%20Tests/badge.svg?branch=master)
+[![Build Status](https://github.com/drop-project-edu/drop-project/actions/workflows/run-tests.yml/badge.svg?branch=master)](https://github.com/drop-project-edu/drop-project/actions/workflows/run-tests.yml)
 [![codecov](https://codecov.io/gh/drop-project-edu/drop-project/branch/master/graph/badge.svg)](https://codecov.io/gh/drop-project-edu/drop-project)
 [![Apache License](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 [![Release](https://img.shields.io/github/v/release/drop-project-edu/drop-project?label=ghcr)](https://github.com/drop-project-edu/drop-project/pkgs/container/drop-project)
