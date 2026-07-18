@@ -25,6 +25,7 @@ import org.dropproject.config.DropProjectProperties
 import org.dropproject.dao.AssignmentTag
 import org.dropproject.dao.SubmissionStatus
 import org.dropproject.data.AssignmentDiskUsage
+import org.dropproject.data.OrphanedProcess
 import org.dropproject.forms.AdminDashboardForm
 import org.dropproject.repository.AssignmentTagRepository
 import org.dropproject.repository.JUnitReportRepository
@@ -41,6 +42,8 @@ import org.springframework.transaction.annotation.Transactional
 import jakarta.validation.Valid
 import org.dropproject.repository.AssignmentRepository
 import java.io.File
+import java.time.Duration
+import java.time.Instant
 import org.springframework.data.domain.PageRequest
 
 /**
@@ -119,7 +122,62 @@ class AdminController(val mavenInvoker: MavenInvoker,
             SubmissionStatus.REBUILDING.code)
         val pendingSubmissions = submissionRepository.findByStatusInOrderByStatusDate(pendingStatuses)
         model["pendingSubmissions"] = pendingSubmissions
+        model["orphanedProcesses"] = findOrphanedProcesses()
         return "admin-pending-submissions"
+    }
+
+    /**
+     * Finds Maven (or forked Surefire) OS processes that are still running for longer than the configured async
+     * timeout - i.e. ones that [org.dropproject.services.CancellableTaskScheduler] should already have killed, but
+     * didn't (e.g. a forked test JVM that outlived its parent Maven process, or a build left running after DP
+     * itself was restarted). Identified by the "-DdropProject.submissionId=" property [MavenInvoker] tags onto
+     * both the top-level Maven process and the forked Surefire JVM.
+     */
+    private fun findOrphanedProcesses(): List<OrphanedProcess> {
+        val marker = "-DdropProject.submissionId="
+        val timeoutSeconds = asyncConfigurer.getTimeout().toLong()
+        val now = Instant.now()
+
+        return ProcessHandle.allProcesses()
+            .toList()
+            .filter { it.isAlive }
+            .mapNotNull { ph ->
+                val args = ph.info().arguments().orElse(null) ?: return@mapNotNull null
+                val submissionId = args.firstOrNull { it.startsWith(marker) }
+                    ?.removePrefix(marker)?.toLongOrNull() ?: return@mapNotNull null
+
+                val startedAt = ph.info().startInstant().orElse(null) ?: return@mapNotNull null
+                val runningForSeconds = Duration.between(startedAt, now).seconds
+                if (runningForSeconds <= timeoutSeconds) return@mapNotNull null
+
+                OrphanedProcess(ph.pid(), runningForSeconds, submissionId)
+            }
+            .sortedByDescending { it.runningForSeconds }
+            .toList()
+    }
+
+    /**
+     * Controller to handle requests related with killing an orphaned Maven/Surefire process (see
+     * [findOrphanedProcesses]). The given pid is only killed if it still matches a currently-detected orphaned
+     * process, so this can't be used to kill an arbitrary process on the host.
+     */
+    @RequestMapping(value = ["/killProcess/{pid}"], method = [(RequestMethod.POST)])
+    fun killProcess(@PathVariable pid: Long, redirectAttributes: RedirectAttributes): String {
+
+        if (findOrphanedProcesses().none { it.pid == pid }) {
+            LOG.warn("Refused to kill process ${pid}: not a currently recognized orphaned build process")
+            redirectAttributes.addFlashAttribute("error", "Process ${pid} is not a recognized orphaned build process")
+            return "redirect:/admin/showPending"
+        }
+
+        ProcessHandle.of(pid).ifPresent { ph ->
+            ph.descendants().forEach { it.destroyForcibly() }
+            ph.destroyForcibly()
+        }
+
+        LOG.info("Killed orphaned process ${pid}")
+        redirectAttributes.addFlashAttribute("message", "Killed process ${pid}")
+        return "redirect:/admin/showPending"
     }
 
     /**

@@ -58,10 +58,14 @@ class MavenInvoker(
      * @param mavenizedProjectFolder is a File containing the project's files
      * @param principalName is a String
      * @param maxMemoryMb is an Int
+     * @param submissionId identifies the [org.dropproject.dao.Submission] being built, if any (not set when
+     * checking an assignment's own test files). Tagged onto both the top-level Maven process and the forked
+     * Surefire JVM as a system property, so that a process still running long after it should have been killed
+     * can be reliably traced back to its submission (see AdminController.findOrphanedProcesses).
      *
      * @return a MavenResult
      */
-    fun run(mavenizedProjectFolder: File, principalName: String?, maxMemoryMb: Int?) : MavenResult {
+    fun run(mavenizedProjectFolder: File, principalName: String?, maxMemoryMb: Int?, submissionId: Long? = null) : MavenResult {
 
         if (!File(dropProjectProperties.maven.repository).exists()) {
             val success = File(dropProjectProperties.maven.repository).mkdirs()
@@ -89,7 +93,14 @@ class MavenInvoker(
         }
 
         // added this line to force the checkstyle to use English as the primary language
-        request.mavenOpts = "-Duser.language=en -Duser.country=US"
+        var mavenOpts = "-Duser.language=en -Duser.country=US"
+
+        if (submissionId != null) {
+            dpArgLine += " -DdropProject.submissionId=${submissionId}"
+            mavenOpts += " -DdropProject.submissionId=${submissionId}"
+        }
+
+        request.mavenOpts = mavenOpts
 
         if (securityManagerEnabled) {
             dpArgLine += " -Djava.security.manager=org.dropproject.security.SandboxSecurityManager"

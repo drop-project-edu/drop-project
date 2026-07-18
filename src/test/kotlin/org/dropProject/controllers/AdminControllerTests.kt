@@ -25,6 +25,7 @@ import org.dropproject.dao.AssignmentTag
 import org.dropproject.dao.RebuildStatus
 import org.dropproject.dao.Submission
 import org.dropproject.dao.SubmissionStatus
+import org.dropproject.data.OrphanedProcess
 import org.dropproject.forms.SubmissionMethod
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.hasSize
@@ -38,6 +39,9 @@ import org.dropproject.repository.RebuildStatusRepository
 import org.dropproject.repository.SubmissionRepository
 import org.dropproject.services.AssignmentService
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.FixMethodOrder
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -55,6 +59,8 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl
+import java.io.File
+import java.util.concurrent.TimeUnit
 
 @RunWith(SpringRunner::class)
 @AutoConfigureMockMvc
@@ -184,6 +190,87 @@ class AdminControllerTests {
 
         assertEquals(SubmissionStatus.ABORTED_BY_TIMEOUT, submissionRepository.findById(1).get().getStatus())
         assertEquals(null, rebuildStatusRepository.findBySubmissionId(1))
+    }
+
+    @Test
+    @WithMockUser("admin",roles=["DROP_PROJECT_ADMIN"])
+    @DirtiesContext
+    fun test_04_showPendingListsAndKillsARealOrphanedMavenProcess() {
+
+        val assignment01 = Assignment(id = "testJavaProj", name = "Test Project (for automatic tests)",
+                packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
+                submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
+                gitRepositoryFolder = "testJavaProj", acceptsStudentTests = true)
+        assignmentRepository.save(assignment01)
+
+        // submit a project whose own test loops forever. In the "test" profile checkProject runs synchronously
+        // (SyncTaskExecutor), so this real (never-ending) Maven build has to be kicked off on a background thread,
+        // otherwise it would block this test forever.
+        val uploadThread = Thread {
+            testsHelper.uploadProject(mvc, "projectWithInfiniteLoop", "testJavaProj", testsHelper.STUDENT_1)
+        }
+        uploadThread.isDaemon = true
+        uploadThread.start()
+
+        try {
+            // the submission row is saved (with status SUBMITTED) before the Maven build even starts, so it's
+            // safe to assume it'll be submission #1 in this freshly-dirtied context, well before the build itself
+            // (which never finishes on its own) completes
+            val submissionDeadline = System.currentTimeMillis() + 10_000
+            while (!submissionRepository.findById(1).isPresent && System.currentTimeMillis() < submissionDeadline) {
+                Thread.sleep(200)
+            }
+            assertTrue("submission should have been created", submissionRepository.findById(1).isPresent)
+
+            // poll until the real Maven/Surefire process(es) for this submission show up as orphaned. In the
+            // "test" profile the async timeout is hardcoded to 0, so anything alive for at least a second
+            // already qualifies - this just waits for Maven itself to actually start them up
+            var orphaned: List<OrphanedProcess> = emptyList()
+            val orphanDeadline = System.currentTimeMillis() + 60_000
+            while (orphaned.isEmpty() && System.currentTimeMillis() < orphanDeadline) {
+                val result = this.mvc.perform(get("/admin/showPending"))
+                        .andExpect(status().isOk)
+                        .andReturn()
+
+                @Suppress("UNCHECKED_CAST")
+                val all = result.modelAndView!!.modelMap["orphanedProcesses"] as List<OrphanedProcess>
+                orphaned = all.filter { it.submissionId == 1L }
+                if (orphaned.isEmpty()) Thread.sleep(1000)
+            }
+            assertTrue("the real Maven build should have shown up as an orphaned process", orphaned.isNotEmpty())
+
+            // killing an unrelated pid must be refused and not affect the real build
+            this.mvc.perform(post("/admin/killProcess/999999999"))
+                    .andExpect(status().isFound)
+                    .andExpect(header().string("Location", "/admin/showPending"))
+                    .andExpect(flash().attribute("error", "Process 999999999 is not a recognized orphaned build process"))
+            assertTrue(orphaned.all { ProcessHandle.of(it.pid).map { ph -> ph.isAlive }.orElse(false) })
+
+            for (process in orphaned) {
+                this.mvc.perform(post("/admin/killProcess/${process.pid}"))
+                        .andExpect(status().isFound)
+                        .andExpect(header().string("Location", "/admin/showPending"))
+            }
+
+            // killing the top-level Maven process should unblock the background thread's call, one way or another
+            uploadThread.join(30_000)
+            assertFalse("the background upload should have completed once its process was killed", uploadThread.isAlive)
+
+            for (process in orphaned) {
+                assertFalse("process ${process.pid} should no longer be alive",
+                    ProcessHandle.of(process.pid).map { it.isAlive }.orElse(false))
+            }
+
+        } finally {
+            // safety net: never leave a real hanging process or thread behind, even if an assertion above failed.
+            // Force-kill anything still tagged with this test's submission directly, bypassing the app entirely.
+            val marker = "-DdropProject.submissionId=1"
+            ProcessHandle.allProcesses()
+                .filter { it.isAlive }
+                .filter { ph -> ph.info().arguments().map { args -> args.contains(marker) }.orElse(false) }
+                .forEach { it.destroyForcibly() }
+            uploadThread.interrupt()
+        }
     }
 
     @Test

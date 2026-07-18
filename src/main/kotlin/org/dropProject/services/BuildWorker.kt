@@ -87,7 +87,7 @@ class BuildWorker(
         }
 
         val realPrincipalName = if (rebuildByTeacher) submission.submitterUserId else principalName
-        val mavenResult = mavenInvoker.run(mavenizedProjectFolder, realPrincipalName, assignment.maxMemoryMb)
+        val mavenResult = mavenInvoker.run(mavenizedProjectFolder, realPrincipalName, assignment.maxMemoryMb, submission.id)
 
         LOG.info("[${authorsStr}] Finished maven invocation")
 
@@ -214,7 +214,7 @@ class BuildWorker(
 
                     LOG.info("[${authorsStr}] Started maven invocation again (for coverage)")
 
-                    val mavenResultCoverage = mavenInvoker.run(mavenizedProjectFolder, realPrincipalName, assignment.maxMemoryMb)
+                    val mavenResultCoverage = mavenInvoker.run(mavenizedProjectFolder, realPrincipalName, assignment.maxMemoryMb, submission.id)
                     if (!mavenResultCoverage.expiredByTimeout) {
                         LOG.info("[${authorsStr}] Finished maven invocation (for coverage)")
 

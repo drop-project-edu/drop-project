@@ -48,6 +48,37 @@
         </tbody>
     </table>
 
+    <h1 class="page-header">Orphaned processes</h1>
+
+    <!--/*@thymesVar id="orphanedProcesses" type="java.util.ArrayList<org.dropproject.data.OrphanedProcess>"*/-->
+    <table class="table" th:if="${!orphanedProcesses.isEmpty()}">
+        <thead>
+        <tr>
+            <th>PID</th>
+            <th>Submission</th>
+            <th>Running for</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="orphanedProcess : ${orphanedProcesses}">
+            <td th:text="${orphanedProcess.pid}"></td>
+            <td><a th:href="@{'/buildReport/' + ${orphanedProcess.submissionId}}" th:text="${orphanedProcess.submissionId}"></a></td>
+            <td th:text="${orphanedProcess.runningForSeconds} + ' s'"></td>
+            <td>
+                <form class="inline" method="post" th:action="@{'/admin/killProcess/' + ${orphanedProcess.pid}}">
+                    <input type="submit" value="Kill" class="btn btn-default btn-xs"
+                           data-toggle="confirmation" data-title="Kill process"
+                           data-content="Are you sure you want to kill this process?"
+                           data-btn-ok-label="Yes, kill it!" data-btn-cancel-label="Cancel"/>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <p th:if="${orphanedProcesses.isEmpty()}">No orphaned processes found.</p>
+
 </div>
 
 <div th:replace="~{layout/layout :: footer}"></div>
