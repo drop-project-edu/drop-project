@@ -79,7 +79,9 @@ class StudentService(
         submissionService.fillIndicatorsFor(submissions)
 
         for (submission in submissions) {
-            submission.submitterName = authorRepository.findByUserId(submission.submitterUserId)?.last()?.name
+            // resolve the name from this specific submission's group, not just any Author row for this userId:
+            // the same student id can have a different declared name in each group's AUTHORS.txt
+            submission.submitterName = submission.group.authors.firstOrNull { it.userId == submission.submitterUserId }?.name
             val assignmentAndGroup = Pair(submission.assignmentId, submission.group.id)
             val assignment = assignmentRepository.findById(submission.assignmentId).get()
 

@@ -1205,6 +1205,37 @@ class ReportControllerTests {
 
     @Test
     @DirtiesContext
+    fun `test student history shows the submitter name declared in each submission's own group`() {
+
+        // student1 submits solo, declaring himself as "Student A" -> group #1
+        testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", "testJavaProj", STUDENT_1,
+            listOf(Pair("student1", "Student A")))
+
+        // the same student1, paired with a different partner, declares himself as "Student B" -> since the
+        // author composition differs, this is a different group (#2), with its own Author row for student1
+        testsHelper.uploadProject(this.mvc, "projectOK", "sampleJavaProject", STUDENT_1,
+            listOf(Pair("student1", "Student B"), Pair("student2", "Student 2")))
+
+        val reportResult = this.mvc.perform(
+            get("/studentHistory?id=${STUDENT_1.username}").with(user(TEACHER_1))
+        )
+            .andExpect(status().isOk)
+            .andReturn()
+
+        @Suppress("UNCHECKED_CAST")
+        val studentHistory = reportResult.modelAndView!!.modelMap["studentHistory"] as StudentHistory
+
+        // each submission must show the name student1 declared in that submission's own group, not whichever
+        // group's Author row happens to be resolved first/last
+        assertEquals("testJavaProj", studentHistory.history[0].assignment.id)
+        assertEquals("Student A", studentHistory.history[0].submissions[0].submitterName)
+
+        assertEquals("sampleJavaProject", studentHistory.history[1].assignment.id)
+        assertEquals("Student B", studentHistory.history[1].submissions[0].submitterName)
+    }
+
+    @Test
+    @DirtiesContext
     fun testSubmissionsReport() {
 
         testsHelper.uploadProject(
@@ -1227,6 +1258,36 @@ class ReportControllerTests {
         for (submission in submissions) {
             assertEquals("Student 1", submission.submitterShortName())
         }
+    }
+
+    @Test
+    @DirtiesContext
+    fun `test submitter name shown is scoped to the group being displayed, not any group the student is in`() {
+
+        // student1 submits solo, declaring himself as "Student A" -> creates group #1
+        testsHelper.uploadProject(
+            this.mvc, "projectInvalidStructure1", "testJavaProj", STUDENT_1,
+            listOf(Pair("student1", "Student A"))
+        )
+
+        // the same student1, now paired with a different partner, declares himself as "Student B" -> since the
+        // author composition differs, this creates a brand new group (#2), with its own Author row for student1
+        testsHelper.uploadProject(
+            this.mvc, "projectInvalidStructure1", "testJavaProj", STUDENT_1,
+            listOf(Pair("student1", "Student B"), Pair("student2", "Student 2"))
+        )
+
+        // viewing group #1's history must still show "Student A", regardless of the name student1 later
+        // declared for himself in the unrelated group #2
+        val reportResult = this.mvc.perform(get("/submissions?assignmentId=testJavaProj&groupId=1")
+            .with(user(TEACHER_1)))
+            .andExpect(status().isOk())
+            .andReturn()
+
+        @Suppress("UNCHECKED_CAST")
+        val submissions = reportResult.modelAndView!!.modelMap["submissions"] as List<Submission>
+        assertEquals(1, submissions.size)
+        assertEquals("Student A", submissions[0].submitterName)
     }
 
     @Test

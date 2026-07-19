@@ -690,7 +690,9 @@ class ReportController(
                 submission.teacherTests = buildReport.junitSummaryAsObject(TestType.TEACHER)
                 submission.hiddenTests = buildReport.junitSummaryAsObject(TestType.HIDDEN)
             }
-            submission.submitterName = authorRepository.findByUserId(submission.submitterUserId)?.last()?.name
+            // resolve the name from this specific group's authors, not just any Author row for this userId:
+            // the same student id can have a different declared name in each group's AUTHORS.txt
+            submission.submitterName = group.authors.firstOrNull { it.userId == submission.submitterUserId }?.name
         }
 
         model["group"] = group
