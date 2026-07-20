@@ -202,7 +202,17 @@ class AssignmentController(
                 return "assignment-form"
             }
 
-            // TODO: verify if there is another assignment connected to this git repository
+            // verify if there is another (still existing) assignment connected to this git repository folder.
+            // Normally impossible for a brand new assignment (gitRepositoryFolder is always == assignmentId, and
+            // we already checked above that no assignment exists with this id), but an imported assignment can
+            // have a gitRepositoryFolder that doesn't match its own id, so this guards against that collision
+            val existingAssignmentWithSameFolder = assignmentRepository.findByGitRepositoryFolder(assignmentForm.assignmentId!!)
+            if (existingAssignmentWithSameFolder != null) {
+                LOG.warn("Assignment ${existingAssignmentWithSameFolder.id} already uses this git repository folder: ${assignmentForm.assignmentId}")
+                bindingResult.rejectValue("assignmentId", "assignment.duplicateFolder",
+                    "Error: There is already an assignment using this git repository folder")
+                return "assignment-form"
+            }
 
             val gitRepository = assignmentForm.gitRepositoryUrl!!
             if (!gitRepository.startsWith("git@")) {
@@ -214,7 +224,17 @@ class AssignmentController(
             // check if we can connect to given git repository
             try {
                 val directory = File(dropProjectProperties.assignments.rootLocation, assignmentForm.assignmentId)
-                gitClient.clone(gitRepository, directory)
+
+                // a leftover folder from a previously deleted assignment with this same id may still be here (e.g.
+                // if the OS hadn't yet released file handles JGit held open when that assignment was deleted). We
+                // already checked above that no other, currently existing assignment claims this folder, so it's
+                // safe to clear it before cloning.
+                if (directory.exists()) {
+                    LOG.info("[${assignmentForm.assignmentId}] Removing leftover folder from a previously deleted assignment: ${directory}")
+                    directory.deleteRecursively()
+                }
+
+                gitClient.clone(gitRepository, directory).use { }
                 LOG.info("[${assignmentForm.assignmentId}] Successfuly cloned ${gitRepository} to ${directory}")
             } catch (e: Exception) {
                 LOG.error("[${assignmentForm.assignmentId}] Error cloning ${gitRepository} - ${e}")
@@ -236,8 +256,9 @@ class AssignmentController(
 
             if (!mustSetupGitConnection) {
                 // update hash
-                val git = Git.open(File(dropProjectProperties.assignments.rootLocation, newAssignment.gitRepositoryFolder))
-                newAssignment.gitCurrentHash = gitClient.getLastCommitInfo(git)?.sha1
+                Git.open(File(dropProjectProperties.assignments.rootLocation, newAssignment.gitRepositoryFolder)).use { git ->
+                    newAssignment.gitCurrentHash = gitClient.getLastCommitInfo(git)?.sha1
+                }
             }
 
             assignmentRepository.save(newAssignment)
@@ -644,11 +665,12 @@ class AssignmentController(
         val gitRepository = assignment.gitRepositoryUrl
         try {
             val directory = File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder)
-            gitClient.clone(gitRepository, directory, assignment.gitRepositoryPrivKey!!.toByteArray())
+            gitClient.clone(gitRepository, directory, assignment.gitRepositoryPrivKey!!.toByteArray()).use { }
             LOG.info("[${assignmentId}] Successfuly cloned ${gitRepository} to ${directory}")
             // update hash
-            val git = Git.open(File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder))
-            assignment.gitCurrentHash = gitClient.getLastCommitInfo(git)?.sha1
+            Git.open(File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder)).use { git ->
+                assignment.gitCurrentHash = gitClient.getLastCommitInfo(git)?.sha1
+            }
             assignmentRepository.save(assignment)
         } catch (e: Exception) {
             LOG.info("Error cloning ${gitRepository} - ${e}")

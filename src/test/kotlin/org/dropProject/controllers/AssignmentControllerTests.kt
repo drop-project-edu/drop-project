@@ -460,6 +460,81 @@ class AssignmentControllerTests {
     }
 
     @Test
+    @WithMockUser("teacher1", roles = ["TEACHER"])
+    @DirtiesContext
+    fun test_04a_createAssignmentClearsLeftoverFolderFromPreviouslyDeletedAssignment() {
+
+        // simulate a leftover folder from a previously deleted assignment with the same id (issue #111): e.g.
+        // left behind because the OS hadn't yet released file handles JGit held open when it was deleted
+        val leftoverFolder = File(dropProjectProperties.assignments.rootLocation, "assignmentId")
+        try {
+            leftoverFolder.mkdirs()
+            File(leftoverFolder, "leftover.txt").writeText("leftover from a previously deleted assignment")
+
+            // creating a new assignment with the same id must behave exactly as if the folder didn't exist at
+            // all - i.e. it should just redirect to setup-git (this repo isn't connected yet), not fail with
+            // some "destination already exists" error
+            this.mvc.perform(
+                post("/assignment/new")
+                    .param("assignmentId", "assignmentId")
+                    .param("assignmentName", "assignmentName")
+                    .param("assignmentPackage", "assignmentPackage")
+                    .param("language", "JAVA")
+                    .param("submissionMethod", "UPLOAD")
+                    .param("gitRepositoryUrl", sampleJavaAssignmentRepo)
+            )
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", "/assignment/setup-git/assignmentId"))
+
+            assertTrue(assignmentRepository.existsById("assignmentId"))
+            assertFalse("the leftover folder should have been cleared before cloning",
+                File(leftoverFolder, "leftover.txt").exists())
+
+        } finally {
+            leftoverFolder.deleteRecursively()
+        }
+    }
+
+    @Test
+    @WithMockUser("teacher1", roles = ["TEACHER"])
+    @DirtiesContext
+    fun test_04b_createAssignmentRejectsGitRepositoryFolderAlreadyUsedByAnotherAssignment() {
+
+        // an assignment (e.g. previously imported) whose gitRepositoryFolder doesn't match its own id
+        val existingAssignment = Assignment(
+            id = "existingAssignmentId", name = "Existing Assignment", packageName = "org.dummy",
+            ownerUserId = "teacher1", submissionMethod = SubmissionMethod.UPLOAD, active = true,
+            gitRepositoryUrl = "git://dummy", gitRepositoryFolder = "sharedFolder"
+        )
+        assignmentRepository.save(existingAssignment)
+
+        val mvcResult = this.mvc.perform(
+            post("/assignment/new")
+                .param("assignmentId", "sharedFolder")
+                .param("assignmentName", "New Assignment")
+                .param("assignmentPackage", "org.dummy")
+                .param("language", "JAVA")
+                .param("submissionMethod", "UPLOAD")
+                .param("gitRepositoryUrl", sampleJavaAssignmentRepo)
+        )
+            .andExpect(status().isOk())
+            .andExpect(view().name("assignment-form"))
+            .andExpect(model().attributeHasFieldErrors("assignmentForm", "assignmentId"))
+            .andReturn()
+
+        val result =
+            mvcResult.modelAndView!!.model.get(BindingResult.MODEL_KEY_PREFIX + "assignmentForm") as BindingResult
+        assertEquals(
+            "Error: There is already an assignment using this git repository folder",
+            result.getFieldError("assignmentId")?.defaultMessage
+        )
+
+        // the existing assignment must be untouched, and no new one should have been created
+        assertTrue(assignmentRepository.existsById("existingAssignmentId"))
+        assertFalse(assignmentRepository.existsById("sharedFolder"))
+    }
+
+    @Test
     @DirtiesContext
     fun test_05_listAssignments() {
 
