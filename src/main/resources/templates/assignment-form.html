@@ -220,7 +220,8 @@
                 <textarea th:field="*{exceptions}" class="form-control" id="exceptions" rows="3" placeholder="a21701234,a21705678" />
                 <p class="help-block" th:if="${#fields.hasErrors('exceptions')}" th:errors="*{exceptions}">Error</p>
                 <p class="help-block" th:if="${!#fields.hasErrors('exceptions')}">Comma separated list of student id's that are exempt from the
-                group size restrictions</p>
+                group size restrictions. These students are automatically allowed to access and submit this assignment, even if it has
+                an "Authorized submitters" list (below) that they are not part of</p>
             </div>
         </div>
 

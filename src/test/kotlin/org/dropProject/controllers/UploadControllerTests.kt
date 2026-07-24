@@ -1756,6 +1756,31 @@ class UploadControllerTests {
 
     @Test
     @DirtiesContext
+    fun `student in exceptions list but not in allowlist can access and submit individually`() {
+
+        // allowlist only contains student2, not student1
+        assigneeRepository.save(Assignee(assignmentId = "testJavaProj", authorUserId = "student2"))
+
+        // student1 is exempt from the group size restriction, but is not in the allowlist
+        val projectGroupRestrictions = ProjectGroupRestrictions(minGroupSize = 2, maxGroupSize = 2, exceptions = "student1")
+        projectGroupRestrictionsRepository.save(projectGroupRestrictions)
+
+        val assignment = assignmentRepository.findById("testJavaProj").get()
+        assignment.projectGroupRestrictions = projectGroupRestrictions
+        assignmentRepository.save(assignment)
+
+        // student1 should still be able to access the assignment, even though it's not in the allowlist
+        this.mvc.perform(get("/upload/testJavaProj")
+                .with(user(STUDENT_1)))
+                .andExpect(status().isOk())
+
+        // student1 should be able to submit individually, bypassing the group size restriction
+        testsHelper.uploadProject(this.mvc, "projectOKIndividual", "testJavaProj", STUDENT_1,
+            expectedResultMatcher = status().isOk())
+    }
+
+    @Test
+    @DirtiesContext
     fun `upload group project as teacher`() {
 
         val projectGroupRestrictions = ProjectGroupRestrictions(minGroupSize = 2, maxGroupSize = 2)

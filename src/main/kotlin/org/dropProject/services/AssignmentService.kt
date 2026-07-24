@@ -801,8 +801,9 @@ class AssignmentService(
 
         if (assigneeRepository.existsByAssignmentId(assignmentId)) {
             // if it enters here, it means this assignment has a white list
-            // let's check if the current user belongs to the white list
-            if (!assigneeRepository.existsByAssignmentIdAndAuthorUserId(assignmentId, principalName)) {
+            // let's check if the current user belongs to the white list or is exempt from group size
+            // restriction, in which is case is also automatically allowed
+            if (!isAssigneeOrException(assignmentId, principalName)) {
                 throw AccessDeniedException("${principalName} is not allowed to view this assignment")
             }
         }
@@ -827,14 +828,25 @@ class AssignmentService(
 
         if (assigneeRepository.existsByAssignmentId(assignmentId)) {
             // if it enters here, it means this assignment has a white list
-            // let's check if all group members belong to the white list
+            // let's check if all group members belong to the white list or are exempt from group size
+            // restriction, in which is case is also automatically allowed
             for (memberId in groupMembers) {
-                if (!assigneeRepository.existsByAssignmentIdAndAuthorUserId(assignmentId, memberId)) {
+                if (!isAssigneeOrException(assignmentId, memberId)) {
                     throw InvalidProjectGroupException(i18n.getMessage("student.submit.groupMemberNotInWhitelist",
                         arrayOf(memberId), currentLocale))
                 }
             }
         }
+    }
+
+    private fun isAssigneeOrException(assignmentId: String, userId: String): Boolean {
+        if (assigneeRepository.existsByAssignmentIdAndAuthorUserId(assignmentId, userId)) {
+            return true
+        }
+
+        val exceptions = assignmentRepository.findById(assignmentId).orElse(null)
+            ?.projectGroupRestrictions?.exceptionsAsList() ?: emptyList()
+        return exceptions.contains(userId)
     }
 
     /**
