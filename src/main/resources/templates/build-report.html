@@ -102,6 +102,10 @@
     </form>
     </div>
 
+    <div class="alert alert-warning" th:if="${warning}">
+        <span th:text="${warning}"/>
+    </div>
+
     <div th:if="${error == null}">
     <h2>Group elements</h2>
     <table class="table table-bordered">
@@ -172,8 +176,12 @@
         </tr>
         </thead>
         <tbody>
-        <tr th:each="checkstyleError : ${buildReport.checkstyleErrors}">
+        <tr th:each="checkstyleError,iter : ${buildReport.checkstyleErrors}"
+            th:if="${!buildReport.codeQualityThresholdExceeded() or iter.index &lt; 10}">
             <td th:text="${checkstyleError}"></td>
+        </tr>
+        <tr th:if="${buildReport.codeQualityThresholdExceeded() and buildReport.checkstyleErrors.size() &gt; 10}">
+            <td><em th:text="'... and ' + ${buildReport.checkstyleErrors.size() - 10} + ' more'"></em></td>
         </tr>
         </tbody>
     </table>

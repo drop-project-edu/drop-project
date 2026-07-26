@@ -40,6 +40,21 @@ private const val ESC = "\u001B"
 private val escapeSequenceRegex = """$ESC\[\d+m""".toRegex()
 
 /**
+ * Prefixes of the Maven output lines that report a failed goal. A failure on any goal other than the ones listed
+ * here means that something went wrong with the build itself, instead of with the submitted code.
+ */
+private const val GOAL_FAILURE_PREFIX = "[ERROR] Failed to execute goal"
+private const val SUREFIRE_GOAL_FAILURE_PREFIX = "$GOAL_FAILURE_PREFIX org.apache.maven.plugins:maven-surefire-plugin"
+private const val COMPILER_GOAL_FAILURE_PREFIX = "$GOAL_FAILURE_PREFIX org.apache.maven.plugins:maven-compiler-plugin"
+private const val KOTLIN_GOAL_FAILURE_PREFIX = "$GOAL_FAILURE_PREFIX org.jetbrains.kotlin:kotlin-maven-plugin"
+private const val DETEKT_GOAL_FAILURE_PREFIX = "$GOAL_FAILURE_PREFIX com.github.ozsie:detekt-maven-plugin"
+
+/**
+ * Detekt reports the number of weighted issues that made it fail on its goal failure line
+ */
+private val detektWeightedIssuesRegex = """Analysis failed with (\d+) weighted issues""".toRegex()
+
+/**
  * Enum representing the types of tests that DP supports:
  * - Student tests - unit tests written by the students to test their own work;
  * - Teacher - unit tests written by the teachers to test the student's work; The detailed results of these tests are
@@ -119,19 +134,44 @@ data class BuildReport(val mavenOutputLines: List<String>,
             return true
         }
 
-        // if it has a failed goal other than compiler or surefire (junit), it is a fatal error
+        // if it has a failed goal other than compiler, surefire (junit) or detekt (code quality), it is a fatal error
         if (mavenOutputLines.
-                        filter { it.startsWith("[ERROR] Failed to execute goal") }.isNotEmpty()) {
+                        filter { it.startsWith(GOAL_FAILURE_PREFIX) }.isNotEmpty()) {
             return mavenOutputLines.filter {
-                        it.startsWith("[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin") ||
-                        it.startsWith("[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin") ||
-                        it.startsWith("[ERROR] Failed to execute goal org.jetbrains.kotlin:kotlin-maven-plugin")
+                        it.startsWith(SUREFIRE_GOAL_FAILURE_PREFIX) ||
+                        it.startsWith(COMPILER_GOAL_FAILURE_PREFIX) ||
+                        it.startsWith(KOTLIN_GOAL_FAILURE_PREFIX) ||
+                        it.startsWith(DETEKT_GOAL_FAILURE_PREFIX)
             }.isEmpty()
         }
 
 
 
         return false;
+    }
+
+    /**
+     * Checks if the code quality tool (Detekt) exceeded the maximum number of issues that is configured for the
+     * assignment (`maxIssues`, in the assignment's detekt-config.yml). When that happens, Detekt fails its goal,
+     * which aborts the build before the tests are executed.
+     *
+     * Note that Detekt still reports every issue that it has found, so [checkstyleErrors] is complete. It's the
+     * unit tests that are missing from the report.
+     *
+     * @return true if the code quality threshold was exceeded
+     */
+    fun codeQualityThresholdExceeded() : Boolean {
+        return mavenOutputLines.any { it.startsWith(DETEKT_GOAL_FAILURE_PREFIX) }
+    }
+
+    /**
+     * @return the number of weighted issues that made Detekt fail the build or null if the threshold wasn't
+     * exceeded. Note that this is a *weighted* total, so it doesn't necessarily match the size of [checkstyleErrors].
+     */
+    fun codeQualityWeightedIssues() : Int? {
+        return mavenOutputLines
+                .firstOrNull { it.startsWith(DETEKT_GOAL_FAILURE_PREFIX) }
+                ?.let { detektWeightedIssuesRegex.find(it)?.groupValues?.get(1)?.toIntOrNull() }
     }
 
     /**

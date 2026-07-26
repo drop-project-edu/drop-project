@@ -52,6 +52,8 @@ class FullBuildReport(
     var readmeHtml: String? = null,
     @JsonView(JSONViews.StudentAPI::class)
     var error: String? = null,
+    @JsonView(JSONViews.StudentAPI::class)
+    var warning: String? = null,
     var isValidating: Boolean? = null,
     @JsonView(JSONViews.StudentAPI::class)
     var summary: MutableList<SubmissionReport>? = null,
@@ -182,6 +184,12 @@ class ReportService(
                             buildReportDB ->
                         fullBuildReport.buildReport = buildReportBuilder.build(buildReportDB.buildReport.split("\n"),
                             mavenizedProjectFolder.absolutePath, assignment, submission)
+                    }
+
+                    // the code quality threshold aborts the build before the tests, so explain why they are all failing
+                    if (fullBuildReport.buildReport?.codeQualityThresholdExceeded() == true) {
+                        fullBuildReport.warning = i18n.getMessage("student.build-report.codeQualityThresholdExceeded",
+                            arrayOf(fullBuildReport.buildReport?.codeQualityWeightedIssues()), currentLocale)
                     }
                 }
             }

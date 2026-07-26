@@ -166,6 +166,17 @@ class BuildWorker(
                                     reportGoal = junitSummary?.numTests
                                 )
                             )
+                        } else if (buildReport.codeQualityThresholdExceeded()) {
+                            // the code quality threshold was exceeded, so the build was aborted before running the
+                            // tests. Report them as failed (without any progress, since none of them was executed) -
+                            // the build report explains why they didn't run
+                            submissionReportRepository.save(
+                                SubmissionReport(
+                                    submissionId = submission.id,
+                                    reportKey = Indicator.TEACHER_UNIT_TESTS.code,
+                                    reportValue = "NOK"
+                                )
+                            )
                         }
 
                         if (buildReport.hasJUnitErrors(TestType.HIDDEN) != null) {

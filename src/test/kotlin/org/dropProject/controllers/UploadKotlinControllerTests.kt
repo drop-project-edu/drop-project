@@ -33,6 +33,8 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -197,6 +199,55 @@ class UploadKotlinControllerTests {
         assertNotNull(buildResult.elapsedTimeJUnit())
         assert(buildResult.elapsedTimeJUnit()!! > 0.toBigDecimal())
 
+    }
+
+    @Test
+    @DirtiesContext
+    fun submitProjectStyleErrorsAboveThreshold() {
+
+        val assignment = assignmentRepository.findById("testKotlinProj").get()
+        val submissionId = testsHelper.uploadProject(this.mvc,"projectKotlinTooManyStyleErrors", "testKotlinProj",
+            STUDENT_1, submissionStructure = assignment.submissionStructure, language = assignment.language)
+
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId")
+                .with(user(STUDENT_1)))
+                .andExpect(status().isOk())
+                .andReturn()
+
+        // exceeding the threshold must not be reported as an internal error
+        assertNull("there should be no error", reportResult.modelAndView!!.modelMap["error"])
+
+        val warning = reportResult.modelAndView!!.modelMap["warning"] as String?
+        assertNotNull("the student must be told why the tests didn't run", warning)
+        assertThat(warning, CoreMatchers.containsString("exceeded the maximum number of code quality issues"))
+        assertThat(warning, CoreMatchers.containsString("unit tests were not executed"))
+
+        @Suppress("UNCHECKED_CAST")
+        val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
+        assertEquals("Summary should be 4 lines", 4, summary.size)
+        assertEquals("compilation should be OK", "OK", summary[1].reportValue)
+        assertEquals("checkstyle should be NOK (key)", Indicator.CHECKSTYLE, summary[2].indicator)
+        assertEquals("checkstyle should be NOK (value)", "NOK", summary[2].reportValue)
+
+        // the tests were never executed, so they are all failing and there is no progress to show
+        assertEquals("junit should be NOK (key)", Indicator.TEACHER_UNIT_TESTS, summary[3].indicator)
+        assertEquals("junit should be NOK (value)", "NOK", summary[3].reportValue)
+        assertNull("there should be no progress", summary[3].reportProgress)
+        assertNull("there should be no goal", summary[3].reportGoal)
+
+        val buildResult = reportResult.modelAndView!!.modelMap["buildReport"] as BuildReport
+        assertTrue("the threshold should have been detected", buildResult.codeQualityThresholdExceeded())
+        assertNotNull("the weighted issue count should be known", buildResult.codeQualityWeightedIssues())
+
+        // the model keeps every issue - it's the template that only renders the first ones
+        assertTrue("detekt should have reported more than 10 issues, got ${buildResult.checkstyleErrors.size}",
+            buildResult.checkstyleErrors.size > 10)
+
+        val html = reportResult.response.contentAsString
+        assertThat(html, CoreMatchers.containsString("unit tests were not executed"))
+        assertEquals("only the first 10 issues should be rendered", 10,
+            buildResult.checkstyleErrors.count { html.contains(it) })
+        assertThat(html, CoreMatchers.containsString("and ${buildResult.checkstyleErrors.size - 10} more"))
     }
 
     @Test

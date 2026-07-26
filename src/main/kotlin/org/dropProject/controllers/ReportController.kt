@@ -191,6 +191,7 @@ class ReportController(
         model["gitRepositoryWithHash"] = buildReport.gitRepositoryWithHash
         model["readmeHTML"] = buildReport.readmeHtml
         model["error"] = buildReport.error
+        model["warning"] = buildReport.warning
         model["autoRefresh"] = buildReport.isValidating
         model["summary"] = buildReport.summary
         model["structureErrors"] = buildReport.structureErrors
