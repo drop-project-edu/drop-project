@@ -2435,6 +2435,47 @@ class UploadControllerTests {
         outerFolder.deleteRecursively()
         zipFile.delete()
     }
+
+    @Test
+    @DirtiesContext
+    fun `show assignment info button is only visible to the assignment's teachers`() {
+
+        val infoLink = "/assignment/info/testJavaProj"
+
+        // make it PUBLIC, so that any teacher can reach the upload page
+        val assignment = assignmentRepository.findById("testJavaProj").get()
+        assignment.visibility = AssignmentVisibility.PUBLIC
+        assignmentRepository.save(assignment)
+
+        // the owner sees the link
+        val ownerPage = this.mvc.perform(get("/upload/testJavaProj").with(user(TEACHER_1)))
+            .andExpect(status().isOk)
+            .andReturn().response.contentAsString
+        assertTrue("the owner should see the info link", ownerPage.contains(infoLink))
+
+        // a teacher that is neither the owner nor in the ACL doesn't
+        val otherTeacherPage = this.mvc.perform(get("/upload/testJavaProj").with(user(TEACHER_2)))
+            .andExpect(status().isOk)
+            .andReturn().response.contentAsString
+        assertFalse(
+            "teacher2 should not be offered a link that gives him an access denied page",
+            otherTeacherPage.contains(infoLink)
+        )
+
+        // students never see it
+        val studentPage = this.mvc.perform(get("/upload/testJavaProj").with(user(STUDENT_1)))
+            .andExpect(status().isOk)
+            .andReturn().response.contentAsString
+        assertFalse("students should not see the info link", studentPage.contains(infoLink))
+
+        // ... but once teacher2 is added to the ACL, he does
+        assignmentACLRepository.save(AssignmentACL(assignmentId = "testJavaProj", userId = "teacher2"))
+
+        val aclTeacherPage = this.mvc.perform(get("/upload/testJavaProj").with(user(TEACHER_2)))
+            .andExpect(status().isOk)
+            .andReturn().response.contentAsString
+        assertTrue("a teacher in the ACL should see the info link", aclTeacherPage.contains(infoLink))
+    }
 }
 
 

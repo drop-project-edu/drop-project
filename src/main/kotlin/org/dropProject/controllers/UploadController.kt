@@ -192,6 +192,9 @@ class UploadController(
         }
 
         model["assignment"] = assignment
+        // the assignment info page is restricted to the owner and the ACL, so the link to it must only be
+        // shown to those teachers, otherwise the others would just get an access denied page
+        model["isAuthorizedTeacher"] = isAuthorizedTeacher
         model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.realName(), assignment.id)
         model["instructionsFragment"] = assignmentTeacherFiles.getInstructions(assignment).body //quick fix
         model["packageTree"] = assignmentTeacherFiles.buildPackageTree(
@@ -432,6 +435,7 @@ class UploadController(
         }
 
         model["assignment"] = assignment
+        model["isAuthorizedTeacher"] = assignmentService.isAuthorizedTeacher(assignment, principal.realName(), request)
         model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.realName(), assignment.id)
         model["instructionsFragment"] = assignmentTeacherFiles.getInstructions(assignment).body //quick fix
         model["packageTree"] = assignmentTeacherFiles.buildPackageTree(

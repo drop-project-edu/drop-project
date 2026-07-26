@@ -31,8 +31,8 @@
     </div>
 
     <p>
-        <a class="btn btn-default" style="margin-right: 15px;" th:if="${isTeacher}" th:href="@{'/assignment/info/' + ${assignment.id}}">Show assignment info <small>(only
-            visible for teachers)</small></a>
+        <a class="btn btn-default" style="margin-right: 15px;" th:if="${isAuthorizedTeacher}" th:href="@{'/assignment/info/' + ${assignment.id}}">Show assignment info <small>(only
+            visible for this assignment's teachers)</small></a>
         <a th:if="${uploadSubmission != null}" class="btn btn-default btn-md"
            th:href="@{'/buildReport/' + ${uploadSubmission.id}}"
            th:text="#{student.upload.form.visualize-report-btn}">Visualizar último relatório</a>

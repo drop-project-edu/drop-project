@@ -18,9 +18,9 @@
         <span class="label label-warning col-sm-1" th:if="${!assignment.active}">Inactive</span>
     </div>
 
-    <p th:if="${isTeacher}">
+    <p th:if="${isAuthorizedTeacher}">
         <a class="btn btn-default" th:href="@{'/assignment/info/' + ${assignment.id}}">Show assignment info <small>(only
-            visible for teachers)</small></a>
+            visible for this assignment's teachers)</small></a>
     </p>
 
     <small th:if="${assignment?.dueDate != null}">Deadline: <span th:text="${assignment.dueDateFormatted()}"></span></small>
