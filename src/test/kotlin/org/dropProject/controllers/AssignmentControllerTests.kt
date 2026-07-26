@@ -2280,5 +2280,36 @@ class AssignmentControllerTests {
             .andExpect(view().name("assignment-form"))
             .andExpect(model().attributeHasFieldErrors("assignmentForm", "assignmentId"))
     }
+
+    @Test
+    @WithMockUser("teacher1", roles = ["TEACHER"])
+    @DirtiesContext
+    fun test_deleteAssignmentWithTags() {
+
+        this.mvc.perform(
+            post("/assignment/new")
+                .param("assignmentId", "dummyAssignmentToDelete")
+                .param("assignmentName", "Dummy Assignment")
+                .param("assignmentPackage", "org.dummy")
+                .param("submissionMethod", "UPLOAD")
+                .param("language", "JAVA")
+                .param("gitRepositoryUrl", sampleJavaAssignmentRepo)
+                .param("assignmentTags", "sample,test")
+        )
+            .andExpect(status().isFound)
+            .andExpect(header().string("Location", "/assignment/setup-git/dummyAssignmentToDelete"))
+
+        assertEquals(2, assignmentTagRepository.findAll().size)
+
+        this.mvc.perform(post("/assignment/delete/dummyAssignmentToDelete"))
+            .andExpect(status().isFound)
+            .andExpect(flash().attribute("message", "Assignment was successfully deleted"))
+            .andExpect(header().string("Location", "/assignment/my"))
+
+        assertFalse(assignmentRepository.existsById("dummyAssignmentToDelete"))
+
+        // no other assignment was using these tags, so they should have been removed from the global list
+        assertEquals(0, assignmentTagRepository.findAll().size)
+    }
 }
 

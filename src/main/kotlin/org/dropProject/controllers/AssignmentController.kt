@@ -31,7 +31,10 @@ import org.dropproject.config.DropProjectProperties
 import org.dropproject.config.PendingTaskError
 import org.dropproject.config.PendingTasks
 import org.dropproject.dao.*
-import org.dropproject.data.*
+import org.dropproject.data.EXPORTED_ASSIGNMENT_JSON_FILENAME
+import org.dropproject.data.EXPORTED_GIT_SUBMISSIONS_JSON_FILENAME
+import org.dropproject.data.EXPORTED_ORIGINAL_SUBMISSIONS_FOLDER
+import org.dropproject.data.EXPORTED_SUBMISSIONS_JSON_FILENAME
 import org.dropproject.extensions.realName
 import org.dropproject.forms.AssignmentForm
 import org.dropproject.forms.SubmissionMethod
@@ -66,19 +69,13 @@ import java.util.*
 @Controller
 @RequestMapping("/assignment")
 class AssignmentController(
-    val authorRepository: AuthorRepository,
     val assignmentRepository: AssignmentRepository,
     val assignmentReportRepository: AssignmentReportRepository,
     val assignmentTagRepository: AssignmentTagRepository,
-    val assignmentTestMethodRepository: AssignmentTestMethodRepository,
     val assigneeRepository: AssigneeRepository,
     val assignmentACLRepository: AssignmentACLRepository,
     val submissionRepository: SubmissionRepository,
-    val submissionReportRepository: SubmissionReportRepository,
     val gitSubmissionRepository: GitSubmissionRepository,
-    val buildReportRepository: BuildReportRepository,
-    val jUnitReportRepository: JUnitReportRepository,
-    val jacocoReportRepository: JacocoReportRepository,
     val projectGroupRestrictionsRepository: ProjectGroupRestrictionsRepository,
     val gitClient: GitClient,
     val assignmentTeacherFiles: AssignmentTeacherFiles,
@@ -86,7 +83,6 @@ class AssignmentController(
     val assignmentService: AssignmentService,
     val zipService: ZipService,
     val cacheManager: CacheManager,
-    val projectGroupService: ProjectGroupService,
     val pendingTasks: PendingTasks,
     val dropProjectProperties: DropProjectProperties,
     val cooloffOverrideService: CooloffOverrideService) {
@@ -769,11 +765,11 @@ class AssignmentController(
             return "redirect:/assignment/my"
         }
 
+        // remove everything from the DB in a single transaction. only after it succeeds do we start removing
+        // files, since those deletions can't be rolled back
+        assignmentService.deleteAssignment(assignment, forceDelete)
+
         if (forceDelete) {
-            LOG.info("Removing all submissions (files and db) related to ${assignmentId}")
-
-            val submissions = submissionRepository.findByAssignmentId(assignmentId)
-
             // remove the base folder for all original submissions for this assignment
             val assignmentOriginalProjectsRootFolder =
                 when (assignment.submissionMethod) {
@@ -793,39 +789,7 @@ class AssignmentController(
             } else {
                 LOG.info("Error removing mavenized projects base folder: ${assignmentMavenizedProjectsRootFolder}")
             }
-
-            val count = submissions.size
-            for ((idx, submission) in submissions.withIndex()) {
-                LOG.info("Removing everything related to submission ${submission.id} from DB ($idx/$count)")
-
-                try {
-                    submissionReportRepository.deleteBySubmissionId(submission.id)
-                    jUnitReportRepository.deleteBySubmissionId(submission.id)
-                    jacocoReportRepository.deleteBySubmissionId(submission.id)
-                    // This is not needed since the build_report_id is a foreign key with cascade delete
-//                    submission.buildReport?.let {
-//                        buildReportRepository.deleteById(it.id)
-//                    }
-                    if (submission.submissionId == null) {  // submission by git
-                        val gitSubmissionId = submission.gitSubmissionId ?: throw IllegalArgumentException("Git submission without gitSubmissionId")
-                        gitSubmissionRepository.deleteById(gitSubmissionId)
-                    }
-                } catch (e: Exception) {
-                    LOG.warn("Error removing stuff related to submission ${submission.id} - $e Moving on...")
-                }
-            }
-
-            LOG.info("Removing all the submissions from DB")
-            submissionRepository.deleteAllByAssignmentId(assignmentId)
         }
-
-        assignmentService.clearAllTags(assignment, clearOrphans = true)
-        assignmentRepository.save(assignment)
-
-        assignmentACLRepository.deleteByAssignmentId(assignmentId)
-        assignmentReportRepository.deleteByAssignmentId(assignmentId)
-        assignmentRepository.deleteById(assignmentId)
-        assigneeRepository.deleteByAssignmentId(assignmentId)
 
         val rootFolder = File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder)
 

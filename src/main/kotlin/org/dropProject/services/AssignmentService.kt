@@ -342,6 +342,60 @@ class AssignmentService(
     }
 
     /**
+     * Removes everything related to an [Assignment] from the database. It doesn't remove any files - that's the
+     * responsibility of the caller, which should only do it after this function returns, since it may rollback.
+     *
+     * Everything is done in a single transaction, so that the assignment is either completely removed or not
+     * removed at all. This also keeps the assignment attached to the same persistence context throughout, which
+     * matters because [clearAllTags] deletes the tags that are left orphan: on a detached assignment, the next
+     * save() would try to reconcile the stale collection against tags that no longer exist.
+     *
+     * @param assignment is the [Assignment] to remove
+     * @param forceDelete if true, also removes all the assignment's submissions
+     */
+    @Transactional
+    fun deleteAssignment(assignment: Assignment, forceDelete: Boolean) {
+
+        val assignmentId = assignment.id
+
+        if (forceDelete) {
+            LOG.info("Removing all submissions (db) related to ${assignmentId}")
+
+            val submissions = submissionRepository.findByAssignmentId(assignmentId)
+            val count = submissions.size
+            for ((idx, submission) in submissions.withIndex()) {
+                LOG.info("Removing everything related to submission ${submission.id} from DB ($idx/$count)")
+
+                // these tolerate rows that are not there (e.g. orphaned reports), deleting nothing
+                submissionReportRepository.deleteBySubmissionId(submission.id)
+                jUnitReportRepository.deleteBySubmissionId(submission.id)
+                jacocoReportRepository.deleteBySubmissionId(submission.id)
+                // the build report is not deleted here since build_report_id is a foreign key with cascade delete
+
+                if (submission.submissionId == null) {  // submission by git
+                    val gitSubmissionId = submission.gitSubmissionId
+                    if (gitSubmissionId != null) {
+                        gitSubmissionRepository.deleteById(gitSubmissionId)
+                    } else {
+                        // inconsistent data - don't let it stop the removal of the remaining submissions
+                        LOG.warn("Submission ${submission.id} is a git submission but has no gitSubmissionId. Moving on...")
+                    }
+                }
+            }
+
+            LOG.info("Removing all the submissions from DB")
+            submissionRepository.deleteAllByAssignmentId(assignmentId)
+        }
+
+        clearAllTags(assignment, clearOrphans = true)
+
+        assignmentACLRepository.deleteByAssignmentId(assignmentId)
+        assignmentReportRepository.deleteByAssignmentId(assignmentId)
+        assignmentRepository.deleteById(assignmentId)
+        assigneeRepository.deleteByAssignmentId(assignmentId)
+    }
+
+    /**
      * Handles the exportation of an assignment and (optionally) its submissions
      * @return a pair with (filename, file)
      *
