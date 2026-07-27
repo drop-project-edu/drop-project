@@ -55,6 +55,32 @@ private const val DETEKT_GOAL_FAILURE_PREFIX = "$GOAL_FAILURE_PREFIX com.github.
 private val detektWeightedIssuesRegex = """Analysis failed with (\d+) weighted issues""".toRegex()
 
 /**
+ * Maven interleaves its own artifact resolution messages with the output of the plugin that is being executed, so
+ * they may show up in the middle of a plugin's report (e.g., on a cold local repository, right after the goal's
+ * header line). They must not be mistaken for the end of the plugin's output.
+ */
+private val mavenArtifactResolutionRegex = """\[INFO] (Downloading|Downloaded|Progress)\b.*""".toRegex()
+
+private fun isMavenArtifactResolutionLine(mavenOutputLine: String) =
+        mavenArtifactResolutionRegex.matches(mavenOutputLine)
+
+/**
+ * Lines that Maven and Detekt print *inside* Detekt's report (regardless of the plugin version), which therefore
+ * don't mark the end of the report.
+ */
+private fun isPartOfDetektOutput(mavenOutputLine: String) =
+        mavenOutputLine.startsWith("[INFO] Args:") || isMavenArtifactResolutionLine(mavenOutputLine)
+
+/**
+ * Checks if a Maven output line reports that Detekt failed its goal *because the assignment's code quality
+ * threshold was exceeded*. Detekt may also fail for reasons that have nothing to do with the submitted code
+ * (e.g., an invalid configuration or a path that it cannot read) and those are fatal errors.
+ */
+private fun isDetektThresholdFailure(mavenOutputLine: String) =
+        mavenOutputLine.startsWith(DETEKT_GOAL_FAILURE_PREFIX) &&
+                detektWeightedIssuesRegex.containsMatchIn(mavenOutputLine)
+
+/**
  * Enum representing the types of tests that DP supports:
  * - Student tests - unit tests written by the students to test their own work;
  * - Teacher - unit tests written by the teachers to test the student's work; The detailed results of these tests are
@@ -134,14 +160,15 @@ data class BuildReport(val mavenOutputLines: List<String>,
             return true
         }
 
-        // if it has a failed goal other than compiler, surefire (junit) or detekt (code quality), it is a fatal error
+        // if it has a failed goal other than compiler, surefire (junit) or detekt reporting too many code quality
+        // issues, it is a fatal error
         if (mavenOutputLines.
                         filter { it.startsWith(GOAL_FAILURE_PREFIX) }.isNotEmpty()) {
             return mavenOutputLines.filter {
                         it.startsWith(SUREFIRE_GOAL_FAILURE_PREFIX) ||
                         it.startsWith(COMPILER_GOAL_FAILURE_PREFIX) ||
                         it.startsWith(KOTLIN_GOAL_FAILURE_PREFIX) ||
-                        it.startsWith(DETEKT_GOAL_FAILURE_PREFIX)
+                        isDetektThresholdFailure(it)
             }.isEmpty()
         }
 
@@ -161,7 +188,7 @@ data class BuildReport(val mavenOutputLines: List<String>,
      * @return true if the code quality threshold was exceeded
      */
     fun codeQualityThresholdExceeded() : Boolean {
-        return mavenOutputLines.any { it.startsWith(DETEKT_GOAL_FAILURE_PREFIX) }
+        return mavenOutputLines.any { isDetektThresholdFailure(it) }
     }
 
     /**
@@ -170,7 +197,7 @@ data class BuildReport(val mavenOutputLines: List<String>,
      */
     fun codeQualityWeightedIssues() : Int? {
         return mavenOutputLines
-                .firstOrNull { it.startsWith(DETEKT_GOAL_FAILURE_PREFIX) }
+                .firstOrNull { isDetektThresholdFailure(it) }
                 ?.let { detektWeightedIssuesRegex.find(it)?.groupValues?.get(1)?.toIntOrNull() }
     }
 
@@ -299,14 +326,15 @@ data class BuildReport(val mavenOutputLines: List<String>,
                     }
                     // depending on the detekt-maven-plugin version, the output is different
                     if (startIdx > 0 &&
-                            idx > startIdx + 1 &&
+                            idx >= startIdx &&
+                            !isPartOfDetektOutput(mavenOutputLine) &&
                             (mavenOutputLine.startsWith("detekt finished") || mavenOutputLine.startsWith("[INFO]"))) {
                         endIdx = idx
                         break
                     }
                 }
 
-                if (startIdx > 0) {
+                if (startIdx > 0 && endIdx > startIdx) {
                     return mavenOutputLines
                             .subList(startIdx, endIdx)
                             .filter { it.startsWith("\t") && !it.startsWith("\t-") }

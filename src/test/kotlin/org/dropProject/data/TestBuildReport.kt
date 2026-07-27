@@ -218,7 +218,10 @@ class TestBuildReport {
                 "/srv/drop-project/mavenized-projects/1592587286410-Pedra, Papel, Tesoura-mavenized-for-rebuild",
                 dummyKotlinAssignment)
 
+        // detekt crashed (it was given an invalid path), which is not the same as detekt reporting that the
+        // submission exceeded the assignment's code quality threshold
         assertTrue(buildReport.mavenExecutionFailed())
+        assertTrue(!buildReport.codeQualityThresholdExceeded())
 
         // TODO: devia ter uma flag "fatalError" quando um plugin rebenta
     }
@@ -265,6 +268,27 @@ class TestBuildReport {
         assertTrue(!buildReport.mavenExecutionFailed())
         assertEquals(0, buildReport.compilationErrors.size)
         assertEquals(8, buildReport.checkstyleErrors.size)
+    }
+
+    // when the local maven repository is cold (e.g., on the CI server), maven downloads the detekt plugin's
+    // dependencies right after printing the goal's header, so those messages show up in the middle of detekt's report
+    @Test
+    fun testKotlinDetektThresholdExceededOnColdRepository() {
+        val mavenOutputLines = resourceLoader
+            .getResource("file:src/test/sampleMavenOutputs/kotlinDetektThresholdExceededColdRepository.txt")
+            .file.readLines()
+        val buildReport = buildReportBuilder.build(mavenOutputLines,
+                "someMavenizedProj",
+                dummyKotlinAssignment)
+
+        // exceeding the threshold is a failed quality gate, not a build error
+        assertTrue(!buildReport.mavenExecutionFailed())
+        assertTrue(buildReport.codeQualityThresholdExceeded())
+        assertEquals(60, buildReport.codeQualityWeightedIssues())
+
+        assertEquals(0, buildReport.compilationErrors.size)
+        assertTrue(buildReport.checkstyleValidationActive())
+        assertEquals(3, buildReport.checkstyleErrors.size)
     }
 
     @Test

@@ -1,0 +1,47 @@
+[INFO] Scanning for projects...
+[INFO]
+[INFO] ------< org.dropProject.sampleAssignments:sampleKotlinAssignment >------
+[INFO] Building sampleKotlinAssignment 1.0-SNAPSHOT
+[INFO]   from pom_updated.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO]
+[INFO] --- clean:3.2.0:clean (default-clean) @ sampleKotlinAssignment ---
+[INFO]
+[INFO] --- resources:3.4.0:resources (default-resources) @ sampleKotlinAssignment ---
+[INFO] skip non existing resourceDirectory someMavenizedProj/src/main/resources
+[INFO]
+[INFO] --- compiler:3.15.0:compile (default-compile) @ sampleKotlinAssignment ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO]
+[INFO] --- kotlin:1.7.20:compile (compile) @ sampleKotlinAssignment ---
+[INFO]
+[INFO] --- detekt:1.23.5:check (default) @ sampleKotlinAssignment ---
+[INFO] Downloading from central: https://repo.maven.apache.org/maven2/io/gitlab/arturbosch/detekt/detekt-formatting/1.23.5/detekt-formatting-1.23.5.pom
+[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/io/gitlab/arturbosch/detekt/detekt-formatting/1.23.5/detekt-formatting-1.23.5.pom (2.5 kB at 84 kB/s)
+[INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/pinterest/ktlint/ktlint-ruleset-standard/0.50.0/ktlint-ruleset-standard-0.50.0.jar
+[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/pinterest/ktlint/ktlint-ruleset-standard/0.50.0/ktlint-ruleset-standard-0.50.0.jar (1.1 MB at 24 MB/s)
+[INFO] Args:
+someMavenizedProj/src/main/kotlin/Main.kt:20:5: Function names should match the pattern: ([a-z][a-zA-Z0-9]*)|(`.*`) [FunctionNaming]
+someMavenizedProj/src/main/kotlin/Main.kt:20:14: Function parameter names should match the pattern: [a-z][A-Za-z0-9]* [FunctionParameterNaming]
+someMavenizedProj/src/main/kotlin/Main.kt:34:9: Variable names should match the pattern: [a-z][A-Za-z0-9]* [VariableNaming]
+
+someMavenizedProj/src/main/kotlin/Main.kt - 5h debt
+	FunctionNaming - [Function names should match the pattern: ([a-z][a-zA-Z0-9]*)|(`.*`)] at someMavenizedProj/src/main/kotlin/Main.kt:20:5
+	FunctionParameterNaming - [Function parameter names should match the pattern: [a-z][A-Za-z0-9]*] at someMavenizedProj/src/main/kotlin/Main.kt:20:14
+	VariableNaming - [Variable names should match the pattern: [a-z][A-Za-z0-9]*] at someMavenizedProj/src/main/kotlin/Main.kt:34:9
+
+Overall debt: 5h
+
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  15.703 s
+[INFO] Finished at: 2026-07-27T08:09:07Z
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal com.github.ozsie:detekt-maven-plugin:1.23.5:check (default) on project sampleKotlinAssignment: Execution default of goal com.github.ozsie:detekt-maven-plugin:1.23.5:check failed: Analysis failed with 60 weighted issues. -> [Help 1]
+[ERROR]
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR]
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/PluginExecutionException
