@@ -272,6 +272,38 @@ class UploadKotlinControllerTests {
         assertEquals("compilation should be NOK (value)", "NOK", summary[1].reportValue)
     }
 
+    // https://github.com/drop-project-edu/drop-project/issues/97
+    @Test
+    @DirtiesContext
+    fun submitKotlinProjectWithJavaFileInThePackage() {
+
+        val assignment = assignmentRepository.findById("testKotlinProj2").get()
+        val submissionId = testsHelper.uploadProject(this.mvc,"projectKotlinWithJavaFile", "testKotlinProj2",
+            STUDENT_1, submissionStructure = assignment.submissionStructure, language = assignment.language)
+
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId")
+            .with(user(STUDENT_1)))
+            .andExpect(status().isOk())
+            .andReturn()
+
+        // java files in a Kotlin assignment break the build in a way that the student can't understand, so they
+        // must be rejected as a structure error, instead of resulting in an internal error
+        assertNull("there should be no error", reportResult.modelAndView!!.modelMap["error"])
+
+        @Suppress("UNCHECKED_CAST")
+        val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
+        assertEquals("Summary should be 1 line", 1, summary.size)
+        assertEquals("projectStructure should be NOK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
+        assertEquals("projectStructure should be NOK (value)", "NOK", summary[0].reportValue)
+
+        @Suppress("UNCHECKED_CAST")
+        val structureErrors = reportResult.modelAndView!!.modelMap["structureErrors"] as List<String>
+        assertThat(structureErrors, CoreMatchers.hasItems(
+            "This is a Kotlin assignment, so it only accepts Kotlin (.kt) files, but the project contains the " +
+                    "following Java (.java) files: src/org/dropproject/samples/samplekotlinassignment/Main.java. " +
+                    "Please delete them and submit again."))
+    }
+
     @Test
     @DirtiesContext
     fun submitProjectAndCheckREADME() {

@@ -539,7 +539,43 @@ class SubmissionService(
             erros.add(i18n.getMessage("error.structure.test.naming", null, currentLocale))
         }
 
+        erros.addAll(checkJavaFilesInKotlinAssignment(projectFolder, assignment))
+
         return erros
+    }
+
+    /**
+     * Checks if a submission for a Kotlin [Assignment] contains java files.
+     *
+     * Maven runs the java compiler before the Kotlin compiler, so a java file that uses the student's Kotlin code
+     * aborts the build before it even reaches the Kotlin compilation, resulting in a report that the student is
+     * not able to understand. Since java files are never part of the solution for a Kotlin assignment, they are
+     * rejected here, with an explicit message.
+     *
+     * @param projectFolder is a File
+     * @param assignment is the [Assignment] that the submission targets
+     *
+     * @return a List of String with the error message, if any java file was found
+     */
+    private fun checkJavaFilesInKotlinAssignment(projectFolder: File, assignment: Assignment): List<String> {
+
+        if (assignment.language != Language.KOTLIN) {
+            return emptyList()
+        }
+
+        val javaFiles = File(projectFolder, "src")
+                .walkTopDown()
+                .filter { it.isFile && it.extension == "java" }
+                .map { it.relativeTo(projectFolder).path }
+                .sorted()
+                .toList()
+
+        if (javaFiles.isEmpty()) {
+            return emptyList()
+        }
+
+        return listOf(i18n.getMessage("error.structure.java.files.in.kotlin.assignment",
+                arrayOf(javaFiles.joinToString(", ")), currentLocale))
     }
 
     private fun checkMavenProjectStructure(projectFolder: File, assignment: Assignment): List<String> {
@@ -585,6 +621,8 @@ class SubmissionService(
                 .any { it.name.startsWith("Test") }) {
             erros.add(i18n.getMessage("error.maven.tests.in.main", arrayOf(folder), currentLocale))
         }
+
+        erros.addAll(checkJavaFilesInKotlinAssignment(projectFolder, assignment))
 
         return erros
     }
