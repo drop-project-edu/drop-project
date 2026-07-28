@@ -97,6 +97,43 @@ java.lang.NullPointerException: Cannot invoke "java.util.ArrayList.add(Object)" 
 
     }
 
+    // https://github.com/drop-project-edu/drop-project/issues/102
+    @Test
+    fun testParseReportWhereTheOutputsDifferInABlankLine() {
+
+        val xmlFile = resourceLoader
+            .getResource("file:${junitXmlReportsRoot}/testErrorsBlankLineInComparison.xml").file.readText()
+
+        val junitResult = junitResultsParser.parseXml(xmlFile)
+
+        assertEquals(1, junitResult.junitMethodResults.size)
+        val jUnitMethodResult = junitResult.junitMethodResults[0]
+        jUnitMethodResult.filterStacktrace("")
+
+        // the only difference between the two outputs is the blank line after the welcome message, so it must
+        // survive into the report that is shown to the student
+        assertEquals("""
+FAILURE: TestTeacherFunctions.TestTeacherFunctions.test_01_criaMenu
+org.opentest4j.AssertionFailedError:${' '}
+Menu deve ser igual ==> expected: <
+Bem vindo ao Campo DEISIado
+
+1 - Novo Jogo
+2 - Ler Jogo
+0 - Sair
+> but was: <
+Bem vindo ao Campo DEISIado
+1 - Novo Jogo
+2 - Ler Jogo
+0 - Sair
+>
+${'\t'}at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+${'\t'}at TestTeacherFunctions.test_01_criaMenu(TestTeacherFunctions.kt:23)
+
+
+        """.trimIndent(), jUnitMethodResult.toString())
+    }
+
     @Test
     fun testParseReportWithSkippedErrors() {
 

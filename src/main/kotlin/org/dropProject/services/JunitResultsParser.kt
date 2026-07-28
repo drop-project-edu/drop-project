@@ -70,7 +70,7 @@ data class JUnitMethodResult(
         }
     }
 
-    internal val failureDetailLines = failureDetail?.lines()?.filter{ it.trim().isNotEmpty() }?.toMutableList()
+    internal val failureDetailLines = failureDetail?.lines()?.dropLastWhile { it.isBlank() }?.toMutableList()
 
     fun filterStacktrace(packageName: String) {
         failureDetailLines?.removeIf { it.trimStart().startsWith("at") && !it.contains(packageName) }
