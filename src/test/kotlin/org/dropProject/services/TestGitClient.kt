@@ -63,6 +63,23 @@ class TestGitClient {
 
     }
 
+    @Test
+    fun testIsPubliclyReadable() {
+
+        // a repository owned by the drop project organization that is public and is expected to stay public
+        assertTrue(gitClient.isPubliclyReadable("git@github.com:drop-project-edu/sampleJavaAssignment.git"))
+
+        // a repository owned by the drop project organization that is private and is expected to stay private
+        assertFalse(gitClient.isPubliclyReadable("git@github.com:drop-project-edu/sampleJavaSubmission.git"))
+
+        // a repository that doesn't exist is indistinguishable from a private one, and must not be flagged
+        assertFalse(gitClient.isPubliclyReadable("git@github.com:drop-project-edu/inexistent.git"))
+
+        // an url that can't be checked must not be flagged either
+        assertFalse(gitClient.isPubliclyReadable("https://github.com/drop-project-edu/sampleJavaAssignment"))
+        assertFalse(gitClient.isPubliclyReadable("git://dummy"))
+    }
+
     // creates a local (non-bare) git repository with two commits over the same file, and returns
     // the repository folder together with each commit's hash
     private fun createLocalGitRepoWithTwoCommits(): Triple<File, String, String> {

@@ -101,6 +101,18 @@ class UploadController(
     }
 
     /**
+     * A student repository that anyone can read allows other students to copy the submission, so it must
+     * not be accepted. This is checked both when the repository is connected and every time it is refreshed,
+     * since the student may change the repository's visibility after connecting it.
+     *
+     * @return true if [gitRepositoryUrl] is publicly readable and DP is configured to refuse such repositories
+     */
+    private fun shouldRejectAsPublic(gitRepositoryUrl: String): Boolean {
+        return dropProjectProperties.git.rejectPublicStudentRepositories &&
+                gitClient.isPubliclyReadable(gitRepositoryUrl, dropProjectProperties.git.visibilityCheckTimeout)
+    }
+
+    /**
      * This is only called after the LTI authentication flow
      */
     @RequestMapping(value = ["/"], method = [(RequestMethod.POST)])
@@ -441,6 +453,7 @@ class UploadController(
         model["packageTree"] = assignmentTeacherFiles.buildPackageTree(
                 assignment.packageName, assignment.language,
                 assignment.submissionStructure, assignment.acceptsStudentTests)
+        model["gitRepositoryUrl"] = gitRepositoryUrl  // so that the form keeps the url if the validation fails
 
         if (gitRepositoryUrl.isNullOrBlank()) {
             model["gitRepoErrorMsg"] = i18n.getMessage("student.git.setup.must-fill-url", null, currentLocale)
@@ -449,6 +462,12 @@ class UploadController(
 
         if (!gitClient.checkValidSSHGithubURL(gitRepositoryUrl)) {
             model["gitRepoErrorMsg"] = i18n.getMessage("student.git.setup.invalid-url", null, currentLocale)
+            return "student-git-form"
+        }
+
+        if (shouldRejectAsPublic(gitRepositoryUrl)) {
+            LOG.info("[${principal.realName()}] tried to connect the public repository ${gitRepositoryUrl}")
+            model["gitRepoErrorMsg"] = i18n.getMessage("student.git.setup.public-repository", null, currentLocale)
             return "student-git-form"
         }
 
@@ -598,6 +617,13 @@ class UploadController(
 
         if (!gitSubmission.group.contains(principal.realName())) {
             throw IllegalAccessError("Submissions can only be refreshed by their owners")
+        }
+
+        // the repository may have been made public after it was connected
+        if (shouldRejectAsPublic(gitSubmission.gitRepositoryUrl)) {
+            LOG.info("[${principal.realName()}] tried to refresh the public repository ${gitSubmission.gitRepositoryUrl}")
+            val errorMsg = i18n.getMessage("student.git.setup.public-repository", null, currentLocale)
+            return ResponseEntity("{ \"error\": \"${errorMsg}\"}", HttpStatus.INTERNAL_SERVER_ERROR)
         }
 
         try {

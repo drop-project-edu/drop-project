@@ -27,10 +27,13 @@ import org.eclipse.jgit.api.ResetCommand
 import org.eclipse.jgit.api.TransportConfigCallback
 import org.eclipse.jgit.diff.DiffFormatter
 import org.eclipse.jgit.diff.Edit
+import org.eclipse.jgit.transport.CredentialItem
+import org.eclipse.jgit.transport.CredentialsProvider
 import org.eclipse.jgit.transport.JschConfigSessionFactory
 import org.eclipse.jgit.transport.OpenSshConfig
 import org.eclipse.jgit.transport.SshTransport
 import org.eclipse.jgit.transport.Transport
+import org.eclipse.jgit.transport.URIish
 import org.eclipse.jgit.util.FS
 import org.springframework.stereotype.Service
 import org.dropproject.extensions.formatDefault
@@ -135,6 +138,16 @@ class GitClient {
             val sshTransport = transport as SshTransport
             sshTransport.sshSessionFactory = MyJschConfigSessionFactory(privateKey)
         }
+    }
+
+    /**
+     * A [CredentialsProvider] that never provides credentials, guaranteeing that the anonymous
+     * access check neither blocks waiting for a prompt nor picks up credentials from the environment.
+     */
+    private object NoCredentialsProvider : CredentialsProvider() {
+        override fun isInteractive() = false
+        override fun supports(vararg items: CredentialItem) = false
+        override fun get(uri: URIish, vararg items: CredentialItem) = false
     }
 
     /**
@@ -262,6 +275,34 @@ class GitClient {
 
         val (username,reponame) = getGitRepoInfo(gitRepositoryUrl)
         return "https://github.com/${username}/${reponame}"
+    }
+
+    /**
+     * Checks if the GitHub repository identified by [gitRepositoryUrl] (ssh style) can be read by anyone,
+     * by executing a "git ls-remote" over https without any credentials. Since GitHub only advertises refs
+     * anonymously for public repositories, a successful call means the repository is public.
+     *
+     * Every situation where this cannot be confirmed (private repository, non-existent repository, url that
+     * is not a github ssh url, network problem) is reported as false, so that a repository is only ever
+     * flagged when it was positively confirmed to be publicly readable. This way, a problem performing the
+     * check never prevents a student from submitting.
+     *
+     * @return true if the repository was confirmed to be publicly readable
+     */
+    fun isPubliclyReadable(gitRepositoryUrl : String, timeoutSeconds : Int = 10) : Boolean {
+        return try {
+            Git.lsRemoteRepository()
+                .setRemote(convertSSHGithubURLtoHttpURL(gitRepositoryUrl))
+                .setHeads(true)
+                .setCredentialsProvider(NoCredentialsProvider)
+                .setTimeout(timeoutSeconds)
+                .call()
+            LOG.info("${gitRepositoryUrl} is publicly readable")
+            true
+        } catch (e: Exception) {
+            LOG.debug("Couldn't read ${gitRepositoryUrl} anonymously (${e.message}). Assuming it's not public")
+            false
+        }
     }
 
     fun getGitRepoInfo(gitRepositoryUrl : String) : Pair<String,String> {

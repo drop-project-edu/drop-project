@@ -57,6 +57,9 @@ data class DropProjectProperties(
     
     /** GitHub integration */
     val github: GitHub = GitHub(),
+
+    /** Git repositories configuration */
+    @field:Valid val git: Git = Git(),
     
     /** Application configuration */
     val config: Config = Config(),
@@ -115,6 +118,17 @@ data class DropProjectProperties(
     data class GitHub(
         /** GitHub token for repository access (optional) */
         val token: String = "no-token"
+    )
+
+    data class Git(
+        /**
+         * Refuse to connect (or to refresh) a student repository that anyone can read, since that
+         * would allow other students to copy the submission
+         */
+        val rejectPublicStudentRepositories: Boolean = true,
+        /** Timeout, in seconds, for the check that determines if a repository is publicly readable */
+        @field:Min(value = 1, message = "drop-project.git.visibility-check-timeout must be at least 1")
+        val visibilityCheckTimeout: Int = 10
     )
 
     data class Config(

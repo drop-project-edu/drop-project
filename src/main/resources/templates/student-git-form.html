@@ -139,7 +139,9 @@
 <script th:if="${gitSubmission?.connected == true}">
     $('#refreshBtn').on('click', function (e) {
 
-        $(this).toggleClass('active');
+        // keep a reference to the button, since "this" is not the button inside the ajax callbacks
+        var refreshBtn = $(this);
+        refreshBtn.toggleClass('active');
 
         var requestData = {};
         requestData[_csrf_param_name] = _csrf_token;
@@ -151,7 +153,7 @@
                 window.location.replace(detailUrl);
             },
             error: function (response) {
-                $(this).toggleClass('active');
+                refreshBtn.toggleClass('active');
                 var jsonResponse = JSON.parse($.trim(response.responseText));
                 alert(jsonResponse.error);
             }

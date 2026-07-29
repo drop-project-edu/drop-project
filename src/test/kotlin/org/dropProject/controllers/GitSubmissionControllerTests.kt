@@ -124,6 +124,30 @@ class GitSubmissionControllerTests {
 
     @Test
     @DirtiesContext
+    fun test_connectSubmissionWithoutGitRepositoryUrl() {
+
+        // without the parameter at all
+        this.mvc.perform(MockMvcRequestBuilders.post("/student/setup-git")
+                .param("assignmentId", defaultAssignmentId)
+                .with(user(STUDENT_1))
+        )
+                .andExpect(status().isOk())
+                .andExpect(view().name("student-git-form"))
+                .andExpect(model().attribute("gitRepoErrorMsg", "You must fill the repository's url"))
+
+        // with an empty parameter
+        this.mvc.perform(MockMvcRequestBuilders.post("/student/setup-git")
+                .param("assignmentId", defaultAssignmentId)
+                .param("gitRepositoryUrl", "")
+                .with(user(STUDENT_1))
+        )
+                .andExpect(status().isOk())
+                .andExpect(view().name("student-git-form"))
+                .andExpect(model().attribute("gitRepoErrorMsg", "You must fill the repository's url"))
+    }
+
+    @Test
+    @DirtiesContext
     fun test_connectSubmissionWithInvalidGitRepository() {
 
         this.mvc.perform(MockMvcRequestBuilders.post("/student/setup-git")
@@ -133,6 +157,8 @@ class GitSubmissionControllerTests {
         )
                 .andExpect(status().isOk())
                 .andExpect(model().attribute("gitRepoErrorMsg", "The repository's url is not in the correct format"))
+                // the form must keep the url that was typed, so that the student doesn't have to type it again
+                .andExpect(model().attribute("gitRepositoryUrl", "git@githuu.com:someuser/cs1Assigment1.git"))
 
 
 
