@@ -26,6 +26,7 @@ import jakarta.persistence.EntityNotFoundException
 import jakarta.servlet.http.HttpServletRequest
 import org.apache.commons.io.FileUtils
 import org.dropproject.Constants
+import org.dropproject.config.PendingExport
 import org.dropproject.config.PendingTasks
 import org.dropproject.controllers.InvalidProjectGroupException
 import org.dropproject.dao.*
@@ -493,9 +494,9 @@ class AssignmentService(
             LOG.info("Created ${zipFile.absolutePath} with submissions from ${assignment.id}")
 
             // put the result in the pending tasks so that the others can check it later
-            pendingTasks.put(taskId, Pair(fileName, zipFile))
+            pendingTasks.put(taskId, PendingExport(fileName, zipFile))
         } finally {
-            tempFolder.delete()
+            tempFolder.deleteRecursively()
         }
     }
 

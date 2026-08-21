@@ -1499,6 +1499,20 @@ class AssignmentControllerTests {
 
     @Test
     @DirtiesContext
+    fun test_20_1_downloadExpiredExport() {
+
+        // exports are deleted after a while, so downloading one that no longer exists must be explained to the user
+        this.mvc.perform(
+            get("/assignment/export-result/someExpiredTaskId")
+                .with(user(TEACHER_1))
+                .contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE)
+        )
+            .andExpect(status().isGone)
+            .andExpect(content().string(containsString("This export is no longer available")))
+    }
+
+    @Test
+    @DirtiesContext
     fun test_21_importAssignmentOnly() {
 
         try {

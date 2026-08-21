@@ -20,6 +20,8 @@
 package org.dropproject.services
 
 import org.dropproject.TestsHelper
+import org.dropproject.config.PendingExport
+import org.dropproject.config.PendingTasks
 import org.dropproject.dao.Assignment
 import org.dropproject.dao.RebuildStatus
 import org.dropproject.dao.SubmissionStatus
@@ -28,7 +30,10 @@ import org.dropproject.repository.AssignmentRepository
 import org.dropproject.repository.RebuildStatusRepository
 import org.dropproject.repository.SubmissionRepository
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
@@ -39,6 +44,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
+import java.io.File
 import java.util.*
 
 @RunWith(SpringRunner::class)
@@ -65,6 +71,9 @@ class ScheduledTasksTests {
 
     @Autowired
     lateinit var assignmentRepository: AssignmentRepository
+
+    @Autowired
+    lateinit var pendingTasks: PendingTasks
 
     @Test
     @DirtiesContext
@@ -125,5 +134,26 @@ class ScheduledTasksTests {
         assertNull(rebuildStatusRepository.findBySubmissionId(stuckRebuilding.id))
         // ...while the one for the still-running rebuild is left alone
         assertEquals(oneMinuteAgo.time, rebuildStatusRepository.findBySubmissionId(freshRebuilding.id)!!.startedAt.time)
+    }
+
+    @Test
+    @DirtiesContext
+    fun `cleanExpiredExports only deletes the exports that are too old`() {
+
+        val zipFile = File.createTempFile("export", ".zip")
+
+        val beforeTheExport = System.currentTimeMillis() - 1000
+        pendingTasks.put("taskId", PendingExport("export", zipFile))
+        val afterTheExport = System.currentTimeMillis() + 1000
+
+        // while it hasn't expired, the export is kept
+        assertEquals(0, scheduledTasks.deleteExportsCreatedBefore(beforeTheExport))
+        assertTrue("the export shouldn't have been deleted yet", zipFile.exists())
+        assertNotNull(pendingTasks.get("taskId"))
+
+        // ... but once it expires, both the file and the task are disposed of
+        assertEquals(1, scheduledTasks.deleteExportsCreatedBefore(afterTheExport))
+        assertFalse("the expired export should have been deleted", zipFile.exists())
+        assertNull(pendingTasks.get("taskId"))
     }
 }

@@ -27,6 +27,8 @@ import org.dropproject.repository.RebuildStatusRepository
 import org.dropproject.repository.SubmissionRepository
 import org.slf4j.LoggerFactory
 import org.dropproject.config.DropProjectProperties
+import org.dropproject.config.PendingExport
+import org.dropproject.config.PendingTasks
 import java.io.File
 import java.util.*
 import java.util.logging.Logger
@@ -41,7 +43,8 @@ class ScheduledTasks(
         val rebuildStatusRepository: RebuildStatusRepository,
         val assignmentRepository: AssignmentRepository,
         val gitClient: GitClient,
-        val dropProjectProperties: DropProjectProperties
+        val dropProjectProperties: DropProjectProperties,
+        val pendingTasks: PendingTasks
 ) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
@@ -105,5 +108,45 @@ class ScheduledTasks(
         }
 
         return refreshedKeys
+    }
+
+    /**
+     * Deletes the files produced by assignment exports that are older than [EXPORT_TIME_TO_LIVE], regardless of
+     * having been downloaded or not. Exports are kept for a while (instead of being deleted right after the
+     * download) so that the teacher can retry a download that failed or was interrupted.
+     *
+     * @return the number of exports that were deleted
+     */
+    // run every 10 minutes
+    @Scheduled(fixedRate = 600_000)
+    fun cleanExpiredExports(): Int {
+        return deleteExportsCreatedBefore(System.currentTimeMillis() - EXPORT_TIME_TO_LIVE)
+    }
+
+    /**
+     * Deletes the files produced by the assignment exports that were created before [timestamp], also forgetting
+     * the corresponding pending tasks.
+     *
+     * @return the number of exports that were deleted
+     */
+    fun deleteExportsCreatedBefore(timestamp: Long): Int {
+
+        var deletedExports = 0
+        for (expiredTask in pendingTasks.removeCreatedBefore(timestamp)) {
+            if (expiredTask is PendingExport) {
+                if (expiredTask.zipFile.delete()) {
+                    deletedExports++
+                    LOG.info("Deleted expired export ${expiredTask.zipFile.absolutePath}")
+                } else {
+                    LOG.warn("Error deleting expired export ${expiredTask.zipFile.absolutePath}")
+                }
+            }
+        }
+
+        return deletedExports
+    }
+
+    companion object {
+        const val EXPORT_TIME_TO_LIVE = 3600 * 1000L  // 1 hour
     }
 }

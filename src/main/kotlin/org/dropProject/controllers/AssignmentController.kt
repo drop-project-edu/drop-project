@@ -28,6 +28,7 @@ import jakarta.validation.Valid
 import org.apache.commons.io.FileUtils
 import org.dropproject.Constants.CACHE_ARCHIVED_ASSIGNMENTS_KEY
 import org.dropproject.config.DropProjectProperties
+import org.dropproject.config.PendingExport
 import org.dropproject.config.PendingTaskError
 import org.dropproject.config.PendingTasks
 import org.dropproject.dao.*
@@ -54,6 +55,7 @@ import org.springframework.ui.ModelMap
 import org.springframework.validation.BindingResult
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
+import org.springframework.web.server.ResponseStatusException
 import org.springframework.web.servlet.mvc.support.RedirectAttributes
 import java.io.File
 import java.nio.file.Files
@@ -969,6 +971,10 @@ class AssignmentController(
         }
     }
 
+    /**
+     * Downloads the file produced by a previous export. Exports are only kept for a limited period of time,
+     * after which they are deleted by the "cleanExpiredExports" scheduled task.
+     */
     @RequestMapping(value = ["/export-result/{taskId}"], method = [(RequestMethod.GET)],
         produces = [org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE])
     @ResponseBody
@@ -981,11 +987,12 @@ class AssignmentController(
             throw result.exception
         }
 
-        val (filename, zipFile) = @Suppress("UNCHECKED_CAST") (result as Pair<String,File>)
-        response.setHeader("Content-Disposition", "attachment; filename=${filename}.dp")
-        return FileSystemResource(zipFile)
+        val export = result as? PendingExport
+            ?: throw ResponseStatusException(HttpStatus.GONE,
+                "This export is no longer available. Please export the assignment again.")
 
-        // TODO: delete the zipFile
+        response.setHeader("Content-Disposition", "attachment; filename=${export.filename}.dp")
+        return FileSystemResource(export.zipFile)
     }
 
     /**
