@@ -20,9 +20,11 @@
 package org.dropproject.services
 
 import org.dropproject.dao.Assignment
+import org.dropproject.dao.Language
 import org.dropproject.dao.TestVisibility
 import org.dropproject.forms.SubmissionMethod
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -188,5 +190,45 @@ class TestAssignmentValidator {
             it.type == AssignmentValidator.InfoType.WARNING &&
                     it.message == "Assignment without package."
         })
+    }
+
+    @Test
+    fun `Test that ValidationInputs reflect the properties that are cross-checked with the repository`() {
+
+        val assignment = Assignment(id = "dummy2", name = "Dummy", gitRepositoryUrl = "",
+            gitRepositoryFolder = "", ownerUserId = "p4997", submissionMethod = SubmissionMethod.UPLOAD,
+            packageName = "org.dropProject.samples", language = Language.JAVA,
+            calculateStudentTestsCoverage = false, maxMemoryMb = null, mandatoryTestsSuffix = null,
+            hiddenTestsVisibility = TestVisibility.HIDE_EVERYTHING)
+
+        val validationInputs = ValidationInputs.from(assignment)
+
+        assertEquals(validationInputs, ValidationInputs.from(assignment))
+
+        // properties that must trigger a new validation
+        assignment.packageName = "org.dropProject.other"
+        assertNotEquals(validationInputs, ValidationInputs.from(assignment))
+        assignment.packageName = "org.dropProject.samples"
+
+        assignment.language = Language.KOTLIN
+        assertNotEquals(validationInputs, ValidationInputs.from(assignment))
+        assignment.language = Language.JAVA
+
+        assignment.calculateStudentTestsCoverage = true
+        assertNotEquals(validationInputs, ValidationInputs.from(assignment))
+        assignment.calculateStudentTestsCoverage = false
+
+        assignment.maxMemoryMb = 1024
+        assertNotEquals(validationInputs, ValidationInputs.from(assignment))
+        assignment.maxMemoryMb = null
+
+        assignment.mandatoryTestsSuffix = "_MANDATORY"
+        assertNotEquals(validationInputs, ValidationInputs.from(assignment))
+        assignment.mandatoryTestsSuffix = null
+
+        // properties that are not checked against the contents of the repository
+        assignment.name = "Another name"
+        assignment.cooloffPeriod = 10
+        assertEquals(validationInputs, ValidationInputs.from(assignment))
     }
 }

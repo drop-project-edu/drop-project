@@ -34,6 +34,7 @@ import org.dropproject.forms.AssignmentForm
 import org.dropproject.forms.SubmissionMethod
 import org.dropproject.repository.*
 import org.dropproject.services.AssignmentService
+import org.dropproject.services.AssignmentValidator
 import org.dropproject.services.GitClient
 import org.dropproject.services.ScheduledTasks
 import org.hamcrest.CoreMatchers.containsString
@@ -101,6 +102,9 @@ class AssignmentControllerTests {
 
     @Autowired
     lateinit var assignmentTagRepository: AssignmentTagRepository
+
+    @Autowired
+    lateinit var assignmentReportRepository: AssignmentReportRepository
 
     @Autowired
     lateinit var projectGroupRestrictionsRepository: ProjectGroupRestrictionsRepository
@@ -2324,6 +2328,101 @@ class AssignmentControllerTests {
 
         // no other assignment was using these tags, so they should have been removed from the global list
         assertEquals(0, assignmentTagRepository.findAll().size)
+    }
+
+    @Test
+    @WithMockUser("teacher1", roles = ["TEACHER"])
+    @DirtiesContext
+    fun test_editAssignmentChangingValidationRelevantFieldMarksItInactive() {
+
+        val assignmentId = "revalidateOnEditTest"
+        val assignmentFolder = File(dropProjectProperties.assignments.rootLocation, assignmentId)
+        try {
+            val (assignment, _, _) = testsHelper.createHistoricalAssignment(
+                assignmentRepository, dropProjectProperties, assignmentId)
+            assertTrue("assignment should start active", assignment.active)
+
+            // simulate the report that was produced when the assignment was connected to the git repository
+            assignmentReportRepository.save(AssignmentReport(assignmentId = assignmentId,
+                type = AssignmentValidator.InfoType.INFO, message = "report before the edit", description = null))
+
+            // turn on the coverage calculation, which the assignment's pom.xml is not prepared for
+            mvc.perform(
+                post("/assignment/new")
+                    .param("assignmentId", assignmentId)
+                    .param("assignmentName", assignment.name)
+                    .param("assignmentPackage", assignment.packageName)
+                    .param("submissionMethod", "GIT")
+                    .param("language", "JAVA")
+                    .param("gitRepositoryUrl", assignment.gitRepositoryUrl)
+                    .param("editMode", "true")
+                    .param("acceptsStudentTests", "true")
+                    .param("minStudentTests", "1")
+                    .param("calculateStudentTestsCoverage", "true")
+            )
+                .andExpect(status().isFound)
+                .andExpect(header().string("Location", "/assignment/info/${assignmentId}"))
+                .andExpect(flash().attribute("error", containsString("marked inactive")))
+
+            // the new configuration doesn't match the contents of the repository, so the assignment
+            // must have been marked inactive
+            val updatedAssignment = assignmentRepository.findById(assignmentId).get()
+            assertFalse("assignment should have been marked inactive", updatedAssignment.active)
+            assertTrue("assignment should have been updated", updatedAssignment.calculateStudentTestsCoverage)
+
+            // the previous report was replaced by the result of the new validation
+            val reports = assignmentReportRepository.findByAssignmentId(assignmentId)
+            assertTrue("the previous report should have been cleared",
+                reports.none { it.message == "report before the edit" })
+            assertTrue("the new report should contain errors",
+                reports.any { it.type == AssignmentValidator.InfoType.ERROR })
+
+        } finally {
+            assignmentFolder.deleteRecursively()
+        }
+    }
+
+    @Test
+    @WithMockUser("teacher1", roles = ["TEACHER"])
+    @DirtiesContext
+    fun test_editAssignmentWithoutChangingValidationRelevantFieldsDoesntValidateAgain() {
+
+        val assignmentId = "revalidateOnEditTest2"
+        val assignmentFolder = File(dropProjectProperties.assignments.rootLocation, assignmentId)
+        try {
+            val (assignment, _, _) = testsHelper.createHistoricalAssignment(
+                assignmentRepository, dropProjectProperties, assignmentId)
+
+            assignmentReportRepository.save(AssignmentReport(assignmentId = assignmentId,
+                type = AssignmentValidator.InfoType.INFO, message = "report before the edit", description = null))
+
+            // change only the name, which is not cross-checked against the contents of the repository
+            mvc.perform(
+                post("/assignment/new")
+                    .param("assignmentId", assignmentId)
+                    .param("assignmentName", "New Name")
+                    .param("assignmentPackage", assignment.packageName)
+                    .param("submissionMethod", "GIT")
+                    .param("language", "JAVA")
+                    .param("gitRepositoryUrl", assignment.gitRepositoryUrl)
+                    .param("editMode", "true")
+            )
+                .andExpect(status().isFound)
+                .andExpect(header().string("Location", "/assignment/info/${assignmentId}"))
+                .andExpect(flash().attribute("message", "Assignment was successfully updated"))
+
+            val updatedAssignment = assignmentRepository.findById(assignmentId).get()
+            assertEquals("New Name", updatedAssignment.name)
+            assertTrue("assignment should still be active", updatedAssignment.active)
+
+            // the assignment wasn't validated again, so the previous report is still there
+            val reports = assignmentReportRepository.findByAssignmentId(assignmentId)
+            assertEquals(1, reports.size)
+            assertEquals("report before the edit", reports[0].message)
+
+        } finally {
+            assignmentFolder.deleteRecursively()
+        }
     }
 }
 

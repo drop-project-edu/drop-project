@@ -481,3 +481,28 @@ class AssignmentValidator {
     }
 
 }
+
+/**
+ * The [Assignment] properties that [AssignmentValidator] cross-checks against the contents of the assignment's git
+ * repository. If any of these changes, the assignment must be validated again, since the previously stored
+ * [org.dropproject.dao.AssignmentReport] no longer reflects the assignment's configuration.
+ *
+ * Whenever a validation starts depending on another property of the assignment, it must be added here.
+ */
+data class ValidationInputs(
+    val packageName: String?,
+    val language: Language,
+    val calculateStudentTestsCoverage: Boolean,
+    val maxMemoryMb: Int?,
+    val mandatoryTestsSuffix: String?
+) {
+    companion object {
+        fun from(assignment: Assignment) = ValidationInputs(
+            packageName = assignment.packageName,
+            language = assignment.language,
+            calculateStudentTestsCoverage = assignment.calculateStudentTestsCoverage,
+            maxMemoryMb = assignment.maxMemoryMb,
+            mandatoryTestsSuffix = assignment.mandatoryTestsSuffix
+        )
+    }
+}

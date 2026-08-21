@@ -72,7 +72,6 @@ import java.util.*
 @RequestMapping("/assignment")
 class AssignmentController(
     val assignmentRepository: AssignmentRepository,
-    val assignmentReportRepository: AssignmentReportRepository,
     val assignmentTagRepository: AssignmentTagRepository,
     val assigneeRepository: AssigneeRepository,
     val assignmentACLRepository: AssignmentACLRepository,
@@ -80,7 +79,6 @@ class AssignmentController(
     val gitSubmissionRepository: GitSubmissionRepository,
     val projectGroupRestrictionsRepository: ProjectGroupRestrictionsRepository,
     val gitClient: GitClient,
-    val assignmentTeacherFiles: AssignmentTeacherFiles,
     val submissionService: SubmissionService,
     val assignmentService: AssignmentService,
     val zipService: ZipService,
@@ -124,6 +122,7 @@ class AssignmentController(
                                principal: Principal): String {
 
         var mustSetupGitConnection = false
+        var validationFailed = false
 
         // add all the tags to the model, in case we have an error and have to return the same page
         model["allTags"] = assignmentTagRepository.findAll()
@@ -291,9 +290,21 @@ class AssignmentController(
                 return "assignment-form"
             }
 
-            // TODO: check again for assignment integrity
+            val validationInputsBefore = ValidationInputs.from(existingAssignment)
 
             assignmentService.updateAssignment(existingAssignment, assignmentForm)
+
+            // if the configuration changed in a way that is cross-checked against the contents of the git repository,
+            // the stored validation report is no longer valid, so the assignment must be validated again. If it now
+            // has errors, mark it inactive, honouring the same rule that prevents activating an invalid assignment
+            if (ValidationInputs.from(existingAssignment) != validationInputsBefore) {
+                LOG.info("[${assignmentId}] Configuration changed, validating the assignment again")
+                validationFailed = assignmentService.validateAndStoreReport(existingAssignment, principal)
+                if (validationFailed) {
+                    LOG.info("[${assignmentId}] Assignment has problems, marking it inactive")
+                    existingAssignment.active = false
+                }
+            }
 
             // update hash
             val git = Git.open(File(dropProjectProperties.assignments.rootLocation, existingAssignment.gitRepositoryFolder))
@@ -347,6 +358,10 @@ class AssignmentController(
 
         if (mustSetupGitConnection) {
             return "redirect:/assignment/setup-git/${assignmentForm.assignmentId}"
+        } else if (validationFailed) {
+            redirectAttributes.addFlashAttribute("error", "Assignment was updated but it was marked inactive, " +
+                    "since the new configuration has problems. Please check the 'Validation Report'")
+            return "redirect:/assignment/info/${assignmentForm.assignmentId}"
         } else {
             redirectAttributes.addFlashAttribute("message", "Assignment was successfully ${if (assignmentForm.editMode) "updated" else "created"}")
             return "redirect:/assignment/info/${assignmentForm.assignmentId}"
@@ -563,14 +578,7 @@ class AssignmentController(
             }
 
             // revalidate the assignment
-            val report = assignmentTeacherFiles.checkAssignmentFiles(assignment, principal)
-
-            // store the report in the DB (first, clear the previous report)
-            assignmentReportRepository.deleteByAssignmentId(assignmentId)
-            report.forEach {
-                assignmentReportRepository.save(AssignmentReport(assignmentId = assignmentId, type = it.type,
-                    message = it.message, description = it.description))
-            }
+            assignmentService.validateAndStoreReport(assignment, principal)
 
         } catch (re: RefNotAdvertisedException) {
             LOG.warn("Couldn't pull git repository for ${assignmentId}: head is invalid")
@@ -679,16 +687,7 @@ class AssignmentController(
         }
 
         // check that the assignment repository is a valid assignment structure
-        val report = assignmentTeacherFiles.checkAssignmentFiles(assignment, principal)
-
-        // store the report in the DB (first, clear the previous report)
-        assignmentReportRepository.deleteByAssignmentId(assignmentId)
-        report.forEach {
-            assignmentReportRepository.save(AssignmentReport(assignmentId = assignmentId, type = it.type,
-                message = it.message, description = it.description))
-        }
-
-        if (report.any { it.type == AssignmentValidator.InfoType.ERROR }) {
+        if (assignmentService.validateAndStoreReport(assignment, principal)) {
             assignmentRepository.save(assignment)  // assignment.buildResult was updated
 
             redirectAttributes.addFlashAttribute("error", "Assignment has problems. Please check the 'Validation Report'")
@@ -838,16 +837,7 @@ class AssignmentController(
                 return redirectUrl
             }
 
-            val report = assignmentTeacherFiles.checkAssignmentFiles(assignment, principal)
-
-            // store the report in the DB (first, clear the previous report)
-            assignmentReportRepository.deleteByAssignmentId(assignmentId)
-            report.forEach {
-                assignmentReportRepository.save(AssignmentReport(assignmentId = assignmentId, type = it.type,
-                    message = it.message, description = it.description))
-            }
-
-            if (report.any { it.type == AssignmentValidator.InfoType.ERROR }) {  // TODO: Should it be warnings also??
+            if (assignmentService.validateAndStoreReport(assignment, principal)) {  // TODO: Should it be warnings also??
                 assignmentRepository.save(assignment)  // assignment.buildResult was updated
 
                 redirectAttributes.addFlashAttribute("error", "Assignment has problems. Please check the 'Validation Report'")

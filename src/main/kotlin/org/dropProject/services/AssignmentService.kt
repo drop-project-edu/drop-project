@@ -290,6 +290,27 @@ class AssignmentService(
     }
 
     /**
+     * Validates the [Assignment]'s files, replacing the [AssignmentReport] that was previously stored in the DB
+     * with the result of this new validation.
+     *
+     * @param assignment is the Assignment to validate
+     * @param principal is a [Principal] representing the user making the request
+     * @return true if the validation found errors (in which case the assignment shouldn't be used by students)
+     */
+    fun validateAndStoreReport(assignment: Assignment, principal: Principal?): Boolean {
+        val report = assignmentTeacherFiles.checkAssignmentFiles(assignment, principal)
+
+        // store the report in the DB (first, clear the previous report)
+        assignmentReportRepository.deleteByAssignmentId(assignment.id)
+        report.forEach {
+            assignmentReportRepository.save(AssignmentReport(assignmentId = assignment.id, type = it.type,
+                message = it.message, description = it.description))
+        }
+
+        return report.any { it.type == AssignmentValidator.InfoType.ERROR }
+    }
+
+    /**
      * Updates an existing Assignment with the contents of an AssignmentForm.
      * @param existingAssignment, the Assignment that will be updated
      * @param assignmentForm, the AssignmentForm from which the Assignment contents will be copied
@@ -736,18 +757,7 @@ class AssignmentService(
         assignmentRepository.save(newAssignment)
 
         // revalidate the assignment
-        val report = assignmentTeacherFiles.checkAssignmentFiles(newAssignment, principal)
-
-        // store the report in the DB (first, clear the previous report)
-        assignmentReportRepository.deleteByAssignmentId(newAssignment.id)
-        report.forEach {
-            assignmentReportRepository.save(
-                AssignmentReport(
-                    assignmentId = newAssignment.id, type = it.type,
-                    message = it.message, description = it.description
-                )
-            )
-        }
+        validateAndStoreReport(newAssignment, principal)
 
         return Pair(newAssignment.id, null)
     }
