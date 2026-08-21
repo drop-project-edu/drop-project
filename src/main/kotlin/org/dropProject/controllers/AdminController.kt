@@ -27,6 +27,7 @@ import org.dropproject.dao.SubmissionStatus
 import org.dropproject.data.AssignmentDiskUsage
 import org.dropproject.data.OrphanedProcess
 import org.dropproject.forms.AdminDashboardForm
+import org.dropproject.forms.SubmissionMethod
 import org.dropproject.repository.AssignmentTagRepository
 import org.dropproject.repository.JUnitReportRepository
 import org.dropproject.repository.SubmissionRepository
@@ -39,6 +40,7 @@ import org.springframework.validation.BindingResult
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.mvc.support.RedirectAttributes
 import org.springframework.transaction.annotation.Transactional
+import jakarta.persistence.EntityNotFoundException
 import jakarta.validation.Valid
 import org.dropproject.repository.AssignmentRepository
 import java.io.File
@@ -291,21 +293,36 @@ class AdminController(val mavenInvoker: MavenInvoker,
 
     /**
      * Controller that handles requests for cleaning up non-final submission files.
-     * Removes all files related to non-final submissions for a given assignment.
-     * 
-     * TODO: This should remove non-final submissions for groups where there is already a submission marked as final
-     * 
+     * Removes the mavenized folders of the non-final submissions of groups that already have a submission
+     * marked as final. The originally submitted files are preserved, so these folders can be recreated
+     * through a full rebuild.
+     *
+     * This is not available for git assignments, since all the submissions of a group share the same
+     * mavenized folder.
+     *
      * @param assignmentId is a String, identifying the assignment to cleanup
      * @return A String identifying the relevant View
      */
     @PostMapping("/cleanup/{assignmentId}")
-    fun cleanup(@PathVariable assignmentId: String): String {
-        LOG.info("Removing all non-final submission files related to ${assignmentId}")
+    fun cleanup(@PathVariable assignmentId: String, redirectAttributes: RedirectAttributes): String {
 
-        val nonFinalSubmissions = submissionRepository.findByAssignmentIdAndMarkedAsFinal(assignmentId, false)
-        submissionService.deleteMavenizedFolderFor(nonFinalSubmissions)
+        val assignment = assignmentRepository.findById(assignmentId)
+            .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
 
-        // TODO: Should show a toast saying how many files were deleted
+        if (assignment.submissionMethod == SubmissionMethod.GIT) {
+            redirectAttributes.addFlashAttribute("error",
+                "Cleanup is not available for git assignments, since all the submissions of a group share the same files")
+            return "redirect:/report/${assignmentId}"
+        }
+
+        LOG.info("Removing the files of the non-final submissions of ${assignmentId}")
+
+        val deletedCount = submissionService.deleteMavenizedFoldersOfNonFinalSubmissions(assignmentId)
+
+        redirectAttributes.addFlashAttribute("message",
+            if (deletedCount > 0) "Removed the files of ${deletedCount} non-final submission(s)"
+            else "There were no non-final submission files to remove")
+
         return "redirect:/report/${assignmentId}"
     }
 }

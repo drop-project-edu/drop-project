@@ -92,10 +92,16 @@
                    data-btn-ok-label="Continue" data-btn-cancel-label="Cancel">Check plagiarism</a>
             </div>
 
-            <div class="btn-group" role="group" th:if="${isAdmin}">
-                <form class="inline btn-group" method="post" th:action="@{'/admin/cleanup/' + ${assignment.id}}" >
-                    <input type="submit" value="Cleanup" class="btn btn-default" title="Remove non-final files" />
-                </form>
+            <div class="btn-group" role="group" th:if="${isAdmin}"
+                 th:with="isGitAssignment=${assignment.submissionMethod.name() == 'GIT'}">
+                <!-- the tooltip is on the wrapper because browsers don't show it on a disabled input -->
+                <span th:title="${isGitAssignment} ?
+                        'Not available for git assignments, since all the submissions of a group share the same files' :
+                        'Remove the files of the non-final submissions'">
+                    <form class="inline btn-group" method="post" th:action="@{'/admin/cleanup/' + ${assignment.id}}" >
+                        <input type="submit" value="Cleanup" class="btn btn-default" th:disabled="${isGitAssignment}" />
+                    </form>
+                </span>
             </div>
 
             <div th:if="${error}">

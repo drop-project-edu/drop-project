@@ -792,17 +792,50 @@ class SubmissionService(
         }
     }
 
-    fun deleteMavenizedFolderFor(submissions: List<Submission>) {
-        for (submission in submissions) {
-            val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission,
-                submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
+    /**
+     * Deletes the mavenized folders that are no longer needed for [assignmentId], that is, the ones belonging to
+     * non-final submissions of groups that already have a submission marked as final. Groups without a final
+     * submission are left untouched, so that every group always keeps at least one submission whose code can
+     * still be inspected and downloaded.
+     *
+     * Note that several submissions may map to the same mavenized folder (for example, a rebuild that hasn't
+     * completed yet still points to the original submission's folder), so a folder is only deleted if no
+     * surviving submission points to it.
+     *
+     * @param assignmentId is a String identifying the assignment to cleanup
+     * @return the number of folders that were effectively deleted
+     */
+    fun deleteMavenizedFoldersOfNonFinalSubmissions(assignmentId: String): Int {
+
+        val submissions = submissionRepository.findByAssignmentId(assignmentId)
+        val groupsWithFinalSubmission = submissions.filter { it.markedAsFinal }.mapTo(HashSet()) { it.group.id }
+
+        val (disposable, toKeep) = submissions.partition {
+            !it.markedAsFinal && it.group.id in groupsWithFinalSubmission
+        }
+
+        val foldersToKeep = toKeep.mapTo(HashSet()) { mavenizedFolderOf(it) }
+        val foldersToDelete = disposable.mapTo(HashSet()) { mavenizedFolderOf(it) } - foldersToKeep
+
+        var deletedCount = 0
+        for (mavenizedProjectFolder in foldersToDelete) {
+            if (!mavenizedProjectFolder.exists()) {
+                continue
+            }
             if (mavenizedProjectFolder.deleteRecursively()) {
-                LOG.info("Removed mavenized project folder (${submission.submissionId}): ${mavenizedProjectFolder}")
+                deletedCount++
+                LOG.info("Removed mavenized project folder: ${mavenizedProjectFolder}")
             } else {
-                LOG.info("Error removing mavenized project folder (${submission.submissionId}): ${mavenizedProjectFolder}")
+                LOG.warn("Error removing mavenized project folder: ${mavenizedProjectFolder}")
             }
         }
+
+        return deletedCount
     }
+
+    private fun mavenizedFolderOf(submission: Submission) =
+        assignmentTeacherFiles.getProjectFolderAsFile(submission,
+            submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
 
     fun getOriginalProjectFolder(submission: Submission): File {
         val projectFolder =

@@ -1105,6 +1105,54 @@ class UploadControllerTests {
         assertEquals("${submissionThatSurvivedCleanup.submissionId}-mavenized", mavenizedProjectsFolder.list()[0])
     }
 
+    @Test
+    @DirtiesContext
+    fun cleanupDoesntRemoveFilesOfGroupsWithoutAFinalSubmission() {
+
+        testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
+        testsHelper.uploadProject(this.mvc, "projectCheckstyleErrors", "testJavaProj", STUDENT_1)
+
+        val mavenizedProjectsFolder = File(dropProjectProperties.mavenizedProjects.rootLocation,
+                                            Submission.relativeUploadFolder("testJavaProj", Date()))
+        assertEquals(2, mavenizedProjectsFolder.list().size)
+
+        val admin = User("admin", "", mutableListOf(SimpleGrantedAuthority("ROLE_DROP_PROJECT_ADMIN")))
+
+        // no submission was marked as final, so the group must keep both submissions
+        this.mvc.perform(post("/admin/cleanup/testJavaProj")
+                .with(user(admin)))
+                .andExpect(redirectedUrl("/report/testJavaProj"))
+                .andExpect(flash().attribute("message", "There were no non-final submission files to remove"))
+
+        assertEquals(2, mavenizedProjectsFolder.list().size)
+
+        // and the button must be enabled, since this is an upload assignment
+        this.mvc.perform(get("/report/testJavaProj").with(user(admin)))
+                .andExpect(status().isOk)
+                .andExpect(content().string(containsString("Remove the files of the non-final submissions")))
+    }
+
+    @Test
+    @DirtiesContext
+    fun cleanupIsNotAvailableForGitAssignments() {
+
+        assignmentRepository.save(Assignment(id = "testGitProj", name = "Test Git Project (for automatic tests)",
+                packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
+                submissionMethod = SubmissionMethod.GIT, active = true, gitRepositoryUrl = "git://dummy",
+                gitRepositoryFolder = "testGitProj", gitCurrentHash = "somehash"))
+
+        val admin = User("admin", "", mutableListOf(SimpleGrantedAuthority("ROLE_DROP_PROJECT_ADMIN")))
+
+        this.mvc.perform(post("/admin/cleanup/testGitProj")
+                .with(user(admin)))
+                .andExpect(redirectedUrl("/report/testGitProj"))
+                .andExpect(flash().attributeExists("error"))
+
+        this.mvc.perform(get("/report/testGitProj").with(user(admin)))
+                .andExpect(status().isOk)
+                .andExpect(content().string(containsString("Not available for git assignments")))
+    }
+
     // assignment's src/main should not overwrite student submission
     @Test
     @DirtiesContext
