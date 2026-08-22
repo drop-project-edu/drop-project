@@ -489,7 +489,7 @@ class AssignmentValidator {
  *
  * Whenever a validation starts depending on another property of the assignment, it must be added here.
  */
-data class ValidationInputs(
+data class AssignmentValidationInputs(
     val packageName: String?,
     val language: Language,
     val calculateStudentTestsCoverage: Boolean,
@@ -497,7 +497,7 @@ data class ValidationInputs(
     val mandatoryTestsSuffix: String?
 ) {
     companion object {
-        fun from(assignment: Assignment) = ValidationInputs(
+        fun from(assignment: Assignment) = AssignmentValidationInputs(
             packageName = assignment.packageName,
             language = assignment.language,
             calculateStudentTestsCoverage = assignment.calculateStudentTestsCoverage,

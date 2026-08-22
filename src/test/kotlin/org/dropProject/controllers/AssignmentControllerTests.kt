@@ -107,6 +107,9 @@ class AssignmentControllerTests {
     lateinit var assignmentReportRepository: AssignmentReportRepository
 
     @Autowired
+    lateinit var projectGroupRepository: ProjectGroupRepository
+
+    @Autowired
     lateinit var projectGroupRestrictionsRepository: ProjectGroupRestrictionsRepository
 
     @Autowired
@@ -2419,6 +2422,84 @@ class AssignmentControllerTests {
             val reports = assignmentReportRepository.findByAssignmentId(assignmentId)
             assertEquals(1, reports.size)
             assertEquals("report before the edit", reports[0].message)
+
+        } finally {
+            assignmentFolder.deleteRecursively()
+        }
+    }
+
+    @Test
+    @WithMockUser("teacher1", roles = ["TEACHER"])
+    @DirtiesContext
+    fun test_editAssignmentChangingEvaluationRelevantFieldWarnsAboutExistingSubmissions() {
+
+        val assignmentId = "rebuildWarningTest"
+        val assignmentFolder = File(dropProjectProperties.assignments.rootLocation, assignmentId)
+        try {
+            val (assignment, _, _) = testsHelper.createHistoricalAssignment(
+                assignmentRepository, dropProjectProperties, assignmentId)
+
+            // a submission that was evaluated with the current configuration
+            val group = ProjectGroup()
+            projectGroupRepository.save(group)
+            val submission = Submission(submissionDate = Date(), submitterUserId = "student1",
+                status = SubmissionStatus.VALIDATED.code, statusDate = Date(),
+                assignmentId = assignmentId, assignmentGitHash = null)
+            submission.group = group
+            submissionRepository.save(submission)
+
+            // start requiring student tests, which changes the way the submissions are evaluated
+            mvc.perform(
+                post("/assignment/new")
+                    .param("assignmentId", assignmentId)
+                    .param("assignmentName", assignment.name)
+                    .param("assignmentPackage", assignment.packageName)
+                    .param("submissionMethod", "GIT")
+                    .param("language", "JAVA")
+                    .param("gitRepositoryUrl", assignment.gitRepositoryUrl)
+                    .param("editMode", "true")
+                    .param("acceptsStudentTests", "true")
+                    .param("minStudentTests", "2")
+            )
+                .andExpect(status().isFound)
+                .andExpect(header().string("Location", "/assignment/info/${assignmentId}"))
+                .andExpect(flash().attribute("warning", containsString("1 submission(s) were evaluated")))
+
+            val updatedAssignment = assignmentRepository.findById(assignmentId).get()
+            assertEquals(2, updatedAssignment.minStudentTests)
+
+        } finally {
+            assignmentFolder.deleteRecursively()
+        }
+    }
+
+    @Test
+    @WithMockUser("teacher1", roles = ["TEACHER"])
+    @DirtiesContext
+    fun test_editAssignmentChangingEvaluationRelevantFieldWithoutSubmissionsDoesntWarn() {
+
+        val assignmentId = "rebuildWarningTest2"
+        val assignmentFolder = File(dropProjectProperties.assignments.rootLocation, assignmentId)
+        try {
+            val (assignment, _, _) = testsHelper.createHistoricalAssignment(
+                assignmentRepository, dropProjectProperties, assignmentId)
+
+            mvc.perform(
+                post("/assignment/new")
+                    .param("assignmentId", assignmentId)
+                    .param("assignmentName", assignment.name)
+                    .param("assignmentPackage", assignment.packageName)
+                    .param("submissionMethod", "GIT")
+                    .param("language", "JAVA")
+                    .param("gitRepositoryUrl", assignment.gitRepositoryUrl)
+                    .param("editMode", "true")
+                    .param("acceptsStudentTests", "true")
+                    .param("minStudentTests", "2")
+            )
+                .andExpect(status().isFound)
+                .andExpect(header().string("Location", "/assignment/info/${assignmentId}"))
+                .andExpect(flash().attribute("message", "Assignment was successfully updated"))
+                .andExpect(flash().attributeCount(1))  // there is nothing to rebuild, so no warning
 
         } finally {
             assignmentFolder.deleteRecursively()

@@ -193,7 +193,7 @@ class TestAssignmentValidator {
     }
 
     @Test
-    fun `Test that ValidationInputs reflect the properties that are cross-checked with the repository`() {
+    fun `Test that AssignmentValidationInputs reflect the properties that are cross-checked with the repository`() {
 
         val assignment = Assignment(id = "dummy2", name = "Dummy", gitRepositoryUrl = "",
             gitRepositoryFolder = "", ownerUserId = "p4997", submissionMethod = SubmissionMethod.UPLOAD,
@@ -201,34 +201,34 @@ class TestAssignmentValidator {
             calculateStudentTestsCoverage = false, maxMemoryMb = null, mandatoryTestsSuffix = null,
             hiddenTestsVisibility = TestVisibility.HIDE_EVERYTHING)
 
-        val validationInputs = ValidationInputs.from(assignment)
+        val validationInputs = AssignmentValidationInputs.from(assignment)
 
-        assertEquals(validationInputs, ValidationInputs.from(assignment))
+        assertEquals(validationInputs, AssignmentValidationInputs.from(assignment))
 
         // properties that must trigger a new validation
         assignment.packageName = "org.dropProject.other"
-        assertNotEquals(validationInputs, ValidationInputs.from(assignment))
+        assertNotEquals(validationInputs, AssignmentValidationInputs.from(assignment))
         assignment.packageName = "org.dropProject.samples"
 
         assignment.language = Language.KOTLIN
-        assertNotEquals(validationInputs, ValidationInputs.from(assignment))
+        assertNotEquals(validationInputs, AssignmentValidationInputs.from(assignment))
         assignment.language = Language.JAVA
 
         assignment.calculateStudentTestsCoverage = true
-        assertNotEquals(validationInputs, ValidationInputs.from(assignment))
+        assertNotEquals(validationInputs, AssignmentValidationInputs.from(assignment))
         assignment.calculateStudentTestsCoverage = false
 
         assignment.maxMemoryMb = 1024
-        assertNotEquals(validationInputs, ValidationInputs.from(assignment))
+        assertNotEquals(validationInputs, AssignmentValidationInputs.from(assignment))
         assignment.maxMemoryMb = null
 
         assignment.mandatoryTestsSuffix = "_MANDATORY"
-        assertNotEquals(validationInputs, ValidationInputs.from(assignment))
+        assertNotEquals(validationInputs, AssignmentValidationInputs.from(assignment))
         assignment.mandatoryTestsSuffix = null
 
         // properties that are not checked against the contents of the repository
         assignment.name = "Another name"
         assignment.cooloffPeriod = 10
-        assertEquals(validationInputs, ValidationInputs.from(assignment))
+        assertEquals(validationInputs, AssignmentValidationInputs.from(assignment))
     }
 }

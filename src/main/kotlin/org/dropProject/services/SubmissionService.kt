@@ -938,3 +938,34 @@ class SubmissionService(
         }
     }
 }
+
+/**
+ * The [Assignment] properties that determine how a submission is evaluated, that is, the ones whose value is frozen
+ * into the [org.dropproject.dao.SubmissionReport] indicators when the submission is built. If any of these changes,
+ * the submissions that were already evaluated no longer reflect the assignment's configuration and must be rebuilt
+ * for the new value to be applied.
+ *
+ * Properties that are re-evaluated everytime a build report is rendered (e.g. mandatoryTestsSuffix or
+ * hiddenTestsVisibility) don't belong here, since those don't require a rebuild.
+ */
+data class SubmissionEvaluationInputs(
+    val packageName: String?,
+    val language: Language,
+    val submissionStructure: SubmissionStructure,
+    val acceptsStudentTests: Boolean,
+    val minStudentTests: Int?,
+    val calculateStudentTestsCoverage: Boolean,
+    val maxMemoryMb: Int?
+) {
+    companion object {
+        fun from(assignment: Assignment) = SubmissionEvaluationInputs(
+            packageName = assignment.packageName,
+            language = assignment.language,
+            submissionStructure = assignment.submissionStructure,
+            acceptsStudentTests = assignment.acceptsStudentTests,
+            minStudentTests = assignment.minStudentTests,
+            calculateStudentTestsCoverage = assignment.calculateStudentTestsCoverage,
+            maxMemoryMb = assignment.maxMemoryMb
+        )
+    }
+}

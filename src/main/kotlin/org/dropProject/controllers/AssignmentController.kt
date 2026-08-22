@@ -290,14 +290,18 @@ class AssignmentController(
                 return "assignment-form"
             }
 
-            val validationInputsBefore = ValidationInputs.from(existingAssignment)
+            // the properties that the validation of the assignment's own files depends on, and the ones that the
+            // evaluation of the students' submissions depends on. Both are compared again after the update, to
+            // find out what became stale
+            val assignmentValidationInputsBefore = AssignmentValidationInputs.from(existingAssignment)
+            val submissionEvaluationInputsBefore = SubmissionEvaluationInputs.from(existingAssignment)
 
             assignmentService.updateAssignment(existingAssignment, assignmentForm)
 
             // if the configuration changed in a way that is cross-checked against the contents of the git repository,
             // the stored validation report is no longer valid, so the assignment must be validated again. If it now
             // has errors, mark it inactive, honouring the same rule that prevents activating an invalid assignment
-            if (ValidationInputs.from(existingAssignment) != validationInputsBefore) {
+            if (AssignmentValidationInputs.from(existingAssignment) != assignmentValidationInputsBefore) {
                 LOG.info("[${assignmentId}] Configuration changed, validating the assignment again")
                 validationFailed = assignmentService.validateAndStoreReport(existingAssignment, principal)
                 if (validationFailed) {
@@ -319,7 +323,19 @@ class AssignmentController(
                 cacheManager.getCache(CACHE_ARCHIVED_ASSIGNMENTS_KEY)?.clear()
             }
 
-            // TODO: Need to rebuild?
+            // the submissions that were already evaluated keep the indicators that were calculated with the previous
+            // configuration. They are not rebuilt automatically, since that could mean hundreds of maven executions
+            // triggered by a single form submission - instead, the teacher is warned and decides which submissions
+            // (if any) are worth rebuilding
+            if (SubmissionEvaluationInputs.from(existingAssignment) != submissionEvaluationInputsBefore) {
+                val numSubmissions = submissionRepository
+                    .countByAssignmentIdAndStatusNot(assignment.id, SubmissionStatus.DELETED.code)
+                if (numSubmissions > 0) {
+                    redirectAttributes.addFlashAttribute("warning",
+                        "${numSubmissions} submission(s) were evaluated with the previous configuration. " +
+                                "Rebuild them if you want the new configuration to be applied to them")
+                }
+            }
         }
 
         if (!(assignmentForm.acl.isNullOrBlank())) {

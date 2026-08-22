@@ -21,6 +21,8 @@ package org.dropproject.services
 
 import org.dropproject.controllers.InvalidProjectStructureException
 import org.dropproject.dao.Assignment
+import org.dropproject.dao.Language
+import org.dropproject.dao.SubmissionStructure
 import org.dropproject.dao.TestVisibility
 import org.dropproject.forms.SubmissionMethod
 import org.junit.Assert.*
@@ -72,5 +74,54 @@ class TestSubmissionService {
         val authors = submissionService.getProjectAuthors(File("src/test/sampleAUTHORS_TXT/with_extra_empty_line.txt"))
         assertEquals("a21700000", authors[0].number)
         assertEquals("John Doe", authors[0].name)
+    }
+
+    @Test
+    fun `check that SubmissionEvaluationInputs reflect the properties that determine how a submission is evaluated`() {
+
+        val assignment = Assignment(id = "dummy", name = "Dummy", gitRepositoryUrl = "",
+            gitRepositoryFolder = "", ownerUserId = "p4997", submissionMethod = SubmissionMethod.UPLOAD,
+            packageName = "org.dropProject.samples", language = Language.JAVA,
+            submissionStructure = SubmissionStructure.MAVEN, acceptsStudentTests = false, minStudentTests = null,
+            calculateStudentTestsCoverage = false, maxMemoryMb = null,
+            hiddenTestsVisibility = TestVisibility.HIDE_EVERYTHING)
+
+        val evaluationInputs = SubmissionEvaluationInputs.from(assignment)
+
+        assertEquals(evaluationInputs, SubmissionEvaluationInputs.from(assignment))
+
+        // properties that require the submissions to be rebuilt
+        assignment.packageName = "org.dropProject.other"
+        assertNotEquals(evaluationInputs, SubmissionEvaluationInputs.from(assignment))
+        assignment.packageName = "org.dropProject.samples"
+
+        assignment.language = Language.KOTLIN
+        assertNotEquals(evaluationInputs, SubmissionEvaluationInputs.from(assignment))
+        assignment.language = Language.JAVA
+
+        assignment.submissionStructure = SubmissionStructure.COMPACT
+        assertNotEquals(evaluationInputs, SubmissionEvaluationInputs.from(assignment))
+        assignment.submissionStructure = SubmissionStructure.MAVEN
+
+        assignment.acceptsStudentTests = true
+        assertNotEquals(evaluationInputs, SubmissionEvaluationInputs.from(assignment))
+        assignment.acceptsStudentTests = false
+
+        assignment.minStudentTests = 2
+        assertNotEquals(evaluationInputs, SubmissionEvaluationInputs.from(assignment))
+        assignment.minStudentTests = null
+
+        assignment.calculateStudentTestsCoverage = true
+        assertNotEquals(evaluationInputs, SubmissionEvaluationInputs.from(assignment))
+        assignment.calculateStudentTestsCoverage = false
+
+        assignment.maxMemoryMb = 1024
+        assertNotEquals(evaluationInputs, SubmissionEvaluationInputs.from(assignment))
+        assignment.maxMemoryMb = null
+
+        // properties that are re-evaluated everytime the build report is rendered, so they don't require a rebuild
+        assignment.mandatoryTestsSuffix = "_MANDATORY"
+        assignment.hiddenTestsVisibility = TestVisibility.SHOW_PROGRESS
+        assertEquals(evaluationInputs, SubmissionEvaluationInputs.from(assignment))
     }
 }
