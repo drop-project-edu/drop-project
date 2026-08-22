@@ -25,6 +25,7 @@ import org.dropproject.extensions.getContent
 import org.dropproject.forms.SubmissionMethod
 import org.dropproject.repository.*
 import org.dropproject.services.SubmissionService
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -185,6 +186,9 @@ class TeacherAPIControllerTests: APIControllerTests {
             get("/api/teacher/assignments/current")
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isUnauthorized)
+            .andExpect(content().json("""
+                {"error":"Token Authentication failed","message":"No credentials in the request"}
+            """.trimIndent()))
     }
 
     @Test
@@ -207,6 +211,38 @@ class TeacherAPIControllerTests: APIControllerTests {
                 .contentType(MediaType.APPLICATION_JSON)
                 .header("authorization", testsHelper.header("student1", token)))
             .andExpect(status().isForbidden)
+            .andExpect(content().json("""{"error":"Access denied"}"""))
+    }
+
+    @Test
+    @DirtiesContext
+    fun `try to get current assignments with a student profile and without content type`() {
+        val token = generateToken("student1", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")), mvc)
+
+        // most api clients don't set a content type on GET requests, but they must get the same 403 anyway
+        val result = this.mvc.perform(
+            get("/api/teacher/assignments/current")
+                .header("authorization", testsHelper.header("student1", token)))
+            .andExpect(status().isForbidden)
+            .andReturn()
+
+        // the api is stateless, so the personal token authentication must not create a session
+        assertNull("the api shouldn't create sessions", result.request.getSession(false))
+    }
+
+    @Test
+    @DirtiesContext
+    fun `try to download a submission with an admin profile`() {
+        // an admin passes the authorization rule of the chain, but not the check that the controller makes, so this
+        // is a denial that is thrown by the controller. it must be reported exactly like the ones that the chain
+        // detects by itself, instead of being converted into a response by GlobalExceptionHandler
+        val token = generateToken("admin", mutableListOf(SimpleGrantedAuthority("ROLE_DROP_PROJECT_ADMIN")), mvc)
+
+        this.mvc.perform(
+            get("/api/teacher/download/1")
+                .header("authorization", testsHelper.header("admin", token)))
+            .andExpect(status().isForbidden)
+            .andExpect(content().json("""{"error":"Access denied"}"""))
     }
 
     @Test
@@ -356,7 +392,7 @@ class TeacherAPIControllerTests: APIControllerTests {
             get("/api/teacher/download/1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .header("authorization", testsHelper.header("teacher1", token)))
-            .andExpect(status().is5xxServerError())
+            .andExpect(status().isNotFound)
     }
 
     @Test
@@ -521,7 +557,7 @@ class TeacherAPIControllerTests: APIControllerTests {
             get("/api/teacher/studentHistory/student2")
                 .contentType(MediaType.APPLICATION_JSON)
                 .header("authorization", testsHelper.header("teacher1", token)))
-            .andExpect(status().is5xxServerError())
+            .andExpect(status().isNotFound)
     }
 
     @Test

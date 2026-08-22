@@ -19,8 +19,7 @@
  */
 package org.dropproject.config
 
-import org.dropproject.security.DropProjectSecurityConfig
-import org.dropproject.security.PersonalTokenAuthenticationManager
+import org.dropproject.security.WebSecurityConfig
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.dropproject.config.DropProjectProperties
@@ -97,8 +96,7 @@ class InMemoryUserDetailsManagerFactory(
 @Profile("!deisi & !oauth2 & !lti")
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true)
-class SimpleLoginWebSecurityConfig(val manager: PersonalTokenAuthenticationManager) :
-    DropProjectSecurityConfig(manager) {
+class SimpleLoginWebSecurityConfig : WebSecurityConfig() {
 
     @Bean
     fun filterChain(http: HttpSecurity): SecurityFilterChain {

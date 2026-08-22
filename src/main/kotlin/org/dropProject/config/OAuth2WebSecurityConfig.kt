@@ -19,8 +19,7 @@
  */
 package org.dropproject.config
 
-import org.dropproject.security.DropProjectSecurityConfig
-import org.dropproject.security.PersonalTokenAuthenticationManager
+import org.dropproject.security.WebSecurityConfig
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.dropproject.config.DropProjectProperties
@@ -42,9 +41,8 @@ import java.util.logging.Logger
 @EnableMethodSecurity(prePostEnabled = true)
 class OAuth2WebSecurityConfig(
     val resourceLoader: ResourceLoader,
-    val manager: PersonalTokenAuthenticationManager,
     val dropProjectProperties: DropProjectProperties
-) : DropProjectSecurityConfig(manager) {
+) : WebSecurityConfig() {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
 

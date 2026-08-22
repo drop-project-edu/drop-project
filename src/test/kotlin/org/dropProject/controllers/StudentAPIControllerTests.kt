@@ -119,6 +119,18 @@ class StudentAPIControllerTests: APIControllerTests {
 
     @Test
     @DirtiesContext
+    fun `try to get current assignments with a malformed authorization header`() {
+        // a header that is not valid base64 is a malformed credential, so it must get the same 401 as an
+        // invalid token, instead of blowing up into a 500
+        this.mvc.perform(
+            get("/api/student/assignments/current")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("authorization", "basic not-base64!!"))
+            .andExpect(status().isUnauthorized)
+    }
+
+    @Test
+    @DirtiesContext
     fun `try to get current assignments with student1`() {
 
         val token = generateToken("student1", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")), mvc)

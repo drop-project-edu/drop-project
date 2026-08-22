@@ -19,38 +19,16 @@
  */
 package org.dropproject.security
 
-import org.springframework.context.annotation.Bean
-import org.springframework.http.HttpStatus
-import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
-import org.springframework.security.web.SecurityFilterChain
-import org.springframework.security.web.access.AccessDeniedHandler
-import org.springframework.security.web.authentication.logout.LogoutFilter
-import jakarta.servlet.http.HttpServletRequest
-import jakarta.servlet.http.HttpServletResponse
+import org.springframework.security.web.access.AccessDeniedHandlerImpl
 
 /**
- * Implementation of the AccessDeniedHandler that either calls the default access denied impl
- * (which forwards the request to an error page) or simply returns a 403 error code (in case of
- * an API request)
- */
-class APIAccessDeniedHandler(private val errorPage: String) : AccessDeniedHandler {
-
-    override fun handle(request: HttpServletRequest, response: HttpServletResponse, accessDeniedException: AccessDeniedException) {
-        if (request.contentType == "application/json") {
-            response.status = HttpStatus.FORBIDDEN.value()
-            response.flushBuffer()  // to commit immediately the response
-        } else {
-            request.getRequestDispatcher(errorPage).forward(request, response)
-        }
-    }
-}
-
-/**
- * Definitions and configurations related with Security and Role Based Access Control.
+ * Definitions and configurations related with Security and Role Based Access Control of the web interface.
  *
+ * The REST API is not configured here - it has its own chain, which is always authenticated with personal tokens,
+ * regardless of the way the users log in the web interface (see [org.dropproject.config.ApiSecurityConfig]).
  */
-open class DropProjectSecurityConfig(val apiAuthenticationManager: PersonalTokenAuthenticationManager? = null) {
+open class WebSecurityConfig {
 
     /**
      * Returns an array of ant matcher expressions which will be allowed without authentication
@@ -62,9 +40,8 @@ open class DropProjectSecurityConfig(val apiAuthenticationManager: PersonalToken
     protected fun configure(http: HttpSecurity): HttpSecurity {
         http
             // disable csrf in case someone needs to access "/" by POST (e.g. Moodle lti)
-            // and for all API calls
-            .csrf { 
-                it.ignoringRequestMatchers("/", "/api/**") 
+            .csrf {
+                it.ignoringRequestMatchers("/")
             }
             .authorizeHttpRequests { authz ->
                 authz
@@ -73,22 +50,17 @@ open class DropProjectSecurityConfig(val apiAuthenticationManager: PersonalToken
                         "/", "/upload", "/upload/**", "/buildReport/**", "/student/**",
                         "/git-submission/refresh-git/*", "/git-submission/generate-report/*", "/mySubmissions",
                         "/leaderboard/*",
-                        "/personalToken", "/api/student/**"
+                        "/personalToken"
                     )
                     .hasAnyRole("STUDENT", "TEACHER", "DROP_PROJECT_ADMIN")
                     .requestMatchers("/admin/**").hasRole("DROP_PROJECT_ADMIN")
                     .anyRequest().hasAnyRole("TEACHER", "DROP_PROJECT_ADMIN")
             }
-            .exceptionHandling { 
-                it.accessDeniedHandler(APIAccessDeniedHandler("/access-denied.html"))
+            .exceptionHandling {
+                it.accessDeniedHandler(AccessDeniedHandlerImpl().apply { setErrorPage("/access-denied.html") })
             }
 
-        if (apiAuthenticationManager != null) {
-            http.addFilterBefore(PersonalTokenAuthenticationFilter("/api/**", apiAuthenticationManager),
-                LogoutFilter::class.java)
-        }
-
-        http.headers { 
+        http.headers {
             it.frameOptions { frameOptions -> frameOptions.sameOrigin() }  // this is needed for h2-console
         }
 

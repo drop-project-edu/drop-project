@@ -923,7 +923,7 @@ class AssignmentService(
      * @param isAdmin whether the user has admin privileges
      * @return AssignmentDetailResponse containing all assignment detail data
      * @throws EntityNotFoundException if the assignment is not found
-     * @throws IllegalAccessException if the user is not authorized to access the assignment
+     * @throws org.springframework.security.access.AccessDeniedException if the user is not authorized to access the assignment
      */
     @RequiresAssignmentOwnerOrACL
     @Transactional(readOnly = true)  // because of assignment.tags forced loading

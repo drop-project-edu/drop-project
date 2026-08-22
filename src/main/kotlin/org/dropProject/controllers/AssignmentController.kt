@@ -49,6 +49,7 @@ import org.springframework.cache.CacheManager
 import org.springframework.core.io.FileSystemResource
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.AccessDeniedException
 import org.springframework.stereotype.Controller
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.ui.ModelMap
@@ -280,7 +281,7 @@ class AssignmentController(
             if (principal.realName() != existingAssignment.ownerUserId && acl.find { it -> it.userId == principal.realName() } == null) {
                 LOG.warn("[${assignmentId}][${principal.realName()}] Assignments can only be changed " +
                         "by their ownerUserId (${existingAssignment.ownerUserId}) or authorized teachers")
-                throw IllegalAccessException("Assignments can only be changed by their owner or authorized teachers")
+                throw AccessDeniedException("Assignments can only be changed by their owner or authorized teachers")
             }
 
             if (assignmentForm.acl?.split(",")?.contains(existingAssignment.ownerUserId) == true) {
@@ -770,11 +771,11 @@ class AssignmentController(
             .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
 
         if (forceDelete && !request.isUserInRole("DROP_PROJECT_ADMIN")) {
-            throw IllegalAccessException("Assignment can only be force-deleted by an admin")
+            throw AccessDeniedException("Assignment can only be force-deleted by an admin")
         }
 
         if (!request.isUserInRole("DROP_PROJECT_ADMIN") && principal.realName() != assignment.ownerUserId) {
-            throw IllegalAccessException("Assignments can only be deleted by their owner or an admin")
+            throw AccessDeniedException("Assignments can only be deleted by their owner or an admin")
         }
 
         if (!forceDelete && submissionRepository.countByAssignmentIdAndStatusNot(assignment.id, SubmissionStatus.DELETED.code).toInt() > 0) {

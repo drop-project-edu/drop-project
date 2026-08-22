@@ -23,8 +23,7 @@ import edu.uoc.elc.spring.lti.security.LTIProcessingFilter
 import edu.uoc.elc.spring.lti.security.openid.OIDCFilter
 import edu.uoc.elc.spring.lti.tool.ToolDefinitionBean
 import edu.uoc.elc.spring.lti.tool.registration.RegistrationService
-import org.dropproject.security.DropProjectSecurityConfig
-import org.dropproject.security.PersonalTokenAuthenticationManager
+import org.dropproject.security.WebSecurityConfig
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
@@ -48,9 +47,8 @@ import org.springframework.security.web.util.matcher.OrRequestMatcher
 class LTIWebSecurityConfig(
     @Qualifier("dpRegistrationService") val registrationService: RegistrationService,
     val toolDefinitionBean: ToolDefinitionBean,
-    val manager: PersonalTokenAuthenticationManager,
     val ltiAuthenticationUserDetailsService: LTIAuthenticationUserDetailsService<PreAuthenticatedAuthenticationToken>
-) : DropProjectSecurityConfig(manager) {
+) : WebSecurityConfig() {
 
     @Bean
     @Order(1)
