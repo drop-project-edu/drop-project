@@ -72,7 +72,7 @@ class GlobalExceptionHandler {
      * Access denials are not converted into a response here. The exception is rethrown, so that it reaches the
      * ExceptionTranslationFilter of the security chain that is serving the request, and each chain reports it in its
      * own format: a json body for the API (see [org.dropproject.config.ApiSecurityConfig]) and a redirect to
-     * /access-denied.html for the web interface (see [org.dropproject.security.WebSecurityConfig]). That is the same
+     * /access-denied for the web interface (see [org.dropproject.security.WebSecurityConfig]). That is the same
      * report that the chains already produce for the denials that they detect themselves, in their authorization
      * rules, so a denial looks the same to the caller no matter where it was decided.
      *

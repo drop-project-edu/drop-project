@@ -1,39 +1,36 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 
-<head>
-    <title>Error</title>
+<head th:replace="~{layout/layout :: head (pageTitle='Drop Project - Error')}">
 </head>
+
 <body>
-<h1>Error</h1>
-<table border="1">
-    <tr>
-        <td>Date</td>
-        <td th:text="${timestamp}"></td>
-    </tr>
-    <tr>
-        <td>Error</td>
-        <td th:text="${error}"></td>
-    </tr>
-    <tr>
-        <td>Status</td>
-        <td th:text="${status}"></td>
-    </tr>
-    <tr>
-        <td>Message</td>
-        <td th:text="${message}"></td>
-    </tr>
-    <tr>
-        <td>Exception</td>
-        <td th:text="${exception}"></td>
-    </tr>
-    <tr>
-        <td>Trace</td>
-        <td>
-            <pre th:text="${trace}"></pre>
-        </td>
-    </tr>
-</table>
+
+<div th:replace="~{layout/layout :: header}"></div>
+
+<div class="container" style="max-width: 760px; margin-bottom: 65px">
+
+    <h1 class="page-header">Error</h1>
+
+    <div class="alert alert-danger">
+        <strong th:text="${status}">500</strong> <span th:text="${error}">Internal Server Error</span>
+    </div>
+
+    <p th:if="${status == 404}">The page that you requested does not exist.</p>
+    <p th:unless="${status == 404}">
+        Something went wrong while showing this page. If it keeps happening, report it to
+        <a th:href="'mailto:' + ${adminEmail}" th:text="${adminEmail}">the administrator</a>.
+    </p>
+
+    <p>
+        <a th:href="@{/}" class="btn btn-primary">Go to the homepage</a>
+    </p>
+
+    <p><small class="text-muted" th:text="${timestamp}"></small></p>
+
+</div>
+
+<div th:replace="~{layout/layout :: footer}"></div>
 
 </body>
 </html>

@@ -383,6 +383,6 @@ class AdminControllerTests {
     @DirtiesContext
     fun `test getAllAssignments is forbidden for non-admins`() {
         mvc.perform(get("/admin/assignments"))
-            .andExpect(forwardedUrl("/access-denied.html"))
+            .andExpect(forwardedUrl("/access-denied"))
     }
 }

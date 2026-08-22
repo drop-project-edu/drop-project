@@ -33,7 +33,7 @@ open class WebSecurityConfig {
     /**
      * Returns an array of ant matcher expressions which will be allowed without authentication
      */
-    open fun getPublicUrls() = listOf("/upload/**/public/**", "/login", "/loginFromDEISI", "/access-denied.html", "/error", "/h2-console/**",
+    open fun getPublicUrls() = listOf("/upload/**/public/**", "/login", "/loginFromDEISI", "/access-denied", "/error", "/h2-console/**",
         "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs",
         "/css/**", "/js/**", "/img/**", "/favicon.ico", "/vendor/*")
 
@@ -57,7 +57,7 @@ open class WebSecurityConfig {
                     .anyRequest().hasAnyRole("TEACHER", "DROP_PROJECT_ADMIN")
             }
             .exceptionHandling {
-                it.accessDeniedHandler(AccessDeniedHandlerImpl().apply { setErrorPage("/access-denied.html") })
+                it.accessDeniedHandler(AccessDeniedHandlerImpl().apply { setErrorPage("/access-denied") })
             }
 
         http.headers {

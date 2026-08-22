@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout/layout :: head (pageTitle='Drop Project - Access denied')}">
+</head>
+
+<body>
+
+<div th:replace="~{layout/layout :: header}"></div>
+
+<div class="container" style="max-width: 760px; margin-bottom: 65px">
+
+    <h1 class="page-header">Access denied</h1>
+
+    <div class="alert alert-danger">
+        You do not have permission to view this page.
+    </div>
+
+    <p>
+        If you should have access to it, ask the assignment's teacher to grant it to you.
+    </p>
+
+    <p>
+        <a th:href="@{/}" class="btn btn-primary">Go to the homepage</a>
+    </p>
+
+</div>
+
+<div th:replace="~{layout/layout :: footer}"></div>
+
+</body>
+</html>

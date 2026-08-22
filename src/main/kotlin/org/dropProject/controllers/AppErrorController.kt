@@ -33,9 +33,21 @@ import java.util.*
 import jakarta.servlet.http.HttpServletRequest
 
 const val ERROR_PATH = "/error"
+const val ACCESS_DENIED_PATH = "/access-denied"
 
 @Controller
 class AppErrorController(var errorAttributes: ErrorAttributes) : ErrorController {
+    /**
+     * The page that the security chains of the web interface forward to when a request is refused
+     * (see [org.dropproject.security.WebSecurityConfig]). It is a view, and not a static file, so that it is shown
+     * with the layout of the rest of the site. The status of the response was already set to 403 by the handler that
+     * forwarded here, and rendering a view does not change it.
+     */
+    @RequestMapping(value = [ACCESS_DENIED_PATH])
+    fun accessDenied(): String {
+        return "access-denied"
+    }
+
     @RequestMapping(value = [ERROR_PATH], produces = ["text/html"])
     fun errorHtml(webRequest: WebRequest): ModelAndView {
         return ModelAndView("exception", getErrorAttributes(webRequest, false))

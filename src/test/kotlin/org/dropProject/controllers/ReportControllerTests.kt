@@ -177,7 +177,7 @@ class ReportControllerTests {
         this.mvc.perform(get("/report/testJavaProj")
             .with(user(STUDENT_1)))
             .andExpect(status().isForbidden)
-            .andExpect(forwardedUrl("/access-denied.html"))
+            .andExpect(forwardedUrl("/access-denied"))
     }
 
     @Test
