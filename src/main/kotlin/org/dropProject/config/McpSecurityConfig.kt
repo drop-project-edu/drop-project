@@ -20,10 +20,13 @@
 package org.dropproject.config
 
 import org.dropproject.mcp.services.McpService
+import org.dropproject.security.writeApiError
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 import org.springframework.core.annotation.Order
+import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
@@ -47,6 +50,17 @@ class McpSecurityConfig(
                 UsernamePasswordAuthenticationFilter::class.java
             )
             .csrf { it.disable() }
+            .exceptionHandling { exceptions ->
+                // McpBearerTokenFilter only authenticates the requests that carry a valid token, and lets all the
+                // others through, so it is here that they are rejected. Without this entry point they would get the
+                // default empty 403, which tells a client that it may not do something, instead of the 401 that tells
+                // it to authenticate.
+                exceptions.authenticationEntryPoint { _, response, exception ->
+                    response.setHeader(HttpHeaders.WWW_AUTHENTICATE, "Bearer")
+                    response.writeApiError(
+                        HttpStatus.UNAUTHORIZED.value(), "Token Authentication failed", exception.message)
+                }
+            }
             .build()
     }
 }

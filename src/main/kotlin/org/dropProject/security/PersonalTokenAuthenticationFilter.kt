@@ -40,10 +40,8 @@ const val AUTH_HEADER_PARAMETER_AUTHORIZATION = "authorization"
 class PersonalTokenAuthenticationFailureHandler : AuthenticationFailureHandler {
 
     override fun onAuthenticationFailure(request: HttpServletRequest?, response: HttpServletResponse, exception: AuthenticationException) {
-        // Set the response status and write custom error message
-        response.status = HttpServletResponse.SC_UNAUTHORIZED
-        response.contentType = "application/json"
-        response.writer.write(("{\"error\": \"Token Authentication failed\", \"message\": \"" + exception.message) + "\"}")
+        response.writeApiError(
+            HttpServletResponse.SC_UNAUTHORIZED, "Token Authentication failed", exception.message)
     }
 }
 

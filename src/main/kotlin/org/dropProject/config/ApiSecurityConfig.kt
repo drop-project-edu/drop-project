@@ -20,12 +20,12 @@
 package org.dropproject.config
 
 import org.dropproject.security.PersonalTokenAuthenticationFilter
+import org.dropproject.security.writeApiError
 import org.dropproject.security.PersonalTokenAuthenticationManager
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.annotation.Order
 import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.web.SecurityFilterChain
@@ -71,21 +71,14 @@ class ApiSecurityConfig(val apiAuthenticationManager: PersonalTokenAuthenticatio
             .exceptionHandling { exceptions ->
                 // these are not requests made by a browser, so there is no error page to forward to
                 exceptions.accessDeniedHandler { _, response, exception ->
-                    response.status = HttpStatus.FORBIDDEN.value()
-                    response.contentType = MediaType.APPLICATION_JSON_VALUE
-                    response.writer.write(
-                        """{"error": "Access denied", "message": "${exception.message}"}"""
-                    )
+                    response.writeApiError(HttpStatus.FORBIDDEN.value(), "Access denied", exception.message)
                 }
                 // in practice, PersonalTokenAuthenticationFilter rejects the unauthenticated requests before they
                 // reach this point, but the default entry point would answer them with an empty 403, so it is
                 // replaced here to guarantee a 401 if the filter ever stops covering the whole chain
                 exceptions.authenticationEntryPoint { _, response, exception ->
-                    response.status = HttpStatus.UNAUTHORIZED.value()
-                    response.contentType = MediaType.APPLICATION_JSON_VALUE
-                    response.writer.write(
-                        """{"error": "Token Authentication failed", "message": "${exception.message}"}"""
-                    )
+                    response.writeApiError(
+                        HttpStatus.UNAUTHORIZED.value(), "Token Authentication failed", exception.message)
                 }
             }
             .build()

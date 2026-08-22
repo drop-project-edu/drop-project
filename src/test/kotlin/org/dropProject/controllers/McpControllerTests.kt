@@ -91,6 +91,34 @@ class McpControllerTests: APIControllerTests {
 
     @Test
     @DirtiesContext
+    fun `try to initialize without a bearer token`() {
+        // McpBearerTokenFilter lets the unauthenticated requests through, so this is reported by the entry point of
+        // the chain. it must be a 401, telling the client to authenticate, and not the default empty 403
+        mvc.perform(
+            post("/mcp/")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""{"jsonrpc": "2.0", "id": "init-1", "method": "initialize"}""")
+        )
+            .andExpect(status().isUnauthorized)
+            .andExpect(header().string("WWW-Authenticate", "Bearer"))
+            .andExpect(content().json("""{"error":"Token Authentication failed"}"""))
+    }
+
+    @Test
+    @DirtiesContext
+    fun `try to initialize with an invalid bearer token`() {
+        mvc.perform(
+            post("/mcp/")
+                .header("Authorization", "Bearer thisIsNotAToken")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""{"jsonrpc": "2.0", "id": "init-1", "method": "initialize"}""")
+        )
+            .andExpect(status().isUnauthorized)
+            .andExpect(content().json("""{"error":"Token Authentication failed"}"""))
+    }
+
+    @Test
+    @DirtiesContext
     fun testMcpInitialize() {
         val authHeader = getBearerToken("teacher1")
         val requestJson = """
