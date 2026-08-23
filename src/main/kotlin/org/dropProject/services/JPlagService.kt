@@ -53,8 +53,6 @@ data class PlagiarismResult(
 class JPlagService(private val submissionService: SubmissionService,
                    private val submissionRepository: SubmissionRepository) {
 
-    var reportFoldersByAssignmentId = mutableMapOf<String,File>()
-
     /**
      * Copies to baseFolder all the submissions that will be checked for plagiarism, in the
      * appropriate folder structure for this tool
@@ -72,7 +70,6 @@ class JPlagService(private val submissionService: SubmissionService,
      * returns the result as a list of [PlagiarismComparison].
      * Also, it produces an HTML report into the outputReportFolder. This will be needed to show individual
      * reports for each match (showing the code side by side)
-     * Finally, it associates the assignmentId with the outputReportFolder in a local variable for future reference
      */
     fun checkSubmissions(baseFolder: File, assignment: Assignment, outputReportFolder: File): PlagiarismResult {
 
@@ -91,8 +88,6 @@ class JPlagService(private val submissionService: SubmissionService,
 
         val reportObjectFactory = ReportObjectFactory()
         reportObjectFactory.createAndSaveReport(result, outputReportFolder.absolutePath)
-
-        reportFoldersByAssignmentId[assignment.id] = outputReportFolder
 
         val submissions = submissionRepository.findByAssignmentId(assignment.id)
         val submissionsByAuthorStr = submissions.associateBy(

@@ -41,6 +41,7 @@ import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import java.io.File
 import java.nio.file.Files
@@ -1362,7 +1363,12 @@ class ReportControllerTests {
             listOf(STUDENT_2.username to "Student 2")
         )
 
-        val mvcResult = this.mvc.perform(get("/checkPlagiarism/${defaultAssignmentId}").with(user(TEACHER_1)))
+        this.mvc.perform(post("/plagiarism/${defaultAssignmentId}").with(user(TEACHER_1)))
+            .andExpect(status().isFound)
+            .andExpect(redirectedUrl("/plagiarism/${defaultAssignmentId}"))
+
+        // the result of the check was stored, so it can be consulted without running the check again
+        val mvcResult = this.mvc.perform(get("/plagiarism/${defaultAssignmentId}").with(user(TEACHER_1)))
             .andExpect(status().isOk)
             .andReturn()
 
@@ -1376,7 +1382,7 @@ class ReportControllerTests {
         assertEquals(1, comparisons[0].secondNumTries)
         assertEquals(80, comparisons[0].similarityPercentage)
 
-        this.mvc.perform(get("/downloadPlagiarismMatchReport/${defaultAssignmentId}").with(user(TEACHER_1)))
+        this.mvc.perform(get("/plagiarism/${defaultAssignmentId}/report").with(user(TEACHER_1)))
             .andExpect(status().isOk)
             .andExpect(header().string("Content-Disposition", "attachment; filename=dp-jplag-${defaultAssignmentId}-report.zip"))
     }
@@ -1395,7 +1401,11 @@ class ReportControllerTests {
         testsHelper.uploadProject(this.mvc, "projectKotlinOK", "testKotlinProj", STUDENT_1, language  = Language.KOTLIN)
         testsHelper.uploadProject(this.mvc, "projectKotlinOK2", "testKotlinProj", STUDENT_2, language  = Language.KOTLIN)
 
-        val mvcResult = this.mvc.perform(get("/checkPlagiarism/testKotlinProj").with(user(TEACHER_1)))
+        this.mvc.perform(post("/plagiarism/testKotlinProj").with(user(TEACHER_1)))
+            .andExpect(status().isFound)
+            .andExpect(redirectedUrl("/plagiarism/testKotlinProj"))
+
+        val mvcResult = this.mvc.perform(get("/plagiarism/testKotlinProj").with(user(TEACHER_1)))
             .andExpect(status().isOk)
             .andReturn()
 
@@ -1409,11 +1419,52 @@ class ReportControllerTests {
         assertEquals(1, comparisons[0].secondNumTries)
         assertEquals(91, comparisons[0].similarityPercentage)
 
-        this.mvc.perform(get("/downloadPlagiarismMatchReport/testKotlinProj").with(user(TEACHER_1)))
+        this.mvc.perform(get("/plagiarism/testKotlinProj/report").with(user(TEACHER_1)))
             .andExpect(status().isOk)
             .andExpect(header().string("Content-Disposition", "attachment; filename=dp-jplag-testKotlinProj-report.zip"))
 
 
+    }
+
+    @Test
+    @DirtiesContext
+    fun testPlagiarismReportIsStored() {
+
+        testsHelper.uploadProject(this.mvc, "projectCompilationErrors", defaultAssignmentId, STUDENT_1)
+        testsHelper.uploadProject(
+            this.mvc, "projectJUnitErrors", defaultAssignmentId, STUDENT_2,
+            listOf(STUDENT_2.username to "Student 2")
+        )
+
+        // before any check, the page shows that this assignment was never checked
+        val beforeCheck = this.mvc.perform(get("/plagiarism/${defaultAssignmentId}").with(user(TEACHER_1)))
+            .andExpect(status().isOk)
+            .andReturn()
+        assertNull(beforeCheck.modelAndView!!.modelMap["lastCheck"])
+
+        this.mvc.perform(post("/plagiarism/${defaultAssignmentId}").with(user(TEACHER_1)))
+            .andExpect(status().isFound)
+
+        val firstVisit = this.mvc.perform(get("/plagiarism/${defaultAssignmentId}").with(user(TEACHER_1)))
+            .andExpect(status().isOk)
+            .andReturn()
+        val storedCheck = firstVisit.modelAndView!!.modelMap["lastCheck"] as PlagiarismCheck
+        assertEquals(2, storedCheck.numSubmissions)
+        assertEquals("teacher1", storedCheck.checkedBy)
+        assertEquals(true, firstVisit.modelAndView!!.modelMap["reportFileAvailable"])
+
+        @Suppress("UNCHECKED_CAST")
+        val comparisons = firstVisit.modelAndView!!.modelMap["comparisons"] as List<PlagiarismComparison>
+        assertEquals(1, comparisons.size)
+        assertEquals(80, comparisons[0].similarityPercentage)
+
+        // visiting the page again shows the very same check, instead of running a new one
+        val secondVisit = this.mvc.perform(get("/plagiarism/${defaultAssignmentId}").with(user(TEACHER_1)))
+            .andExpect(status().isOk)
+            .andReturn()
+        val sameCheck = secondVisit.modelAndView!!.modelMap["lastCheck"] as PlagiarismCheck
+        assertEquals(storedCheck.id, sameCheck.id)
+        assertEquals(storedCheck.checkDate, sameCheck.checkDate)
     }
 
     @Test

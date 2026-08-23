@@ -81,7 +81,8 @@ class AssignmentService(
     val gitClient: GitClient,
     val assignmentTeacherFiles: AssignmentTeacherFiles,
     val dropProjectProperties: DropProjectProperties,
-    val cooloffOverrideService: CooloffOverrideService
+    val cooloffOverrideService: CooloffOverrideService,
+    val plagiarismService: PlagiarismService
 ) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
@@ -413,6 +414,7 @@ class AssignmentService(
 
         assignmentACLRepository.deleteByAssignmentId(assignmentId)
         assignmentReportRepository.deleteByAssignmentId(assignmentId)
+        plagiarismService.deleteChecks(assignmentId)
         assignmentRepository.deleteById(assignmentId)
         assigneeRepository.deleteByAssignmentId(assignmentId)
     }

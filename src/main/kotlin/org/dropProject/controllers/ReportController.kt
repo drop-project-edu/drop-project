@@ -79,7 +79,7 @@ class ReportController(
     val templateEngine: TemplateEngine,
     val assignmentService: AssignmentService,
     val reportService: ReportService,
-    val jPlagService: JPlagService,
+    val plagiarismService: PlagiarismService,
     val studentService: StudentService,
     val dropProjectProperties: DropProjectProperties
 ) {
@@ -550,65 +550,70 @@ class ReportController(
 
     }
 
+    /**
+     * Controller that runs a plagiarism check over the submissions of an [Assignment]. Since this is a time
+     * consuming operation, the result is stored and the browser is redirected to the page that shows it. This way,
+     * refreshing that page (or coming back to it later) doesn't run the check again.
+     * @param assignmentId is a String identifying the relevant Assignment
+     * @param principal is a [Principal] representing the user making the request
+     * @return A String with a redirect to the plagiarism report of this Assignment
+     */
     @RequiresAssignmentOwnerOrACL
-    @RequestMapping(value = ["/checkPlagiarism/{assignmentId}"], method = [(RequestMethod.GET)])
-    fun checkPlagiarism(@PathVariable assignmentId: String, model: ModelMap, principal: Principal): String {
+    @RequestMapping(value = ["/plagiarism/{assignmentId}"], method = [(RequestMethod.POST)])
+    fun checkPlagiarism(@PathVariable assignmentId: String, principal: Principal): String {
 
         val assignment = assignmentRepository.findById(assignmentId).orElse(null)
             ?: throw IllegalArgumentException("assignment ${assignmentId} is not registered")
 
-        val submissionInfos = submissionService.getSubmissionsList(assignment, retrieveReport = false)
+        plagiarismService.runCheck(assignment, principal.realName())
 
-        // check if there are any submissions marked as final. in that case, consider only final submissions
-        // for plagiarismo detection
-        val hasSubmissionsMarkedAsFinal = submissionInfos.any { it.lastSubmission.markedAsFinal }
-        val submissions = submissionInfos
-            .filter { !hasSubmissionsMarkedAsFinal || it.lastSubmission.markedAsFinal }
-            .map { it.lastSubmission }
+        return "redirect:/plagiarism/${assignmentId}"
+    }
 
-        val tempDir = FileSystemResource(System.getProperty("java.io.tmpdir")).file
-        val submissionsToCheckFolder = File(tempDir, "dp-jplag-${assignmentId}-submissions")
-        submissionsToCheckFolder.deleteRecursively()  // make sure it doesn't exist
-        val plagiarismReportFolder = File(tempDir, "dp-jplag-${assignmentId}-report")
-        plagiarismReportFolder.deleteRecursively()  // make sure it doesn't exist
-        try {
-            jPlagService.prepareSubmissions(submissions, submissionsToCheckFolder)
-            LOG.info("Prepared submissions for jplag on ${submissionsToCheckFolder.absolutePath}")
+    /**
+     * Controller that shows the result of the last plagiarism check of an [Assignment], without running a new one.
+     * @param assignmentId is a String identifying the relevant Assignment
+     * @param model is a [ModelMap] that will be populated with information to use in a View
+     * @param principal is a [Principal] representing the user making the request
+     * @return A String with the name of the relevant View
+     */
+    @RequiresAssignmentOwnerOrACL
+    @RequestMapping(value = ["/plagiarism/{assignmentId}"], method = [(RequestMethod.GET)])
+    fun getPlagiarismReport(@PathVariable assignmentId: String, model: ModelMap, principal: Principal): String {
 
-            val result = jPlagService.checkSubmissions(submissionsToCheckFolder, assignment, plagiarismReportFolder)
-            LOG.info(
-                "Checked submissions using jplag on ${submissionsToCheckFolder.absolutePath}. " +
-                        "Wrote report to ${plagiarismReportFolder.absolutePath}.zip"
-            )
+        val assignment = assignmentRepository.findById(assignmentId).orElse(null)
+            ?: throw IllegalArgumentException("assignment ${assignmentId} is not registered")
 
-            // complement comparisons with info about the number of submissions
-            for (comparison in result.comparisons) {
-                comparison.firstNumTries = submissionInfos
-                    .find { it.lastSubmission.id == comparison.firstSubmission.id }?.allSubmissions?.count() ?: -1
-                comparison.secondNumTries = submissionInfos
-                    .find { it.lastSubmission.id == comparison.secondSubmission.id }?.allSubmissions?.count() ?: -1
-            }
+        model["assignment"] = assignment
 
-            model["assignment"] = assignment
+        val lastCheck = plagiarismService.getLastCheck(assignmentId)
+        if (lastCheck != null) {
+            val result = plagiarismService.toResult(lastCheck)
+            model["lastCheck"] = lastCheck
             model["comparisons"] = result.comparisons
             model["ignoredSubmissions"] = result.ignoredSubmissions
-
-            return "teacher-submissions-plagiarism"
-
-        } finally {
-            submissionsToCheckFolder.delete()
-            // TODO: when to delete plagiarismReportFolder?
+            model["reportFileAvailable"] = plagiarismService.getReportFile(assignmentId).exists()
         }
+
+        return "teacher-submissions-plagiarism"
     }
 
 
+    /**
+     * Controller that handles requests to download the detailed JPlag report of the last plagiarism check of an
+     * [Assignment]. This is the file that can be opened in the JPlag Report Viewer.
+     * @param assignmentId is a String identifying the relevant Assignment
+     * @param principal is a [Principal] representing the user making the request
+     * @param response is an [HttpServletResponse]
+     * @return A [FileSystemResource] with the report file
+     */
     @RequiresAssignmentOwnerOrACL
     @RequestMapping(
-        value = ["/downloadPlagiarismMatchReport/{assignmentId}"],
+        value = ["/plagiarism/{assignmentId}/report"],
         method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE]
     )
     @ResponseBody
-    fun downloadPlagiarismMatchReport(
+    fun downloadPlagiarismReport(
         @PathVariable assignmentId: String, principal: Principal,
         response: HttpServletResponse
     ): FileSystemResource {
@@ -616,10 +621,9 @@ class ReportController(
         val assignment = assignmentRepository.findById(assignmentId).orElse(null)
             ?: throw IllegalArgumentException("assignment ${assignmentId} is not registered")
 
-        val tempDir = FileSystemResource(System.getProperty("java.io.tmpdir")).file
-        val plagiarismReportFile = File(tempDir, "dp-jplag-${assignmentId}-report.zip")
+        val plagiarismReportFile = plagiarismService.getReportFile(assignmentId)
 
-        response.setHeader("Content-Disposition", "attachment; filename=dp-jplag-${assignmentId}-report.zip")
+        response.setHeader("Content-Disposition", "attachment; filename=${plagiarismReportFile.name}")
 
         return FileSystemResource(plagiarismReportFile.absoluteFile)
     }

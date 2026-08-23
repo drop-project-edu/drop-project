@@ -4,6 +4,8 @@ target
 upload
 mavenized-projects-test
 mavenized-projects
+plagiarism-test
+plagiarism
 *.zip
 /src/main/resources/config
 .env

@@ -9,6 +9,7 @@
 <div th:replace="~{layout/layout :: header}"></div>
 
 <!--/*@thymesVar id="assignment" type="org.dropproject.dao.Assignment"*/-->
+<!--/*@thymesVar id="lastCheck" type="org.dropproject.dao.PlagiarismCheck"*/-->
 <!--/*@thymesVar id="comparisons" type="java.util.List<org.dropproject.services.PlagiarismComparison>"*/-->
 <div class="container" style="max-width: 900px; margin-bottom: 65px">
 
@@ -16,55 +17,90 @@
     <div class="alert alert-danger" th:text="${error}" th:if="${error}" />
 
     <h1 class="page-header">Plagiarism report <small th:text="${assignment.id}"></small></h1>
-    <h6 th:text="${'Only matches above ' + T(org.dropproject.Constants).SIMILARITY_THRESHOLD*100} + '% similarity are considered'"/>
 
-    <table class="table">
-        <thead>
-        <tr>
-            <th>First group <small>(# submissions)</small></th>
-            <th>Second group <small>(# submissions)</small></th>
-            <th class="text-center">Similarity</th>
-        </tr>
-        </thead>
-        <tbody>
+    <div th:if="${lastCheck == null}">
+        <p>This assignment hasn't been checked for plagiarism yet.</p>
+        <form method="post" th:action="@{'/plagiarism/' + ${assignment.id}}">
+            <input type="submit" value="Check plagiarism" class="btn btn-primary"
+                   data-placement="bottom"
+                   data-toggle="confirmation" data-title="Check plagiarism"
+                   data-content="This will check the last/final submissions for plagiarism. It may take a while."
+                   data-btn-ok-label="Continue" data-btn-cancel-label="Cancel" />
+        </form>
+    </div>
 
-        <tr th:each="comparison : ${comparisons}">
-            <td>
-                <a th:href="@{'/buildReport/' + ${comparison.firstSubmission.id}}"
-                   th:text="${comparison.firstSubmission.group.authorsNameStr()}"
-                   th:title="${comparison.firstSubmission.group.authorsIdStr(', ')}" />
-                <small th:text="${'(' + comparison.firstNumTries + ')'}"/>
-            </td>
-            <td>
-                <a th:href="@{'/buildReport/' + ${comparison.secondSubmission.id}}"
-                   th:text="${comparison.secondSubmission.group.authorsNameStr()}"
-                   th:title="${comparison.secondSubmission.group.authorsIdStr(', ')}" />
-                <small th:text="${'(' + comparison.secondNumTries + ')'}"/>
-            </td>
-            <td class="text-center" th:text="${comparison.similarityPercentage + '%'}"></td>
-        </tr>
-        </tbody>
-    </table>
+    <div th:if="${lastCheck != null}">
 
-    <br/>
+        <div class="clearfix">
+            <p class="pull-left" style="margin-top: 8px">
+                <span th:text="${'Checked ' + #dates.format(lastCheck.checkDate, 'yyyy-MM-dd HH:mm') +
+                                ' over ' + lastCheck.numSubmissions + ' submissions.'}"/>
+                <span th:text="${'Only matches above ' + lastCheck.similarityThreshold*100 +
+                                '% similarity are considered.'}"/>
+            </p>
+            <form class="pull-right" method="post" th:action="@{'/plagiarism/' + ${assignment.id}}">
+                <input type="submit" value="Check again" class="btn btn-default"
+                       data-placement="bottom"
+                       data-toggle="confirmation" data-title="Check plagiarism again"
+                       data-content="This will check the last/final submissions again and replace this report. It may take a while."
+                       data-btn-ok-label="Continue" data-btn-cancel-label="Cancel" />
+            </form>
+        </div>
 
-    <h4 th:if="${!ignoredSubmissions.isEmpty()}">Ignored submissions</h4>
-    <p th:if="${!ignoredSubmissions.isEmpty()}">These submissions were not considered in this process since there was an error processing them</p>
-    <ul th:if="${!ignoredSubmissions.isEmpty()}">
-        <li th:each="ignoredSubmission: ${ignoredSubmissions}" th:text="${ignoredSubmission}" />
-    </ul>
+        <p th:if="${comparisons.isEmpty()}">No matches were found.</p>
 
-    <br/>
-    <br/>
-    <h4>Plagiarism details</h4>
-    <p>
-    Plagiarism details were stored in a specific JPlag report file
-        <a class="btn btn-default btn-sm" th:href="@{'/downloadPlagiarismMatchReport/' + ${assignment.id}}">
-            <span class="glyphicon glyphicon-download"></span> Download JPlag report file</a><br/>
-        You then have to upload that file into JPlag Report Viewer
-        <a class="btn btn-default btn-sm" href="https://jplag.github.io/JPlag/" target="_blank">
-            <span class="glyphicon glyphicon-new-window"></span> Open JPlag Report Viewer</a>
-    </p>
+        <table class="table" th:if="${!comparisons.isEmpty()}">
+            <thead>
+            <tr>
+                <th>First group <small>(# submissions)</small></th>
+                <th>Second group <small>(# submissions)</small></th>
+                <th class="text-center">Similarity</th>
+            </tr>
+            </thead>
+            <tbody>
+
+            <tr th:each="comparison : ${comparisons}">
+                <td>
+                    <a th:href="@{'/buildReport/' + ${comparison.firstSubmission.id}}"
+                       th:text="${comparison.firstSubmission.group.authorsNameStr()}"
+                       th:title="${comparison.firstSubmission.group.authorsIdStr(', ')}" />
+                    <small th:text="${'(' + comparison.firstNumTries + ')'}"/>
+                </td>
+                <td>
+                    <a th:href="@{'/buildReport/' + ${comparison.secondSubmission.id}}"
+                       th:text="${comparison.secondSubmission.group.authorsNameStr()}"
+                       th:title="${comparison.secondSubmission.group.authorsIdStr(', ')}" />
+                    <small th:text="${'(' + comparison.secondNumTries + ')'}"/>
+                </td>
+                <td class="text-center" th:text="${comparison.similarityPercentage + '%'}"></td>
+            </tr>
+            </tbody>
+        </table>
+
+        <br/>
+
+        <h4 th:if="${!ignoredSubmissions.isEmpty()}">Ignored submissions</h4>
+        <p th:if="${!ignoredSubmissions.isEmpty()}">These submissions were not considered in this process since there was an error processing them</p>
+        <ul th:if="${!ignoredSubmissions.isEmpty()}">
+            <li th:each="ignoredSubmission: ${ignoredSubmissions}" th:text="${ignoredSubmission}" />
+        </ul>
+
+        <br/>
+        <br/>
+        <h4>Plagiarism details</h4>
+        <p th:if="${reportFileAvailable}">
+        Plagiarism details were stored in a specific JPlag report file
+            <a class="btn btn-default btn-sm" th:href="@{'/plagiarism/' + ${assignment.id} + '/report'}">
+                <span class="glyphicon glyphicon-download"></span> Download JPlag report file</a><br/>
+            You then have to upload that file into JPlag Report Viewer
+            <a class="btn btn-default btn-sm" href="https://jplag.github.io/JPlag/" target="_blank">
+                <span class="glyphicon glyphicon-new-window"></span> Open JPlag Report Viewer</a>
+        </p>
+        <p th:if="${!reportFileAvailable}">
+            The JPlag report file of this check is no longer available. Run the check again to produce it.
+        </p>
+
+    </div>
 
 </div>
 

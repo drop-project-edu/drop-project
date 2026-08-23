@@ -46,6 +46,9 @@ data class DropProjectProperties(
     /** Mavenized projects configuration */
     val mavenizedProjects: MavenizedProjects = MavenizedProjects(),
     
+    /** Plagiarism checking configuration */
+    val plagiarism: Plagiarism = Plagiarism(),
+    
     /** Maven configuration */
     val maven: Maven = Maven(),
     
@@ -91,6 +94,11 @@ data class DropProjectProperties(
     data class MavenizedProjects(
         /** Root location for mavenized projects */
         val rootLocation: String = "mavenized-projects"
+    )
+
+    data class Plagiarism(
+        /** Root location for the plagiarism reports produced by JPlag */
+        val rootLocation: String = "plagiarism"
     )
 
     data class Maven(
