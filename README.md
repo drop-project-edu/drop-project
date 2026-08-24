@@ -122,6 +122,24 @@ If you wish to experiment with the teacher role, send me an email and I'll be ha
 
 For instructions on building from source, running tests, and generating documentation, see [development.md](development.md).
 
+## Who is using Drop Project
+
+Drop Project is being used to teach programming at:
+
+<p>
+  <a href="https://www.ulusofona.pt/" title="Universidade Lusófona">
+    <img src="docs/logo_ulusofona.png" alt="Universidade Lusófona" height="55"/>
+  </a>
+  &nbsp;&nbsp;&nbsp;
+  <a href="https://www.fct.unl.pt/" title="Faculdade de Ciências e Tecnologia, Universidade NOVA de Lisboa">
+    <img src="docs/logo_fct_nova.png" alt="Faculdade de Ciências e Tecnologia, Universidade NOVA de Lisboa" height="55"/>
+  </a>
+  &nbsp;&nbsp;&nbsp;
+  <a href="https://www.ubi.pt/" title="Universidade da Beira Interior">
+    <img src="docs/logo_ubi.png" alt="Universidade da Beira Interior" height="55"/>
+  </a>
+</p>
+
 ## Citation
 
 * Cipriano, B.P., Fachada, N. & Alves, P. (2022). Drop Project: An automatic assessment tool for programming assignments. *SoftwareX*, 18. 101079. <https://doi.org/10.1016/j.softx.2022.101079>
