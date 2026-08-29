@@ -825,6 +825,12 @@ class AssignmentService(
         }
 
         try {
+            // the id of the group restrictions belongs to the exporting server, where it may identify the
+            // restrictions of another assignment (or none at all), so they are recreated here as a new row
+            newAssignment.projectGroupRestrictions = newAssignment.projectGroupRestrictions?.let {
+                projectGroupRestrictionsRepository.save(it.copy(id = 0))
+            }
+
             assignmentRepository.save(newAssignment)
 
             // creates the tags that don't exist yet in this server and reuses the ones that do
