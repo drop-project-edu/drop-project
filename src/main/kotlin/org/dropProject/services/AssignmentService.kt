@@ -714,6 +714,11 @@ class AssignmentService(
 
         val newAssignment = mapper.readValue(assignmentJSONFile, Assignment::class.java)
 
+        // the ids of the tags belong to the exporting server, where they may identify other tags (or none at all),
+        // so only their names are kept, to reattach them, further down, to the tags of this server
+        val importedTagNames = newAssignment.tags.map { it.name }
+        newAssignment.tags = mutableSetOf()
+
         // check if already exists an assignment with this id
         if (assignmentRepository.findById(newAssignment.id).orElse(null) != null) {
             return Pair(newAssignment.id, "Error: There is already an assignment with this id (${newAssignment.id})")
@@ -757,6 +762,9 @@ class AssignmentService(
         }
 
         assignmentRepository.save(newAssignment)
+
+        // creates the tags that don't exist yet in this server and reuses the ones that do
+        importedTagNames.forEach { addTagToAssignment(newAssignment, it) }
 
         // revalidate the assignment
         validateAndStoreReport(newAssignment, principal)
