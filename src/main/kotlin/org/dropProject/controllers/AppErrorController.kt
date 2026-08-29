@@ -22,6 +22,7 @@ package org.dropproject.controllers
 import org.springframework.boot.web.error.ErrorAttributeOptions
 import org.springframework.boot.web.servlet.error.ErrorAttributes
 import org.springframework.boot.web.servlet.error.ErrorController
+import org.springframework.core.env.Environment
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
@@ -36,7 +37,7 @@ const val ERROR_PATH = "/error"
 const val ACCESS_DENIED_PATH = "/access-denied"
 
 @Controller
-class AppErrorController(var errorAttributes: ErrorAttributes) : ErrorController {
+class AppErrorController(var errorAttributes: ErrorAttributes, val environment: Environment) : ErrorController {
     /**
      * The page that the security chains of the web interface forward to when a request is refused
      * (see [org.dropproject.security.WebSecurityConfig]). It is a view, and not a static file, so that it is shown
@@ -48,9 +49,14 @@ class AppErrorController(var errorAttributes: ErrorAttributes) : ErrorController
         return "access-denied"
     }
 
+    /**
+     * The error page of the web interface. When running with the 'dev' profile, it also shows the stacktrace of the
+     * exception that caused the error, to make it easier to diagnose the problem during development.
+     */
     @RequestMapping(value = [ERROR_PATH], produces = ["text/html"])
     fun errorHtml(webRequest: WebRequest): ModelAndView {
-        return ModelAndView("exception", getErrorAttributes(webRequest, false))
+        val devMode = environment.activeProfiles.contains("dev")
+        return ModelAndView("exception", getErrorAttributes(webRequest, devMode))
     }
 
     /**
@@ -73,13 +79,14 @@ class AppErrorController(var errorAttributes: ErrorAttributes) : ErrorController
 
     private fun getErrorAttributes(webRequest: WebRequest,
                                    includeStackTrace: Boolean): Map<String, Any> {
-        if (includeStackTrace) {
-            return this.errorAttributes.getErrorAttributes(webRequest,
-                ErrorAttributeOptions.of(ErrorAttributeOptions.Include.STACK_TRACE))
+        val options = if (includeStackTrace) {
+            // 'including' and not 'of', because 'of' would drop the defaults (status, error and path)
+            ErrorAttributeOptions.defaults()
+                .including(ErrorAttributeOptions.Include.STACK_TRACE, ErrorAttributeOptions.Include.MESSAGE)
         } else {
-            return this.errorAttributes.getErrorAttributes(webRequest,
-                ErrorAttributeOptions.defaults())
+            ErrorAttributeOptions.defaults()
         }
+        return this.errorAttributes.getErrorAttributes(webRequest, options)
     }
 
     private fun getStatus(request: HttpServletRequest): HttpStatus {

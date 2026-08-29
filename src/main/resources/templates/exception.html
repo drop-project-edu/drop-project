@@ -8,7 +8,7 @@
 
 <div th:replace="~{layout/layout :: header}"></div>
 
-<div class="container" style="max-width: 760px; margin-bottom: 65px">
+<div class="container" th:style="${trace} != null ? 'margin-bottom: 65px' : 'max-width: 760px; margin-bottom: 65px'">
 
     <h1 class="page-header">Error</h1>
 
@@ -25,6 +25,15 @@
     <p>
         <a th:href="@{/}" class="btn btn-primary">Go to the homepage</a>
     </p>
+
+    <details th:if="${trace}" style="margin-top: 40px">
+        <summary style="cursor: pointer">
+            <strong>Stacktrace</strong>
+            <small class="text-muted">(only shown when running with the 'dev' profile)</small>
+        </summary>
+        <p style="margin-top: 15px" th:unless="${#strings.isEmpty(message)}"><code th:text="${message}"></code></p>
+        <pre style="max-height: 400px; overflow: auto" th:text="${trace}"></pre>
+    </details>
 
     <p><small class="text-muted" th:text="${timestamp}"></small></p>
 
