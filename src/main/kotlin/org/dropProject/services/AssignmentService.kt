@@ -48,6 +48,7 @@ import org.springframework.scheduling.annotation.Async
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.transaction.interceptor.TransactionAspectSupport
 import org.springframework.ui.ModelMap
 import java.io.File
 import java.nio.file.Files
@@ -569,6 +570,14 @@ class AssignmentService(
         }
     }
 
+    /**
+     * Imports an assignment and, if the file contains them, its submissions.
+     *
+     * The import is atomic: if any of the steps fails, the assignment and the submissions that were already imported
+     * are undone (the database changes are rolled back and the cloned repository is deleted), so that the same file
+     * can be imported again after the cause of the failure is solved.
+     */
+    @Transactional
     fun importAssignment(mapper: ObjectMapper, assignmentJSONFile: File, submissionsJSONFile: File,
                          gitSubmissionsJSONFile: File,
                          originalSubmissionsFolder: File,
@@ -582,35 +591,76 @@ class AssignmentService(
             LOG.info("Imported $assignmentId")
         }
 
-        if (submissionsJSONFile.exists()) {
-            val errorMessage2 = importSubmissionsFromImportedFile(mapper, submissionsJSONFile, assignmentId)
-            if (errorMessage2 != null) {
-                return AssignmentImportResult("error", errorMessage2, "redirect:/assignment/import")
-            }
+        val assignment = assignmentRepository.findById(assignmentId)
+            .orElseThrow { EntityNotFoundException("Assignment ${assignmentId} not found") }
 
-            if (gitSubmissionsJSONFile.exists()) {
-                val errorMessage3 = importGitSubmissionsFromImportedFile(mapper, gitSubmissionsJSONFile, assignmentId)
-                if (errorMessage3 != null) {
-                    return AssignmentImportResult("error", errorMessage3, "redirect:/assignment/import")
-                }
-            }
-
-            // import all the original submission files
-            if (originalSubmissionsFolder.exists()) {
-                val assignment = assignmentRepository.findById(assignmentId)
-                    .orElseThrow { EntityNotFoundException("Assignment ${assignmentId} not found") }
-                when (assignment.submissionMethod) {
-                    SubmissionMethod.UPLOAD -> FileUtils.copyDirectory(originalSubmissionsFolder, File(dropProjectProperties.storage.uploadLocation))
-                    SubmissionMethod.GIT -> FileUtils.copyDirectory(originalSubmissionsFolder, File(dropProjectProperties.storage.gitLocation))
-                }
-            }
-            return AssignmentImportResult("message", "Imported successfully ${assignmentId} and all its submissions",
-                "redirect:/report/${assignmentId}")
-        } else {
-            return AssignmentImportResult("message", "Imported successfully ${assignmentId}. Submissions were not imported",
-                "redirect:/assignment/info/${assignmentId}")
+        val result = try {
+            importSubmissionsOfImportedAssignment(mapper, submissionsJSONFile, gitSubmissionsJSONFile,
+                originalSubmissionsFolder, assignment)
+        } catch (e: Exception) {
+            // the rollback of the transaction doesn't delete the folder where the repository was cloned
+            deleteClonedRepository(assignment)
+            throw e
         }
 
+        if (result.type == "error") {
+            undoImport(assignment)
+        }
+
+        return result
+    }
+
+    private fun importSubmissionsOfImportedAssignment(mapper: ObjectMapper, submissionsJSONFile: File,
+                                                      gitSubmissionsJSONFile: File,
+                                                      originalSubmissionsFolder: File,
+                                                      assignment: Assignment): AssignmentImportResult {
+
+        if (!submissionsJSONFile.exists()) {
+            return AssignmentImportResult("message", "Imported successfully ${assignment.id}. Submissions were not imported",
+                "redirect:/assignment/info/${assignment.id}")
+        }
+
+        val errorMessage = importSubmissionsFromImportedFile(mapper, submissionsJSONFile, assignment.id)
+        if (errorMessage != null) {
+            return AssignmentImportResult("error", errorMessage, "redirect:/assignment/import")
+        }
+
+        if (gitSubmissionsJSONFile.exists()) {
+            val gitErrorMessage = importGitSubmissionsFromImportedFile(mapper, gitSubmissionsJSONFile, assignment.id)
+            if (gitErrorMessage != null) {
+                return AssignmentImportResult("error", gitErrorMessage, "redirect:/assignment/import")
+            }
+        }
+
+        // import all the original submission files
+        if (originalSubmissionsFolder.exists()) {
+            when (assignment.submissionMethod) {
+                SubmissionMethod.UPLOAD -> FileUtils.copyDirectory(originalSubmissionsFolder, File(dropProjectProperties.storage.uploadLocation))
+                SubmissionMethod.GIT -> FileUtils.copyDirectory(originalSubmissionsFolder, File(dropProjectProperties.storage.gitLocation))
+            }
+        }
+
+        return AssignmentImportResult("message", "Imported successfully ${assignment.id} and all its submissions",
+            "redirect:/report/${assignment.id}")
+    }
+
+    /**
+     * Undoes an import that failed after the assignment was already created.
+     */
+    private fun undoImport(assignment: Assignment) {
+        TransactionAspectSupport.currentTransactionStatus().setRollbackOnly()
+        deleteClonedRepository(assignment)
+        LOG.info("Undone the import of ${assignment.id}")
+    }
+
+    /**
+     * Deletes the folder into which the assignment's git repository was cloned.
+     */
+    private fun deleteClonedRepository(assignment: Assignment) {
+        val directory = File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder)
+        if (directory.exists()) {
+            FileUtils.deleteDirectory(directory)
+        }
     }
 
     /**
@@ -774,13 +824,19 @@ class AssignmentService(
             }
         }
 
-        assignmentRepository.save(newAssignment)
+        try {
+            assignmentRepository.save(newAssignment)
 
-        // creates the tags that don't exist yet in this server and reuses the ones that do
-        importedTagNames.forEach { addTagToAssignment(newAssignment, it) }
+            // creates the tags that don't exist yet in this server and reuses the ones that do
+            importedTagNames.forEach { addTagToAssignment(newAssignment, it) }
 
-        // revalidate the assignment
-        validateAndStoreReport(newAssignment, principal)
+            // revalidate the assignment
+            validateAndStoreReport(newAssignment, principal)
+        } catch (e: Exception) {
+            // the rollback of the transaction doesn't delete the folder where the repository was just cloned
+            deleteClonedRepository(newAssignment)
+            throw e
+        }
 
         return Pair(newAssignment.id, null)
     }
