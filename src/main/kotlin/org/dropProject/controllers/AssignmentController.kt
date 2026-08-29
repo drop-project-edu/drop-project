@@ -1039,26 +1039,34 @@ class AssignmentController(
         LOG.info("[${principal.realName()}] uploaded ${originalFilename}")
 
         val tempFolder = Files.createTempDirectory("import").toFile()
-        val destinationFile = File(tempFolder, "${System.currentTimeMillis()}-${originalFilename}.zip")
-        Files.copy(file.inputStream, destinationFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
 
-        val destinationFolder = zipService.unzip(destinationFile.toPath(), "extracted")
-        val assignmentJSONFile = File(destinationFolder, EXPORTED_ASSIGNMENT_JSON_FILENAME)
-        val submissionsJSONFile = File(destinationFolder, EXPORTED_SUBMISSIONS_JSON_FILENAME)
-        val gitSubmissionsJSONFile = File(destinationFolder, EXPORTED_GIT_SUBMISSIONS_JSON_FILENAME)
-        val originalSubmissionsFolder = File(destinationFolder, EXPORTED_ORIGINAL_SUBMISSIONS_FOLDER)
+        // the uploaded file and its contents (which include the private key of the assignment) are only needed
+        // while the import runs, so the folder is always deleted, even if the import fails
+        try {
+            val destinationFile = File(tempFolder, "${System.currentTimeMillis()}-${originalFilename}.zip")
+            Files.copy(file.inputStream, destinationFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
 
-        if (!assignmentJSONFile.exists()) {
-            redirectAttributes.addFlashAttribute("error", "Error: File is not valid (missing assignment.json)")
-            return "redirect:/assignment/import"
+            val destinationFolder = zipService.unzip(destinationFile.toPath(), "extracted")
+            val assignmentJSONFile = File(destinationFolder, EXPORTED_ASSIGNMENT_JSON_FILENAME)
+            val submissionsJSONFile = File(destinationFolder, EXPORTED_SUBMISSIONS_JSON_FILENAME)
+            val gitSubmissionsJSONFile = File(destinationFolder, EXPORTED_GIT_SUBMISSIONS_JSON_FILENAME)
+            val originalSubmissionsFolder = File(destinationFolder, EXPORTED_ORIGINAL_SUBMISSIONS_FOLDER)
+
+            if (!assignmentJSONFile.exists()) {
+                redirectAttributes.addFlashAttribute("error", "Error: File is not valid (missing assignment.json)")
+                return "redirect:/assignment/import"
+            }
+
+            val mapper = ObjectMapper().registerModule(KotlinModule.Builder().build())
+
+            val result = assignmentService.importAssignment(mapper, assignmentJSONFile, submissionsJSONFile,
+                gitSubmissionsJSONFile, originalSubmissionsFolder, principal)
+            redirectAttributes.addFlashAttribute(result.type, result.message)
+            return result.redirectUrl
+
+        } finally {
+            FileUtils.deleteDirectory(tempFolder)
         }
-
-        val mapper = ObjectMapper().registerModule(KotlinModule.Builder().build())
-
-        val result = assignmentService.importAssignment(mapper, assignmentJSONFile, submissionsJSONFile,
-            gitSubmissionsJSONFile, originalSubmissionsFolder, principal)
-        redirectAttributes.addFlashAttribute(result.type, result.message)
-        return result.redirectUrl
     }
 
     /**
