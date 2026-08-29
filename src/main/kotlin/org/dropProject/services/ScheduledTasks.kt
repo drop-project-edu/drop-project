@@ -28,6 +28,7 @@ import org.dropproject.repository.SubmissionRepository
 import org.slf4j.LoggerFactory
 import org.dropproject.config.DropProjectProperties
 import org.dropproject.config.PendingExport
+import org.dropproject.config.PendingMultipleExports
 import org.dropproject.config.PendingTasks
 import java.io.File
 import java.util.*
@@ -133,12 +134,18 @@ class ScheduledTasks(
 
         var deletedExports = 0
         for (expiredTask in pendingTasks.removeCreatedBefore(timestamp)) {
-            if (expiredTask is PendingExport) {
-                if (expiredTask.zipFile.delete()) {
+            val expiredExports = when (expiredTask) {
+                is PendingExport -> listOf(expiredTask)
+                is PendingMultipleExports -> expiredTask.exports
+                else -> emptyList()
+            }
+
+            for (expiredExport in expiredExports) {
+                if (expiredExport.zipFile.delete()) {
                     deletedExports++
-                    LOG.info("Deleted expired export ${expiredTask.zipFile.absolutePath}")
+                    LOG.info("Deleted expired export ${expiredExport.zipFile.absolutePath}")
                 } else {
-                    LOG.warn("Error deleting expired export ${expiredTask.zipFile.absolutePath}")
+                    LOG.warn("Error deleting expired export ${expiredExport.zipFile.absolutePath}")
                 }
             }
         }

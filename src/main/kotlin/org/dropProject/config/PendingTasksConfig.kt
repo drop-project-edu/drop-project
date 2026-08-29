@@ -37,6 +37,11 @@ data class PendingTaskError(val exception: Throwable)
 data class PendingExport(val filename: String, val zipFile: File)
 
 /**
+ * The result of an export of several assignments at once: one [PendingExport] per assignment
+ */
+data class PendingMultipleExports(val exports: List<PendingExport>)
+
+/**
  * Manages tasks that are executed asynchronously such as assignments export. Tasks are put here by the
  * asynchronous threads and read by the request threads that are polling for their result.
  */

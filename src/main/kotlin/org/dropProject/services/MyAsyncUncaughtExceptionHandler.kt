@@ -48,11 +48,12 @@ class MyAsyncUncaughtExceptionHandler(val submissionRepository: SubmissionReposi
 
         // since the method comparison is not typesafe, I minimize the chance of error with this
         require(AssignmentService::class.memberFunctions.any { it.name == "exportAssignment" })
+        require(AssignmentService::class.memberFunctions.any { it.name == "exportAssignments" })
         require(BuildWorker::class.memberFunctions.any { it.name == "checkProject" })
 
         when (methodThatThrewTheException) {
-            "exportAssignment" -> {
-                // val assignmentId = params[0] as String
+            "exportAssignment", "exportAssignments" -> {
+                // params[0] is the assignment id (or the list of assignment ids)
                 val taskId = params[2] as String
                 pendingTasks.put(taskId, PendingTaskError(ex))
             }

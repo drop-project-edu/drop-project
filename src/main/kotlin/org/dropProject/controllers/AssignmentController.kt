@@ -29,6 +29,7 @@ import org.apache.commons.io.FileUtils
 import org.dropproject.Constants.CACHE_ARCHIVED_ASSIGNMENTS_KEY
 import org.dropproject.config.DropProjectProperties
 import org.dropproject.config.PendingExport
+import org.dropproject.config.PendingMultipleExports
 import org.dropproject.config.PendingTaskError
 import org.dropproject.config.PendingTasks
 import org.dropproject.dao.*
@@ -959,21 +960,76 @@ class AssignmentController(
     }
 
     /**
+     * Controller that handles the exportation of several assignments at once, each one producing its own .dp file.
+     * The assignments are selected in the assignments list.
+     *
+     * @param assignmentIds are the ids of the assignments to export
+     * @return the view name
+     */
+    @RequestMapping(value = ["/export"], method = [(RequestMethod.POST)])
+    fun startAssignmentsExport(@RequestParam(name = "ids", required = false) assignmentIds: List<String>?,
+                               @RequestParam(name = "includeSubmissions", required = false) includeSubmissions: Boolean = false,
+                               principal: Principal,
+                               request: HttpServletRequest,
+                               redirectAttributes: RedirectAttributes): String {
+
+        // the same assignment may come twice, since the checkboxes of the pages that are not being shown are
+        // submitted as hidden inputs
+        val distinctAssignmentIds = assignmentIds.orEmpty().distinct()
+
+        if (distinctAssignmentIds.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Error: You didn't select any assignment to export")
+            return "redirect:/assignment/my"
+        }
+
+        // the ids come from the browser, so each one must be checked. If any of them is refused, none is exported
+        for (assignmentId in distinctAssignmentIds) {
+            val assignment = assignmentRepository.findById(assignmentId).orElse(null)
+            if (assignment == null) {
+                // the page may have been open when someone else deleted the assignment
+                redirectAttributes.addFlashAttribute("error",
+                    "Error: The assignment ${assignmentId} no longer exists. Please refresh the page and try again")
+                return "redirect:/assignment/my"
+            }
+
+            if (!request.isUserInRole("DROP_PROJECT_ADMIN") &&
+                !assignmentService.isAuthorizedTeacher(assignment, principal.realName(), request)) {
+                throw AccessDeniedException("You are not allowed to export the assignment ${assignmentId}")
+            }
+        }
+
+        val taskId = "${System.currentTimeMillis()}"
+
+        // this will run asynchronously (except for tests)
+        LOG.info("Started async export for assignments ${distinctAssignmentIds} (taskId: $taskId)")
+        assignmentService.exportAssignments(distinctAssignmentIds, includeSubmissions, taskId)
+
+        if (pendingTasks.get(taskId) != null) {
+            return "redirect:/assignment/export-results/${taskId}"
+        }
+
+        return "redirect:/assignment/export-status/${taskId}"
+    }
+
+    /**
      * Checks the status of a given export. This is called from a page in "polling mode" - refreshing periodically
      */
     @RequestMapping(value = ["/export-status/{taskId}"], method = [(RequestMethod.GET)])
     fun getAssignmentExportStatus(@PathVariable taskId: String, model: ModelMap) : String {
 
-        if (pendingTasks.get(taskId) == null) {
+        val result = pendingTasks.get(taskId)
+
+        if (result == null) {
             // task hasn't finished
             model["autoRefresh"] = true
             model["message"] = "Export in progress... Please wait"
             return "export-status"
         } else {
-            // task has finished - redirect to the page that will download the file
+            // task has finished - redirect to the page that will download the file(s)
             model["autoRefresh"] = false
             model["message"] = "Export successful"
-            model["redirect"] = "assignment/export-result/${taskId}"
+            model["redirect"] = if (result is PendingMultipleExports) "assignment/export-results/${taskId}"
+                                else "assignment/export-result/${taskId}"
             return "export-status"
         }
     }
@@ -1000,6 +1056,47 @@ class AssignmentController(
 
         response.setHeader("Content-Disposition", "attachment; filename=${export.filename}.dp")
         return FileSystemResource(export.zipFile)
+    }
+
+    /**
+     * Lists the files produced by a previous export of several assignments, so that the user can download each one.
+     */
+    @RequestMapping(value = ["/export-results/{taskId}"], method = [(RequestMethod.GET)])
+    fun getAssignmentsExportResults(@PathVariable taskId: String, model: ModelMap): String {
+
+        model["taskId"] = taskId
+        model["exports"] = getMultipleExports(taskId).exports
+        return "export-results"
+    }
+
+    /**
+     * Downloads one of the files produced by a previous export of several assignments.
+     */
+    @RequestMapping(value = ["/export-results/{taskId}/{index}"], method = [(RequestMethod.GET)],
+        produces = [org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE])
+    @ResponseBody
+    fun getAssignmentsExportFile(@PathVariable taskId: String,
+                                 @PathVariable index: Int,
+                                 response: HttpServletResponse): FileSystemResource {
+
+        val export = getMultipleExports(taskId).exports.getOrNull(index)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "This export doesn't have such a file")
+
+        response.setHeader("Content-Disposition", "attachment; filename=${export.filename}.dp")
+        return FileSystemResource(export.zipFile)
+    }
+
+    private fun getMultipleExports(taskId: String): PendingMultipleExports {
+
+        val result = pendingTasks.get(taskId)
+
+        if (result is PendingTaskError) {
+            throw result.exception
+        }
+
+        return result as? PendingMultipleExports
+            ?: throw ResponseStatusException(HttpStatus.GONE,
+                "This export is no longer available. Please export the assignments again.")
     }
 
     /**

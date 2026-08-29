@@ -29,6 +29,7 @@ import org.dropproject.TestsHelper.Companion.sampleJavaAssignmentPrivateKey
 import org.dropproject.TestsHelper.Companion.sampleJavaAssignmentPublicKey
 import org.dropproject.dao.*
 import org.dropproject.data.SubmissionInfo
+import org.dropproject.config.PendingExport
 import org.dropproject.extensions.formatJustDate
 import org.dropproject.forms.AssignmentForm
 import org.dropproject.forms.SubmissionMethod
@@ -1516,6 +1517,90 @@ class AssignmentControllerTests {
         )
             .andExpect(status().isGone)
             .andExpect(content().string(containsString("This export is no longer available")))
+    }
+
+    @Test
+    @DirtiesContext
+    fun test_20_2_exportSeveralAssignments() {
+
+        try {
+            testsHelper.createAndSetupAssignment(
+                mvc, assignmentRepository, "dummyAssignment1", "Dummy Assignment",
+                "org.dummy", "UPLOAD", sampleJavaAssignmentRepo
+            )
+            testsHelper.createAndSetupAssignment(
+                mvc, assignmentRepository, "dummyAssignment2", "Dummy Kotlin Assignment",
+                "org.dummy", "UPLOAD", sampleKotlinAssignmentRepo, language = "KOTLIN"
+            )
+
+            // the assignments are selected in the assignments list and exported all at once
+            val result = this.mvc.perform(
+                post("/assignment/export")
+                    .with(user(TEACHER_1))
+                    .param("ids", "dummyAssignment1", "dummyAssignment2")
+            )
+                .andExpect(status().isFound)
+                .andReturn()
+
+            val resultsLocation = result.response.getHeader("Location")
+            kotlin.test.assertNotNull(resultsLocation)
+
+            // the export produced one file per assignment
+            val resultsPage = this.mvc.perform(get(resultsLocation).with(user(TEACHER_1)))
+                .andExpect(status().isOk)
+                .andExpect(view().name("export-results"))
+                .andReturn()
+
+            @Suppress("UNCHECKED_CAST")
+            val exports = resultsPage.modelAndView!!.model["exports"] as List<PendingExport>
+            assertEquals(2, exports.size)
+            assertEquals("dummyAssignment1_${Date().formatJustDate()}", exports[0].filename)
+            assertEquals("dummyAssignment2_${Date().formatJustDate()}", exports[1].filename)
+
+            // and each one of them can be downloaded
+            listOf("dummyAssignment1", "dummyAssignment2").forEachIndexed { index, assignmentId ->
+                this.mvc.perform(
+                    get("${resultsLocation}/${index}")
+                        .with(user(TEACHER_1))
+                        .contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE)
+                )
+                    .andExpect(status().isOk)
+                    .andExpect(
+                        header().string(
+                            "Content-Disposition",
+                            "attachment; filename=${assignmentId}_${Date().formatJustDate()}.dp"
+                        )
+                    )
+            }
+
+        } finally {
+            File(dropProjectProperties.assignments.rootLocation, "dummyAssignment1").deleteRecursively()
+            File(dropProjectProperties.assignments.rootLocation, "dummyAssignment2").deleteRecursively()
+        }
+    }
+
+    @Test
+    @DirtiesContext
+    fun test_20_3_exportAssignmentsOfAnotherTeacher() {
+
+        try {
+            testsHelper.createAndSetupAssignment(
+                mvc, assignmentRepository, "dummyAssignment1", "Dummy Assignment",
+                "org.dummy", "UPLOAD", sampleJavaAssignmentRepo
+            )
+
+            // the ids are sent by the browser, so a teacher must not be able to export the assignments of others
+            val teacher2 = User("teacher2", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
+            this.mvc.perform(
+                post("/assignment/export")
+                    .with(user(teacher2))
+                    .param("ids", "dummyAssignment1")
+            )
+                .andExpect(status().isForbidden)
+
+        } finally {
+            File(dropProjectProperties.assignments.rootLocation, "dummyAssignment1").deleteRecursively()
+        }
     }
 
     @Test

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout/layout :: head (pageTitle='Drop Project - Export results')}">
+</head>
+
+<body>
+
+<div th:replace="~{layout/layout :: header}"></div>
+
+<div class="container" style="max-width: 760px">
+
+    <h1 class="page-header">Export results</h1>
+
+    <div class="alert alert-info">
+        The export produced one file per assignment. They are deleted after one hour.
+    </div>
+
+    <table class="table table-hover">
+        <tbody>
+        <tr th:each="export, iteration : ${exports}">
+            <td>
+                <a th:href="@{'/assignment/export-results/' + ${taskId} + '/' + ${iteration.index}}"
+                   th:text="${export.filename} + '.dp'">assignment.dp</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <a th:href="@{/assignment/my}" class="btn btn-default">Back to the assignments</a>
+
+</div>
+
+<div th:replace="~{layout/layout :: footer}"></div>
+
+</body>
+</html>

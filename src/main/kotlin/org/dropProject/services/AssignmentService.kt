@@ -27,6 +27,7 @@ import jakarta.servlet.http.HttpServletRequest
 import org.apache.commons.io.FileUtils
 import org.dropproject.Constants
 import org.dropproject.config.PendingExport
+import org.dropproject.config.PendingMultipleExports
 import org.dropproject.config.PendingTasks
 import org.dropproject.controllers.InvalidProjectGroupException
 import org.dropproject.dao.*
@@ -421,14 +422,34 @@ class AssignmentService(
     }
 
     /**
-     * Handles the exportation of an assignment and (optionally) its submissions
-     * @return a pair with (filename, file)
+     * Handles the exportation of an assignment and (optionally) its submissions.
      *
      * NOTE: If you change the name of this method, update MyAsyncUncaughtExceptionHandler
      */
     @Async
     @Transactional
     fun exportAssignment(assignmentId: String, includeSubmissions: Boolean, taskId: String) {
+        pendingTasks.put(taskId, createExport(assignmentId, includeSubmissions))
+    }
+
+    /**
+     * Handles the exportation of several assignments at once, producing one .dp file per assignment.
+     *
+     * NOTE: If you change the name of this method, update MyAsyncUncaughtExceptionHandler
+     */
+    @Async
+    @Transactional
+    fun exportAssignments(assignmentIds: List<String>, includeSubmissions: Boolean, taskId: String) {
+        val exports = assignmentIds.map { createExport(it, includeSubmissions) }
+        pendingTasks.put(taskId, PendingMultipleExports(exports))
+    }
+
+    /**
+     * Creates the .dp file of a single assignment and (optionally) of its submissions.
+     *
+     * @return the name to give to the downloaded file and the file itself
+     */
+    private fun createExport(assignmentId: String, includeSubmissions: Boolean): PendingExport {
 
         val assignment = assignmentRepository.findById(assignmentId).orElse(null)
             ?: throw IllegalArgumentException("assignment ${assignmentId} is not registered")
@@ -517,8 +538,7 @@ class AssignmentService(
             val zipFile = zipService.createZipFromFolder(tempFolder.name, tempFolder)
             LOG.info("Created ${zipFile.absolutePath} with submissions from ${assignment.id}")
 
-            // put the result in the pending tasks so that the others can check it later
-            pendingTasks.put(taskId, PendingExport(fileName, zipFile))
+            return PendingExport(fileName, zipFile)
         } finally {
             tempFolder.deleteRecursively()
         }

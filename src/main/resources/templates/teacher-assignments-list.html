@@ -28,9 +28,46 @@
         <div class="alert alert-danger" th:text="${error}"/>
     </div>
 
-    <table class="table myDataTable">
+    <div class="bulk-scope" data-bulk-scope="bulkForm">
+
+        <form id="bulkForm" method="post" th:action="@{/assignment/export}"></form>
+
+        <div class="bulk-toolbar clearfix">
+            <div class="pull-right text-right">
+
+                <input type="checkbox" id="bulkMode" class="bulk-mode sr-only"/>
+                <label for="bulkMode" class="bulk-mode-label btn btn-default btn-sm">
+                    <span class="glyphicon glyphicon-check"></span> Select multiple
+                </label>
+
+                <div class="btn-group bulk-bar">
+                    <button type="button" class="btn btn-default btn-sm dropdown-toggle" data-bulk-action
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Bulk actions <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-right">
+                        <li>
+                            <button form="bulkForm" th:formaction="@{/assignment/export}">
+                                <span class="glyphicon glyphicon-export"></span> Export
+                            </button>
+                        </li>
+                        <li>
+                            <button form="bulkForm" th:formaction="@{/assignment/export}"
+                                    name="includeSubmissions" value="true">
+                                <span class="glyphicon glyphicon-export"></span> Export with submissions
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+
+                <p class="bulk-count text-muted"><span data-bulk-count>0</span> selected</p>
+            </div>
+        </div>
+
+    <table class="table table-hover myDataTable table-selectable">
         <thead>
         <tr>
+            <th class="bulk-column"></th>
             <th>Assignment ID</th>
             <th><select class="selectpicker" multiple data-live-search="true" title="Tags">
                 <option th:each="tag: ${allTags}" th:text="${tag.name}" th:selected="${tag.selected}">
@@ -45,6 +82,10 @@
         <tbody>
         <!--/*@thymesVar id="assignments" type="java.util.ArrayList<org.dropproject.dao.Assignment>"*/-->
         <tr th:each="assignment : ${assignments}">
+            <td class="bulk-column">
+                <input type="checkbox" form="bulkForm" name="ids" data-bulk-item
+                       th:value="${assignment.id}" th:attr="aria-label='Select ' + ${assignment.id}"/>
+            </td>
             <td th:text="${assignment.id}" th:title="${assignment.name}"></td>
             <td class="space-between">
                 <span th:each="tag: ${assignment.tagsStr}" th:text="${tag}" class="label label-info" />
@@ -104,6 +145,8 @@
         </tr>
         </tbody>
     </table>
+
+    </div>
 
     <a th:if="${!archived}" th:href="@{/assignment/new}" class="btn btn-primary">Create Assignment</a>
     <a th:if="${!archived}" th:href="@{/assignment/import}" class="btn btn-default"><span class="glyphicon glyphicon-import"></span> Import Assignment</a>
@@ -166,12 +209,13 @@
         var table = $('.myDataTable').DataTable({
             "paging": false,
             "ordering": true,
-            "order": [[3, 'desc'], [2, 'desc']],
+            "autoWidth": false,
+            "order": [[4, 'desc'], [3, 'desc']],
             "info": false,
             "searching": false,
             "columnDefs": [
                 {
-                    "targets": [0, 1, 4, 5, 6],
+                    "targets": [0, 1, 2, 5, 6, 7],
                     "orderable": false
                 }
             ]
@@ -186,12 +230,15 @@
             "paging": true,
             "pageLength": 25,
             "ordering": true,
-            "order": [[2, 'desc']],
+            "autoWidth": false,
+            "order": [[3, 'desc']],
             "info": false,
             "searching": false,
+            // the table, followed by a row with the number of entries on the left and the pages on the right
+            "dom": "t<'row'<'col-sm-6'l><'col-sm-6'p>>",
             "columnDefs": [
                 {
-                    "targets": [0, 1, 3, 4],
+                    "targets": [0, 1, 2, 4, 5],
                     "orderable": false
                 }
             ]
