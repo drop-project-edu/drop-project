@@ -583,13 +583,13 @@ class AssignmentService(
         }
 
         if (submissionsJSONFile.exists()) {
-            val errorMessage2 = importSubmissionsFromImportedFile(mapper, submissionsJSONFile)
+            val errorMessage2 = importSubmissionsFromImportedFile(mapper, submissionsJSONFile, assignmentId)
             if (errorMessage2 != null) {
                 return AssignmentImportResult("error", errorMessage2, "redirect:/assignment/import")
             }
 
             if (gitSubmissionsJSONFile.exists()) {
-                val errorMessage3 = importGitSubmissionsFromImportedFile(mapper, gitSubmissionsJSONFile)
+                val errorMessage3 = importGitSubmissionsFromImportedFile(mapper, gitSubmissionsJSONFile, assignmentId)
                 if (errorMessage3 != null) {
                     return AssignmentImportResult("error", errorMessage3, "redirect:/assignment/import")
                 }
@@ -613,8 +613,13 @@ class AssignmentService(
 
     }
 
+    /**
+     * Imports the submissions contained in [submissionsJSONFile] into the assignment identified by [assignmentId],
+     * which is the assignment that was just imported.
+     */
     fun importSubmissionsFromImportedFile(mapper: ObjectMapper,
-                                          submissionsJSONFile: File): String? {
+                                          submissionsJSONFile: File,
+                                          assignmentId: String): String? {
 
         val submissions = mapper.readValue(submissionsJSONFile, object : TypeReference<List<SubmissionExport>?>() {})
 
@@ -622,8 +627,16 @@ class AssignmentService(
             return "Error: File doesn't contain submissions"
         }
 
-        // find the assignmentId and make sure it exists
-        val assignmentId = submissions[0].assignmentId
+        // the submissions must belong to the assignment that was imported from this same file. Otherwise, this
+        // would be a way of injecting submissions into any other empty assignment of this server, even if it
+        // belongs to another teacher
+        val otherAssignmentId = submissions.find { it.assignmentId != assignmentId }?.assignmentId
+        if (otherAssignmentId != null) {
+            return "Error: This file contains submissions of another assignment ($otherAssignmentId). " +
+                    "Please import a .dp file that was exported by Drop Project."
+        }
+
+        // make sure the assignment exists
         if (assignmentRepository.findById(assignmentId).isEmpty) {
             return "Error: You are importing submissions to an assignment ($assignmentId) that doesn't exist. " +
                     "First, please create that assignment."
@@ -782,13 +795,25 @@ class AssignmentService(
         newAssignment.gitCurrentHash = gitClient.getLastCommitInfo(git)?.sha1
     }
 
+    /**
+     * Imports the git submissions contained in [submissionsJSONFile] into the assignment identified by
+     * [assignmentId], which is the assignment that was just imported.
+     */
     fun importGitSubmissionsFromImportedFile(mapper: ObjectMapper,
-                                             submissionsJSONFile: File): String? {
+                                             submissionsJSONFile: File,
+                                             assignmentId: String): String? {
 
         val gitSubmissions = mapper.readValue(submissionsJSONFile, object : TypeReference<List<GitSubmissionExport>?>() {})
 
         if (gitSubmissions.isNullOrEmpty()) {
             return "Error: File doesn't contain git submissions"
+        }
+
+        // just like the submissions, the git submissions must belong to the assignment that was imported
+        val otherAssignmentId = gitSubmissions.find { it.assignmentId != assignmentId }?.assignmentId
+        if (otherAssignmentId != null) {
+            return "Error: This file contains git submissions of another assignment ($otherAssignmentId). " +
+                    "Please import a .dp file that was exported by Drop Project."
         }
 
         gitSubmissions.forEachIndexed { index, it ->
