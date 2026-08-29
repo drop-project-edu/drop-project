@@ -109,6 +109,14 @@ class ZipService {
         zipFile.entries.iterator().forEachRemaining { entry ->
             try {
                 val outFile = File(destinationFolder, entry.getName())
+
+                // an entry named, for example, "x/../../../evil.txt" would be written outside of the destination
+                // folder (this is known as the "zip slip" vulnerability), so those entries are refused
+                if (!outFile.canonicalFile.toPath().startsWith(destinationFolder.canonicalFile.toPath())) {
+                    throw StorageException("Failed to unzip ${originalFilename} - the entry ${entry.getName()} " +
+                            "would be written outside of the destination folder")
+                }
+
                 if (entry.isDirectory) {
                     outFile.mkdirs()
                     outFile.setWritable(true) // Set directory writable
