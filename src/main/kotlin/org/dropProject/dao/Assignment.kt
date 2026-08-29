@@ -22,6 +22,7 @@ package org.dropproject.dao
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonView
 import org.dropproject.data.JSONViews
 import org.dropproject.extensions.format
@@ -204,6 +205,9 @@ data class Assignment(
     var projectGroupRestrictions: ProjectGroupRestrictions? = null,
 ) {
 
+    // READ_ONLY because this property has no setter: without it, importing an assignment fails with
+    // "Should never call set() on setterless property ('tagsStr')", since the exports include it
+    @get:JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @get:JsonView(JSONViews.TeacherAPI::class)
     @get:Transient
     val tagsStr: List<String>
