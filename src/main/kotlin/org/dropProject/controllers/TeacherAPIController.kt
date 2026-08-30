@@ -37,6 +37,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.AccessDeniedException
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.ui.ModelMap
 import org.springframework.web.bind.annotation.*
 import java.nio.file.Files
@@ -203,6 +204,7 @@ class TeacherAPIController(
     @GetMapping(value = ["/assignmentSearch/{query}"], produces = [MediaType.APPLICATION_JSON_VALUE])
     @JsonView(JSONViews.TeacherAPI::class)
     @Operation(summary = "Get all assignments that match the query value")
+    @Transactional(readOnly = true)  // accessing tagsStr needs an open session, since tags are lazily fetched
     fun searchAssignments(@PathVariable("query") query: String, principal: Principal): ResponseEntity<List<StudentListResponse>> {
         val result = assignmentRepository.findAll()
             .filter {
