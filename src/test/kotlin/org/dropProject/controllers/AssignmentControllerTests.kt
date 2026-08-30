@@ -19,6 +19,7 @@
  */
 package org.dropproject.controllers
 
+import org.junit.jupiter.api.Tag
 import org.dropproject.DropProjectIntegrationTest
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
@@ -76,6 +77,7 @@ const val sampleJavaAssignmentWithJUnit5Repo = "git@github.com:drop-project-edu/
 
 @TestMethodOrder(MethodOrderer.MethodName::class)
 @DropProjectIntegrationTest
+@Tag("integration")
 class AssignmentControllerTests {
 
     @Autowired

@@ -19,6 +19,7 @@
  */
 package org.dropproject.controllers
 
+import org.junit.jupiter.api.Tag
 import org.dropproject.DropProjectIntegrationTest
 import org.dropproject.TestsHelper
 import org.dropproject.dao.Assignment
@@ -50,6 +51,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.view
 import java.io.File
 
 @DropProjectIntegrationTest
+@Tag("integration")
 class UploadKotlinControllerTests {
 
     @Autowired

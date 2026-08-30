@@ -32,6 +32,8 @@
 		<license.licenseName>apache_v2</license.licenseName>
 		<orchid.version>0.21.1</orchid.version>
 		<antlr.version>4.13.0</antlr.version>
+		<!-- tests tagged @Tag("integration") are excluded by the 'fast' profile (mvn test -Pfast) -->
+		<surefire.excludedGroups></surefire.excludedGroups>
 	</properties>
 
 	<dependencies>
@@ -337,6 +339,13 @@
 				</dependency>
 			</dependencies>
 		</profile>
+		<profile>
+			<!-- quick feedback loop: skips the tests that run real maven builds or reach github.com -->
+			<id>fast</id>
+			<properties>
+				<surefire.excludedGroups>integration</surefire.excludedGroups>
+			</properties>
+		</profile>
 	</profiles>
 
 	<pluginRepositories>
@@ -429,6 +438,9 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>3.5.3</version>
+				<configuration>
+					<excludedGroups>${surefire.excludedGroups}</excludedGroups>
+				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.jacoco</groupId>

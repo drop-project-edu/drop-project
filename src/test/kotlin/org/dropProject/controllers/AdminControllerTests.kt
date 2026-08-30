@@ -19,6 +19,7 @@
  */
 package org.dropproject.controllers
 
+import org.junit.jupiter.api.Tag
 import org.dropproject.DropProjectIntegrationTest
 import org.dropproject.TestsHelper
 import org.dropproject.dao.Assignment
@@ -58,6 +59,7 @@ import java.util.concurrent.TimeUnit
 
 @TestMethodOrder(MethodOrderer.MethodName::class)
 @DropProjectIntegrationTest
+@Tag("integration")
 class AdminControllerTests {
 
     @Autowired
@@ -199,8 +201,8 @@ class AdminControllerTests {
 
         try {
             // the submission row is saved (with status SUBMITTED) before the Maven build even starts, so it's
-            // safe to assume it'll be submission #1 in this freshly-dirtied context, well before the build itself
-            // (which never finishes on its own) completes
+            // safe to assume it'll be submission #1 (ResetStateExtension restarts identities between tests),
+            // well before the build itself (which never finishes on its own) completes
             val submissionDeadline = System.currentTimeMillis() + 10_000
             while (!submissionRepository.findById(1).isPresent && System.currentTimeMillis() < submissionDeadline) {
                 Thread.sleep(200)

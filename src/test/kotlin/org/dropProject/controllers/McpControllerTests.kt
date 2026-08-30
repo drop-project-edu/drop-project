@@ -19,6 +19,7 @@
  */
 package org.dropproject.controllers
 
+import org.junit.jupiter.api.Tag
 import org.dropproject.DropProjectIntegrationTest
 import org.dropproject.TestsHelper
 import org.dropproject.dao.Assignment
@@ -35,6 +36,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 
 @DropProjectIntegrationTest
+@Tag("integration")
 class McpControllerTests: ApiTestSupport {
 
     @Autowired

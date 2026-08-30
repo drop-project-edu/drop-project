@@ -19,6 +19,7 @@
  */
 package org.dropproject.controllers
 
+import org.junit.jupiter.api.Tag
 import org.dropproject.DropProjectIntegrationTest
 import org.dropproject.config.DropProjectProperties
 import org.dropproject.dao.Assignment
@@ -51,6 +52,7 @@ import java.io.File
  * so this class turns it on explicitly.
  */
 @DropProjectIntegrationTest
+@Tag("integration")
 // merged with the @TestPropertySource brought in by @DropProjectIntegrationTest
 @TestPropertySource(properties = ["drop-project.git.reject-public-student-repositories=true"])
 class PublicGitRepositoryTests {

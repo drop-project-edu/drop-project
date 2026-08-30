@@ -19,6 +19,7 @@
  */
 package org.dropproject.services
 
+import org.junit.jupiter.api.Tag
 import org.apache.commons.io.FileUtils
 import org.eclipse.jgit.api.Git
 import org.junit.jupiter.api.AfterEach
@@ -59,6 +60,7 @@ class GitClientTests {
     }
 
     @Test
+    @Tag("integration")  // hits github.com
     fun `is publicly readable`() {
 
         // a repository owned by the drop project organization that is public and is expected to stay public

@@ -19,6 +19,7 @@
  */
 package org.dropproject.controllers
 
+import org.junit.jupiter.api.Tag
 import org.dropproject.DropProjectIntegrationTest
 import org.junit.jupiter.api.Assertions.*
 import org.dropproject.TestsHelper
@@ -66,6 +67,7 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 
 @DropProjectIntegrationTest
+@Tag("integration")
 class UploadControllerTests {
 
     @Autowired

@@ -19,6 +19,7 @@
  */
 package org.dropproject.controllers
 
+import org.junit.jupiter.api.Tag
 import org.dropproject.DropProjectIntegrationTest
 import net.lingala.zip4j.ZipFile
 import org.apache.commons.io.FileUtils
@@ -56,6 +57,7 @@ import kotlin.collections.LinkedHashMap
 
 
 @DropProjectIntegrationTest
+@Tag("integration")
 class ReportControllerTests {
 
     @Autowired
@@ -1135,9 +1137,14 @@ class ReportControllerTests {
             listOf(Pair("student1", "Student 1")))
         testsHelper.uploadProject(this.mvc, "projectOK", "testJavaProj", STUDENT_1,
             listOf(Pair("student1", "Student 1")))
-        Thread.sleep(1000)  // to make sure the last submission is registered with a submissionDate superior to the previous ones
         testsHelper.uploadProject(this.mvc, "projectOK", "sampleJavaProject", STUDENT_1,
             listOf(Pair("student1", "Student 1"), Pair("student2", "Student 2")))
+
+        // make sure the last submission has a submissionDate superior to the previous ones,
+        // since the sorted history assertions below depend on it
+        val lastSubmission = submissionRepository.findAll().maxByOrNull { it.id }!!
+        lastSubmission.submissionDate = Date(lastSubmission.submissionDate.time + 60_000)
+        submissionRepository.save(lastSubmission)
 
         mvc.perform(get("/studentHistoryForm").with(user(TEACHER_1))).andExpect(status().isOk)
 

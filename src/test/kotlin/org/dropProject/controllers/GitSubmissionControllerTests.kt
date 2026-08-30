@@ -19,6 +19,7 @@
  */
 package org.dropproject.controllers
 
+import org.junit.jupiter.api.Tag
 import org.dropproject.DropProjectIntegrationTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
@@ -41,6 +42,7 @@ import org.hamcrest.Matchers.hasProperty
 import java.io.File
 
 @DropProjectIntegrationTest
+@Tag("integration")
 class GitSubmissionControllerTests {
 
     @Autowired
