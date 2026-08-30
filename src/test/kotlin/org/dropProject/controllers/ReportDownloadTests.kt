@@ -19,6 +19,9 @@
  */
 package org.dropproject.controllers
 
+import org.dropproject.TestUsers.STUDENT_1
+import org.dropproject.TestUsers.STUDENT_2
+import org.dropproject.TestUsers.TEACHER_1
 import org.dropproject.extensions.formatDefault
 import org.junit.jupiter.api.Tag
 import org.dropproject.DropProjectIntegrationTest
@@ -46,7 +49,7 @@ class ReportDownloadTests : ReportTestBase() {
     @Test
     fun `download maven project`() {
 
-        val submissionId = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", defaultAssignmentId, STUDENT_1)
+        val submissionId = submissionFixtures.uploadProject("projectCompilationErrors", defaultAssignmentId, STUDENT_1)
 
         this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
             .andExpect(status().isOk())
@@ -67,7 +70,7 @@ class ReportDownloadTests : ReportTestBase() {
             zipService.createZipFromFolder("original", resourceLoader.getResource("file:src/test/sampleProjects/compact/java/projectCompilationErrors").file)
         originalZipFile.deleteOnExit()
 
-        val submissionId = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", defaultAssignmentId, STUDENT_1)
+        val submissionId = submissionFixtures.uploadProject("projectCompilationErrors", defaultAssignmentId, STUDENT_1)
 
         this.mvc.perform(
             get("/buildReport/$submissionId")
@@ -89,9 +92,8 @@ class ReportDownloadTests : ReportTestBase() {
     @Test
     fun `download original all`() {
 
-        testsHelper.uploadProject(this.mvc, "projectCompilationErrors", defaultAssignmentId, STUDENT_1)
-        testsHelper.uploadProject(
-            this.mvc, "projectJUnitErrors", defaultAssignmentId, STUDENT_2,
+        submissionFixtures.uploadProject("projectCompilationErrors", defaultAssignmentId, STUDENT_1)
+        submissionFixtures.uploadProject("projectJUnitErrors", defaultAssignmentId, STUDENT_2,
             listOf(STUDENT_2.username to "Student 2")
         )
 
@@ -116,9 +118,8 @@ class ReportDownloadTests : ReportTestBase() {
     @Test
     fun `download mavenized all`() {
 
-        testsHelper.uploadProject(this.mvc, "projectCompilationErrors", defaultAssignmentId, STUDENT_1)
-        testsHelper.uploadProject(
-            this.mvc, "projectJUnitErrors", defaultAssignmentId, STUDENT_2,
+        submissionFixtures.uploadProject("projectCompilationErrors", defaultAssignmentId, STUDENT_1)
+        submissionFixtures.uploadProject("projectJUnitErrors", defaultAssignmentId, STUDENT_2,
             listOf(STUDENT_2.username to "Student 2")
         )
 
@@ -146,8 +147,7 @@ class ReportDownloadTests : ReportTestBase() {
         assignment.submissionMethod = SubmissionMethod.GIT
         assignmentRepository.save(assignment)
 
-        testsHelper.connectToGitRepositoryAndBuildReport(
-            mvc, gitSubmissionRepository, "sampleJavaProject",
+        gitFixtures.connectToGitRepositoryAndBuildReport("sampleJavaProject",
             "git@github.com:drop-project-edu/sampleJavaSubmission.git", "student1"
         )
 
@@ -167,8 +167,7 @@ class ReportDownloadTests : ReportTestBase() {
         assignment.submissionMethod = SubmissionMethod.GIT
         assignmentRepository.save(assignment)
 
-        testsHelper.connectToGitRepositoryAndBuildReport(
-            mvc, gitSubmissionRepository, "sampleJavaProject",
+        gitFixtures.connectToGitRepositoryAndBuildReport("sampleJavaProject",
             "git@github.com:drop-project-edu/sampleJavaSubmission.git", "student1"
         )
 
@@ -190,31 +189,28 @@ class ReportDownloadTests : ReportTestBase() {
         try {
             // create an assignment with two commits: a copy of sampleJavaProject and then a change "MARKER-NEW"
             val (assignment, assignmentCommitOld, assignmentCommitNew) =
-                testsHelper.createHistoricalAssignment(assignmentRepository, dropProjectProperties)
+                assignmentFixtures.createHistoricalAssignment()
             // create a submission with two commits: "MARKER-STUDENT-CODE-1" and then "MARKER-STUDENT-CODE-2"
             val (gitSubmission, studentCommitA, studentCommitB) =
-                testsHelper.createHistoricalGitSubmission(
-                    gitSubmissionRepository, projectGroupRepository, authorRepository, dropProjectProperties, assignment
+                gitFixtures.createHistoricalGitSubmission(assignment
                 )
 
             val now = Date()
             // first submission associated with the first assignment commit and the first student commit
-            val submission1 = testsHelper.saveHistoricalSubmission(
-                submissionGitInfoRepository, gitSubmission, assignment, assignmentCommitOld, studentCommitA, now
+            val submission1 = submissionFixtures.saveHistoricalSubmission(gitSubmission, assignment, assignmentCommitOld, studentCommitA, now
             )
             // second submission associated with the second assignment commit and the second student commit
-            val submission2 = testsHelper.saveHistoricalSubmission(
-                submissionGitInfoRepository, gitSubmission, assignment, assignmentCommitNew, studentCommitB, Date(now.time + 60000)
+            val submission2 = submissionFixtures.saveHistoricalSubmission(gitSubmission, assignment, assignmentCommitNew, studentCommitB, Date(now.time + 60000)
             )
 
             assertTrue(submission2.submissionDate.after(submission1.submissionDate))
 
             // downloading the OLDER submission must trigger the on-demand rebuild path, reflecting
             // both the older student commit and the teacher files as they were at that time
-            val zip1 = testsHelper.downloadMavenProjectZip(mvc, submission1.id)
-            assertTrue(testsHelper.zipEntryContent(zip1, "Main.java").contains("MARKER-STUDENT-CODE-1"))
-            assertFalse(testsHelper.zipEntryContent(zip1, "Main.java").contains("MARKER-STUDENT-CODE-2"))
-            assertFalse(testsHelper.zipEntryContent(zip1, "TestTeacherProject.java").contains("MARKER-NEW"))
+            val zip1 = submissionFixtures.downloadMavenProjectZip(submission1.id)
+            assertTrue(submissionFixtures.zipEntryContent(zip1, "Main.java").contains("MARKER-STUDENT-CODE-1"))
+            assertFalse(submissionFixtures.zipEntryContent(zip1, "Main.java").contains("MARKER-STUDENT-CODE-2"))
+            assertFalse(submissionFixtures.zipEntryContent(zip1, "TestTeacherProject.java").contains("MARKER-NEW"))
 
         } finally {
             FileUtils.deleteQuietly(assignmentFolder)
@@ -229,8 +225,7 @@ class ReportDownloadTests : ReportTestBase() {
         assignmentRepository.save(assignment)
 
         // TODO should have more than one group submitting to properly test this
-        testsHelper.connectToGitRepositoryAndBuildReport(
-            mvc, gitSubmissionRepository, "sampleJavaProject",
+        gitFixtures.connectToGitRepositoryAndBuildReport("sampleJavaProject",
             "git@github.com:drop-project-edu/sampleJavaSubmission.git", "student1"
         )
 
@@ -254,7 +249,7 @@ class ReportDownloadTests : ReportTestBase() {
     @Test
     fun `download submission asset`() {
 
-        val submissionId = testsHelper.uploadProject(this.mvc, "projectWithREADME", defaultAssignmentId, STUDENT_1)
+        val submissionId = submissionFixtures.uploadProject("projectWithREADME", defaultAssignmentId, STUDENT_1)
 
         val result = this.mvc.perform(get("/buildReport/$submissionId/cross_red_icon.png")
             .with(user(STUDENT_1)))
@@ -276,14 +271,12 @@ class ReportDownloadTests : ReportTestBase() {
         val now = Date()
         val nowStr = now.formatDefault()
 
-        testsHelper.makeSeveralSubmissions(
-            listOf(
+        submissionFixtures.makeSeveralSubmissions(listOf(
                 "projectInvalidStructure1",
                 "projectInvalidStructure1",
                 "projectOK",
                 "projectInvalidStructure1"
-            ), mvc, now
-        )
+            ), now)
 
         // mark all as final, otherwise the export will be empty
         val submissions = submissionRepository.findAll()
@@ -322,14 +315,12 @@ class ReportDownloadTests : ReportTestBase() {
         val now = Date()
         val nowStr = now.formatDefault()
 
-        testsHelper.makeSeveralSubmissions(
-            listOf(
+        submissionFixtures.makeSeveralSubmissions(listOf(
                 "projectWith1StudentTest",
                 "projectWith1StudentTest",
                 "projectWith1StudentTest",
                 "projectWith1StudentTest"
-            ), mvc, now
-        )
+            ), now)
 
         // mark all as final, otherwise the export will be empty
         val submissions = submissionRepository.findAll()
@@ -373,14 +364,12 @@ class ReportDownloadTests : ReportTestBase() {
         val now = Date()
         val nowStr = now.formatDefault()
 
-        testsHelper.makeSeveralSubmissions(
-            listOf(
+        submissionFixtures.makeSeveralSubmissions(listOf(
                 "projectInvalidStructure1",
                 "projectInvalidStructure1",
                 "projectOK",
                 "projectInvalidStructure1"
-            ), mvc, now
-        )
+            ), now)
 
         // mark all as final, otherwise the export will be empty
         val submissions = submissionRepository.findAll()

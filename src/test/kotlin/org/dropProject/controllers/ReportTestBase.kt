@@ -19,6 +19,9 @@
  */
 package org.dropproject.controllers
 
+import org.dropproject.AssignmentFixtures
+import org.dropproject.SubmissionFixtures
+import org.dropproject.GitFixtures
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -31,7 +34,6 @@ import org.springframework.security.core.userdetails.User
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import java.io.File
-import org.dropproject.TestsHelper
 import org.dropproject.dao.*
 import org.dropproject.data.*
 import org.dropproject.forms.SubmissionMethod
@@ -78,7 +80,11 @@ abstract class ReportTestBase {
     lateinit var projectGroupRepository: ProjectGroupRepository
 
     @Autowired
-    lateinit var testsHelper: TestsHelper
+    lateinit var assignmentFixtures: AssignmentFixtures
+    @Autowired
+    lateinit var submissionFixtures: SubmissionFixtures
+    @Autowired
+    lateinit var gitFixtures: GitFixtures
 
     @Autowired
     lateinit var zipService: ZipService
@@ -87,12 +93,6 @@ abstract class ReportTestBase {
     lateinit var assignmentService: AssignmentService
 
     val defaultAssignmentId = "testJavaProj"
-
-    val STUDENT_1 = User("student1", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
-
-    val STUDENT_2 = User("student2", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
-
-    val TEACHER_1 = User("teacher1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
 
     @BeforeEach
     fun setup() {
@@ -103,40 +103,9 @@ abstract class ReportTestBase {
         folder.mkdirs()
 
         // create initial assignments
-        val assignment01 = Assignment(
-            id = "testJavaProj", name = "Test Project (for automatic tests)",
-            packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
-            submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
-            gitRepositoryFolder = "testJavaProj"
-        )
-        assignmentRepository.save(assignment01)
-
-        assignmentTestMethodRepository.save(
-            AssignmentTestMethod(
-                assignment = assignment01,
-                testClass = "TestTeacherProject", testMethod = "testFuncaoParaTestar"
-            )
-        )
-        assignmentTestMethodRepository.save(
-            AssignmentTestMethod(
-                assignment = assignment01,
-                testClass = "TestTeacherProject", testMethod = "testFuncaoLentaParaTestar"
-            )
-        )
-        assignmentTestMethodRepository.save(
-            AssignmentTestMethod(
-                assignment = assignment01,
-                testClass = "TestTeacherHiddenProject", testMethod = "testFuncaoParaTestarQueNaoApareceAosAlunos"
-            )
-        )
-
-        val assignment02 = Assignment(
-            id = "sampleJavaProject", name = "Test Project (for automatic tests)",
-            packageName = "org.dropProject.samples.sampleJavaAssignment", ownerUserId = "teacher1",
-            submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummy",
-            gitRepositoryFolder = "sampleJavaProject"
-        )
-        assignmentRepository.save(assignment02)
+        assignmentFixtures.createDefaultAssignment(withTestMethods = true)
+        assignmentFixtures.createDefaultAssignment(id = "sampleJavaProject",
+            packageName = "org.dropProject.samples.sampleJavaAssignment")
     }
 
     @AfterEach

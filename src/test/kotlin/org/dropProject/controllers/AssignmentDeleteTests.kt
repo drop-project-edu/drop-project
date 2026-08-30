@@ -19,6 +19,8 @@
  */
 package org.dropproject.controllers
 
+import org.dropproject.TestUsers.STUDENT_1
+import org.dropproject.TestUsers.TEACHER_1
 import org.junit.jupiter.api.Tag
 import org.dropproject.DropProjectIntegrationTest
 import org.apache.commons.io.FileUtils
@@ -47,9 +49,6 @@ class AssignmentDeleteTests : AssignmentTestBase() {
     @Test
     fun `delete assignment`() {
 
-        val STUDENT_1 = User("student1", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
-        val TEACHER_1 = User("teacher1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
-
         // make a copy of the "testJavaProj" assignment files and create an assignment based on the copy
         // so that we can safely delete it, without affecting the original files
         val assignmentFolder = File(dropProjectProperties.assignments.rootLocation, "testJavaProjForDelete")
@@ -69,7 +68,7 @@ class AssignmentDeleteTests : AssignmentTestBase() {
 
         // make a submission
         val submissionId =
-            testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1).toLong()
+            submissionFixtures.uploadProject("projectCompilationErrors", "testJavaProj", STUDENT_1).toLong()
 
         // try to delete the assignment but DP will issue an error since it has submissions
         this.mvc.perform(
@@ -100,8 +99,6 @@ class AssignmentDeleteTests : AssignmentTestBase() {
 
     @Test
     fun `delete assignment with other assignments`() {
-
-        val TEACHER_1 = User("teacher1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
 
         // make a copy of the "testJavaProj" assignment files and create an assignment based on the copy
         // so that we can safely delete it, without affecting the original files
@@ -155,9 +152,6 @@ class AssignmentDeleteTests : AssignmentTestBase() {
     @Test
     fun `delete assignment with force`() {
 
-        val STUDENT_1 = User("student1", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
-        val TEACHER_1 = User("teacher1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
-
         // make a copy of the "testJavaProj" assignment files and create an assignment based on the copy
         // so that we can safely delete it, without affecting the original files
         val assignmentFolder = File(dropProjectProperties.assignments.rootLocation, "testJavaProjForDelete")
@@ -177,7 +171,7 @@ class AssignmentDeleteTests : AssignmentTestBase() {
 
         // make a submission
         val submissionId =
-            testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1).toLong()
+            submissionFixtures.uploadProject("projectCompilationErrors", "testJavaProj", STUDENT_1).toLong()
         val submission = submissionRepository.findById(submissionId).get()
 
         // try to delete the assignment with force = true using someone who hasn't the admin role
@@ -213,8 +207,6 @@ class AssignmentDeleteTests : AssignmentTestBase() {
 
     @Test
     fun `delete assignment and check repositories`() {
-        val STUDENT_1 = User("student1", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
-        val TEACHER_1 = User("teacher1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
 
         // make a copy of the "testJavaProj" assignment files and create an assignment based on the copy
         // so that we can safely delete it, without affecting the original files
@@ -308,7 +300,7 @@ class AssignmentDeleteTests : AssignmentTestBase() {
         )
         assignmentRepository.save(assignment02)
 
-        testsHelper.makeSeveralSubmissions(listOf("projectOK", "projectInvalidStructure1"), mvc)
+        submissionFixtures.makeSeveralSubmissions(listOf("projectOK", "projectInvalidStructure1"))
         assertEquals(2, submissionRepository.countByAssignmentIdAndStatusNot("testJavaProj",
             SubmissionStatus.DELETED.code))
 

@@ -19,11 +19,11 @@
  */
 package org.dropproject.controllers
 
+import org.dropproject.TestUsers.TEACHER_1
 import org.junit.jupiter.api.Tag
 import org.dropproject.DropProjectIntegrationTest
-import org.dropproject.TestsHelper
-import org.dropproject.TestsHelper.Companion.sampleJavaAssignmentPrivateKey
-import org.dropproject.TestsHelper.Companion.sampleJavaAssignmentPublicKey
+import org.dropproject.TestKeys.sampleJavaAssignmentPrivateKey
+import org.dropproject.TestKeys.sampleJavaAssignmentPublicKey
 import org.dropproject.dao.*
 import org.dropproject.repository.*
 import org.dropproject.services.GitClient
@@ -51,8 +51,7 @@ class AssignmentGitConnectionTests : AssignmentTestBase() {
     fun `create new assignment and connect with github`() {
 
         try {
-            val createdAssignment = testsHelper.createAndSetupAssignment(
-                mvc, assignmentRepository, "dummyAssignment1", "Dummy Assignment",
+            val createdAssignment = assignmentFixtures.createAndSetupAssignment("dummyAssignment1", "Dummy Assignment",
                 "org.dummy",
                 "UPLOAD", sampleJavaAssignmentRepo
             )
@@ -263,8 +262,7 @@ class AssignmentGitConnectionTests : AssignmentTestBase() {
     fun `create new kotlin assignment and connect with github`() {
 
         try {
-            val createdAssignment = testsHelper.createAndSetupAssignment(
-                mvc, assignmentRepository, "dummyAssignment1", "Dummy Kotlin Assignment",
+            val createdAssignment = assignmentFixtures.createAndSetupAssignment("dummyAssignment1", "Dummy Kotlin Assignment",
                 "org.dummy",
                 "UPLOAD", sampleKotlinAssignmentRepo, language = "KOTLIN"
             )
@@ -326,8 +324,7 @@ class AssignmentGitConnectionTests : AssignmentTestBase() {
 
         try {
             // create assignment, properly connected to git (sampleJavaAssignmentRepo)
-            testsHelper.createAndSetupAssignment(
-                mvc, assignmentRepository, "dummyAssignment", "Dummy Assignment",
+            assignmentFixtures.createAndSetupAssignment("dummyAssignment", "Dummy Assignment",
                 "org.dummy", "UPLOAD", sampleJavaAssignmentRepo,
                 teacherId = "teacher1", activateRightAfterCloning = false
             )
@@ -383,8 +380,7 @@ class AssignmentGitConnectionTests : AssignmentTestBase() {
     fun `refresh assignment git repository`() {
 
         try {
-            testsHelper.createAndSetupAssignment(
-                mvc, assignmentRepository, "dummyAssignment1", "Dummy Assignment",
+            assignmentFixtures.createAndSetupAssignment("dummyAssignment1", "Dummy Assignment",
                 "org.dummy",
                 "UPLOAD", sampleJavaAssignmentRepo
             )
@@ -409,12 +405,11 @@ class AssignmentGitConnectionTests : AssignmentTestBase() {
     @WithMockUser("teacher1", roles = ["TEACHER"])
     fun `refresh ssh keys for all assignments`() {
 
-//        println(GitClient().computeSshFingerprint(TestsHelper.sampleJavaAssignmentPublicKey))
+//        println(GitClient().computeSshFingerprint(TestKeys.sampleJavaAssignmentPublicKey))
         println(GitClient().computeSshFingerprint(ApplicationContextListener.sampleJavaAssignmentPublicKey))
 
         try {
-            val createdAssignment = testsHelper.createAndSetupAssignment(
-                mvc, assignmentRepository, "dummyAssignment1", "Dummy Assignment",
+            val createdAssignment = assignmentFixtures.createAndSetupAssignment("dummyAssignment1", "Dummy Assignment",
                 "org.dummy",
                 "UPLOAD", sampleJavaAssignmentRepo
             )

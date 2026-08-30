@@ -19,8 +19,11 @@
  */
 package org.dropproject.controllers
 
-import org.dropproject.TestsHelper.Companion.sampleJavaAssignmentPrivateKey
-import org.dropproject.TestsHelper.Companion.sampleJavaAssignmentPublicKey
+import org.dropproject.TestUsers.TEACHER_1
+import org.dropproject.TestUsers.TEACHER_2
+import org.dropproject.TestKeys
+import org.dropproject.TestKeys.sampleJavaAssignmentPrivateKey
+import org.dropproject.TestKeys.sampleJavaAssignmentPublicKey
 import org.dropproject.extensions.formatJustDate
 import org.junit.jupiter.api.Tag
 import org.dropproject.DropProjectIntegrationTest
@@ -29,7 +32,6 @@ import com.fasterxml.jackson.module.kotlin.KotlinModule
 import net.lingala.zip4j.ZipFile
 import net.lingala.zip4j.model.FileHeader
 import org.apache.commons.io.FileUtils
-import org.dropproject.TestsHelper
 import org.dropproject.dao.*
 import org.dropproject.data.SubmissionInfo
 import org.dropproject.config.PendingExport
@@ -61,8 +63,7 @@ class AssignmentImportExportTests : AssignmentTestBase() {
     fun `export assignment`() {
 
         try {
-            testsHelper.createAndSetupAssignment(
-                mvc, assignmentRepository, "dummyAssignment1", "Dummy Assignment",
+            assignmentFixtures.createAndSetupAssignment("dummyAssignment1", "Dummy Assignment",
                 "org.dummy",
                 "UPLOAD", sampleJavaAssignmentRepo,
                 dueDate = "2022-10-31T01:30:00.000-00:00"
@@ -111,8 +112,8 @@ class AssignmentImportExportTests : AssignmentTestBase() {
             assertEquals("SHOW_PROGRESS", node.at("/hiddenTestsVisibility").asText())
             assertFalse(node.at("/acceptsStudentTests").asBoolean())
             assertEquals(sampleJavaAssignmentRepo, node.at("/gitRepositoryUrl").asText())
-            assertEquals(TestsHelper.sampleJavaAssignmentPublicKey, node.at("/gitRepositoryPubKey").asText())
-            assertEquals(TestsHelper.sampleJavaAssignmentPrivateKey, node.at("/gitRepositoryPrivKey").asText())
+            assertEquals(TestKeys.sampleJavaAssignmentPublicKey, node.at("/gitRepositoryPubKey").asText())
+            assertEquals(TestKeys.sampleJavaAssignmentPrivateKey, node.at("/gitRepositoryPrivKey").asText())
             assertEquals("dummyAssignment1", node.at("/gitRepositoryFolder").asText())
 
             downloadedZipFile.delete()
@@ -144,12 +145,10 @@ class AssignmentImportExportTests : AssignmentTestBase() {
     fun `export several assignments`() {
 
         try {
-            testsHelper.createAndSetupAssignment(
-                mvc, assignmentRepository, "dummyAssignment1", "Dummy Assignment",
+            assignmentFixtures.createAndSetupAssignment("dummyAssignment1", "Dummy Assignment",
                 "org.dummy", "UPLOAD", sampleJavaAssignmentRepo
             )
-            testsHelper.createAndSetupAssignment(
-                mvc, assignmentRepository, "dummyAssignment2", "Dummy Kotlin Assignment",
+            assignmentFixtures.createAndSetupAssignment("dummyAssignment2", "Dummy Kotlin Assignment",
                 "org.dummy", "UPLOAD", sampleKotlinAssignmentRepo, language = "KOTLIN"
             )
 
@@ -203,16 +202,14 @@ class AssignmentImportExportTests : AssignmentTestBase() {
     fun `export assignments of another teacher`() {
 
         try {
-            testsHelper.createAndSetupAssignment(
-                mvc, assignmentRepository, "dummyAssignment1", "Dummy Assignment",
+            assignmentFixtures.createAndSetupAssignment("dummyAssignment1", "Dummy Assignment",
                 "org.dummy", "UPLOAD", sampleJavaAssignmentRepo
             )
 
             // the ids are sent by the browser, so a teacher must not be able to export the assignments of others
-            val teacher2 = User("teacher2", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
             this.mvc.perform(
                 post("/assignment/export")
-                    .with(user(teacher2))
+                    .with(user(TEACHER_2))
                     .param("ids", "dummyAssignment1")
             )
                 .andExpect(status().isForbidden)
@@ -265,22 +262,14 @@ class AssignmentImportExportTests : AssignmentTestBase() {
     @Test
     fun `export assignment and submissions`() {
 
-        val assignment01 = Assignment(
-            id = "testJavaProj", name = "Test Project (for automatic tests)",
-            packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
-            submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
-            gitRepositoryFolder = "testJavaProj"
-        )
-        assignmentRepository.save(assignment01)
+        assignmentFixtures.createDefaultAssignment()
 
-        testsHelper.makeSeveralSubmissions(
-            listOf(
+        submissionFixtures.makeSeveralSubmissions(listOf(
                 "projectInvalidStructure1",
                 "projectInvalidStructure1",
                 "projectOK",
                 "projectInvalidStructure1"
-            ), mvc
-        )
+            ))
 
         val result = this.mvc.perform(
             get("/assignment/export/testJavaProj?includeSubmissions=true")
@@ -418,8 +407,7 @@ class AssignmentImportExportTests : AssignmentTestBase() {
         )
         assignmentRepository.save(assignment01)
 
-        testsHelper.connectToGitRepositoryAndBuildReport(
-            mvc, gitSubmissionRepository, "testJavaProj",
+        gitFixtures.connectToGitRepositoryAndBuildReport("testJavaProj",
             "git@github.com:drop-project-edu/sampleJavaSubmission.git", "student1"
         )
 

@@ -47,8 +47,7 @@ class AssignmentEditTests : AssignmentTestBase() {
     fun `create new assignment and edit`() {
 
         try {
-            testsHelper.createAndSetupAssignment(
-                mvc, assignmentRepository, "dummyAssignment8", "Dummy Assignment",
+            assignmentFixtures.createAndSetupAssignment("dummyAssignment8", "Dummy Assignment",
                 "org.dummy",
                 "UPLOAD", sampleJavaAssignmentRepo
             )
@@ -128,8 +127,7 @@ class AssignmentEditTests : AssignmentTestBase() {
         val assignmentId = "revalidateOnEditTest"
         val assignmentFolder = File(dropProjectProperties.assignments.rootLocation, assignmentId)
         try {
-            val (assignment, _, _) = testsHelper.createHistoricalAssignment(
-                assignmentRepository, dropProjectProperties, assignmentId)
+            val (assignment, _, _) = assignmentFixtures.createHistoricalAssignment(assignmentId)
             assertTrue(assignment.active, "assignment should start active")
 
             // simulate the report that was produced when the assignment was connected to the git repository
@@ -177,8 +175,7 @@ class AssignmentEditTests : AssignmentTestBase() {
         val assignmentId = "revalidateOnEditTest2"
         val assignmentFolder = File(dropProjectProperties.assignments.rootLocation, assignmentId)
         try {
-            val (assignment, _, _) = testsHelper.createHistoricalAssignment(
-                assignmentRepository, dropProjectProperties, assignmentId)
+            val (assignment, _, _) = assignmentFixtures.createHistoricalAssignment(assignmentId)
 
             assignmentReportRepository.save(AssignmentReport(assignmentId = assignmentId,
                 type = AssignmentValidator.InfoType.INFO, message = "report before the edit", description = null))
@@ -219,8 +216,7 @@ class AssignmentEditTests : AssignmentTestBase() {
         val assignmentId = "rebuildWarningTest"
         val assignmentFolder = File(dropProjectProperties.assignments.rootLocation, assignmentId)
         try {
-            val (assignment, _, _) = testsHelper.createHistoricalAssignment(
-                assignmentRepository, dropProjectProperties, assignmentId)
+            val (assignment, _, _) = assignmentFixtures.createHistoricalAssignment(assignmentId)
 
             // a submission that was evaluated with the current configuration
             val group = ProjectGroup()
@@ -263,8 +259,7 @@ class AssignmentEditTests : AssignmentTestBase() {
         val assignmentId = "rebuildWarningTest2"
         val assignmentFolder = File(dropProjectProperties.assignments.rootLocation, assignmentId)
         try {
-            val (assignment, _, _) = testsHelper.createHistoricalAssignment(
-                assignmentRepository, dropProjectProperties, assignmentId)
+            val (assignment, _, _) = assignmentFixtures.createHistoricalAssignment(assignmentId)
 
             mvc.perform(
                 post("/assignment/new")

@@ -19,8 +19,9 @@
  */
 package org.dropproject.controllers
 
+import org.dropproject.AssignmentFixtures
+import org.dropproject.basicAuthHeader
 import org.dropproject.DropProjectIntegrationTest
-import org.dropproject.TestsHelper
 import org.dropproject.dao.*
 import org.dropproject.extensions.getContent
 import org.dropproject.forms.SubmissionMethod
@@ -43,6 +44,9 @@ import java.time.LocalDateTime
 
 @DropProjectIntegrationTest
 class TeacherAPIControllerTests: ApiTestSupport {
+
+    @Autowired
+    lateinit var assignmentFixtures: AssignmentFixtures
 
     @Autowired
     lateinit var mvc: MockMvc
@@ -74,8 +78,6 @@ class TeacherAPIControllerTests: ApiTestSupport {
     @Autowired
     lateinit var resourceLoader: ResourceLoader
 
-    @Autowired
-    lateinit var testsHelper: TestsHelper
 
     @Autowired
     lateinit var submissionService: SubmissionService
@@ -152,11 +154,7 @@ class TeacherAPIControllerTests: ApiTestSupport {
         authorRepository.deleteAll()
 
         // create initial assignment
-        val assignment01 = Assignment(id = "testJavaProj", name = "Test Project (for automatic tests)",
-            packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
-            submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummy",
-            gitRepositoryFolder = "testJavaProj")
-        assignmentRepository.save(assignment01)
+        assignmentFixtures.createDefaultAssignment()
         assigneeRepository.save(Assignee(assignmentId = "testJavaProj", authorUserId = "student1"))
 
         val author = Author(name = "Student 1", userId = "student1")
@@ -183,7 +181,7 @@ class TeacherAPIControllerTests: ApiTestSupport {
         this.mvc.perform(
             get("/api/teacher/assignments/current")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("student1", "invalid")))
+                .header("authorization", basicAuthHeader("student1", "invalid")))
             .andExpect(status().isUnauthorized)
     }
 
@@ -194,7 +192,7 @@ class TeacherAPIControllerTests: ApiTestSupport {
         this.mvc.perform(
             get("/api/teacher/assignments/current")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("student1", token)))
+                .header("authorization", basicAuthHeader("student1", token)))
             .andExpect(status().isForbidden)
             .andExpect(content().json("""{"error":"Access denied"}"""))
     }
@@ -206,7 +204,7 @@ class TeacherAPIControllerTests: ApiTestSupport {
         // most api clients don't set a content type on GET requests, but they must get the same 403 anyway
         val result = this.mvc.perform(
             get("/api/teacher/assignments/current")
-                .header("authorization", testsHelper.header("student1", token)))
+                .header("authorization", basicAuthHeader("student1", token)))
             .andExpect(status().isForbidden)
             .andReturn()
 
@@ -223,7 +221,7 @@ class TeacherAPIControllerTests: ApiTestSupport {
 
         this.mvc.perform(
             get("/api/teacher/download/1")
-                .header("authorization", testsHelper.header("admin", token)))
+                .header("authorization", basicAuthHeader("admin", token)))
             .andExpect(status().isForbidden)
             .andExpect(content().json("""{"error":"Access denied"}"""))
     }
@@ -235,7 +233,7 @@ class TeacherAPIControllerTests: ApiTestSupport {
         this.mvc.perform(
             get("/api/teacher/assignments/current")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("teacher1", token)))
+                .header("authorization", basicAuthHeader("teacher1", token)))
             .andExpect(status().isOk)
             .andExpect(content().json("""
                 [
@@ -262,7 +260,7 @@ class TeacherAPIControllerTests: ApiTestSupport {
         this.mvc.perform(
             get("/api/teacher/assignments/testJavaProj/submissions")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("teacher1", token)))
+                .header("authorization", basicAuthHeader("teacher1", token)))
             .andExpect(status().isOk)
             .andExpect(content().json("""
                 [
@@ -293,7 +291,7 @@ class TeacherAPIControllerTests: ApiTestSupport {
         this.mvc.perform(
             get("/api/teacher/assignments/testJavaProj/submissions/1")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("teacher1", token)))
+                .header("authorization", basicAuthHeader("teacher1", token)))
             .andExpect(status().isOk)
             .andExpect(content().json("""
                 [
@@ -322,7 +320,7 @@ class TeacherAPIControllerTests: ApiTestSupport {
         this.mvc.perform(
             get("/api/teacher/submissions/1")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("teacher1", token)))
+                .header("authorization", basicAuthHeader("teacher1", token)))
             .andExpect(status().isOk()).andExpect(content().json("""
                 {"numSubmissions":2,
                  "assignment":{"id":"testJavaProj",
@@ -369,7 +367,7 @@ class TeacherAPIControllerTests: ApiTestSupport {
         this.mvc.perform(
             get("/api/teacher/download/1")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("teacher1", token)))
+                .header("authorization", basicAuthHeader("teacher1", token)))
             .andExpect(status().isNotFound)
     }
 
@@ -380,7 +378,7 @@ class TeacherAPIControllerTests: ApiTestSupport {
         this.mvc.perform(
             get("/api/teacher/studentSearch/student1")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("teacher1", token)))
+                .header("authorization", basicAuthHeader("teacher1", token)))
             .andExpect(status().isOk()).andExpect(content().json("""
                 [
                   {
@@ -398,7 +396,7 @@ class TeacherAPIControllerTests: ApiTestSupport {
         this.mvc.perform(
             get("/api/teacher/studentSearch/student2")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("teacher1", token)))
+                .header("authorization", basicAuthHeader("teacher1", token)))
             .andExpect(status().isOk()).andExpect(content().json("""
                 []
             """.trimIndent()))
@@ -411,7 +409,7 @@ class TeacherAPIControllerTests: ApiTestSupport {
         this.mvc.perform(
             get("/api/teacher/assignmentSearch/testJavaProj")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("teacher1", token)))
+                .header("authorization", basicAuthHeader("teacher1", token)))
             .andExpect(status().isOk()).andExpect(content().json("""
                 [
                   {
@@ -429,7 +427,7 @@ class TeacherAPIControllerTests: ApiTestSupport {
         this.mvc.perform(
             get("/api/teacher/assignmentSearch/testProj")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("teacher1", token)))
+                .header("authorization", basicAuthHeader("teacher1", token)))
             .andExpect(status().isOk()).andExpect(content().json("""
                 []
             """.trimIndent()))
@@ -442,7 +440,7 @@ class TeacherAPIControllerTests: ApiTestSupport {
         this.mvc.perform(
             get("/api/teacher/studentHistory/student1")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("teacher1", token)))
+                .header("authorization", basicAuthHeader("teacher1", token)))
             .andExpect(status().isOk())
             .andExpect(content().json("""
                     {
@@ -528,7 +526,7 @@ class TeacherAPIControllerTests: ApiTestSupport {
         this.mvc.perform(
             get("/api/teacher/studentHistory/student2")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("teacher1", token)))
+                .header("authorization", basicAuthHeader("teacher1", token)))
             .andExpect(status().isNotFound)
     }
 
@@ -539,7 +537,7 @@ class TeacherAPIControllerTests: ApiTestSupport {
         this.mvc.perform(
             get("/api/teacher/submissions/1/markAsFinal")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("teacher1", token)))
+                .header("authorization", basicAuthHeader("teacher1", token)))
             .andExpect(status().isOk()).andExpect(content().string("true"))
     }
 
@@ -550,7 +548,7 @@ class TeacherAPIControllerTests: ApiTestSupport {
         this.mvc.perform(
             get("/api/teacher/submissions/0/markAsFinal")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("teacher1", token)))
+                .header("authorization", basicAuthHeader("teacher1", token)))
             .andExpect(status().isOk()).andExpect(content().string("false"))
     }
 }

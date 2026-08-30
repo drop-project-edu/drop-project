@@ -19,6 +19,8 @@
  */
 package org.dropproject.controllers
 
+import org.dropproject.TestUsers.STUDENT_1
+import org.dropproject.TestUsers.TEACHER_1
 import org.junit.jupiter.api.Tag
 import org.dropproject.DropProjectIntegrationTest
 import org.dropproject.dao.*
@@ -63,8 +65,7 @@ class AssignmentListingTests : AssignmentTestBase() {
                 .andExpect(model().attribute("assignments", emptyList<Assignment>()))
 
             // create assignment
-            testsHelper.createAndSetupAssignment(
-                mvc, assignmentRepository, "dummyAssignment4", "Dummy Assignment",
+            assignmentFixtures.createAndSetupAssignment("dummyAssignment4", "Dummy Assignment",
                 "org.dummy",
                 "UPLOAD", sampleJavaAssignmentRepo,
                 teacherId = "p1", activateRightAfterCloning = false
@@ -110,8 +111,7 @@ class AssignmentListingTests : AssignmentTestBase() {
 
         try {
             // create an assignment with white-list. it will start as inactive
-            testsHelper.createAndSetupAssignment(
-                mvc, assignmentRepository, "dummyAssignment6", "Dummy Assignment",
+            assignmentFixtures.createAndSetupAssignment("dummyAssignment6", "Dummy Assignment",
                 "org.dummy",
                 "UPLOAD", sampleJavaAssignmentRepo,
                 assignees = "21800000"
@@ -212,8 +212,7 @@ class AssignmentListingTests : AssignmentTestBase() {
                 .andExpect(model().attribute("assignments", emptyList<Assignment>()))
 
             // create assignment
-            testsHelper.createAndSetupAssignment(
-                mvc, assignmentRepository, "dummyAssignment4", "Dummy Assignment",
+            assignmentFixtures.createAndSetupAssignment("dummyAssignment4", "Dummy Assignment",
                 "org.dummy",
                 "UPLOAD", sampleJavaAssignmentRepo,
                 teacherId = "p1", activateRightAfterCloning = false
@@ -305,8 +304,7 @@ class AssignmentListingTests : AssignmentTestBase() {
     fun `create new assignment and info with test methods`() {
 
         try {
-            testsHelper.createAndSetupAssignment(
-                mvc, assignmentRepository, "dummyAssignmentTests", "Dummy Assignment",
+            assignmentFixtures.createAndSetupAssignment("dummyAssignmentTests", "Dummy Assignment",
                 "org.dummy",
                 "UPLOAD", sampleJavaAssignmentRepo
             )
@@ -342,8 +340,7 @@ class AssignmentListingTests : AssignmentTestBase() {
     fun `create new assignment and info with test methods with junit5`() {
 
         try {
-            testsHelper.createAndSetupAssignment(
-                mvc, assignmentRepository, "dummyAssignmentTests", "Dummy Assignment",
+            assignmentFixtures.createAndSetupAssignment("dummyAssignmentTests", "Dummy Assignment",
                 "org.dummy",
                 "UPLOAD", sampleJavaAssignmentWithJUnit5Repo
             )
@@ -391,16 +388,15 @@ class AssignmentListingTests : AssignmentTestBase() {
         try {
 
             // create assignment
-            testsHelper.createAndSetupAssignment(
-                mvc, assignmentRepository, "dummyAssignment4", "Dummy Assignment",
+            assignmentFixtures.createAndSetupAssignment("dummyAssignment4", "Dummy Assignment",
                 "org.dummy",
                 "UPLOAD", sampleJavaAssignmentRepo,
                 teacherId = TEACHER_1.username, activateRightAfterCloning = true
             )
 
-            testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "dummyAssignment4", STUDENT_1)
+            submissionFixtures.uploadProject("projectCompilationErrors", "dummyAssignment4", STUDENT_1)
             val lastSubmissionId =
-                testsHelper.uploadProject(this.mvc, "projectCheckstyleErrors", "dummyAssignment4", STUDENT_1)
+                submissionFixtures.uploadProject("projectCheckstyleErrors", "dummyAssignment4", STUDENT_1)
 
             // list assignments should return one assignment
             val mvcResult = this.mvc.perform(
@@ -442,31 +438,29 @@ class AssignmentListingTests : AssignmentTestBase() {
     @Test
     fun `mark all as final`() {
 
-        val assignmentId = testsHelper.defaultAssignmentId
+        val assignmentId = submissionFixtures.defaultAssignmentId
 
         // create assignment
         val assignment01 = Assignment(
             id = assignmentId, name = "Test Project (for automatic tests)",
-            packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = testsHelper.TEACHER_1.username,
+            packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = TEACHER_1.username,
             submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
             gitRepositoryFolder = "testJavaProj"
         )
         assignmentRepository.save(assignment01)
 
         // make several submissions for that assignment
-        testsHelper.makeSeveralSubmissions(
-            listOf(
+        submissionFixtures.makeSeveralSubmissions(listOf(
                 "projectInvalidStructure1",
                 "projectInvalidStructure1",
                 "projectInvalidStructure1",
                 "projectInvalidStructure1"
-            ), mvc
-        )
+            ))
 
         // mark all as final
         this.mvc.perform(
             post("/assignment/markAllAsFinal/${assignmentId}")
-                .with(user(testsHelper.TEACHER_1))
+                .with(user(TEACHER_1))
         )
             .andExpect(status().isFound())
             .andExpect(header().string("Location", "/report/${assignmentId}"))
@@ -474,7 +468,7 @@ class AssignmentListingTests : AssignmentTestBase() {
         // check results
         val reportResult = this.mvc.perform(
             get("/report/testJavaProj")
-                .with(user(testsHelper.TEACHER_1))
+                .with(user(TEACHER_1))
         )
             .andExpect(status().isOk())
             .andReturn()

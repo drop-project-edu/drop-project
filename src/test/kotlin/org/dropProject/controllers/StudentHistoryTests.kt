@@ -19,6 +19,8 @@
  */
 package org.dropproject.controllers
 
+import org.dropproject.TestUsers.STUDENT_1
+import org.dropproject.TestUsers.TEACHER_1
 import org.junit.jupiter.api.Tag
 import org.dropproject.DropProjectIntegrationTest
 import org.junit.jupiter.api.Assertions.*
@@ -49,11 +51,11 @@ class StudentHistoryTests : ReportTestBase() {
          *
          */
 
-        testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", "testJavaProj", STUDENT_1,
+        submissionFixtures.uploadProject("projectInvalidStructure1", "testJavaProj", STUDENT_1,
             listOf(Pair("student1", "Student 1")))
-        testsHelper.uploadProject(this.mvc, "projectOK", "testJavaProj", STUDENT_1,
+        submissionFixtures.uploadProject("projectOK", "testJavaProj", STUDENT_1,
             listOf(Pair("student1", "Student 1")))
-        testsHelper.uploadProject(this.mvc, "projectOK", "sampleJavaProject", STUDENT_1,
+        submissionFixtures.uploadProject("projectOK", "sampleJavaProject", STUDENT_1,
             listOf(Pair("student1", "Student 1"), Pair("student2", "Student 2")))
 
         // make sure the last submission has a submissionDate superior to the previous ones,
@@ -100,12 +102,12 @@ class StudentHistoryTests : ReportTestBase() {
     fun `student history shows the submitter name declared in each submission's own group`() {
 
         // student1 submits solo, declaring himself as "Student A" -> group #1
-        testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", "testJavaProj", STUDENT_1,
+        submissionFixtures.uploadProject("projectInvalidStructure1", "testJavaProj", STUDENT_1,
             listOf(Pair("student1", "Student A")))
 
         // the same student1, paired with a different partner, declares himself as "Student B" -> since the
         // author composition differs, this is a different group (#2), with its own Author row for student1
-        testsHelper.uploadProject(this.mvc, "projectOK", "sampleJavaProject", STUDENT_1,
+        submissionFixtures.uploadProject("projectOK", "sampleJavaProject", STUDENT_1,
             listOf(Pair("student1", "Student B"), Pair("student2", "Student 2")))
 
         val reportResult = this.mvc.perform(

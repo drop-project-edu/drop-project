@@ -19,9 +19,10 @@
  */
 package org.dropproject.controllers
 
+import org.dropproject.SubmissionFixtures
+import org.dropproject.TestUsers.STUDENT_1
 import org.junit.jupiter.api.Tag
 import org.dropproject.DropProjectIntegrationTest
-import org.dropproject.TestsHelper
 import org.dropproject.dao.Assignment
 import org.dropproject.dao.Indicator
 import org.dropproject.dao.Language
@@ -64,9 +65,7 @@ class UploadKotlinControllerTests {
     lateinit var assignmentRepository: AssignmentRepository
 
     @Autowired
-    private lateinit var testsHelper: TestsHelper
-
-    val STUDENT_1 = User("student1", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
+    lateinit var submissionFixtures: SubmissionFixtures
 
     @BeforeEach
     fun initMavenizedFolderAndCreateAssignment() {
@@ -112,7 +111,7 @@ class UploadKotlinControllerTests {
     fun submitProjectOK() {
 
         val assignment = assignmentRepository.findById("testKotlinProj").get()
-        val submissionId = testsHelper.uploadProject(this.mvc,"projectKotlinNoPackageOK", "testKotlinProj", STUDENT_1,
+        val submissionId = submissionFixtures.uploadProject("projectKotlinNoPackageOK", "testKotlinProj", STUDENT_1,
             submissionStructure = assignment.submissionStructure, language = assignment.language)
 
         val reportResult = this.mvc.perform(get("/buildReport/$submissionId")
@@ -150,7 +149,7 @@ class UploadKotlinControllerTests {
     fun submitProjectStyleErrors1() {
 
         val assignment = assignmentRepository.findById("testKotlinProj").get()
-        val submissionId = testsHelper.uploadProject(this.mvc,"projectKotlinWithStyleErrors", "testKotlinProj", STUDENT_1,
+        val submissionId = submissionFixtures.uploadProject("projectKotlinWithStyleErrors", "testKotlinProj", STUDENT_1,
             submissionStructure = assignment.submissionStructure, language = assignment.language)
 
         val reportResult = this.mvc.perform(get("/buildReport/$submissionId")
@@ -195,7 +194,7 @@ class UploadKotlinControllerTests {
     fun submitProjectStyleErrorsAboveThreshold() {
 
         val assignment = assignmentRepository.findById("testKotlinProj").get()
-        val submissionId = testsHelper.uploadProject(this.mvc,"projectKotlinTooManyStyleErrors", "testKotlinProj",
+        val submissionId = submissionFixtures.uploadProject("projectKotlinTooManyStyleErrors", "testKotlinProj",
             STUDENT_1, submissionStructure = assignment.submissionStructure, language = assignment.language)
 
         val reportResult = this.mvc.perform(get("/buildReport/$submissionId")
@@ -241,7 +240,7 @@ class UploadKotlinControllerTests {
     fun submitProjectCompilationError() {
 
         val assignment = assignmentRepository.findById("testKotlinProj").get()
-        val submissionId = testsHelper.uploadProject(this.mvc,"projectKotlinCompilationError", "testKotlinProj", STUDENT_1,
+        val submissionId = submissionFixtures.uploadProject("projectKotlinCompilationError", "testKotlinProj", STUDENT_1,
             submissionStructure = assignment.submissionStructure, language = assignment.language)
 
         val reportResult = this.mvc.perform(get("/buildReport/$submissionId")
@@ -263,7 +262,7 @@ class UploadKotlinControllerTests {
     fun submitKotlinProjectWithJavaFileInThePackage() {
 
         val assignment = assignmentRepository.findById("testKotlinProj2").get()
-        val submissionId = testsHelper.uploadProject(this.mvc,"projectKotlinWithJavaFile", "testKotlinProj2",
+        val submissionId = submissionFixtures.uploadProject("projectKotlinWithJavaFile", "testKotlinProj2",
             STUDENT_1, submissionStructure = assignment.submissionStructure, language = assignment.language)
 
         val reportResult = this.mvc.perform(get("/buildReport/$submissionId")
@@ -293,7 +292,7 @@ class UploadKotlinControllerTests {
     fun submitProjectAndCheckREADME() {
 
         val assignment = assignmentRepository.findById("testKotlinProj2").get()
-        val submissionId = testsHelper.uploadProject(this.mvc,"projectKotlinOK", "testKotlinProj2", STUDENT_1,
+        val submissionId = submissionFixtures.uploadProject("projectKotlinOK", "testKotlinProj2", STUDENT_1,
             submissionStructure = assignment.submissionStructure, language = assignment.language)
 
         val reportResult = this.mvc.perform(get("/buildReport/$submissionId")

@@ -19,6 +19,10 @@
  */
 package org.dropproject.controllers
 
+import org.dropproject.TestUsers.STUDENT_1
+import org.dropproject.TestUsers.STUDENT_2
+import org.dropproject.TestUsers.STUDENT_3
+import org.dropproject.TestUsers.TEACHER_1
 import org.junit.jupiter.api.Tag
 import org.dropproject.DropProjectIntegrationTest
 import org.junit.jupiter.api.Assertions.*
@@ -52,16 +56,13 @@ class SignalledGroupsTests : ReportTestBase() {
      */
     @Test
     fun `signalled groups`() {
-        val student3 = User("student3", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
 
-        testsHelper.uploadProject(this.mvc, "projectJUnitErrors", defaultAssignmentId, STUDENT_1)
-        testsHelper.uploadProject(
-            this.mvc, "projectJUnitErrors", defaultAssignmentId, STUDENT_2,
+        submissionFixtures.uploadProject("projectJUnitErrors", defaultAssignmentId, STUDENT_1)
+        submissionFixtures.uploadProject("projectJUnitErrors", defaultAssignmentId, STUDENT_2,
             authors = listOf(STUDENT_2.username to "Student 2")
         )
-        testsHelper.uploadProject(
-            this.mvc, "projectOK", defaultAssignmentId, student3,
-            authors = listOf(student3.username to "Student 3")
+        submissionFixtures.uploadProject("projectOK", defaultAssignmentId, STUDENT_3,
+            authors = listOf(STUDENT_3.username to "Student 3")
         )
 
         val reportResult = this.mvc.perform(
@@ -96,12 +97,10 @@ class SignalledGroupsTests : ReportTestBase() {
      */
     @Test
     fun `signalled groups via mvc - no groups are signalled`() {
-        val student3 = User("student3", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
 
-        testsHelper.uploadProject(this.mvc, "projectJUnitErrors", defaultAssignmentId, STUDENT_1)
-        testsHelper.uploadProject(
-            this.mvc, "projectOK", defaultAssignmentId, student3,
-            authors = listOf(student3.username to "Student 3")
+        submissionFixtures.uploadProject("projectJUnitErrors", defaultAssignmentId, STUDENT_1)
+        submissionFixtures.uploadProject("projectOK", defaultAssignmentId, STUDENT_3,
+            authors = listOf(STUDENT_3.username to "Student 3")
         )
 
         val reportResult = this.mvc.perform(

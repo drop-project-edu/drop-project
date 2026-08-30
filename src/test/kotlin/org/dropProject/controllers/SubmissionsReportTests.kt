@@ -19,6 +19,9 @@
  */
 package org.dropproject.controllers
 
+import org.dropproject.TestUsers.STUDENT_1
+import org.dropproject.TestUsers.STUDENT_2
+import org.dropproject.TestUsers.TEACHER_1
 import org.junit.jupiter.api.Tag
 import org.dropproject.DropProjectIntegrationTest
 import org.junit.jupiter.api.Assertions.*
@@ -53,15 +56,13 @@ class SubmissionsReportTests : ReportTestBase() {
     @Test
     fun `report for multiple submissions`() {
 
-        testsHelper.makeSeveralSubmissions(
-            listOf(
+        submissionFixtures.makeSeveralSubmissions(listOf(
                 "projectInvalidStructure1",
                 "projectInvalidStructure1",
                 "projectInvalidStructure1",
                 "projectInvalidStructure1",
                 "projectInvalidStructure1"
-            ), mvc
-        )
+            ))
 
         val reportResult = this.mvc.perform(
             get("/report/testJavaProj")
@@ -87,7 +88,7 @@ class SubmissionsReportTests : ReportTestBase() {
     @Test
     fun `my submissions`() {
 
-        testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", defaultAssignmentId, STUDENT_1)
+        submissionFixtures.uploadProject("projectInvalidStructure1", defaultAssignmentId, STUDENT_1)
 
         val mySubmissionsResult = this.mvc.perform(
             get("/mySubmissions")
@@ -110,12 +111,10 @@ class SubmissionsReportTests : ReportTestBase() {
     @Test
     fun `submissions report`() {
 
-        testsHelper.uploadProject(
-            this.mvc, "projectInvalidStructure1", "testJavaProj", STUDENT_1,
+        submissionFixtures.uploadProject("projectInvalidStructure1", "testJavaProj", STUDENT_1,
             listOf(Pair("student1", "Student 1"))
         )
-        testsHelper.uploadProject(
-            this.mvc, "projectOK", "testJavaProj", STUDENT_1,
+        submissionFixtures.uploadProject("projectOK", "testJavaProj", STUDENT_1,
             listOf(Pair("student1", "Student 1"))
         )
 
@@ -136,15 +135,13 @@ class SubmissionsReportTests : ReportTestBase() {
     fun `submitter name shown is scoped to the group being displayed, not any group the student is in`() {
 
         // student1 submits solo, declaring himself as "Student A" -> creates group #1
-        testsHelper.uploadProject(
-            this.mvc, "projectInvalidStructure1", "testJavaProj", STUDENT_1,
+        submissionFixtures.uploadProject("projectInvalidStructure1", "testJavaProj", STUDENT_1,
             listOf(Pair("student1", "Student A"))
         )
 
         // the same student1, now paired with a different partner, declares himself as "Student B" -> since the
         // author composition differs, this creates a brand new group (#2), with its own Author row for student1
-        testsHelper.uploadProject(
-            this.mvc, "projectInvalidStructure1", "testJavaProj", STUDENT_1,
+        submissionFixtures.uploadProject("projectInvalidStructure1", "testJavaProj", STUDENT_1,
             listOf(Pair("student1", "Student B"), Pair("student2", "Student 2"))
         )
 
@@ -201,7 +198,7 @@ class SubmissionsReportTests : ReportTestBase() {
     fun `get report by other element of the group`() {
 
         // student1 makes a submission in name of the group (student1, student2)
-        val submissionId = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", defaultAssignmentId, STUDENT_1,
+        val submissionId = submissionFixtures.uploadProject("projectCompilationErrors", defaultAssignmentId, STUDENT_1,
             listOf(Pair("student1", "Student 1"), Pair("student2", "Student 2")))
 
         // student1 gets the report
@@ -223,7 +220,7 @@ class SubmissionsReportTests : ReportTestBase() {
 
     @Test
     fun `test matrix`() {
-        testsHelper.uploadProject(this.mvc, "projectJUnitErrors", defaultAssignmentId, STUDENT_1)
+        submissionFixtures.uploadProject("projectJUnitErrors", defaultAssignmentId, STUDENT_1)
 
         val reportResult = this.mvc.perform(
             get("/testMatrix/${defaultAssignmentId}")

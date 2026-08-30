@@ -19,6 +19,7 @@
  */
 package org.dropproject.controllers
 
+import org.dropproject.TestUsers.STUDENT_1
 import org.junit.jupiter.api.Tag
 import org.dropproject.DropProjectIntegrationTest
 import org.junit.jupiter.api.Assertions.*
@@ -52,7 +53,7 @@ class UploadStudentTestsTests : UploadTestBase() {
                 gitRepositoryFolder = "testJavaProjWithCoverage")
         assignmentRepository.save(assignment)
 
-        val submissionId = testsHelper.uploadProject(this.mvc, "projectWith1StudentTest", assignment.id, STUDENT_1)
+        val submissionId = submissionFixtures.uploadProject("projectWith1StudentTest", assignment.id, STUDENT_1)
 
         val reportResult = this.mvc.perform(get("/buildReport/$submissionId")
                 .with(user(STUDENT_1)))
@@ -109,7 +110,7 @@ class UploadStudentTestsTests : UploadTestBase() {
             gitRepositoryFolder = "testJavaProjJUnit5")
         assignmentRepository.save(assignment)
 
-        val submissionId = testsHelper.uploadProject(this.mvc, "projectWith2StudentTestsUsingBeforeClass", assignment.id, STUDENT_1)
+        val submissionId = submissionFixtures.uploadProject("projectWith2StudentTestsUsingBeforeClass", assignment.id, STUDENT_1)
 
         val reportResult = this.mvc.perform(get("/buildReport/$submissionId")
             .with(user(STUDENT_1)))
@@ -162,7 +163,7 @@ class UploadStudentTestsTests : UploadTestBase() {
                 gitRepositoryFolder = "testJavaProjWithCoverage")
         assignmentRepository.save(assignment)
 
-        val submissionId = testsHelper.uploadProject(this.mvc, "projectWith1StudentTest", assignment.id, STUDENT_1)
+        val submissionId = submissionFixtures.uploadProject("projectWith1StudentTest", assignment.id, STUDENT_1)
 
         val reportResult = this.mvc.perform(get("/buildReport/$submissionId")
                 .with(user(STUDENT_1)))
@@ -197,7 +198,7 @@ class UploadStudentTestsTests : UploadTestBase() {
         assignment.minStudentTests = 1
         assignmentRepository.save(assignment)
 
-        val submissionId = testsHelper.uploadProject(this.mvc, "projectOK", "testJavaProj", STUDENT_1)  // <<< this project doesn't have student tests
+        val submissionId = submissionFixtures.uploadProject("projectOK", "testJavaProj", STUDENT_1)  // <<< this project doesn't have student tests
 
         val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
                 .andExpect(status().isOk())
@@ -241,7 +242,7 @@ class UploadStudentTestsTests : UploadTestBase() {
         assignment.minStudentTests = 2  // <<< this project requires at least 2 student tests
         assignmentRepository.save(assignment)
 
-        val submissionId = testsHelper.uploadProject(this.mvc, "projectWith1StudentTest", "testJavaProj", STUDENT_1)  // <<< this project only has 1 student test
+        val submissionId = submissionFixtures.uploadProject("projectWith1StudentTest", "testJavaProj", STUDENT_1)  // <<< this project only has 1 student test
 
         val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
                 .andExpect(status().isOk())
@@ -280,7 +281,7 @@ class UploadStudentTestsTests : UploadTestBase() {
     @Test
     fun `upload project with test input files`() {
 
-        val submissionId = testsHelper.uploadProject(this.mvc, "projectWithTestInputFiles", "testJavaProj", STUDENT_1)
+        val submissionId = submissionFixtures.uploadProject("projectWithTestInputFiles", "testJavaProj", STUDENT_1)
 
         val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
                 .andExpect(status().isOk())

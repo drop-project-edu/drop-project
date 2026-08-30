@@ -19,6 +19,10 @@
  */
 package org.dropproject.controllers
 
+import org.dropproject.TestUsers.STUDENT_1
+import org.dropproject.TestUsers.STUDENT_2
+import org.dropproject.TestUsers.STUDENT_3
+import org.dropproject.TestUsers.TEACHER_1
 import org.junit.jupiter.api.Tag
 import org.dropproject.DropProjectIntegrationTest
 import org.junit.jupiter.api.Assertions.*
@@ -64,25 +68,19 @@ class LeaderboardTests : ReportTestBase() {
         assertEquals("student1;Student 1", lines[0])
         assertEquals("student2;Student 2", lines[1])
 
-        val student3 = User("student3", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
-
         try {
             // upload five times, each time with a different author
-            testsHelper.uploadProject(this.mvc, "projectOK", defaultAssignmentId, STUDENT_1)
-            testsHelper.uploadProject(
-                this.mvc, "projectOK", defaultAssignmentId, STUDENT_2,
+            submissionFixtures.uploadProject("projectOK", defaultAssignmentId, STUDENT_1)
+            submissionFixtures.uploadProject("projectOK", defaultAssignmentId, STUDENT_2,
                 authors = listOf(STUDENT_2.username to "Student 2")
             )
-            testsHelper.uploadProject(
-                this.mvc, "projectJUnitErrors", defaultAssignmentId, student3,
-                authors = listOf(student3.username to "Student 3")
+            submissionFixtures.uploadProject("projectJUnitErrors", defaultAssignmentId, STUDENT_3,
+                authors = listOf(STUDENT_3.username to "Student 3")
             )
-            testsHelper.uploadProject(
-                this.mvc, "projectOK", defaultAssignmentId, STUDENT_2,
+            submissionFixtures.uploadProject("projectOK", defaultAssignmentId, STUDENT_2,
                 authors = listOf(STUDENT_2.username to "Student 2")
             )
-            testsHelper.uploadProject(
-                this.mvc, "projectOK", defaultAssignmentId, STUDENT_1,
+            submissionFixtures.uploadProject("projectOK", defaultAssignmentId, STUDENT_1,
                 authors = listOf(STUDENT_1.username to "Student 3")
             )
 
@@ -130,7 +128,7 @@ class LeaderboardTests : ReportTestBase() {
         val lines = Files.readAllLines(path)
 
         try {
-            testsHelper.uploadProject(this.mvc, "projectOK", defaultAssignmentId, STUDENT_1)
+            submissionFixtures.uploadProject("projectOK", defaultAssignmentId, STUDENT_1)
         } finally {
             val writer = Files.newBufferedWriter(path)
             writer.write(lines[0])

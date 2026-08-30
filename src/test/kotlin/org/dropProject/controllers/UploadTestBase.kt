@@ -19,8 +19,10 @@
  */
 package org.dropproject.controllers
 
+import org.dropproject.AssignmentFixtures
+import org.dropproject.SubmissionFixtures
+import org.dropproject.GitFixtures
 import org.junit.jupiter.api.Assertions.*
-import org.dropproject.TestsHelper
 import org.dropproject.dao.*
 import org.dropproject.forms.SubmissionMethod
 import org.dropproject.repository.*
@@ -91,20 +93,14 @@ abstract class UploadTestBase {
     lateinit var storageService: StorageService
 
     @Autowired
-    lateinit var testsHelper: TestsHelper
+    lateinit var assignmentFixtures: AssignmentFixtures
+    @Autowired
+    lateinit var submissionFixtures: SubmissionFixtures
+    @Autowired
+    lateinit var gitFixtures: GitFixtures
 
     @Autowired
     lateinit var cooloffOverrideService: CooloffOverrideService
-
-    val STUDENT_1 = User("student1", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
-
-    val STUDENT_2 = User("student2", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
-
-    val STUDENT_3 = User("student3", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
-
-    val TEACHER_1 = User("teacher1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
-
-    val TEACHER_2 = User("teacher2", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
 
     @BeforeEach
     fun setup() {
@@ -115,18 +111,7 @@ abstract class UploadTestBase {
         folder.mkdirs()
 
         // create initial assignment
-        val assignment01 = Assignment(id = "testJavaProj", name = "Test Project (for automatic tests)",
-                packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
-                submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummy",
-                gitRepositoryFolder = "testJavaProj", gitCurrentHash = "somehash")
-        assignmentRepository.save(assignment01)
-
-        assignmentTestMethodRepository.save(AssignmentTestMethod(assignment = assignment01,
-                                                testClass = "TestTeacherProject", testMethod = "testFuncaoParaTestar"))
-        assignmentTestMethodRepository.save(AssignmentTestMethod(assignment = assignment01,
-                                                testClass = "TestTeacherProject", testMethod = "testFuncaoLentaParaTestar"))
-        assignmentTestMethodRepository.save(AssignmentTestMethod(assignment = assignment01,
-                                                testClass = "TestTeacherHiddenProject", testMethod = "testFuncaoParaTestarQueNaoApareceAosAlunos"))
+        assignmentFixtures.createDefaultAssignment(gitCurrentHash = "somehash", withTestMethods = true)
     }
 
     @AfterEach

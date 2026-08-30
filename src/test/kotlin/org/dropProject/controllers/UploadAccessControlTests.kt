@@ -19,6 +19,11 @@
  */
 package org.dropproject.controllers
 
+import org.dropproject.TestUsers.STUDENT_1
+import org.dropproject.TestUsers.STUDENT_2
+import org.dropproject.TestUsers.STUDENT_3
+import org.dropproject.TestUsers.TEACHER_1
+import org.dropproject.TestUsers.TEACHER_2
 import org.junit.jupiter.api.Tag
 import org.dropproject.DropProjectIntegrationTest
 import org.junit.jupiter.api.Assertions.*
@@ -117,7 +122,7 @@ class UploadAccessControlTests : UploadTestBase() {
                 .andExpect(status().isOk())
 
         // student1 should be able to submit individually, bypassing the group size restriction
-        testsHelper.uploadProject(this.mvc, "projectOKIndividual", "testJavaProj", STUDENT_1,
+        submissionFixtures.uploadProject("projectOKIndividual", "testJavaProj", STUDENT_1,
             expectedResultMatcher = status().isOk())
     }
 
@@ -131,8 +136,7 @@ class UploadAccessControlTests : UploadTestBase() {
                 .andExpect(model().attribute("assignments", emptyList<Assignment>()))
 
             // create assignment
-            testsHelper.createAndSetupAssignment(
-                mvc, assignmentRepository, "dummyAssignment4", "Dummy Assignment",
+            assignmentFixtures.createAndSetupAssignment("dummyAssignment4", "Dummy Assignment",
                 "org.dummy",
                 "UPLOAD", sampleJavaAssignmentRepo, visibility = "PUBLIC",
                 teacherId = "p1", activateRightAfterCloning = true
@@ -174,8 +178,7 @@ class UploadAccessControlTests : UploadTestBase() {
                 .andExpect(model().attribute("assignments", emptyList<Assignment>()))
 
             // create assignment
-            testsHelper.createAndSetupAssignment(
-                mvc, assignmentRepository, "dummyAssignment4", "Dummy Assignment",
+            assignmentFixtures.createAndSetupAssignment("dummyAssignment4", "Dummy Assignment",
                 "org.dummy",
                 "UPLOAD", sampleJavaAssignmentRepo, visibility = "PUBLIC",
                 teacherId = "p1", activateRightAfterCloning = true
@@ -255,9 +258,7 @@ class UploadAccessControlTests : UploadTestBase() {
         )
 
         // 3. Tenta submeter como teacher1 (que é o dono mas NÃO está na whitelist)
-        val submissionId = testsHelper.uploadProject(
-            this.mvc,
-            "projectOK",
+        val submissionId = submissionFixtures.uploadProject("projectOK",
             "testJavaProj",
             TEACHER_1,
             authors = listOf("teacher1" to "Teacher 1")
@@ -291,9 +292,7 @@ class UploadAccessControlTests : UploadTestBase() {
         // Como o GlobalExceptionHandler retorna uma String simples (não JSON) no 403, 
         // o uploadProject vai lançar uma exceção ao tentar fazer o parse do JSON.
         try {
-            testsHelper.uploadProject(
-                this.mvc,
-                "projectOK",
+            submissionFixtures.uploadProject("projectOK",
                 "testJavaProj",
                 TEACHER_2,
                 authors = listOf("teacher2" to "Teacher 2"),
@@ -330,9 +329,7 @@ class UploadAccessControlTests : UploadTestBase() {
         )
 
         // 4. Tentar submeter → deve ter sucesso
-        val submissionId = testsHelper.uploadProject(
-            this.mvc,
-            "projectOK",
+        val submissionId = submissionFixtures.uploadProject("projectOK",
             "testJavaProj",
             TEACHER_2,
             authors = listOf("teacher2" to "Teacher 2")
@@ -389,7 +386,7 @@ class UploadAccessControlTests : UploadTestBase() {
     @Test
     fun `can't see other submissions`() {
 
-        testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", "testJavaProj", STUDENT_1)
+        submissionFixtures.uploadProject("projectInvalidStructure1", "testJavaProj", STUDENT_1)
 
         this.mvc.perform(get("/buildReport/1")
                 .with(user(STUDENT_3)))

@@ -306,8 +306,7 @@ class AssignmentCreationTests : AssignmentTestBase() {
 
         try {
 
-            testsHelper.createAndSetupAssignment(
-                mvc, assignmentRepository, "dummyAssignment7", "Dummy Assignment",
+            assignmentFixtures.createAndSetupAssignment("dummyAssignment7", "Dummy Assignment",
                 "org.dummy",
                 "UPLOAD", sampleJavaAssignmentRepo,
                 acl = "p1000, p1001"
@@ -401,8 +400,7 @@ class AssignmentCreationTests : AssignmentTestBase() {
 
         try {
 
-            testsHelper.createAndSetupAssignment(
-                mvc, assignmentRepository, "dummyAssignment7", "Dummy Assignment",
+            assignmentFixtures.createAndSetupAssignment("dummyAssignment7", "Dummy Assignment",
                 "org.dummy",
                 "UPLOAD", sampleJavaAssignmentRepo,
                 minGroupSize = "2",

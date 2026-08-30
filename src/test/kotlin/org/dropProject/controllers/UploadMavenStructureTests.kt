@@ -19,6 +19,7 @@
  */
 package org.dropproject.controllers
 
+import org.dropproject.TestUsers.STUDENT_1
 import org.junit.jupiter.api.Tag
 import org.dropproject.DropProjectIntegrationTest
 import org.junit.jupiter.api.Assertions.*
@@ -51,7 +52,7 @@ class UploadMavenStructureTests : UploadTestBase() {
         assignment.submissionStructure = SubmissionStructure.MAVEN
         assignmentRepository.save(assignment)
 
-        val submissionId = testsHelper.uploadProject(this.mvc, "projectOK-maven", "testJavaProj", STUDENT_1,
+        val submissionId = submissionFixtures.uploadProject("projectOK-maven", "testJavaProj", STUDENT_1,
             submissionStructure = assignment.submissionStructure, language = assignment.language)
 
         val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
@@ -85,7 +86,7 @@ class UploadMavenStructureTests : UploadTestBase() {
         assignment.submissionStructure = SubmissionStructure.MAVEN
         assignmentRepository.save(assignment)
 
-        val submissionId = testsHelper.uploadProject(this.mvc, "projectInvalidStructure1-maven", "testJavaProj", STUDENT_1,
+        val submissionId = submissionFixtures.uploadProject("projectInvalidStructure1-maven", "testJavaProj", STUDENT_1,
             submissionStructure = assignment.submissionStructure, language = assignment.language)
 
         val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
@@ -113,7 +114,7 @@ class UploadMavenStructureTests : UploadTestBase() {
         assignmentRepository.save(assignment)
 
         // Upload a compact project (no pom.xml) to a Maven assignment
-        val submissionId = testsHelper.uploadProject(this.mvc, "projectOK", "testJavaProj", STUDENT_1,
+        val submissionId = submissionFixtures.uploadProject("projectOK", "testJavaProj", STUDENT_1,
             submissionStructure = SubmissionStructure.COMPACT, language = Language.JAVA)
 
         val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
@@ -138,7 +139,7 @@ class UploadMavenStructureTests : UploadTestBase() {
         assignment.submissionStructure = SubmissionStructure.MAVEN
         assignmentRepository.save(assignment)
 
-        val submissionId = testsHelper.uploadProject(this.mvc, "projectJUnitErrors-maven", "testJavaProj", STUDENT_1,
+        val submissionId = submissionFixtures.uploadProject("projectJUnitErrors-maven", "testJavaProj", STUDENT_1,
             submissionStructure = assignment.submissionStructure, language = assignment.language)
 
         val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
@@ -168,7 +169,7 @@ class UploadMavenStructureTests : UploadTestBase() {
         assignment.submissionStructure = SubmissionStructure.MAVEN
         assignmentRepository.save(assignment)
 
-        val submissionId = testsHelper.uploadProject(this.mvc, "projectCheckstyleErrors-maven", "testJavaProj", STUDENT_1,
+        val submissionId = submissionFixtures.uploadProject("projectCheckstyleErrors-maven", "testJavaProj", STUDENT_1,
             submissionStructure = assignment.submissionStructure, language = assignment.language)
 
         val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
@@ -204,7 +205,7 @@ class UploadMavenStructureTests : UploadTestBase() {
         )
         assignmentRepository.save(assignment)
 
-        val submissionId = testsHelper.uploadProject(this.mvc, "projectKotlinOK-maven", "testKotlinProj", STUDENT_1,
+        val submissionId = submissionFixtures.uploadProject("projectKotlinOK-maven", "testKotlinProj", STUDENT_1,
             submissionStructure = assignment.submissionStructure, language = assignment.language)
 
         val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
@@ -230,7 +231,7 @@ class UploadMavenStructureTests : UploadTestBase() {
         assignmentRepository.save(assignment)
 
         // Upload a compact project to a Maven assignment
-        val submissionId = testsHelper.uploadProject(this.mvc, "projectOK", "testJavaProj", STUDENT_1,
+        val submissionId = submissionFixtures.uploadProject("projectOK", "testJavaProj", STUDENT_1,
             submissionStructure = SubmissionStructure.COMPACT, language = Language.JAVA)
 
         val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))

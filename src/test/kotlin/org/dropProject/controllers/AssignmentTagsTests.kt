@@ -19,6 +19,7 @@
  */
 package org.dropproject.controllers
 
+import org.dropproject.TestUsers.TEACHER_1
 import org.junit.jupiter.api.Tag
 import org.dropproject.DropProjectIntegrationTest
 import org.dropproject.dao.*
@@ -91,8 +92,7 @@ class AssignmentTagsTests : AssignmentTestBase() {
     fun `update assignment with tags`() {
 
         try {
-            testsHelper.createAndSetupAssignment(
-                mvc, assignmentRepository, "dummyAssignmentTags", "Dummy Assignment",
+            assignmentFixtures.createAndSetupAssignment("dummyAssignmentTags", "Dummy Assignment",
                 "org.dummy",
                 "UPLOAD", sampleJavaAssignmentRepo,
                 tags = "sample,test,simple"  // <<<<
@@ -154,15 +154,13 @@ class AssignmentTagsTests : AssignmentTestBase() {
                 .andExpect(model().attribute("assignments", emptyList<Assignment>()))
 
             // create two assignments
-            testsHelper.createAndSetupAssignment(
-                mvc, assignmentRepository, "dummyAssignment4", "Dummy Assignment",
+            assignmentFixtures.createAndSetupAssignment("dummyAssignment4", "Dummy Assignment",
                 "org.dummy",
                 "UPLOAD", sampleJavaAssignmentRepo,
                 teacherId = "p1", activateRightAfterCloning = false, tags = "sample,test"
             )
 
-            testsHelper.createAndSetupAssignment(
-                mvc, assignmentRepository, "dummyAssignment5", "Dummy Assignment",
+            assignmentFixtures.createAndSetupAssignment("dummyAssignment5", "Dummy Assignment",
                 "org.dummy",
                 "UPLOAD", sampleJavaAssignmentRepo,
                 teacherId = "p1", activateRightAfterCloning = false, tags = "other,test"

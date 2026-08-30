@@ -19,6 +19,7 @@
  */
 package org.dropproject.controllers
 
+import org.dropproject.TestUsers.STUDENT_1
 import org.junit.jupiter.api.Tag
 import org.dropproject.DropProjectIntegrationTest
 import org.dropproject.config.DropProjectProperties
@@ -76,8 +77,6 @@ class PublicGitRepositoryTests {
     lateinit var authorRepository: AuthorRepository
 
     val assignmentId = "sampleJavaProject"
-
-    val STUDENT_1 = User("student1", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
 
     // a repository owned by the drop project organization that is public and is expected to stay public
     val publicRepositoryUrl = "git@github.com:drop-project-edu/sampleJavaAssignment.git"

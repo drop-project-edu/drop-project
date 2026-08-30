@@ -19,8 +19,9 @@
  */
 package org.dropproject.services
 
+import org.dropproject.AssignmentFixtures
+import org.dropproject.SubmissionFixtures
 import org.dropproject.DropProjectIntegrationTest
-import org.dropproject.TestsHelper
 import org.dropproject.config.PendingExport
 import org.dropproject.config.PendingTasks
 import org.dropproject.dao.Assignment
@@ -45,10 +46,13 @@ import java.util.*
 class ScheduledTasksTests {
 
     @Autowired
+    lateinit var assignmentFixtures: AssignmentFixtures
+
+    @Autowired
     lateinit var mvc: MockMvc
 
     @Autowired
-    lateinit var testsHelper: TestsHelper
+    lateinit var submissionFixtures: SubmissionFixtures
 
     @Autowired
     lateinit var scheduledTasks: ScheduledTasks
@@ -68,14 +72,10 @@ class ScheduledTasksTests {
     @Test
     fun `cleanExpiredSubmissions aborts stale submissions and rebuilds but leaves a fresh rebuild alone`() {
 
-        val assignment01 = Assignment(id = "testJavaProj", name = "Test Project (for automatic tests)",
-                packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
-                submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
-                gitRepositoryFolder = "testJavaProj")
-        assignmentRepository.save(assignment01)
+        assignmentFixtures.createDefaultAssignment()
 
-        testsHelper.makeSeveralSubmissions(listOf("projectInvalidStructure1", "projectInvalidStructure1",
-            "projectInvalidStructure1", "projectInvalidStructure1"), mvc)
+        submissionFixtures.makeSeveralSubmissions(listOf("projectInvalidStructure1", "projectInvalidStructure1",
+            "projectInvalidStructure1", "projectInvalidStructure1"))
 
         val twoHoursAgo = Date(System.currentTimeMillis() - 2 * 3600 * 1000)
         // statusDate is deliberately frozen to an old value when entering REBUILDING (dontUpdateStatusDate=true),

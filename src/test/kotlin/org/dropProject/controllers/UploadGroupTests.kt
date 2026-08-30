@@ -19,6 +19,9 @@
  */
 package org.dropproject.controllers
 
+import org.dropproject.TestUsers.STUDENT_1
+import org.dropproject.TestUsers.STUDENT_2
+import org.dropproject.TestUsers.TEACHER_1
 import org.junit.jupiter.api.Tag
 import org.dropproject.DropProjectIntegrationTest
 import org.junit.jupiter.api.Assertions.*
@@ -49,10 +52,10 @@ class UploadGroupTests : UploadTestBase() {
                 .andExpect(status().isOk())
                 .andExpect(model().attribute("numSubmissions", 0L))
 
-        val submissionId1 = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
+        val submissionId1 = submissionFixtures.uploadProject("projectCompilationErrors", "testJavaProj", STUDENT_1)
         assertEquals(1, submissionId1.toLong(), "wrong submissionId")
 
-        val submissionId2 = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
+        val submissionId2 = submissionFixtures.uploadProject("projectCompilationErrors", "testJavaProj", STUDENT_1)
         assertEquals(2, submissionId2.toLong(), "wrong submissionId")
 
         // let's change the AUTHORS
@@ -68,7 +71,7 @@ class UploadGroupTests : UploadTestBase() {
             writer.write("student3;Student 3")
             writer.close()
 
-            val submissionId3 = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
+            val submissionId3 = submissionFixtures.uploadProject("projectCompilationErrors", "testJavaProj", STUDENT_1)
             assertEquals(3, submissionId3.toLong(), "wrong submissionId")
 
         } finally {
@@ -102,7 +105,7 @@ class UploadGroupTests : UploadTestBase() {
     fun `upload by one element of the group and get report by the other element`() {
 
         // student1 makes a submission in name of the group (student1, student2)
-        val submissionId = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1,
+        val submissionId = submissionFixtures.uploadProject("projectCompilationErrors", "testJavaProj", STUDENT_1,
             listOf(Pair("student1", "Student 1"), Pair("student2", "Student 2")))
 
         // student1 gets the upload form
@@ -143,7 +146,7 @@ class UploadGroupTests : UploadTestBase() {
         assignment.projectGroupRestrictions = projectGroupRestrictions
         assignmentRepository.save(assignment)
 
-        val error = testsHelper.uploadProject(this.mvc, "projectOKIndividual", "testJavaProj", STUDENT_1,
+        val error = submissionFixtures.uploadProject("projectOKIndividual", "testJavaProj", STUDENT_1,
             expectedResultMatcher = status().isInternalServerError())
         assertEquals("This assignment only accepts submissions from groups with 2..2 elements.", error)
 
@@ -151,7 +154,7 @@ class UploadGroupTests : UploadTestBase() {
         projectGroupRestrictions.exceptions = "student1,student3"
         projectGroupRestrictionsRepository.save(projectGroupRestrictions)
 
-        testsHelper.uploadProject(this.mvc, "projectOKIndividual", "testJavaProj", STUDENT_1,
+        submissionFixtures.uploadProject("projectOKIndividual", "testJavaProj", STUDENT_1,
             expectedResultMatcher = status().isOk())
     }
 
@@ -163,7 +166,7 @@ class UploadGroupTests : UploadTestBase() {
 
         // try to upload a group project with student1 and student2
         // projectOK has AUTHORS.txt with both student1 and student2
-        val error = testsHelper.uploadProject(this.mvc, "projectOK", "testJavaProj", STUDENT_1,
+        val error = submissionFixtures.uploadProject("projectOK", "testJavaProj", STUDENT_1,
             expectedResultMatcher = status().isInternalServerError())
         assertEquals("Student student2 is not authorized for this assignment.", error)
     }
@@ -178,7 +181,7 @@ class UploadGroupTests : UploadTestBase() {
         assignment.projectGroupRestrictions = projectGroupRestrictions
         assignmentRepository.save(assignment)
 
-        testsHelper.uploadProject(this.mvc, "projectOKTeacher", "testJavaProj", TEACHER_1,
+        submissionFixtures.uploadProject("projectOKTeacher", "testJavaProj", TEACHER_1,
             expectedResultMatcher = status().isOk())
     }
 

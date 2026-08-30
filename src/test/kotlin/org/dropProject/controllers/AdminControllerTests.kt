@@ -19,9 +19,11 @@
  */
 package org.dropproject.controllers
 
+import org.dropproject.AssignmentFixtures
+import org.dropproject.SubmissionFixtures
+import org.dropproject.TestUsers.STUDENT_1
 import org.junit.jupiter.api.Tag
 import org.dropproject.DropProjectIntegrationTest
-import org.dropproject.TestsHelper
 import org.dropproject.dao.Assignment
 import org.dropproject.dao.AssignmentTag
 import org.dropproject.dao.RebuildStatus
@@ -60,10 +62,13 @@ import java.util.concurrent.TimeUnit
 class AdminControllerTests {
 
     @Autowired
+    lateinit var assignmentFixtures: AssignmentFixtures
+
+    @Autowired
     lateinit var mvc : MockMvc
 
     @Autowired
-    lateinit var testsHelper: TestsHelper
+    lateinit var submissionFixtures: SubmissionFixtures
 
     @Autowired
     lateinit var submissionRepository : SubmissionRepository
@@ -111,12 +116,8 @@ class AdminControllerTests {
 
         // make a submission
         // create initial assignments
-        val assignment01 = Assignment(id = "testJavaProj", name = "Test Project (for automatic tests)",
-                packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
-                submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
-                gitRepositoryFolder = "testJavaProj")
-        assignmentRepository.save(assignment01)
-        testsHelper.makeSeveralSubmissions(listOf("projectInvalidStructure1"), mvc)
+        assignmentFixtures.createDefaultAssignment()
+        submissionFixtures.makeSeveralSubmissions(listOf("projectInvalidStructure1"))
 
         // mark this submission as submitted
         val submission = submissionRepository.findById(1)
@@ -142,12 +143,8 @@ class AdminControllerTests {
     @WithMockUser("admin",roles=["DROP_PROJECT_ADMIN"])
     fun `show pending includes rebuilding and submitted for rebuild`() {
 
-        val assignment01 = Assignment(id = "testJavaProj", name = "Test Project (for automatic tests)",
-                packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
-                submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
-                gitRepositoryFolder = "testJavaProj")
-        assignmentRepository.save(assignment01)
-        testsHelper.makeSeveralSubmissions(listOf("projectInvalidStructure1", "projectInvalidStructure1"), mvc)
+        assignmentFixtures.createDefaultAssignment()
+        submissionFixtures.makeSeveralSubmissions(listOf("projectInvalidStructure1", "projectInvalidStructure1"))
 
         // simulate a submission stuck rebuilding...
         val rebuildingSubmission = submissionRepository.findById(1).get()
@@ -191,7 +188,7 @@ class AdminControllerTests {
         // (SyncTaskExecutor), so this real (never-ending) Maven build has to be kicked off on a background thread,
         // otherwise it would block this test forever.
         val uploadThread = Thread {
-            testsHelper.uploadProject(mvc, "projectWithInfiniteLoop", "testJavaProj", testsHelper.STUDENT_1)
+            submissionFixtures.uploadProject("projectWithInfiniteLoop", "testJavaProj", STUDENT_1)
         }
         uploadThread.isDaemon = true
         uploadThread.start()

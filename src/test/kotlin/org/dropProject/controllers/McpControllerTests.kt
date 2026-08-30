@@ -19,9 +19,10 @@
  */
 package org.dropproject.controllers
 
+import org.dropproject.AssignmentFixtures
+import org.dropproject.SubmissionFixtures
 import org.junit.jupiter.api.Tag
 import org.dropproject.DropProjectIntegrationTest
-import org.dropproject.TestsHelper
 import org.dropproject.dao.Assignment
 import org.dropproject.forms.SubmissionMethod
 import org.dropproject.repository.AssignmentRepository
@@ -40,13 +41,16 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 class McpControllerTests: ApiTestSupport {
 
     @Autowired
+    lateinit var assignmentFixtures: AssignmentFixtures
+
+    @Autowired
     lateinit var mvc: MockMvc
 
     @Autowired
     lateinit var assignmentRepository: AssignmentRepository
 
     @Autowired
-    private lateinit var testsHelper: TestsHelper
+    lateinit var submissionFixtures: SubmissionFixtures
 
     private fun getBearerToken(username: String): String {
         // Generate personal token for user and use it directly as Bearer token
@@ -57,26 +61,11 @@ class McpControllerTests: ApiTestSupport {
     @BeforeEach
     fun setup() {
         // Create test assignments
-        val assignment1 = Assignment(
-            id = "testMcpAssignment",
-            name = "Test MCP Assignment",
-            packageName = "org.dropProject.samples.testAssignment",
-            ownerUserId = "teacher1",
-            submissionMethod = SubmissionMethod.UPLOAD,
-            active = true,
-            gitRepositoryUrl = "git://dummy",
-            gitRepositoryFolder = "testMcpAssignment"
-        )
-        assignmentRepository.save(assignment1)
+        assignmentFixtures.createDefaultAssignment(id = "testMcpAssignment", name = "Test MCP Assignment",
+            packageName = "org.dropProject.samples.testAssignment")
 
         // create initial assignments
-        val assignment02 = Assignment(
-            id = "testJavaProj", name = "Test Project (for automatic tests)",
-            packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
-            submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
-            gitRepositoryFolder = "testJavaProj"
-        )
-        assignmentRepository.save(assignment02)
+        assignmentFixtures.createDefaultAssignment()
     }
 
     @Test
@@ -314,8 +303,7 @@ class McpControllerTests: ApiTestSupport {
         val authHeader = getBearerToken("teacher1")
 
         // First, create a submission
-        val submissionId = testsHelper.uploadProject(this.mvc,
-            "projectOK", "testJavaProj",
+        val submissionId = submissionFixtures.uploadProject("projectOK", "testJavaProj",
             User("student1", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT"))))
 
         val requestJson = """
@@ -353,8 +341,7 @@ class McpControllerTests: ApiTestSupport {
         val authHeader = getBearerToken("teacher1")
 
         // First, create a submission
-        val submissionId = testsHelper.uploadProject(this.mvc,
-            "projectOK", "testJavaProj",
+        val submissionId = submissionFixtures.uploadProject("projectOK", "testJavaProj",
             User("student1", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT"))))
 
         val requestJson = """
@@ -394,8 +381,7 @@ class McpControllerTests: ApiTestSupport {
         val authHeader = getBearerToken("teacher1")
 
         // First, create a submission
-        val submissionId = testsHelper.uploadProject(this.mvc,
-            "projectOK", "testJavaProj",
+        val submissionId = submissionFixtures.uploadProject("projectOK", "testJavaProj",
             User("student1", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT"))))
 
         // Read a specific file

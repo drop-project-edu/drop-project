@@ -19,6 +19,9 @@
  */
 package org.dropproject.controllers
 
+import org.dropproject.TestUsers.STUDENT_1
+import org.dropproject.TestUsers.STUDENT_2
+import org.dropproject.TestUsers.TEACHER_1
 import org.junit.jupiter.api.Tag
 import org.dropproject.DropProjectIntegrationTest
 import org.junit.jupiter.api.Assertions.*
@@ -44,9 +47,8 @@ class PlagiarismTests : ReportTestBase() {
     @Test
     fun `check plagiarism - java`() {
 
-        testsHelper.uploadProject(this.mvc, "projectCompilationErrors", defaultAssignmentId, STUDENT_1)
-        testsHelper.uploadProject(
-            this.mvc, "projectJUnitErrors", defaultAssignmentId, STUDENT_2,
+        submissionFixtures.uploadProject("projectCompilationErrors", defaultAssignmentId, STUDENT_1)
+        submissionFixtures.uploadProject("projectJUnitErrors", defaultAssignmentId, STUDENT_2,
             listOf(STUDENT_2.username to "Student 2")
         )
 
@@ -84,8 +86,8 @@ class PlagiarismTests : ReportTestBase() {
             gitRepositoryFolder = "testKotlinProj2")
         assignmentRepository.save(assignmentKotlin)
 
-        testsHelper.uploadProject(this.mvc, "projectKotlinOK", "testKotlinProj", STUDENT_1, language  = Language.KOTLIN)
-        testsHelper.uploadProject(this.mvc, "projectKotlinOK2", "testKotlinProj", STUDENT_2, language  = Language.KOTLIN)
+        submissionFixtures.uploadProject("projectKotlinOK", "testKotlinProj", STUDENT_1, language  = Language.KOTLIN)
+        submissionFixtures.uploadProject("projectKotlinOK2", "testKotlinProj", STUDENT_2, language  = Language.KOTLIN)
 
         this.mvc.perform(post("/plagiarism/testKotlinProj").with(user(TEACHER_1)))
             .andExpect(status().isFound)
@@ -115,9 +117,8 @@ class PlagiarismTests : ReportTestBase() {
     @Test
     fun `plagiarism report is stored`() {
 
-        testsHelper.uploadProject(this.mvc, "projectCompilationErrors", defaultAssignmentId, STUDENT_1)
-        testsHelper.uploadProject(
-            this.mvc, "projectJUnitErrors", defaultAssignmentId, STUDENT_2,
+        submissionFixtures.uploadProject("projectCompilationErrors", defaultAssignmentId, STUDENT_1)
+        submissionFixtures.uploadProject("projectJUnitErrors", defaultAssignmentId, STUDENT_2,
             listOf(STUDENT_2.username to "Student 2")
         )
 

@@ -19,6 +19,8 @@
  */
 package org.dropproject.controllers
 
+import org.dropproject.TestUsers.STUDENT_1
+import org.dropproject.TestUsers.TEACHER_1
 import org.junit.jupiter.api.Tag
 import org.dropproject.DropProjectIntegrationTest
 import org.junit.jupiter.api.Assertions.*
@@ -59,7 +61,7 @@ class UploadCooloffTests : UploadTestBase() {
         assignment.cooloffPeriod = 10
         assignmentRepository.save(assignment)
 
-        testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
+        submissionFixtures.uploadProject("projectCompilationErrors", "testJavaProj", STUDENT_1)
         val now = LocalTime.now()
 
         this.mvc.perform(get("/upload/testJavaProj")
@@ -82,7 +84,7 @@ class UploadCooloffTests : UploadTestBase() {
         assignment.cooloffPeriod = 10
         assignmentRepository.save(assignment)
 
-        testsHelper.uploadProject(this.mvc, "projectCheckstyleErrors", "testJavaProj", STUDENT_1)
+        submissionFixtures.uploadProject("projectCheckstyleErrors", "testJavaProj", STUDENT_1)
         val now = LocalTime.now()
         val formatter = DateTimeFormatter.ofPattern("HH:mm")
 
@@ -106,7 +108,7 @@ class UploadCooloffTests : UploadTestBase() {
         assignment.cooloffPeriod = 10
         assignmentRepository.save(assignment)
 
-        testsHelper.uploadProject(this.mvc, "projectCheckstyleErrors", "testJavaProj", STUDENT_1)
+        submissionFixtures.uploadProject("projectCheckstyleErrors", "testJavaProj", STUDENT_1)
         val now = LocalTime.now()
 
         this.mvc.perform(get("/upload/testJavaProj")

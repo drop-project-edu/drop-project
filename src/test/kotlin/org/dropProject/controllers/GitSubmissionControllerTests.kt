@@ -19,6 +19,11 @@
  */
 package org.dropproject.controllers
 
+import org.dropproject.GitFixtures
+import org.dropproject.TestKeys
+import org.dropproject.TestUsers.STUDENT_1
+import org.dropproject.TestUsers.STUDENT_2
+import org.dropproject.TestUsers.TEACHER_1
 import org.junit.jupiter.api.Tag
 import org.dropproject.DropProjectIntegrationTest
 import org.junit.jupiter.api.AfterEach
@@ -34,7 +39,6 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
-import org.dropproject.TestsHelper
 import org.dropproject.dao.*
 import org.dropproject.forms.SubmissionMethod
 import org.dropproject.repository.*
@@ -61,13 +65,9 @@ class GitSubmissionControllerTests {
     lateinit var assignmentRepository: AssignmentRepository
 
     @Autowired
-    private lateinit var testsHelper: TestsHelper
+    lateinit var gitFixtures: GitFixtures
 
     val defaultAssignmentId = "sampleJavaProject"
-
-    val STUDENT_1 = User("student1", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
-    val STUDENT_2 = User("student2", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
-    val TEACHER_1 = User("teacher1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
 
     @BeforeEach
     fun initMavenizedFolder() {
@@ -214,7 +214,7 @@ class GitSubmissionControllerTests {
                 .andReturn()
         assertNull(result.modelAndView!!.modelMap["gitSubmission"])
 
-        testsHelper.connectToGitRepositoryAndBuildReport(mvc, gitSubmissionRepository, defaultAssignmentId,
+        gitFixtures.connectToGitRepositoryAndBuildReport(defaultAssignmentId,
                 "git@github.com:drop-project-edu/sampleJavaSubmission.git", "student1")
 
         /*** GET /buildReport ***/
@@ -272,8 +272,8 @@ class GitSubmissionControllerTests {
         assertFalse(gitSubmission.connected)
 
         // inject public and private key
-        gitSubmission.gitRepositoryPrivKey = TestsHelper.sampleJavaAssignmentPrivateKey
-        gitSubmission.gitRepositoryPubKey = TestsHelper.sampleJavaAssignmentPublicKey
+        gitSubmission.gitRepositoryPrivKey = TestKeys.sampleJavaAssignmentPrivateKey
+        gitSubmission.gitRepositoryPubKey = TestKeys.sampleJavaAssignmentPublicKey
         gitSubmissionRepository.save(gitSubmission)
 
         /*** POST /student/setup-git-2 ***/
@@ -310,7 +310,7 @@ class GitSubmissionControllerTests {
                 .andExpect(model().attribute("gitSubmission", newGitSubmission))
 
         // now let's put another student who shares a group with this one connecting to github
-        val gitSubmissionId = testsHelper.connectToGitRepositoryAndBuildReport(mvc, gitSubmissionRepository, defaultAssignmentId,
+        val gitSubmissionId = gitFixtures.connectToGitRepositoryAndBuildReport(defaultAssignmentId,
                 "git@github.com:drop-project-edu/sampleJavaSubmission.git", "student1")
         val anotherStudentGitSubmission = gitSubmissionRepository.findById(gitSubmissionId).get()
 
@@ -326,7 +326,7 @@ class GitSubmissionControllerTests {
     @Test
     fun `connect, build report and disconnect`() {
 
-        testsHelper.connectToGitRepositoryAndBuildReport(mvc, gitSubmissionRepository, defaultAssignmentId,
+        gitFixtures.connectToGitRepositoryAndBuildReport(defaultAssignmentId,
                 "git@github.com:drop-project-edu/sampleJavaSubmission.git", "student1")
 
         assertEquals(1, gitSubmissionRepository.count())
@@ -353,8 +353,7 @@ class GitSubmissionControllerTests {
             .with(user(STUDENT_1)))
             .andExpect(status().isInternalServerError)
 
-        val gitSubmissionId = testsHelper.connectToGitRepositoryAndBuildReport(mvc, gitSubmissionRepository,
-            defaultAssignmentId, "git@github.com:drop-project-edu/sampleJavaSubmission.git", "student1")
+        val gitSubmissionId = gitFixtures.connectToGitRepositoryAndBuildReport(defaultAssignmentId, "git@github.com:drop-project-edu/sampleJavaSubmission.git", "student1")
 
         this.mvc.perform(
             post("/git-submission/refresh-git/${gitSubmissionId}")

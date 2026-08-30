@@ -19,6 +19,8 @@
  */
 package org.dropproject.controllers
 
+import org.dropproject.TestUsers.STUDENT_1
+import org.dropproject.TestUsers.TEACHER_1
 import org.junit.jupiter.api.Tag
 import org.dropproject.DropProjectIntegrationTest
 import org.junit.jupiter.api.Assertions.*
@@ -77,7 +79,7 @@ class UploadValidationTests : UploadTestBase() {
     @Test
     fun `upload project with invalid structure 1`() {
 
-        val submissionId = testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", "testJavaProj", STUDENT_1)
+        val submissionId = submissionFixtures.uploadProject("projectInvalidStructure1", "testJavaProj", STUDENT_1)
 
         val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
                 .andExpect(status().isOk)
@@ -99,7 +101,7 @@ class UploadValidationTests : UploadTestBase() {
     @Test
     fun `upload project with invalid structure 2`() {
 
-        val submissionId = testsHelper.uploadProject(this.mvc, "projectInvalidStructure2", "testJavaProj", STUDENT_1)
+        val submissionId = submissionFixtures.uploadProject("projectInvalidStructure2", "testJavaProj", STUDENT_1)
 
         val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
                 .andExpect(status().isOk)
@@ -119,7 +121,7 @@ class UploadValidationTests : UploadTestBase() {
     @Test
     fun `upload project with hacking attempt`() {
 
-        val submissionId = testsHelper.uploadProject(this.mvc, "projectHackingAttempt", "testJavaProj", STUDENT_1)
+        val submissionId = submissionFixtures.uploadProject("projectHackingAttempt", "testJavaProj", STUDENT_1)
 
         val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
                 .andExpect(status().isOk())
@@ -138,7 +140,7 @@ class UploadValidationTests : UploadTestBase() {
     @Test
     fun `upload project with unexpected character`() {
         val uploader = User("p4453", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
-        val submissionId = testsHelper.uploadProject(this.mvc, "projectUnexpectedCharacter", "testJavaProj", uploader)
+        val submissionId = submissionFixtures.uploadProject("projectUnexpectedCharacter", "testJavaProj", uploader)
 
         val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(uploader)))
                 .andExpect(status().isOk())
@@ -165,7 +167,7 @@ class UploadValidationTests : UploadTestBase() {
     @Test
     fun `upload a project with test classes that dont follow the TestXXX convention should show an error`() {
 
-        val submissionId = testsHelper.uploadProject(this.mvc, "projectWithStudentTestNotValid", "testJavaProj", STUDENT_1)
+        val submissionId = submissionFixtures.uploadProject("projectWithStudentTestNotValid", "testJavaProj", STUDENT_1)
 
         val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
             .andExpect(status().isOk())
@@ -231,7 +233,7 @@ class UploadValidationTests : UploadTestBase() {
     @Test
     fun `upload project with invalid structure - indicators should be visible in report`() {
 
-        val submissionId = testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", "testJavaProj", STUDENT_1)
+        val submissionId = submissionFixtures.uploadProject("projectInvalidStructure1", "testJavaProj", STUDENT_1)
 
         // status should remain VALIDATED
         val submissionFromDB = submissionRepository.findById(submissionId.toLong()).get()
@@ -258,12 +260,12 @@ class UploadValidationTests : UploadTestBase() {
     fun `assignment files don't overwrite submission files`() {
 
         try {
-            testsHelper.createAndSetupAssignment(mvc, assignmentRepository, "sampleJavaAssignment", "Sample Java Assignment",
+            assignmentFixtures.createAndSetupAssignment("sampleJavaAssignment", "Sample Java Assignment",
                     "org.dropProject.samples.sampleJavaAssignment",
                     "UPLOAD", sampleJavaAssignmentRepo,
                     activateRightAfterCloning = true)
 
-            val submissionId = testsHelper.uploadProject(this.mvc, "projectSampleJavaAssignmentNOK", "sampleJavaAssignment", STUDENT_1)
+            val submissionId = submissionFixtures.uploadProject("projectSampleJavaAssignmentNOK", "sampleJavaAssignment", STUDENT_1)
 
             val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
                     .andExpect(status().isOk())

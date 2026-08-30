@@ -19,6 +19,9 @@
  */
 package org.dropproject.controllers
 
+import org.dropproject.TestUsers.STUDENT_1
+import org.dropproject.TestUsers.STUDENT_2
+import org.dropproject.TestUsers.TEACHER_1
 import org.junit.jupiter.api.Tag
 import org.dropproject.DropProjectIntegrationTest
 import org.junit.jupiter.api.Assertions.*
@@ -45,7 +48,7 @@ class UploadSubmissionLifecycleTests : UploadTestBase() {
     @Test
     fun `upload project goes into right folder`() {
 
-        val submissionId = testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", "testJavaProj", STUDENT_1)
+        val submissionId = submissionFixtures.uploadProject("projectInvalidStructure1", "testJavaProj", STUDENT_1)
 
         val submissionDB = submissionRepository.findById(submissionId.toLong()).get()
         val submissionFolder = File("${dropProjectProperties.storage.rootLocation}/upload", submissionDB.submissionFolder)
@@ -62,7 +65,7 @@ class UploadSubmissionLifecycleTests : UploadTestBase() {
                 .andExpect(status().isOk())
                 .andExpect(model().attribute("numSubmissions", 0L))
 
-        testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
+        submissionFixtures.uploadProject("projectCompilationErrors", "testJavaProj", STUDENT_1)
 
         this.mvc.perform(get("/upload/testJavaProj").with(user(STUDENT_1)))
                 .andExpect(status().isOk())
@@ -73,8 +76,8 @@ class UploadSubmissionLifecycleTests : UploadTestBase() {
     @Test
     fun `mark as final`() {
 
-        testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
-        testsHelper.uploadProject(this.mvc, "projectCheckstyleErrors", "testJavaProj", STUDENT_1)
+        submissionFixtures.uploadProject("projectCompilationErrors", "testJavaProj", STUDENT_1)
+        submissionFixtures.uploadProject("projectCheckstyleErrors", "testJavaProj", STUDENT_1)
 
         // mark second submission as final
         this.mvc.perform(post("/markAsFinal/2")
@@ -113,8 +116,8 @@ class UploadSubmissionLifecycleTests : UploadTestBase() {
     @Test
     fun `cleanup submissions`() {
 
-        testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
-        testsHelper.uploadProject(this.mvc, "projectCheckstyleErrors", "testJavaProj", STUDENT_1)
+        submissionFixtures.uploadProject("projectCompilationErrors", "testJavaProj", STUDENT_1)
+        submissionFixtures.uploadProject("projectCheckstyleErrors", "testJavaProj", STUDENT_1)
 
         // mark second submission as final
         this.mvc.perform(post("/markAsFinal/2")
@@ -144,8 +147,8 @@ class UploadSubmissionLifecycleTests : UploadTestBase() {
     @Test
     fun `cleanup doesn't remove files of groups without a final submission`() {
 
-        testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
-        testsHelper.uploadProject(this.mvc, "projectCheckstyleErrors", "testJavaProj", STUDENT_1)
+        submissionFixtures.uploadProject("projectCompilationErrors", "testJavaProj", STUDENT_1)
+        submissionFixtures.uploadProject("projectCheckstyleErrors", "testJavaProj", STUDENT_1)
 
         val mavenizedProjectsFolder = File(dropProjectProperties.mavenizedProjects.rootLocation,
                                             Submission.relativeUploadFolder("testJavaProj", Date()))
@@ -209,7 +212,7 @@ class UploadSubmissionLifecycleTests : UploadTestBase() {
 
             // submit assignment and check errors
             run {
-                val submissionId = testsHelper.uploadProject(this.mvc, "projectOtherEncoding", "testJavaProj", uploader)
+                val submissionId = submissionFixtures.uploadProject("projectOtherEncoding", "testJavaProj", uploader)
 
                 val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(uploader)))
                         .andExpect(status().isOk())
@@ -275,7 +278,7 @@ class UploadSubmissionLifecycleTests : UploadTestBase() {
 
     @Test
     fun `rebuild submission`() {
-        val submissionId = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
+        val submissionId = submissionFixtures.uploadProject("projectCompilationErrors", "testJavaProj", STUDENT_1)
 
         this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
                 .andExpect(status().isOk)
@@ -302,7 +305,7 @@ class UploadSubmissionLifecycleTests : UploadTestBase() {
 
     @Test
     fun `abort rebuild`() {
-        val submissionId = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
+        val submissionId = submissionFixtures.uploadProject("projectCompilationErrors", "testJavaProj", STUDENT_1)
 
         // simulate a rebuild that got stuck: force the submission into REBUILDING and give it a tracking row,
         // as UploadController.rebuild() would have done when it started
@@ -322,7 +325,7 @@ class UploadSubmissionLifecycleTests : UploadTestBase() {
 
         // aborting a submission that has already reached a terminal, non-aborted status must be a no-op (guards
         // against a stale "Abort" click on the build report page clobbering a result that has since completed)
-        val otherSubmissionId = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_2)
+        val otherSubmissionId = submissionFixtures.uploadProject("projectCompilationErrors", "testJavaProj", STUDENT_2)
         assertEquals(SubmissionStatus.VALIDATED, submissionRepository.findById(otherSubmissionId.toLong()).get().getStatus())
 
         this.mvc.perform(post("/abortRebuild/$otherSubmissionId")
@@ -337,7 +340,7 @@ class UploadSubmissionLifecycleTests : UploadTestBase() {
     @Test
     fun `upload and delete one submission`() {
 
-        val submissionId = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
+        val submissionId = submissionFixtures.uploadProject("projectCompilationErrors", "testJavaProj", STUDENT_1)
 
         this.mvc.perform(post("/delete/$submissionId")
                 .with(user(TEACHER_1)))
@@ -361,8 +364,8 @@ class UploadSubmissionLifecycleTests : UploadTestBase() {
     @Test
     fun `upload multiple and delete just one submission`() {
 
-        val submissionId1 = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
-        val submissionId2 = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
+        val submissionId1 = submissionFixtures.uploadProject("projectCompilationErrors", "testJavaProj", STUDENT_1)
+        val submissionId2 = submissionFixtures.uploadProject("projectCompilationErrors", "testJavaProj", STUDENT_1)
 
         this.mvc.perform(post("/delete/$submissionId1")
                 .with(user(TEACHER_1)))

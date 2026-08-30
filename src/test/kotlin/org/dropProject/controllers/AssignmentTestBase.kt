@@ -19,7 +19,9 @@
  */
 package org.dropproject.controllers
 
-import org.dropproject.TestsHelper
+import org.dropproject.AssignmentFixtures
+import org.dropproject.SubmissionFixtures
+import org.dropproject.GitFixtures
 import org.dropproject.dao.*
 import org.dropproject.repository.*
 import org.dropproject.services.AssignmentService
@@ -79,15 +81,15 @@ abstract class AssignmentTestBase {
     lateinit var assignmentService: AssignmentService
 
     @Autowired
-    lateinit var testsHelper: TestsHelper
+    lateinit var assignmentFixtures: AssignmentFixtures
+    @Autowired
+    lateinit var submissionFixtures: SubmissionFixtures
+    @Autowired
+    lateinit var gitFixtures: GitFixtures
 
     @Autowired
     lateinit var scheduledTasks: ScheduledTasks
 
     @Autowired
     lateinit var dropProjectProperties: DropProjectProperties
-
-    val TEACHER_1 = User("teacher1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
-
-    val STUDENT_1 = User("student1", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
 }
