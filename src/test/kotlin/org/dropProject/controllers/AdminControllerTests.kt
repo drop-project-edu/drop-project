@@ -44,9 +44,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.TestMethodOrder
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.MethodOrderer
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.web.servlet.MockMvc
@@ -57,7 +55,6 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.forward
 import java.io.File
 import java.util.concurrent.TimeUnit
 
-@TestMethodOrder(MethodOrderer.MethodName::class)
 @DropProjectIntegrationTest
 @Tag("integration")
 class AdminControllerTests {
@@ -85,14 +82,14 @@ class AdminControllerTests {
 
     @Test
     @WithMockUser("admin",roles=["DROP_PROJECT_ADMIN"])
-    fun test_00_getDashboard() {
+    fun `get dashboard`() {
         this.mvc.perform(get("/admin/dashboard"))
                 .andExpect(status().isOk)
     }
 
     @Test
     @WithMockUser("admin",roles=["DROP_PROJECT_ADMIN"])
-    fun test_01_changeMavenOutput() {
+    fun `change maven output`() {
         this.mvc.perform(post("/admin/dashboard")
                 .param("showMavenOutput", "true")
                 .param("asyncTimeout", "30")
@@ -103,7 +100,7 @@ class AdminControllerTests {
 
     @Test
     @WithMockUser("admin",roles=["DROP_PROJECT_ADMIN"])
-    fun test_02_showPendingAndAbort() {
+    fun `show pending and abort`() {
         val result = this.mvc.perform(get("/admin/showPending"))
                 .andExpect(status().isOk)
                 .andReturn()
@@ -143,7 +140,7 @@ class AdminControllerTests {
 
     @Test
     @WithMockUser("admin",roles=["DROP_PROJECT_ADMIN"])
-    fun test_03_showPendingIncludesRebuildingAndSubmittedForRebuild() {
+    fun `show pending includes rebuilding and submitted for rebuild`() {
 
         val assignment01 = Assignment(id = "testJavaProj", name = "Test Project (for automatic tests)",
                 packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
@@ -182,7 +179,7 @@ class AdminControllerTests {
 
     @Test
     @WithMockUser("admin",roles=["DROP_PROJECT_ADMIN"])
-    fun test_04_showPendingListsAndKillsARealOrphanedMavenProcess() {
+    fun `show pending lists and kills a real orphaned maven process`() {
 
         val assignment01 = Assignment(id = "testJavaProj", name = "Test Project (for automatic tests)",
                 packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
