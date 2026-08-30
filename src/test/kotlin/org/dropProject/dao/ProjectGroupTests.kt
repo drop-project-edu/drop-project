@@ -22,10 +22,10 @@ package org.dropproject.dao
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
-class TestProjectGroup {
+class ProjectGroupTests {
 
     @Test
-    fun projectGroup() {
+    fun `contains finds authors by their number`() {
         var projectGroup = ProjectGroup(1)
         projectGroup.authors.add(Author(1, "BC", "1983"))
         assertTrue(projectGroup.contains("1983"))

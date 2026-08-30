@@ -19,8 +19,7 @@
  */
 package org.dropproject.controllers
 
-import org.junit.jupiter.api.extension.ExtendWith
-import org.dropproject.ResetStateExtension
+import org.dropproject.DropProjectIntegrationTest
 import org.junit.jupiter.api.Assertions.*
 import org.dropproject.TestsHelper
 import org.dropproject.dao.*
@@ -48,8 +47,6 @@ import org.mockito.BDDMockito.verify
 import org.mockito.Mockito.never
 import org.springframework.beans.factory.annotation.Autowired
 import org.dropproject.config.DropProjectProperties
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.core.io.ResourceLoader
 import org.springframework.data.domain.Sort
 import org.springframework.mock.web.MockMultipartFile
@@ -57,8 +54,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.User
 import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers.print
@@ -70,11 +65,7 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 
-@AutoConfigureMockMvc
-@SpringBootTest
-@TestPropertySource(locations = ["classpath:drop-project-test.properties"])
-@ActiveProfiles("test")
-@ExtendWith(ResetStateExtension::class)
+@DropProjectIntegrationTest
 class UploadControllerTests {
 
     @Autowired
@@ -169,7 +160,7 @@ class UploadControllerTests {
 
     @Test
     @Disabled("rever isto - storageService is not a mock, so the verify() call would fail")
-    fun shouldNotAcceptNoZipFile() {
+    fun `should not accept a non-zip file`() {
         val multipartFile = MockMultipartFile("file", "test.txt", "text/plain", "Spring Framework".toByteArray())
         this.mvc.perform(multipart("/upload").file(multipartFile).with(user(STUDENT_1)))
                 .andExpect(status().isFound)
@@ -181,7 +172,7 @@ class UploadControllerTests {
 
     @Test
     @Disabled("Infelizmente o MockMvc não consegue testar isto")
-    fun shouldNotAcceptBigFile() {
+    fun `should not accept a big file`() {
 
         val bigFileData = ByteArray(100_000_000) { 1 }
 

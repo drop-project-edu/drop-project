@@ -19,8 +19,7 @@
  */
 package org.dropproject.data
 
-import org.junit.jupiter.api.extension.ExtendWith
-import org.dropproject.ResetStateExtension
+import org.dropproject.DropProjectIntegrationTest
 import org.dropproject.dao.Assignment
 import org.dropproject.dao.Language
 import org.dropproject.forms.SubmissionMethod
@@ -29,17 +28,11 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.core.io.ResourceLoader
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.TestPropertySource
 
 
-@SpringBootTest
-@TestPropertySource(locations=["classpath:drop-project-test.properties"])
-@ActiveProfiles("test")
-@ExtendWith(ResetStateExtension::class)
-class TestBuildReport {
+@DropProjectIntegrationTest
+class BuildReportTests {
 
     @Autowired
     lateinit var resourceLoader: ResourceLoader
@@ -57,7 +50,7 @@ class TestBuildReport {
             language = Language.KOTLIN, gitRepositoryFolder = "testJavaProj")
 
     @Test
-    fun testFatalError1() {
+    fun `fatal error 1`() {
 
         val mavenOutputLines = resourceLoader.getResource("file:src/test/sampleMavenOutputs/fatalError1.txt").file.readLines()
 
@@ -69,7 +62,7 @@ class TestBuildReport {
     }
 
     @Test
-    fun testFatalError2() {
+    fun `fatal error 2`() {
 
         val mavenOutputLines = resourceLoader.getResource("file:src/test/sampleMavenOutputs/fatalError2.txt").file.readLines()
 
@@ -82,7 +75,7 @@ class TestBuildReport {
     }
 
     @Test
-    fun testCheckstyleErrors1() {
+    fun `checkstyle errors 1`() {
 
         val mavenOutputLines = resourceLoader.getResource("file:src/test/sampleMavenOutputs/checkstyleErrors1.txt").file.readLines()
 
@@ -96,7 +89,7 @@ class TestBuildReport {
     }
 
     @Test
-    fun testCompilerError1() {
+    fun `compiler error 1`() {
 
         val mavenOutputLines = resourceLoader.getResource("file:src/test/sampleMavenOutputs/compilerError1.txt").file.readLines()
 
@@ -110,7 +103,7 @@ class TestBuildReport {
     }
 
     @Test
-    fun testCompilerError2() {
+    fun `compiler error 2`() {
 
         val mavenOutputLines = resourceLoader.getResource("file:src/test/sampleMavenOutputs/compilerError2.txt").file.readLines()
 
@@ -124,7 +117,7 @@ class TestBuildReport {
     }
 
     @Test
-    fun testJUnitErrors1() {
+    fun `junit errors 1`() {
 
         val mavenOutputLines = resourceLoader.getResource("file:src/test/sampleMavenOutputs/junitErrors1.txt").file.readLines()
 
@@ -138,7 +131,7 @@ class TestBuildReport {
     }
 
     @Test
-    fun testOK1() {
+    fun `build ok 1`() {
 
         val mavenOutputLines = resourceLoader.getResource("file:src/test/sampleMavenOutputs/ok1.txt").file.readLines()
 
@@ -152,7 +145,7 @@ class TestBuildReport {
     }
 
     @Test
-    fun testKotlinCompilerError1() {
+    fun `kotlin compiler error 1`() {
 
         val mavenOutputLines = resourceLoader.getResource("file:src/test/sampleMavenOutputs/kotlinCompilerError1.txt").file.readLines()
 
@@ -168,7 +161,7 @@ class TestBuildReport {
     }
 
     @Test
-    fun testKotlinCompilerError2() {
+    fun `kotlin compiler error 2`() {
 
         val mavenOutputLines = resourceLoader.getResource("file:src/test/sampleMavenOutputs/kotlinCompilerError2.txt").file.readLines()
 
@@ -183,7 +176,7 @@ class TestBuildReport {
     }
 
     @Test
-    fun testKotlinJunitErrors1() {
+    fun `kotlin junit errors 1`() {
 
         val mavenOutputLines = resourceLoader.getResource("file:src/test/sampleMavenOutputs/kotlinJunitErrors1.txt").file.readLines()
 
@@ -197,7 +190,7 @@ class TestBuildReport {
     }
 
     @Test
-    fun testKotlinOK1() {
+    fun `kotlin build ok 1`() {
 
         val mavenOutputLines = resourceLoader.getResource("file:src/test/sampleMavenOutputs/kotlinOK1.txt").file.readLines()
 
@@ -211,7 +204,7 @@ class TestBuildReport {
     }
 
     @Test
-    fun testPluginError() {
+    fun `plugin error`() {
         val mavenOutputLines = resourceLoader.getResource("file:src/test/sampleMavenOutputs/pluginError.txt").file.readLines()
 
         val buildReport = buildReportBuilder.build(mavenOutputLines,
@@ -227,7 +220,7 @@ class TestBuildReport {
     }
 
     @Test
-    fun testCheckstylePluginError() {
+    fun `checkstyle plugin error`() {
         val mavenOutputLines = resourceLoader.getResource("file:src/test/sampleMavenOutputs/checkstylePluginFails.txt").file.readLines()
 
         val buildReport = buildReportBuilder.build(mavenOutputLines,
@@ -240,7 +233,7 @@ class TestBuildReport {
     }
 
     @Test
-    fun testKotlinDetektErrors() {
+    fun `kotlin detekt errors`() {
 
         val detektOutputs = arrayOf("kotlinDetektErrors-1.0.0.RC9.2.txt", "kotlinDetektErrors-1.1.1.txt", "kotlinDetektErrors-1.11.0.txt")
 
@@ -259,7 +252,7 @@ class TestBuildReport {
     }
 
     @Test
-    fun testKotlinDetektErrors2() {
+    fun `kotlin detekt errors 2`() {
         val mavenOutputLines = resourceLoader.getResource("file:src/test/sampleMavenOutputs/kotlinDetektErrors2-1.11.0.txt").file.readLines()
         val buildReport = buildReportBuilder.build(mavenOutputLines,
                 "someMavenizedProj",
@@ -273,7 +266,7 @@ class TestBuildReport {
     // when the local maven repository is cold (e.g., on the CI server), maven downloads the detekt plugin's
     // dependencies right after printing the goal's header, so those messages show up in the middle of detekt's report
     @Test
-    fun testKotlinDetektThresholdExceededOnColdRepository() {
+    fun `kotlin detekt threshold exceeded on cold repository`() {
         val mavenOutputLines = resourceLoader
             .getResource("file:src/test/sampleMavenOutputs/kotlinDetektThresholdExceededColdRepository.txt")
             .file.readLines()
@@ -292,7 +285,7 @@ class TestBuildReport {
     }
 
     @Test
-    fun testExit() {
+    fun `exit code`() {
 
         val mavenOutputLines = resourceLoader.getResource("file:src/test/sampleMavenOutputs/exit.txt").file.readLines()
 
@@ -306,7 +299,7 @@ class TestBuildReport {
     }
 
     @Test
-    fun testTestsDidntRun() {
+    fun `tests didn't run`() {
 
         val mavenOutputLines = resourceLoader.getResource("file:src/test/sampleMavenOutputs/testsDidntRun.txt").file.readLines()
 
@@ -318,7 +311,7 @@ class TestBuildReport {
     }
 
     @Test
-    fun testOutOfMemoryError1() {
+    fun `out of memory error 1`() {
 
         val mavenOutputLines = resourceLoader.getResource("file:src/test/sampleMavenOutputs/outOfMemoryError.txt").file.readLines()
 

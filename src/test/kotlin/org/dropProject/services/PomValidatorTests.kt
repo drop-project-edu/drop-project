@@ -19,22 +19,15 @@
  */
 package org.dropproject.services
 
-import org.junit.jupiter.api.extension.ExtendWith
-import org.dropproject.ResetStateExtension
+import org.dropproject.DropProjectIntegrationTest
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.TestPropertySource
 import java.io.File
 
 
-@SpringBootTest
-@TestPropertySource(locations = ["classpath:drop-project-test.properties"])
-@ActiveProfiles("test")
-@ExtendWith(ResetStateExtension::class)
-class TestPomValidator {
+@DropProjectIntegrationTest
+class PomValidatorTests {
 
     @Autowired
     private lateinit var pomValidator: PomValidator

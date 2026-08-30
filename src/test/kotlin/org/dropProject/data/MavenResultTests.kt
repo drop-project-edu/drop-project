@@ -17,27 +17,26 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package org.dropproject.dao
+package org.dropproject.data
 
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
-class TestAuthor {
-
+class MavenResultTests {
     @Test
-    fun testAuthorConstructor() {
-        var projGroup = ProjectGroup(1)
-        var author = Author("BC", "1983", projGroup)
-        assertEquals("BC", author.name)
-        assertEquals("1983", author.userId)
-        assertEquals(projGroup, author.group)
-    }
+    fun `maven result`() {
+        val outputLines = mutableListOf<String>()
+        var mvnResult = MavenResult(100, outputLines, true)
+        assertTrue(mvnResult.expiredByTimeout)
+        assertEquals(100, mvnResult.resultCode)
 
-    @Test
-    fun testAuthorWithSpacesInName() {
-        var author = Author(0, " Pedro   ", "1234")
-        assertEquals("Pedro", author.name)
-        assertEquals("1234", author.userId)
-    }
+        var mvnResult2 = MavenResult(200, outputLines, false)
+        assertFalse(mvnResult2.expiredByTimeout)
+        assertEquals(200, mvnResult2.resultCode)
 
+        mvnResult2.expiredByTimeout = true
+        assertTrue(mvnResult2.expiredByTimeout)
+    }
 }

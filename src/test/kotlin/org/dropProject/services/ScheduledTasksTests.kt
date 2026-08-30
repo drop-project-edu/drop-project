@@ -19,8 +19,7 @@
  */
 package org.dropproject.services
 
-import org.junit.jupiter.api.extension.ExtendWith
-import org.dropproject.ResetStateExtension
+import org.dropproject.DropProjectIntegrationTest
 import org.dropproject.TestsHelper
 import org.dropproject.config.PendingExport
 import org.dropproject.config.PendingTasks
@@ -38,19 +37,11 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.servlet.MockMvc
 import java.io.File
 import java.util.*
 
-@AutoConfigureMockMvc
-@SpringBootTest
-@TestPropertySource(locations=["classpath:drop-project-test.properties"])
-@ActiveProfiles("test")
-@ExtendWith(ResetStateExtension::class)
+@DropProjectIntegrationTest
 class ScheduledTasksTests {
 
     @Autowired

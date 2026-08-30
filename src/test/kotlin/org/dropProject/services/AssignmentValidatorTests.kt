@@ -37,7 +37,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension
 
 @ExtendWith(SpringExtension::class)
 @ActiveProfiles("test")
-class TestAssignmentValidator {
+class AssignmentValidatorTests {
 
     @Autowired
     lateinit var resourceLoader: ResourceLoader

@@ -19,8 +19,7 @@
  */
 package org.dropproject.services
 
-import org.junit.jupiter.api.extension.ExtendWith
-import org.dropproject.ResetStateExtension
+import org.dropproject.DropProjectIntegrationTest
 import org.dropproject.controllers.InvalidProjectStructureException
 import org.dropproject.dao.Assignment
 import org.dropproject.dao.Language
@@ -31,20 +30,12 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.core.io.ResourceLoader
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.TestPropertySource
 import java.io.File
 
 
-@AutoConfigureMockMvc
-@SpringBootTest
-@TestPropertySource(locations = ["classpath:drop-project-test.properties"])
-@ActiveProfiles("test")
-@ExtendWith(ResetStateExtension::class)
-class TestSubmissionService {
+@DropProjectIntegrationTest
+class SubmissionServiceTests {
 
     @Autowired
     private lateinit var submissionService: SubmissionService

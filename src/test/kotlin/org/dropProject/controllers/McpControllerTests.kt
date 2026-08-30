@@ -19,8 +19,7 @@
  */
 package org.dropproject.controllers
 
-import org.junit.jupiter.api.extension.ExtendWith
-import org.dropproject.ResetStateExtension
+import org.dropproject.DropProjectIntegrationTest
 import org.dropproject.TestsHelper
 import org.dropproject.dao.Assignment
 import org.dropproject.forms.SubmissionMethod
@@ -28,23 +27,15 @@ import org.dropproject.repository.AssignmentRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.User
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 
-@AutoConfigureMockMvc
-@SpringBootTest
-@TestPropertySource(locations = ["classpath:drop-project-test.properties"])
-@ActiveProfiles("test")
-@ExtendWith(ResetStateExtension::class)
-class McpControllerTests: APIControllerTests {
+@DropProjectIntegrationTest
+class McpControllerTests: ApiTestSupport {
 
     @Autowired
     lateinit var mvc: MockMvc
@@ -113,7 +104,7 @@ class McpControllerTests: APIControllerTests {
     }
 
     @Test
-    fun testMcpInitialize() {
+    fun `mcp initialize`() {
         val authHeader = getBearerToken("teacher1")
         val requestJson = """
             {
@@ -136,7 +127,7 @@ class McpControllerTests: APIControllerTests {
     }
 
     @Test
-    fun testMcpToolsList() {
+    fun `mcp tools list`() {
         val authHeader = getBearerToken("teacher1")
         val requestJson = """
             {
@@ -256,7 +247,7 @@ class McpControllerTests: APIControllerTests {
     }
 
     @Test
-    fun testMcpGetAssignmentInfo() {
+    fun `mcp get assignment info`() {
         val authHeader = getBearerToken("teacher1")
         val requestJson = """
             {
@@ -287,7 +278,7 @@ class McpControllerTests: APIControllerTests {
     }
 
     @Test
-    fun testMcpSearchAssignments() {
+    fun `mcp search assignments`() {
         val authHeader = getBearerToken("teacher1")
         val requestJson = """
             {
@@ -317,7 +308,7 @@ class McpControllerTests: APIControllerTests {
     }
 
     @Test
-    fun testMcpGetSubmissionCode() {
+    fun `mcp get submission code`() {
         val authHeader = getBearerToken("teacher1")
 
         // First, create a submission
@@ -356,7 +347,7 @@ class McpControllerTests: APIControllerTests {
     }
 
     @Test
-    fun testMcpGetSubmissionInfo() {
+    fun `mcp get submission info`() {
         val authHeader = getBearerToken("teacher1")
 
         // First, create a submission
@@ -397,7 +388,7 @@ class McpControllerTests: APIControllerTests {
     }
 
     @Test
-    fun testMcpGetFileContent() {
+    fun `mcp get file content`() {
         val authHeader = getBearerToken("teacher1")
 
         // First, create a submission

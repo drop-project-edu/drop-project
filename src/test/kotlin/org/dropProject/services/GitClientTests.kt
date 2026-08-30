@@ -28,7 +28,7 @@ import java.io.File
 import java.nio.file.Files
 
 
-class TestGitClient {
+class GitClientTests {
 
     val gitClient = GitClient()
 
@@ -41,7 +41,7 @@ class TestGitClient {
     }
 
     @Test
-    fun testCheckValidGithubURL() {
+    fun `check valid github url`() {
 
         assertTrue(gitClient.checkValidSSHGithubURL("git@github.com:ULHT-LP2-2018-19/paint-episodio-2-completo.git"))
         assertFalse(gitClient.checkValidSSHGithubURL("https://github.com/ULHT-LP2-2018-19/paint-episodio-2-completo.git"))
@@ -51,7 +51,7 @@ class TestGitClient {
     }
 
     @Test
-    fun testConvertSSHGithubURLtoHttpURL() {
+    fun `convert ssh github url to http url`() {
 
         assertEquals("https://github.com/ULHT-LP2-2018-19/paint-episodio-2-completo",
                 gitClient.convertSSHGithubURLtoHttpURL("git@github.com:ULHT-LP2-2018-19/paint-episodio-2-completo.git"))
@@ -59,7 +59,7 @@ class TestGitClient {
     }
 
     @Test
-    fun testIsPubliclyReadable() {
+    fun `is publicly readable`() {
 
         // a repository owned by the drop project organization that is public and is expected to stay public
         assertTrue(gitClient.isPubliclyReadable("git@github.com:drop-project-edu/sampleJavaAssignment.git"))
@@ -97,7 +97,7 @@ class TestGitClient {
     }
 
     @Test
-    fun testCloneRepositoryAtCommit_returnsContentOfTheGivenCommit() {
+    fun `cloneRepositoryAtCommit returns content of the given commit`() {
 
         val (repoFolder, commitA, commitB) = createLocalGitRepoWithTwoCommits()
 
@@ -111,7 +111,7 @@ class TestGitClient {
     }
 
     @Test
-    fun testCloneRepositoryAtCommit_nullHashReturnsHead() {
+    fun `cloneRepositoryAtCommit with null hash returns head`() {
 
         val (repoFolder, _, _) = createLocalGitRepoWithTwoCommits()
 
@@ -121,7 +121,7 @@ class TestGitClient {
     }
 
     @Test
-    fun testCloneRepositoryAtCommit_doesNotMutateSourceRepository() {
+    fun `cloneRepositoryAtCommit does not mutate the source repository`() {
 
         val (repoFolder, commitA, _) = createLocalGitRepoWithTwoCommits()
 
@@ -143,7 +143,7 @@ class TestGitClient {
     }
 
     @Test
-    fun testCloneRepositoryAtCommit_concurrentClonesOfDifferentCommitsDontInterfere() {
+    fun `cloneRepositoryAtCommit concurrent clones of different commits don't interfere`() {
 
         val (repoFolder, commitA, commitB) = createLocalGitRepoWithTwoCommits()
 

@@ -19,25 +19,16 @@
  */
 package org.dropproject.services
 
-import org.junit.jupiter.api.extension.ExtendWith
-import org.dropproject.ResetStateExtension
+import org.dropproject.DropProjectIntegrationTest
 import org.dropproject.data.AuthorDetails
 import org.dropproject.repository.ProjectGroupRepository
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.TestPropertySource
 
 
-@AutoConfigureMockMvc
-@SpringBootTest
-@TestPropertySource(locations = ["classpath:drop-project-test.properties"])
-@ActiveProfiles("test")
-@ExtendWith(ResetStateExtension::class)
-class TestProjectGroupService {
+@DropProjectIntegrationTest
+class ProjectGroupServiceTests {
 
     @Autowired
     private lateinit var projectGroupService: ProjectGroupService
@@ -46,7 +37,7 @@ class TestProjectGroupService {
     private lateinit var projectGroupRepository: ProjectGroupRepository
 
     @Test
-    fun testCreateGroupWithOneStudentTwice() {
+    fun `create group with one student twice`() {
 
         val authors = arrayListOf(AuthorDetails("username1", "user1"))
         val projectGroup1 = projectGroupService.getOrCreateProjectGroup(authors)
@@ -60,7 +51,7 @@ class TestProjectGroupService {
     }
 
     @Test
-    fun testCreateGroupWithTwoStudentsTwice() {
+    fun `create group with two students twice`() {
 
         val authors = arrayListOf(AuthorDetails("username1", "user1"), AuthorDetails("username2", "user2"))
         val projectGroup1 = projectGroupService.getOrCreateProjectGroup(authors)

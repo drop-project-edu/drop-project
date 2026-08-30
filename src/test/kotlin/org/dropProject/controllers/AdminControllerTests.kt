@@ -19,8 +19,7 @@
  */
 package org.dropproject.controllers
 
-import org.junit.jupiter.api.extension.ExtendWith
-import org.dropproject.ResetStateExtension
+import org.dropproject.DropProjectIntegrationTest
 import org.dropproject.TestsHelper
 import org.dropproject.dao.Assignment
 import org.dropproject.dao.AssignmentTag
@@ -48,11 +47,7 @@ import org.junit.jupiter.api.TestMethodOrder
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.MethodOrderer
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.security.test.context.support.WithMockUser
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
@@ -61,12 +56,8 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.forward
 import java.io.File
 import java.util.concurrent.TimeUnit
 
-@AutoConfigureMockMvc
-@SpringBootTest
-@TestPropertySource(locations=["classpath:drop-project-test.properties"])
-@ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.MethodName::class)
-@ExtendWith(ResetStateExtension::class)
+@DropProjectIntegrationTest
 class AdminControllerTests {
 
     @Autowired

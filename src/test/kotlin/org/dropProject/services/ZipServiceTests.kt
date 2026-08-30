@@ -22,7 +22,7 @@ package org.dropproject.services
 import org.junit.jupiter.api.Test
 import java.io.File
 
-class TestZipService {
+class ZipServiceTests {
 
     val zipper = ZipService()
 
@@ -33,7 +33,7 @@ class TestZipService {
      * is unzipped and we check if the decompressed file has the same contents that the original file had.
      */
     @Test
-    fun testZipAndUnzip()  {
+    fun `zip and unzip`()  {
         val zipCreationTime = System.currentTimeMillis()
         val temDirectory = File(System.getProperty("java.io.tmpdir"))
         val subDirectory = File(temDirectory, "to-zip-" + zipCreationTime)

@@ -23,10 +23,10 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.util.*
 
-class TestSubmissionStatus {
+class SubmissionStatusTests {
 
     @Test
-    fun testSubmissionConstructor() {
+    fun `submission constructor`() {
         val projGroup = ProjectGroup()
         val date = Date()
         var submission = Submission("123", "proj-lp2-1920-p1", null, "1", "V", date, projGroup, "", submissionMode = SubmissionMode.UPLOAD)
@@ -39,14 +39,14 @@ class TestSubmissionStatus {
     }
 
     @Test
-    fun testSubmissionSetCoverage() {
+    fun `submission set coverage`() {
         var submission = Submission("123", "proj-lp2-19-20-p1", null, "1", "V", Date(), ProjectGroup(), "", submissionMode = SubmissionMode.UPLOAD)
         submission.coverage = 95
         assertEquals(95, submission.coverage!!)
     }
 
     @Test
-    fun testGetSubmissionStatusInvalid() {
+    fun `get submission status with an invalid code`() {
         var exceptionOk = false
         try {
             SubmissionStatus.getSubmissionStatus("Unknown")

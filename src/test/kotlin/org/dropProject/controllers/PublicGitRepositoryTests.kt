@@ -19,8 +19,7 @@
  */
 package org.dropproject.controllers
 
-import org.junit.jupiter.api.extension.ExtendWith
-import org.dropproject.ResetStateExtension
+import org.dropproject.DropProjectIntegrationTest
 import org.dropproject.config.DropProjectProperties
 import org.dropproject.dao.Assignment
 import org.dropproject.dao.Author
@@ -36,12 +35,9 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.User
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
-import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
@@ -54,12 +50,9 @@ import java.io.File
  * The rest of the test suite runs with this validation turned off (see drop-project-test.properties),
  * so this class turns it on explicitly.
  */
-@AutoConfigureMockMvc
-@SpringBootTest
-@TestPropertySource(locations = ["classpath:drop-project-test.properties"],
-        properties = ["drop-project.git.reject-public-student-repositories=true"])
-@ActiveProfiles("test")
-@ExtendWith(ResetStateExtension::class)
+@DropProjectIntegrationTest
+// merged with the @TestPropertySource brought in by @DropProjectIntegrationTest
+@TestPropertySource(properties = ["drop-project.git.reject-public-student-repositories=true"])
 class PublicGitRepositoryTests {
 
     @Autowired
@@ -111,7 +104,7 @@ class PublicGitRepositoryTests {
     }
 
     @Test
-    fun test_connectingAPublicRepositoryIsRefused() {
+    fun `connecting a public repository is refused`() {
 
         this.mvc.perform(post("/student/setup-git")
                 .param("assignmentId", assignmentId)
@@ -127,7 +120,7 @@ class PublicGitRepositoryTests {
     }
 
     @Test
-    fun test_connectingAPrivateRepositoryProceedsToTheDeployKeyStep() {
+    fun `connecting a private repository proceeds to the deploy key step`() {
 
         this.mvc.perform(post("/student/setup-git")
                 .param("assignmentId", assignmentId)
@@ -140,7 +133,7 @@ class PublicGitRepositoryTests {
     }
 
     @Test
-    fun test_refreshingARepositoryThatBecamePublicIsRefused() {
+    fun `refreshing a repository that became public is refused`() {
 
         // simulate a submission that was connected while the repository was still private
         val gitSubmission = createConnectedGitSubmission(publicRepositoryUrl)

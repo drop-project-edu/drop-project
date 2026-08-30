@@ -33,7 +33,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension
 @ExtendWith(SpringExtension::class)
 @ActiveProfiles("test")
 @TestPropertySource(locations = ["classpath:drop-project-test.properties"])
-class TestJunitResultsParser {
+class JunitResultsParserTests {
 
     @Autowired
     lateinit var resourceLoader: ResourceLoader
@@ -45,7 +45,7 @@ class TestJunitResultsParser {
     val jacocoReportsRoot = "src/test/sampleJacocoReports"
 
     @Test
-    fun testParseReportWithNoErrors() {
+    fun `parse report with no errors`() {
 
         val xmlFile = resourceLoader.getResource("file:${junitXmlReportsRoot}/testNoErrors.xml").file.readText()
 
@@ -60,7 +60,7 @@ class TestJunitResultsParser {
     }
 
     @Test
-    fun testParseReportWithErrors1() {
+    fun `parse report with errors 1`() {
 
         val xmlFile = resourceLoader.getResource("file:${junitXmlReportsRoot}/testErrors1.xml").file.readText()
 
@@ -75,7 +75,7 @@ class TestJunitResultsParser {
     }
 
     @Test
-    fun testParseReportWithErrors2() {
+    fun `parse report with errors 2`() {
 
         val xmlFile = resourceLoader.getResource("file:${junitXmlReportsRoot}/testErrors2.xml").file.readText()
 
@@ -99,7 +99,7 @@ java.lang.NullPointerException: Cannot invoke "java.util.ArrayList.add(Object)" 
 
     // https://github.com/drop-project-edu/drop-project/issues/102
     @Test
-    fun testParseReportWhereTheOutputsDifferInABlankLine() {
+    fun `parse report where the outputs differ in a blank line`() {
 
         val xmlFile = resourceLoader
             .getResource("file:${junitXmlReportsRoot}/testErrorsBlankLineInComparison.xml").file.readText()
@@ -135,7 +135,7 @@ ${'\t'}at TestTeacherFunctions.test_01_criaMenu(TestTeacherFunctions.kt:23)
     }
 
     @Test
-    fun testParseReportWithSkippedErrors() {
+    fun `parse report with skipped errors`() {
 
         val xmlFile = resourceLoader.getResource("file:${junitXmlReportsRoot}/testSkipped.xml").file.readText()
 
@@ -150,7 +150,7 @@ ${'\t'}at TestTeacherFunctions.test_01_criaMenu(TestTeacherFunctions.kt:23)
     }
 
     @Test
-    fun testParseCoverageReport() {
+    fun `parse coverage report`() {
 
         val csvFile = resourceLoader.getResource("file:${jacocoReportsRoot}/jacoco-testProj.csv").file.readText()
 

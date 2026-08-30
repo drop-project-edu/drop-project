@@ -28,7 +28,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 
 
-interface APIControllerTests {
+interface ApiTestSupport {
 
     fun generateToken(user: String, roles: List<SimpleGrantedAuthority>, mvc: MockMvc): String {
         mvc.perform(

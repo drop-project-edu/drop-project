@@ -19,8 +19,7 @@
  */
 package org.dropproject.controllers
 
-import org.junit.jupiter.api.extension.ExtendWith
-import org.dropproject.ResetStateExtension
+import org.dropproject.DropProjectIntegrationTest
 import net.lingala.zip4j.ZipFile
 import org.apache.commons.io.FileUtils
 import org.junit.jupiter.api.AfterEach
@@ -29,15 +28,11 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.dropproject.config.DropProjectProperties
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.core.io.ResourceLoader
 import org.springframework.http.MediaType
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.User
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
@@ -60,11 +55,7 @@ import java.util.*
 import kotlin.collections.LinkedHashMap
 
 
-@AutoConfigureMockMvc
-@SpringBootTest
-@TestPropertySource(locations = ["classpath:drop-project-test.properties"])
-@ActiveProfiles("test")
-@ExtendWith(ResetStateExtension::class)
+@DropProjectIntegrationTest
 class ReportControllerTests {
 
     @Autowired
@@ -214,7 +205,7 @@ class ReportControllerTests {
     }
 
     @Test
-    fun testMySubmissions() {
+    fun `my submissions`() {
 
         testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", defaultAssignmentId, STUDENT_1)
 
@@ -725,7 +716,7 @@ class ReportControllerTests {
     }
 
     @Test
-    fun testTestMatrix() {
+    fun `test matrix`() {
         testsHelper.uploadProject(this.mvc, "projectJUnitErrors", defaultAssignmentId, STUDENT_1)
 
         val reportResult = this.mvc.perform(
@@ -759,7 +750,7 @@ class ReportControllerTests {
      * and 2 failed tests.
      */
     @Test
-    fun testSignalledGroups() {
+    fun `signalled groups`() {
         val student3 = User("student3", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
 
         testsHelper.uploadProject(this.mvc, "projectJUnitErrors", defaultAssignmentId, STUDENT_1)
@@ -803,7 +794,7 @@ class ReportControllerTests {
      * -- a String with a message saying that there are no signalled groups.
      */
     @Test
-    fun testSignalledGroupsViaMVC_NoGroupsAreSignalled() {
+    fun `signalled groups via mvc - no groups are signalled`() {
         val student3 = User("student3", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
 
         testsHelper.uploadProject(this.mvc, "projectJUnitErrors", defaultAssignmentId, STUDENT_1)
@@ -853,7 +844,7 @@ class ReportControllerTests {
      * - The groupGroupsByFailures() function will return a List with size 0
      */
     @Test
-    fun testGroupGroupsByFailures_NoGroupsAreSignalled() {
+    fun `groupGroupsByFailures - no groups are signalled`() {
         val projectGroups = testDataForGroupGroupsByFailures();
         var g1 = projectGroups[0];
         var g2 = projectGroups[1];
@@ -883,7 +874,7 @@ class ReportControllerTests {
      * - The only element of the returned list will contain 3 student groups and 2 failed tests
      */
     @Test
-    fun testGroupGroupsByFailures_AllGroupsAreSignalled() {
+    fun `groupGroupsByFailures - all groups are signalled`() {
         val projectGroups = testDataForGroupGroupsByFailures();
         var g1 = projectGroups[0];
         var g2 = projectGroups[1];
@@ -927,7 +918,7 @@ class ReportControllerTests {
      * -- One with groups 4 and 5
      */
     @Test
-    fun testGroupGroupsByFailures_MoreComplexScenario() {
+    fun `groupGroupsByFailures - more complex scenario`() {
 
         val projectGroups = testDataForGroupGroupsByFailures();
         var g1 = projectGroups[0];
@@ -998,7 +989,7 @@ class ReportControllerTests {
      * This is a test for the calculation of the average and standard deviation statistics.
      */
     @Test
-    fun testComputeStatistics() {
+    fun `compute group statistics`() {
         var submissionStatistics = testDataForComputeStatistics(1)
         var nrOfGroups = 4.0
         var expectedAverageNumberOfSubmissions = (20 + 18 + 5 + 20) / nrOfGroups
@@ -1015,7 +1006,7 @@ class ReportControllerTests {
      * to be true" (i.e. it is suspicious). That group should be returned by the function.
      */
     @Test
-    fun testIdentifyGroupsOutsideStatisticalNorms() {
+    fun `identifyGroupsOutsideStatisticalNorms`() {
         var submissionStatistics = testDataForComputeStatistics(1)
         var assignmentStatistics = computeStatistics(submissionStatistics, 20)
         // hack
@@ -1033,7 +1024,7 @@ class ReportControllerTests {
      * to be true" (i.e. it is suspicious). Those 2 groups should be returned by the function.
      */
     @Test
-    fun testIdentifyGroupsOutsideStatisticalNorms_MoreThanOneSuspiciousGroup() {
+    fun `identifyGroupsOutsideStatisticalNorms - more than one suspicious group`() {
         var submissionStatistics = testDataForComputeStatistics(2)
         var assignmentStatistics = computeStatistics(submissionStatistics, 20)
 
@@ -1057,7 +1048,7 @@ class ReportControllerTests {
      * as being outside the statistical norms.
      */
     @Test
-    fun testIdentifyGroupsOutsideStatisticalNorms_NoGroupsOverThreshold() {
+    fun `identifyGroupsOutsideStatisticalNorms - no groups over threshold`() {
         var submissionStatistics = mutableListOf<GroupSubmissionStatistics>()
         // hack : since the test is not testing the ProjectGroup objects, we can use this dummy group in all objects
         val pGroup = ProjectGroup(-1);
@@ -1079,7 +1070,7 @@ class ReportControllerTests {
      * outside of it.
      */
     @Test
-    fun testIdentifyGroupsOutsideStatisticalNorms_OnlyTheOneGroupIsOverThreshold() {
+    fun `identifyGroupsOutsideStatisticalNorms - only the one group is over threshold`() {
         var submissionStatistics = mutableListOf<GroupSubmissionStatistics>()
         // hack : since the test is not testing the ProjectGroup objects, we can use this dummy group in all objects
         val pGroup = ProjectGroup(-1)
@@ -1108,7 +1099,7 @@ class ReportControllerTests {
      * this situation (nr tests: 17, nr subs: 20).
      */
     @Test
-    fun testIdentifyGroupsOutsideStatisticalNorms_MoreComplexScenario() {
+    fun `identifyGroupsOutsideStatisticalNorms - more complex scenario`() {
         var submissionStatistics = mutableListOf<GroupSubmissionStatistics>()
 
         // hack : since the test is not testing the ProjectGroup objects, we can use this dummy group in all objects
@@ -1128,7 +1119,7 @@ class ReportControllerTests {
     }
 
     @Test
-    fun testStudentHistory() {
+    fun `student history`() {
 
         /**
          *
@@ -1213,7 +1204,7 @@ class ReportControllerTests {
     }
 
     @Test
-    fun testSubmissionsReport() {
+    fun `submissions report`() {
 
         testsHelper.uploadProject(
             this.mvc, "projectInvalidStructure1", "testJavaProj", STUDENT_1,
@@ -1267,7 +1258,7 @@ class ReportControllerTests {
     }
 
     @Test
-    fun testStudentList() {
+    fun `student list`() {
 
         // create some authors
         authorRepository.save(Author(name="Sarah", userId = "student1"))
@@ -1303,7 +1294,7 @@ class ReportControllerTests {
     }
 
     @Test
-    fun testGetReportByOtherElementOfTheGroup() {
+    fun `get report by other element of the group`() {
 
         // student1 makes a submission in name of the group (student1, student2)
         val submissionId = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", defaultAssignmentId, STUDENT_1,
@@ -1327,7 +1318,7 @@ class ReportControllerTests {
     }
 
     @Test
-    fun testCheckPlagiarismJava() {
+    fun `check plagiarism - java`() {
 
         testsHelper.uploadProject(this.mvc, "projectCompilationErrors", defaultAssignmentId, STUDENT_1)
         testsHelper.uploadProject(
@@ -1360,7 +1351,7 @@ class ReportControllerTests {
     }
 
     @Test
-    fun testCheckPlagiarismKotlin() {
+    fun `check plagiarism - kotlin`() {
 
         val assignmentKotlin = Assignment(id = "testKotlinProj", name = "Test Project (for automatic tests)",
             packageName = "org.dropproject.samples.samplekotlinassignment", ownerUserId = "teacher1",
@@ -1398,7 +1389,7 @@ class ReportControllerTests {
     }
 
     @Test
-    fun testPlagiarismReportIsStored() {
+    fun `plagiarism report is stored`() {
 
         testsHelper.uploadProject(this.mvc, "projectCompilationErrors", defaultAssignmentId, STUDENT_1)
         testsHelper.uploadProject(

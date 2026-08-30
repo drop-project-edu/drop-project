@@ -19,21 +19,16 @@
  */
 package org.dropproject.controllers
 
-import org.junit.jupiter.api.extension.ExtendWith
-import org.dropproject.ResetStateExtension
+import org.dropproject.DropProjectIntegrationTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.dropproject.config.DropProjectProperties
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.User
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
@@ -45,11 +40,7 @@ import org.dropproject.repository.*
 import org.hamcrest.Matchers.hasProperty
 import java.io.File
 
-@AutoConfigureMockMvc
-@SpringBootTest
-@TestPropertySource(locations = ["classpath:drop-project-test.properties"])
-@ActiveProfiles("test")
-@ExtendWith(ResetStateExtension::class)
+@DropProjectIntegrationTest
 class GitSubmissionControllerTests {
 
     @Autowired
@@ -121,7 +112,7 @@ class GitSubmissionControllerTests {
     }
 
     @Test
-    fun test_connectSubmissionWithoutGitRepositoryUrl() {
+    fun `connect submission without git repository url`() {
 
         // without the parameter at all
         this.mvc.perform(MockMvcRequestBuilders.post("/student/setup-git")
@@ -144,7 +135,7 @@ class GitSubmissionControllerTests {
     }
 
     @Test
-    fun test_connectSubmissionWithInvalidGitRepository() {
+    fun `connect submission with an invalid git repository`() {
 
         this.mvc.perform(MockMvcRequestBuilders.post("/student/setup-git")
                 .param("assignmentId", defaultAssignmentId)
@@ -167,7 +158,7 @@ class GitSubmissionControllerTests {
     }
 
     @Test
-    fun test_connectSubmissionWithInexistentGitRepositoryAndThenTryWithACorrectOne() {
+    fun `connect submission with an inexistent git repository and then try with a correct one`() {
 
         // setup a connection to an inexistent git repo
         this.mvc.perform(post("/student/setup-git")
@@ -190,7 +181,7 @@ class GitSubmissionControllerTests {
     }
 
     @Test
-    fun test_connectSubmissionWithValidButInexistentGitRepository() {
+    fun `connect submission with a valid but inexistent git repository`() {
 
         this.mvc.perform(MockMvcRequestBuilders.post("/student/setup-git")
                 .param("assignmentId", defaultAssignmentId)
@@ -211,7 +202,7 @@ class GitSubmissionControllerTests {
     }
 
     @Test
-    fun test_connectAndBuildReport() {
+    fun `connect and build report`() {
 
         /*** GET /upload/testJavaPro ***/
         val result = this.mvc.perform(get("/upload/${defaultAssignmentId}")
@@ -264,7 +255,7 @@ class GitSubmissionControllerTests {
 
 
     @Test
-    fun test_connectWithARepositoryWithoutAuthors_txt() {
+    fun `connect with a repository without AUTHORS txt`() {
 
         /*** POST /student/setup-git ***/
         this.mvc.perform(MockMvcRequestBuilders.post("/student/setup-git")
@@ -331,7 +322,7 @@ class GitSubmissionControllerTests {
     }
 
     @Test
-    fun test_connectAndBuildReportAndDisconnect() {
+    fun `connect, build report and disconnect`() {
 
         testsHelper.connectToGitRepositoryAndBuildReport(mvc, gitSubmissionRepository, defaultAssignmentId,
                 "git@github.com:drop-project-edu/sampleJavaSubmission.git", "student1")
@@ -352,7 +343,7 @@ class GitSubmissionControllerTests {
     }
 
     @Test
-    fun test_connectAndRefresh() {
+    fun `connect and refresh`() {
 
         // try to refresh a submission that doesn't exist
         this.mvc.perform(

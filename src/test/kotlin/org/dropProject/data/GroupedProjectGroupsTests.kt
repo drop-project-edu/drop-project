@@ -24,10 +24,10 @@ import org.dropproject.dao.Author
 import org.dropproject.dao.ProjectGroup
 import org.junit.jupiter.api.Test
 
-class TestProjectGroup {
+class GroupedProjectGroupsTests {
 
     @Test
-    fun testAssignmentStatistics() {
+    fun `grouped project groups expose ids, members and failed tests`() {
 
         val pGroup1 = ProjectGroup(1)
         pGroup1.authors.add(Author(1, "BC", "1983"))

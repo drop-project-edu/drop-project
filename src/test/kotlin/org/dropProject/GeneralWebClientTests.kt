@@ -19,7 +19,6 @@
  */
 package org.dropproject
 
-import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
@@ -28,17 +27,9 @@ import org.htmlunit.html.HtmlElement
 import org.htmlunit.html.HtmlPage
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.security.test.context.support.WithMockUser
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.TestPropertySource
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@TestPropertySource(locations = ["classpath:drop-project-test.properties"])
-@ActiveProfiles("test")
-@ExtendWith(ResetStateExtension::class)
+@DropProjectIntegrationTest
 class GeneralWebClientTests {
 
     @Autowired

@@ -19,8 +19,7 @@
  */
 package org.dropproject.controllers
 
-import org.junit.jupiter.api.extension.ExtendWith
-import org.dropproject.ResetStateExtension
+import org.dropproject.DropProjectIntegrationTest
 import org.dropproject.TestsHelper
 import org.dropproject.dao.*
 import org.dropproject.extensions.getContent
@@ -31,14 +30,10 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.core.io.ClassPathResource
 import org.springframework.core.io.ResourceLoader
 import org.springframework.http.MediaType
 import org.springframework.security.core.authority.SimpleGrantedAuthority
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
@@ -46,12 +41,8 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.sql.Timestamp
 import java.time.LocalDateTime
 
-@AutoConfigureMockMvc
-@SpringBootTest
-@TestPropertySource(locations = ["classpath:drop-project-test.properties"])
-@ActiveProfiles("test")
-@ExtendWith(ResetStateExtension::class)
-class TeacherAPIControllerTests: APIControllerTests {
+@DropProjectIntegrationTest
+class TeacherAPIControllerTests: ApiTestSupport {
 
     @Autowired
     lateinit var mvc: MockMvc
