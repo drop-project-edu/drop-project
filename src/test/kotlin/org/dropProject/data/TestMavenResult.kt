@@ -19,10 +19,10 @@
  */
 package org.dropproject.data
 
-import junit.framework.TestCase.assertFalse
-import junit.framework.TestCase.assertEquals
-import junit.framework.TestCase.assertTrue
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
 
 class TestMavenResult {
     @Test

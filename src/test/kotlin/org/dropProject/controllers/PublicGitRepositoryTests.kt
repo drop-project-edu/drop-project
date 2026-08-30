@@ -29,11 +29,10 @@ import org.dropproject.repository.AssignmentRepository
 import org.dropproject.repository.AuthorRepository
 import org.dropproject.repository.GitSubmissionRepository
 import org.dropproject.repository.ProjectGroupRepository
-import org.junit.After
-import org.junit.Assert.*
-import org.junit.Before
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
@@ -43,7 +42,6 @@ import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequ
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
-import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
@@ -55,7 +53,6 @@ import java.io.File
  * The rest of the test suite runs with this validation turned off (see drop-project-test.properties),
  * so this class turns it on explicitly.
  */
-@RunWith(SpringRunner::class)
 @AutoConfigureMockMvc
 @SpringBootTest
 @TestPropertySource(locations = ["classpath:drop-project-test.properties"],
@@ -94,7 +91,7 @@ class PublicGitRepositoryTests {
     val expectedErrorMsg = "Your repository is public, which allows other students to copy your work. " +
             "Make it private and try again."
 
-    @Before
+    @BeforeEach
     fun initAssignment() {
         val assignment = Assignment(id = assignmentId, name = "Test Project (for automatic tests)",
                 packageName = "org.dropProject.samples.sampleJavaAssignment", ownerUserId = "teacher1",
@@ -103,7 +100,7 @@ class PublicGitRepositoryTests {
         assignmentRepository.save(assignment)
     }
 
-    @After
+    @AfterEach
     fun cleanup() {
         val submissionsFolder = File(dropProjectProperties.storage.rootLocation)
         if (submissionsFolder.exists()) {
@@ -125,7 +122,7 @@ class PublicGitRepositoryTests {
                 // the form must keep the url that was typed, so that the student doesn't have to type it again
                 .andExpect(model().attribute("gitRepositoryUrl", publicRepositoryUrl))
 
-        assertEquals("no git submission should have been created", 0, gitSubmissionRepository.count())
+        assertEquals(0, gitSubmissionRepository.count(), "no git submission should have been created")
     }
 
     @Test
@@ -139,7 +136,7 @@ class PublicGitRepositoryTests {
                 .andExpect(status().isOk)
                 .andExpect(view().name("student-setup-git"))
 
-        assertEquals("the git submission should have been created", 1, gitSubmissionRepository.count())
+        assertEquals(1, gitSubmissionRepository.count(), "the git submission should have been created")
     }
 
     @Test

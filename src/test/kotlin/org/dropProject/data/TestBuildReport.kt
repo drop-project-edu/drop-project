@@ -23,19 +23,16 @@ import org.dropproject.dao.Assignment
 import org.dropproject.dao.Language
 import org.dropproject.forms.SubmissionMethod
 import org.dropproject.services.BuildReportBuilder
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.core.io.ResourceLoader
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
-import org.springframework.test.context.junit4.SpringRunner
 
 
-@RunWith(SpringRunner::class)
 @SpringBootTest
 @TestPropertySource(locations=["classpath:drop-project-test.properties"])
 @ActiveProfiles("test")
@@ -253,7 +250,7 @@ class TestBuildReport {
 
             assertTrue(!buildReport.mavenExecutionFailed())
             assertEquals(0, buildReport.compilationErrors.size)
-            assertEquals("$it", 5, buildReport.checkstyleErrors.size)
+            assertEquals(5, buildReport.checkstyleErrors.size, "$it")
         }
 
     }

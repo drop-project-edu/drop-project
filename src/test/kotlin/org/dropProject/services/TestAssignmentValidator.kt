@@ -23,19 +23,19 @@ import org.dropproject.dao.Assignment
 import org.dropproject.dao.Language
 import org.dropproject.dao.TestVisibility
 import org.dropproject.forms.SubmissionMethod
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotEquals
-import org.junit.Assert.assertTrue
-import org.junit.Before
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.io.ResourceLoader
 import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.junit4.SpringRunner
+import org.springframework.test.context.junit.jupiter.SpringExtension
 
 
-@RunWith(SpringRunner::class)
+@ExtendWith(SpringExtension::class)
 @ActiveProfiles("test")
 class TestAssignmentValidator {
 
@@ -51,7 +51,7 @@ class TestAssignmentValidator {
             packageName = "org.dropProject.samples",
             hiddenTestsVisibility = TestVisibility.HIDE_EVERYTHING)
 
-    @Before
+    @BeforeEach
     fun initAssignmentValidator() {
         assignmentValidator = AssignmentValidator()
     }
@@ -63,7 +63,7 @@ class TestAssignmentValidator {
 
         assignmentValidator.validate(assignmentFolder, dummyAssignment)
         val report = assignmentValidator.report
-        assertTrue("report list should not be empty", !report.isEmpty())
+        assertTrue(!report.isEmpty(), "report list should not be empty")
         assertTrue(report.any { it.type == AssignmentValidator.InfoType.INFO  &&
                 it.message == "You have hidden tests. The results will be completely hidden from the students." })
         assertTrue(report.any { it.type == AssignmentValidator.InfoType.INFO  &&
@@ -80,7 +80,7 @@ class TestAssignmentValidator {
 
         assignmentValidator.validate(assignmentFolder, dummyAssignment)
         val report = assignmentValidator.report
-        assertTrue("report should not be empty", !report.isEmpty())
+        assertTrue(!report.isEmpty(), "report should not be empty")
         assertTrue(report.none { it.type != AssignmentValidator.InfoType.INFO })
     }
 
@@ -91,7 +91,7 @@ class TestAssignmentValidator {
 
         assignmentValidator.validate(assignmentFolder, dummyAssignment)
         val report = assignmentValidator.report
-        assertTrue("report should not be empty", !report.isEmpty())
+        assertTrue(!report.isEmpty(), "report should not be empty")
         assertTrue(report.any { it.type == AssignmentValidator.InfoType.WARNING })
         assertTrue(report.any { it.message == "POM file is not prepared to use the 'dropProject.currentUserId' system property" })
     }

@@ -38,14 +38,13 @@ import org.dropproject.repository.AssignmentTagRepository
 import org.dropproject.repository.RebuildStatusRepository
 import org.dropproject.repository.SubmissionRepository
 import org.dropproject.services.AssignmentService
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertTrue
-import org.junit.FixMethodOrder
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.MethodSorters
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.TestMethodOrder
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.MethodOrderer
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
@@ -53,7 +52,6 @@ import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
-import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
@@ -62,12 +60,11 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.forward
 import java.io.File
 import java.util.concurrent.TimeUnit
 
-@RunWith(SpringRunner::class)
 @AutoConfigureMockMvc
 @SpringBootTest
 @TestPropertySource(locations=["classpath:drop-project-test.properties"])
 @ActiveProfiles("test")
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@TestMethodOrder(MethodOrderer.MethodName::class)
 class AdminControllerTests {
 
     @Autowired
@@ -220,7 +217,7 @@ class AdminControllerTests {
             while (!submissionRepository.findById(1).isPresent && System.currentTimeMillis() < submissionDeadline) {
                 Thread.sleep(200)
             }
-            assertTrue("submission should have been created", submissionRepository.findById(1).isPresent)
+            assertTrue(submissionRepository.findById(1).isPresent, "submission should have been created")
 
             // poll until the real Maven/Surefire process(es) for this submission show up as orphaned. In the
             // "test" profile the async timeout is hardcoded to 0, so anything alive for at least a second
@@ -237,7 +234,7 @@ class AdminControllerTests {
                 orphaned = all.filter { it.submissionId == 1L }
                 if (orphaned.isEmpty()) Thread.sleep(1000)
             }
-            assertTrue("the real Maven build should have shown up as an orphaned process", orphaned.isNotEmpty())
+            assertTrue(orphaned.isNotEmpty(), "the real Maven build should have shown up as an orphaned process")
 
             // killing an unrelated pid must be refused and not affect the real build
             this.mvc.perform(post("/admin/killProcess/999999999"))
@@ -254,11 +251,10 @@ class AdminControllerTests {
 
             // killing the top-level Maven process should unblock the background thread's call, one way or another
             uploadThread.join(30_000)
-            assertFalse("the background upload should have completed once its process was killed", uploadThread.isAlive)
+            assertFalse(uploadThread.isAlive, "the background upload should have completed once its process was killed")
 
             for (process in orphaned) {
-                assertFalse("process ${process.pid} should no longer be alive",
-                    ProcessHandle.of(process.pid).map { it.isAlive }.orElse(false))
+                assertFalse(ProcessHandle.of(process.pid).map { it.isAlive }.orElse(false), "process ${process.pid} should no longer be alive")
             }
 
         } finally {

@@ -21,11 +21,10 @@ package org.dropproject.controllers
 
 import net.lingala.zip4j.ZipFile
 import org.apache.commons.io.FileUtils
-import org.junit.After
-import org.junit.Assert.*
-import org.junit.Before
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.dropproject.config.DropProjectProperties
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
@@ -38,7 +37,6 @@ import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequ
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
-import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
@@ -61,7 +59,6 @@ import java.util.*
 import kotlin.collections.LinkedHashMap
 
 
-@RunWith(SpringRunner::class)
 @AutoConfigureMockMvc
 @SpringBootTest
 @TestPropertySource(locations = ["classpath:drop-project-test.properties"])
@@ -113,7 +110,7 @@ class ReportControllerTests {
     val STUDENT_2 = User("student2", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
     val TEACHER_1 = User("teacher1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
 
-    @Before
+    @BeforeEach
     fun setup() {
         var folder = File(dropProjectProperties.mavenizedProjects.rootLocation)
         if (folder.exists()) {
@@ -158,7 +155,7 @@ class ReportControllerTests {
         assignmentRepository.save(assignment02)
     }
 
-    @After
+    @AfterEach
     fun deleteMavenizedFolder() {
         var folder = File(dropProjectProperties.mavenizedProjects.rootLocation)
         if (folder.exists()) {
@@ -205,7 +202,7 @@ class ReportControllerTests {
         @Suppress("UNCHECKED_CAST")
         val report = reportResult.modelAndView!!.modelMap["submissions"] as List<SubmissionInfo>
 
-        assertEquals("report should have 4 lines", 4, report.size)
+        assertEquals(4, report.size, "report should have 4 lines")
         assertEquals("student1", report[0].projectGroup.authorsIdStr())
         assertEquals(2, report[0].allSubmissions.size)
         assertEquals("student2", report[1].projectGroup.authorsIdStr())
@@ -307,7 +304,7 @@ class ReportControllerTests {
         val downloadedFile = File("result.zip")
         FileUtils.writeByteArrayToFile(downloadedFile, downloadedFileContent)
         val downloadedFileAsZipObject = ZipFile(downloadedFile)
-        assertTrue("zip has more than 15 files", downloadedFileAsZipObject.fileHeaders.size > 15)
+        assertTrue(downloadedFileAsZipObject.fileHeaders.size > 15, "zip has more than 15 files")
         downloadedFile.delete()
 
         // TODO: check zip contents?
@@ -523,12 +520,12 @@ class ReportControllerTests {
         @Suppress("UNCHECKED_CAST")
         val report = reportResult.modelAndView!!.modelMap["submissions"] as List<Submission>
 
-        assertEquals("report should have 4 lines", 4, report.size)
+        assertEquals(4, report.size, "report should have 4 lines")
         assertEquals("student3", report[3].group.authorsIdStr())  // this should be the last one because it has junit errors
 
         // the others should pass all tests and have ascending order of ellapsed time
         val others = report.dropLast(1)
-        assertTrue("should pass all tests", others.all { it.teacherTests?.progress == 2 })
+        assertTrue(others.all { it.teacherTests?.progress == 2 }, "should pass all tests")
 
         val ellapsedList = others.map { it.ellapsed }
         val ellapsedSortedList = ellapsedList.sortedBy { it }

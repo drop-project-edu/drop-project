@@ -19,7 +19,7 @@
  */
 package org.dropproject.controllers
 
-import junit.framework.TestCase.*
+import org.junit.jupiter.api.Assertions.*
 import org.dropproject.TestsHelper
 import org.dropproject.dao.*
 import org.dropproject.data.BuildReport
@@ -36,12 +36,12 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers
 import org.hamcrest.Matchers.hasProperty
 import org.hamcrest.collection.IsCollectionWithSize
-import org.junit.After
-import org.junit.Assert
-import org.junit.Assert.assertArrayEquals
-import org.junit.Before
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.assertArrayEquals
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
 import org.mockito.BDDMockito.verify
 import org.mockito.Mockito.never
 import org.springframework.beans.factory.annotation.Autowired
@@ -58,7 +58,6 @@ import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequ
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
-import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers.print
@@ -70,7 +69,6 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 
-@RunWith(SpringRunner::class)
 @AutoConfigureMockMvc
 @SpringBootTest
 @TestPropertySource(locations = ["classpath:drop-project-test.properties"])
@@ -131,7 +129,7 @@ class UploadControllerTests {
     val TEACHER_1 = User("teacher1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
     val TEACHER_2 = User("teacher2", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
 
-    @Before
+    @BeforeEach
     fun setup() {
         var folder = File(dropProjectProperties.mavenizedProjects.rootLocation)
         if (folder.exists()) {
@@ -154,7 +152,7 @@ class UploadControllerTests {
                                                 testClass = "TestTeacherHiddenProject", testMethod = "testFuncaoParaTestarQueNaoApareceAosAlunos"))
     }
 
-    @After
+    @AfterEach
     fun cleanup() {
         val folder = File(dropProjectProperties.mavenizedProjects.rootLocation)
         if (folder.exists()) {
@@ -167,7 +165,8 @@ class UploadControllerTests {
         }
     }
 
-    // @Test - rever isto
+    @Test
+    @Disabled("rever isto - storageService is not a mock, so the verify() call would fail")
     fun shouldNotAcceptNoZipFile() {
         val multipartFile = MockMultipartFile("file", "test.txt", "text/plain", "Spring Framework".toByteArray())
         this.mvc.perform(multipart("/upload").file(multipartFile).with(user(STUDENT_1)))
@@ -178,7 +177,8 @@ class UploadControllerTests {
         verify(this.storageService, never()).store(multipartFile, "")
     }
 
-    // @Test   - Infelizmente o MockMvc não consegue testar isto....
+    @Test
+    @Disabled("Infelizmente o MockMvc não consegue testar isto")
     fun shouldNotAcceptBigFile() {
 
         val bigFileData = ByteArray(100_000_000) { 1 }
@@ -230,7 +230,7 @@ class UploadControllerTests {
         val submissionDB = submissionRepository.findById(submissionId.toLong()).get()
         val submissionFolder = File("${dropProjectProperties.storage.rootLocation}/upload", submissionDB.submissionFolder)
 
-        assertTrue("submission folder doesn't exist", submissionFolder.exists())
+        assertTrue(submissionFolder.exists(), "submission folder doesn't exist")
 
     }
 
@@ -246,9 +246,9 @@ class UploadControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
-        assertEquals("Summary should be 1 line", 1, summary.size)
-        assertEquals("projectStructure should be NOK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
-        assertEquals("projectStructure should be NOK (value)", "NOK", summary[0].reportValue)
+        assertEquals(1, summary.size, "Summary should be 1 line")
+        assertEquals(Indicator.PROJECT_STRUCTURE, summary[0].indicator, "projectStructure should be NOK (key)")
+        assertEquals("NOK", summary[0].reportValue, "projectStructure should be NOK (value)")
 
         @Suppress("UNCHECKED_CAST")
         val structureErrors = reportResult.modelAndView!!.modelMap["structureErrors"] as List<String>
@@ -270,9 +270,9 @@ class UploadControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
-        assertEquals("Summary should be 1 line", 1, summary.size)
-        assertEquals("projectStructure should be NOK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
-        assertEquals("projectStructure should be NOK (value)", "NOK", summary[0].reportValue)
+        assertEquals(1, summary.size, "Summary should be 1 line")
+        assertEquals(Indicator.PROJECT_STRUCTURE, summary[0].indicator, "projectStructure should be NOK (key)")
+        assertEquals("NOK", summary[0].reportValue, "projectStructure should be NOK (value)")
 
         @Suppress("UNCHECKED_CAST")
         val structureErrors = reportResult.modelAndView!!.modelMap["structureErrors"] as List<String>
@@ -292,11 +292,11 @@ class UploadControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
-        assertEquals("Summary should be 2 lines", 2, summary.size)
-        assertEquals("projectStructure should be OK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
-        assertEquals("projectStructure should be OK (value)", "OK", summary[0].reportValue)
-        assertEquals("compilation should be NOK (key)", Indicator.COMPILATION, summary[1].indicator)
-        assertEquals("compilation should be NOK (value)", "NOK", summary[1].reportValue)
+        assertEquals(2, summary.size, "Summary should be 2 lines")
+        assertEquals(Indicator.PROJECT_STRUCTURE, summary[0].indicator, "projectStructure should be OK (key)")
+        assertEquals("OK", summary[0].reportValue, "projectStructure should be OK (value)")
+        assertEquals(Indicator.COMPILATION, summary[1].indicator, "compilation should be NOK (key)")
+        assertEquals("NOK", summary[1].reportValue, "compilation should be NOK (value)")
 
         @Suppress("UNCHECKED_CAST")
         val structureErrors = reportResult.modelAndView!!.modelMap["structureErrors"] as List<String>
@@ -368,13 +368,13 @@ class UploadControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
-        assertEquals("Summary should be 5 lines", 5, summary.size)
-        assertEquals("projectStructure should be OK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
-        assertEquals("projectStructure should be OK (value)", "OK", summary[0].reportValue)
-        assertEquals("compilation should be NOK (key)", Indicator.COMPILATION, summary[1].indicator)
-        assertEquals("compilation should be NOK (value)", "OK", summary[1].reportValue)
-        assertEquals("checkstyle should be NOK (key)", Indicator.CHECKSTYLE, summary[2].indicator)
-        assertEquals("checkstyle should be NOK (value)", "NOK", summary[2].reportValue)
+        assertEquals(5, summary.size, "Summary should be 5 lines")
+        assertEquals(Indicator.PROJECT_STRUCTURE, summary[0].indicator, "projectStructure should be OK (key)")
+        assertEquals("OK", summary[0].reportValue, "projectStructure should be OK (value)")
+        assertEquals(Indicator.COMPILATION, summary[1].indicator, "compilation should be NOK (key)")
+        assertEquals("OK", summary[1].reportValue, "compilation should be NOK (value)")
+        assertEquals(Indicator.CHECKSTYLE, summary[2].indicator, "checkstyle should be NOK (key)")
+        assertEquals("NOK", summary[2].reportValue, "checkstyle should be NOK (value)")
 
         @Suppress("UNCHECKED_CAST")
         val structureErrors = reportResult.modelAndView!!.modelMap["structureErrors"] as List<String>
@@ -383,7 +383,7 @@ class UploadControllerTests {
         val buildResult = reportResult.modelAndView!!.modelMap["buildReport"] as BuildReport
         assert(buildResult.compilationErrors.isEmpty())
 
-        assertEquals("checkstyle should have 6 errors", buildResult.checkstyleErrors.size, 6)
+        assertEquals(buildResult.checkstyleErrors.size, 6, "checkstyle should have 6 errors")
         assertThat(buildResult.checkstyleErrors,
                 CoreMatchers.hasItems(
                         "org/dropProject/sampleAssignments/testProj/Main.java:12:17: Nome da função 'FazCoisas' deve começar por letra minúscula. Caso o nome tenha mais do que uma palavra, as palavras seguintes devem ser capitalizadas (iniciadas por uma maiúscula). [MethodName]"
@@ -407,15 +407,15 @@ class UploadControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
-        assertEquals("Summary should be 5 lines", 5, summary.size)
-        assertEquals("projectStructure should be OK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
-        assertEquals("projectStructure should be OK (value)", "OK", summary[0].reportValue)
-        assertEquals("compilation should be OK (key)", Indicator.COMPILATION, summary[1].indicator)
-        assertEquals("compilation should be OK (value)", "OK", summary[1].reportValue)
-        assertEquals("checkstyle should be OK (key)", Indicator.CHECKSTYLE, summary[2].indicator)
-        assertEquals("checkstyle should be OK (value)", "OK", summary[2].reportValue)
-        assertEquals("junit should be OK (key)", Indicator.TEACHER_UNIT_TESTS, summary[3].indicator)
-        assertEquals("junit should be OK (value)", "OK", summary[3].reportValue)
+        assertEquals(5, summary.size, "Summary should be 5 lines")
+        assertEquals(Indicator.PROJECT_STRUCTURE, summary[0].indicator, "projectStructure should be OK (key)")
+        assertEquals("OK", summary[0].reportValue, "projectStructure should be OK (value)")
+        assertEquals(Indicator.COMPILATION, summary[1].indicator, "compilation should be OK (key)")
+        assertEquals("OK", summary[1].reportValue, "compilation should be OK (value)")
+        assertEquals(Indicator.CHECKSTYLE, summary[2].indicator, "checkstyle should be OK (key)")
+        assertEquals("OK", summary[2].reportValue, "checkstyle should be OK (value)")
+        assertEquals(Indicator.TEACHER_UNIT_TESTS, summary[3].indicator, "junit should be OK (key)")
+        assertEquals("OK", summary[3].reportValue, "junit should be OK (value)")
 
         @Suppress("UNCHECKED_CAST")
         val structureErrors = reportResult.modelAndView!!.modelMap["structureErrors"] as List<String>
@@ -446,15 +446,15 @@ class UploadControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
-        assertEquals("Summary should be 5 lines", 5, summary.size)
-        assertEquals("projectStructure should be OK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
-        assertEquals("projectStructure should be OK (value)", "OK", summary[0].reportValue)
-        assertEquals("compilation should be OK (key)", Indicator.COMPILATION, summary[1].indicator)
-        assertEquals("compilation should be OK (value)", "OK", summary[1].reportValue)
-        assertEquals("checkstyle should be OK (key)", Indicator.CHECKSTYLE, summary[2].indicator)
-        assertEquals("checkstyle should be OK (value)", "OK", summary[2].reportValue)
-        assertEquals("junit should be OK (key)", Indicator.TEACHER_UNIT_TESTS, summary[3].indicator)
-        assertEquals("junit should be OK (value)", "OK", summary[3].reportValue)
+        assertEquals(5, summary.size, "Summary should be 5 lines")
+        assertEquals(Indicator.PROJECT_STRUCTURE, summary[0].indicator, "projectStructure should be OK (key)")
+        assertEquals("OK", summary[0].reportValue, "projectStructure should be OK (value)")
+        assertEquals(Indicator.COMPILATION, summary[1].indicator, "compilation should be OK (key)")
+        assertEquals("OK", summary[1].reportValue, "compilation should be OK (value)")
+        assertEquals(Indicator.CHECKSTYLE, summary[2].indicator, "checkstyle should be OK (key)")
+        assertEquals("OK", summary[2].reportValue, "checkstyle should be OK (value)")
+        assertEquals(Indicator.TEACHER_UNIT_TESTS, summary[3].indicator, "junit should be OK (key)")
+        assertEquals("OK", summary[3].reportValue, "junit should be OK (value)")
     }
 
     @Test
@@ -470,7 +470,7 @@ class UploadControllerTests {
         @Suppress("UNCHECKED_CAST")
         val readmeContent = reportResult.modelAndView!!.modelMap["readmeHTML"] as String
         if (!readmeContent.contains("Test README")) {
-            fail("README doesn't contain 'Test README'")
+            fail<Unit>("README doesn't contain 'Test README'")
         }
     }
 
@@ -515,8 +515,8 @@ class UploadControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
-        assertEquals("junit should be NOK (key)", Indicator.TEACHER_UNIT_TESTS, summary[3].indicator)
-        assertEquals("junit should be NOK (value)", "NOK", summary[3].reportValue)
+        assertEquals(Indicator.TEACHER_UNIT_TESTS, summary[3].indicator, "junit should be NOK (key)")
+        assertEquals("NOK", summary[3].reportValue, "junit should be NOK (value)")
 
         val buildResult = reportResult.modelAndView!!.modelMap["buildReport"] as BuildReport
         assertEquals(2, buildResult.junitSummaryAsObject(TestType.TEACHER)?.numErrors)
@@ -536,10 +536,10 @@ class UploadControllerTests {
                 .andExpect(model().attribute("numSubmissions", 0L))
 
         val submissionId1 = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
-        assertEquals("wrong submissionId", 1, submissionId1.toLong())
+        assertEquals(1, submissionId1.toLong(), "wrong submissionId")
 
         val submissionId2 = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
-        assertEquals("wrong submissionId", 2, submissionId2.toLong())
+        assertEquals(2, submissionId2.toLong(), "wrong submissionId")
 
         // let's change the AUTHORS
         val path = File(projectRoot, "AUTHORS.txt").toPath()
@@ -555,7 +555,7 @@ class UploadControllerTests {
             writer.close()
 
             val submissionId3 = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
-            assertEquals("wrong submissionId", 3, submissionId3.toLong())
+            assertEquals(3, submissionId3.toLong(), "wrong submissionId")
 
         } finally {
             val writer = Files.newBufferedWriter(path)
@@ -595,21 +595,21 @@ class UploadControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
-        assertEquals("Summary should be 5 lines", 5, summary.size)
-        assertEquals("projectStructure should be OK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
-        assertEquals("projectStructure should be OK (value)", "OK", summary[0].reportValue)
-        assertEquals("compilation should be OK (key)", Indicator.COMPILATION, summary[1].indicator)
-        assertEquals("compilation should be OK (value)", "OK", summary[1].reportValue)
-        assertEquals("checkstyle should be OK (key)", Indicator.CHECKSTYLE, summary[2].indicator)
-        assertEquals("checkstyle should be OK (value)", "OK", summary[2].reportValue)
-        assertEquals("junit (public) should be NOK (key)", Indicator.TEACHER_UNIT_TESTS, summary[3].indicator)
-        assertEquals("junit (public) should be NOK (value)", "NOK", summary[3].reportValue)
-        assertEquals("junit (public) should pass 1 test", 1, summary[3].reportProgress)
-        assertEquals("junit (public) should have total 2 tests", 2, summary[3].reportGoal)
-        assertEquals("junit (hidden) should be NOK (key)", Indicator.HIDDEN_UNIT_TESTS, summary[4].indicator)
-        assertEquals("junit (hidden) should be NOK (value)", "NOK", summary[4].reportValue)
-        assertEquals("junit (hidden) should pass 0 tests", 0, summary[4].reportProgress)
-        assertEquals("junit (hidden) should have total 1 test", 1, summary[4].reportGoal)
+        assertEquals(5, summary.size, "Summary should be 5 lines")
+        assertEquals(Indicator.PROJECT_STRUCTURE, summary[0].indicator, "projectStructure should be OK (key)")
+        assertEquals("OK", summary[0].reportValue, "projectStructure should be OK (value)")
+        assertEquals(Indicator.COMPILATION, summary[1].indicator, "compilation should be OK (key)")
+        assertEquals("OK", summary[1].reportValue, "compilation should be OK (value)")
+        assertEquals(Indicator.CHECKSTYLE, summary[2].indicator, "checkstyle should be OK (key)")
+        assertEquals("OK", summary[2].reportValue, "checkstyle should be OK (value)")
+        assertEquals(Indicator.TEACHER_UNIT_TESTS, summary[3].indicator, "junit (public) should be NOK (key)")
+        assertEquals("NOK", summary[3].reportValue, "junit (public) should be NOK (value)")
+        assertEquals(1, summary[3].reportProgress, "junit (public) should pass 1 test")
+        assertEquals(2, summary[3].reportGoal, "junit (public) should have total 2 tests")
+        assertEquals(Indicator.HIDDEN_UNIT_TESTS, summary[4].indicator, "junit (hidden) should be NOK (key)")
+        assertEquals("NOK", summary[4].reportValue, "junit (hidden) should be NOK (value)")
+        assertEquals(0, summary[4].reportProgress, "junit (hidden) should pass 0 tests")
+        assertEquals(1, summary[4].reportGoal, "junit (hidden) should have total 1 test")
 
         val buildResult = reportResult.modelAndView!!.modelMap["buildReport"] as BuildReport
         assert(buildResult.hasJUnitErrors(TestType.TEACHER) == true)
@@ -674,21 +674,21 @@ class UploadControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
-        assertEquals("Summary should be 5 lines", 5, summary.size)
-        assertEquals("projectStructure should be OK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
-        assertEquals("projectStructure should be OK (value)", "OK", summary[0].reportValue)
-        assertEquals("compilation should be OK (key)", Indicator.COMPILATION, summary[1].indicator)
-        assertEquals("compilation should be OK (value)", "OK", summary[1].reportValue)
-        assertEquals("checkstyle should be OK (key)", Indicator.CHECKSTYLE, summary[2].indicator)
-        assertEquals("checkstyle should be OK (value)", "OK", summary[2].reportValue)
-        assertEquals("junit (public) should be NOK (key)", Indicator.TEACHER_UNIT_TESTS, summary[3].indicator)
-        assertEquals("junit (public) should be NOK (value)", "NOK", summary[3].reportValue)
-        assertEquals("junit (public) should pass 1 test", 1, summary[3].reportProgress)
-        assertEquals("junit (public) should have total 2 tests", 2, summary[3].reportGoal)
-        assertEquals("junit (hidden) should be NOK (key)", Indicator.HIDDEN_UNIT_TESTS, summary[4].indicator)
-        assertEquals("junit (hidden) should be NOK (value)", "NOK", summary[4].reportValue)
-        assertEquals("junit (hidden) should pass 0 tests", 0, summary[4].reportProgress)
-        assertEquals("junit (hidden) should have total 1 test", 1, summary[4].reportGoal)
+        assertEquals(5, summary.size, "Summary should be 5 lines")
+        assertEquals(Indicator.PROJECT_STRUCTURE, summary[0].indicator, "projectStructure should be OK (key)")
+        assertEquals("OK", summary[0].reportValue, "projectStructure should be OK (value)")
+        assertEquals(Indicator.COMPILATION, summary[1].indicator, "compilation should be OK (key)")
+        assertEquals("OK", summary[1].reportValue, "compilation should be OK (value)")
+        assertEquals(Indicator.CHECKSTYLE, summary[2].indicator, "checkstyle should be OK (key)")
+        assertEquals("OK", summary[2].reportValue, "checkstyle should be OK (value)")
+        assertEquals(Indicator.TEACHER_UNIT_TESTS, summary[3].indicator, "junit (public) should be NOK (key)")
+        assertEquals("NOK", summary[3].reportValue, "junit (public) should be NOK (value)")
+        assertEquals(1, summary[3].reportProgress, "junit (public) should pass 1 test")
+        assertEquals(2, summary[3].reportGoal, "junit (public) should have total 2 tests")
+        assertEquals(Indicator.HIDDEN_UNIT_TESTS, summary[4].indicator, "junit (hidden) should be NOK (key)")
+        assertEquals("NOK", summary[4].reportValue, "junit (hidden) should be NOK (value)")
+        assertEquals(0, summary[4].reportProgress, "junit (hidden) should pass 0 tests")
+        assertEquals(1, summary[4].reportGoal, "junit (hidden) should have total 1 test")
 
         val buildResult = reportResult.modelAndView!!.modelMap["buildReport"] as BuildReport
         assert(buildResult.hasJUnitErrors(TestType.TEACHER) == true)
@@ -734,7 +734,7 @@ class UploadControllerTests {
     @DirtiesContext
     fun uploadProjectJunitWithSkippedTests() {
 
-        // this assignment has one test marked with @Ignore
+        // this assignment has one test marked with @Disabled
         val assignment = Assignment(id = "testJavaProjWithIgnoredTests", name = "Test Project (for automatic tests)",
                 packageName = "org.dropProject.sampleAssignments.testProj", submissionMethod = SubmissionMethod.UPLOAD,
                 gitRepositoryUrl = "git://dummy", language = Language.JAVA, ownerUserId = "teacher1",
@@ -750,10 +750,10 @@ class UploadControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
-        assertEquals("junit (public) should be NOK (key)", Indicator.TEACHER_UNIT_TESTS, summary[3].indicator)
-        assertEquals("junit (public) should be NOK (value)", "NOK", summary[3].reportValue)
-        assertEquals("junit (public) should pass 0 tests", 0, summary[3].reportProgress)
-        assertEquals("junit (public) should have total 1 test", 1, summary[3].reportGoal)
+        assertEquals(Indicator.TEACHER_UNIT_TESTS, summary[3].indicator, "junit (public) should be NOK (key)")
+        assertEquals("NOK", summary[3].reportValue, "junit (public) should be NOK (value)")
+        assertEquals(0, summary[3].reportProgress, "junit (public) should pass 0 tests")
+        assertEquals(1, summary[3].reportGoal, "junit (public) should have total 1 test")
 
         val buildResult = reportResult.modelAndView!!.modelMap["buildReport"] as BuildReport
         assert(buildResult.hasJUnitErrors(TestType.TEACHER) == true)
@@ -840,15 +840,15 @@ class UploadControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
-        assertEquals("Summary should be 5 lines", 5, summary.size)
-        assertEquals("projectStructure should be OK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
-        assertEquals("projectStructure should be OK (value)", "OK", summary[0].reportValue)
-        assertEquals("compilation should be OK (key)", Indicator.COMPILATION, summary[1].indicator)
-        assertEquals("compilation should be OK (value)", "OK", summary[1].reportValue)
-        assertEquals("checkstyle should be OK (key)", Indicator.CHECKSTYLE, summary[2].indicator)
-        assertEquals("checkstyle should be OK (value)", "OK", summary[2].reportValue)
-        assertEquals("junit should be OK (key)", Indicator.TEACHER_UNIT_TESTS, summary[3].indicator)
-        assertEquals("junit should be OK (value)", "OK", summary[3].reportValue)
+        assertEquals(5, summary.size, "Summary should be 5 lines")
+        assertEquals(Indicator.PROJECT_STRUCTURE, summary[0].indicator, "projectStructure should be OK (key)")
+        assertEquals("OK", summary[0].reportValue, "projectStructure should be OK (value)")
+        assertEquals(Indicator.COMPILATION, summary[1].indicator, "compilation should be OK (key)")
+        assertEquals("OK", summary[1].reportValue, "compilation should be OK (value)")
+        assertEquals(Indicator.CHECKSTYLE, summary[2].indicator, "checkstyle should be OK (key)")
+        assertEquals("OK", summary[2].reportValue, "checkstyle should be OK (value)")
+        assertEquals(Indicator.TEACHER_UNIT_TESTS, summary[3].indicator, "junit should be OK (key)")
+        assertEquals("OK", summary[3].reportValue, "junit should be OK (value)")
 
 
     }
@@ -868,15 +868,15 @@ class UploadControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
-        assertEquals("Summary should be 5 lines", 5, summary.size)
-        assertEquals("projectStructure should be OK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
-        assertEquals("projectStructure should be OK (value)", "OK", summary[0].reportValue)
-        assertEquals("compilation should be OK (key)", Indicator.COMPILATION, summary[1].indicator)
-        assertEquals("compilation should be OK (value)", "OK", summary[1].reportValue)
-        assertEquals("checkstyle should be OK (key)", Indicator.CHECKSTYLE, summary[2].indicator)
-        assertEquals("checkstyle should be OK (value)", "OK", summary[2].reportValue)
-        assertEquals("junit should be OK (key)", Indicator.TEACHER_UNIT_TESTS, summary[3].indicator)
-        assertEquals("junit should be OK (value)", "OK", summary[3].reportValue)
+        assertEquals(5, summary.size, "Summary should be 5 lines")
+        assertEquals(Indicator.PROJECT_STRUCTURE, summary[0].indicator, "projectStructure should be OK (key)")
+        assertEquals("OK", summary[0].reportValue, "projectStructure should be OK (value)")
+        assertEquals(Indicator.COMPILATION, summary[1].indicator, "compilation should be OK (key)")
+        assertEquals("OK", summary[1].reportValue, "compilation should be OK (value)")
+        assertEquals(Indicator.CHECKSTYLE, summary[2].indicator, "checkstyle should be OK (key)")
+        assertEquals("OK", summary[2].reportValue, "checkstyle should be OK (value)")
+        assertEquals(Indicator.TEACHER_UNIT_TESTS, summary[3].indicator, "junit should be OK (key)")
+        assertEquals("OK", summary[3].reportValue, "junit should be OK (value)")
     }
 
     @Test
@@ -948,17 +948,17 @@ class UploadControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
-        assertEquals("Summary should be 4 lines", 4, summary.size)
-        assertEquals("projectStructure should be OK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
-        assertEquals("projectStructure should be OK (value)", "OK", summary[0].reportValue)
-        assertEquals("compilation should be OK (key)", Indicator.COMPILATION, summary[1].indicator)
-        assertEquals("compilation should be OK (value)", "OK", summary[1].reportValue)
-        assertEquals("checkstyle should be OK (key)", Indicator.CHECKSTYLE, summary[2].indicator)
-        assertEquals("checkstyle should be OK (value)", "OK", summary[2].reportValue)
-        assertEquals("junit should be NOK (key)", Indicator.TEACHER_UNIT_TESTS, summary[3].indicator)
-        assertEquals("junit should be NOK (value)", "NOK", summary[3].reportValue)
-        assertEquals("junit should pass 2 tests", 2, summary[3].reportProgress)
-        assertEquals("junit should have total 4 tests", 4, summary[3].reportGoal)
+        assertEquals(4, summary.size, "Summary should be 4 lines")
+        assertEquals(Indicator.PROJECT_STRUCTURE, summary[0].indicator, "projectStructure should be OK (key)")
+        assertEquals("OK", summary[0].reportValue, "projectStructure should be OK (value)")
+        assertEquals(Indicator.COMPILATION, summary[1].indicator, "compilation should be OK (key)")
+        assertEquals("OK", summary[1].reportValue, "compilation should be OK (value)")
+        assertEquals(Indicator.CHECKSTYLE, summary[2].indicator, "checkstyle should be OK (key)")
+        assertEquals("OK", summary[2].reportValue, "checkstyle should be OK (value)")
+        assertEquals(Indicator.TEACHER_UNIT_TESTS, summary[3].indicator, "junit should be NOK (key)")
+        assertEquals("NOK", summary[3].reportValue, "junit should be NOK (value)")
+        assertEquals(2, summary[3].reportProgress, "junit should pass 2 tests")
+        assertEquals(4, summary[3].reportGoal, "junit should have total 4 tests")
 
         val buildResult = reportResult.modelAndView!!.modelMap["buildReport"] as BuildReport
         println("buildResult = ${buildResult.mavenOutput()}")
@@ -990,11 +990,11 @@ class UploadControllerTests {
         @Suppress("UNCHECKED_CAST")
         val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
 
-        assertEquals("Summary should be 2 lines", 2, summary.size)
-        assertEquals("projectStructure should be OK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
-        assertEquals("projectStructure should be OK (value)", "OK", summary[0].reportValue)
-        assertEquals("compilation should be NOK (key)", Indicator.COMPILATION, summary[1].indicator)
-        assertEquals("compilation should be NOK (value)", "NOK", summary[1].reportValue)
+        assertEquals(2, summary.size, "Summary should be 2 lines")
+        assertEquals(Indicator.PROJECT_STRUCTURE, summary[0].indicator, "projectStructure should be OK (key)")
+        assertEquals("OK", summary[0].reportValue, "projectStructure should be OK (value)")
+        assertEquals(Indicator.COMPILATION, summary[1].indicator, "compilation should be NOK (key)")
+        assertEquals("NOK", summary[1].reportValue, "compilation should be NOK (value)")
 
     }
 
@@ -1172,15 +1172,15 @@ class UploadControllerTests {
 
             @Suppress("UNCHECKED_CAST")
             val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
-            assertEquals("Summary should be 4 lines", 4, summary.size)
-            assertEquals("projectStructure should be OK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
-            assertEquals("projectStructure should be OK (value)", "OK", summary[0].reportValue)
-            assertEquals("compilation should be OK (key)", Indicator.COMPILATION, summary[1].indicator)
-            assertEquals("compilation should be OK (value)", "OK", summary[1].reportValue)
-            assertEquals("checkstyle should be OK (key)", Indicator.CHECKSTYLE, summary[2].indicator)
-            assertEquals("checkstyle should be OK (value)", "OK", summary[2].reportValue)
-            assertEquals("junit should be NOK (key)", Indicator.TEACHER_UNIT_TESTS, summary[3].indicator)
-            assertEquals("junit should be NOK (value)", "NOK", summary[3].reportValue)
+            assertEquals(4, summary.size, "Summary should be 4 lines")
+            assertEquals(Indicator.PROJECT_STRUCTURE, summary[0].indicator, "projectStructure should be OK (key)")
+            assertEquals("OK", summary[0].reportValue, "projectStructure should be OK (value)")
+            assertEquals(Indicator.COMPILATION, summary[1].indicator, "compilation should be OK (key)")
+            assertEquals("OK", summary[1].reportValue, "compilation should be OK (value)")
+            assertEquals(Indicator.CHECKSTYLE, summary[2].indicator, "checkstyle should be OK (key)")
+            assertEquals("OK", summary[2].reportValue, "checkstyle should be OK (value)")
+            assertEquals(Indicator.TEACHER_UNIT_TESTS, summary[3].indicator, "junit should be NOK (key)")
+            assertEquals("NOK", summary[3].reportValue, "junit should be NOK (value)")
 
         } finally {
 
@@ -1256,15 +1256,15 @@ class UploadControllerTests {
 
                 @Suppress("UNCHECKED_CAST")
                 val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
-                assertEquals("Summary should be 5 lines", 5, summary.size)
-                assertEquals("projectStructure should be OK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
-                assertEquals("projectStructure should be OK (value)", "OK", summary[0].reportValue)
-                assertEquals("compilation should be OK (key)", Indicator.COMPILATION, summary[1].indicator)
-                assertEquals("compilation should be OK (value)", "OK", summary[1].reportValue)
-                assertEquals("checkstyle should be OK (key)", Indicator.CHECKSTYLE, summary[2].indicator)
-                assertEquals("checkstyle should be OK (value)", "OK", summary[2].reportValue)
-                assertEquals("junit should be NOK (key)", Indicator.TEACHER_UNIT_TESTS, summary[3].indicator)
-                assertEquals("junit should be NOK (value)", "NOK", summary[3].reportValue)
+                assertEquals(5, summary.size, "Summary should be 5 lines")
+                assertEquals(Indicator.PROJECT_STRUCTURE, summary[0].indicator, "projectStructure should be OK (key)")
+                assertEquals("OK", summary[0].reportValue, "projectStructure should be OK (value)")
+                assertEquals(Indicator.COMPILATION, summary[1].indicator, "compilation should be OK (key)")
+                assertEquals("OK", summary[1].reportValue, "compilation should be OK (value)")
+                assertEquals(Indicator.CHECKSTYLE, summary[2].indicator, "checkstyle should be OK (key)")
+                assertEquals("OK", summary[2].reportValue, "checkstyle should be OK (value)")
+                assertEquals(Indicator.TEACHER_UNIT_TESTS, summary[3].indicator, "junit should be NOK (key)")
+                assertEquals("NOK", summary[3].reportValue, "junit should be NOK (value)")
             }
 
             // change assignment to fix the error
@@ -1291,15 +1291,15 @@ class UploadControllerTests {
 
                 @Suppress("UNCHECKED_CAST")
                 val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
-                assertEquals("Summary should be 5 lines", 5, summary.size)
-                assertEquals("projectStructure should be OK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
-                assertEquals("projectStructure should be OK (value)", "OK", summary[0].reportValue)
-                assertEquals("compilation should be OK (key)", Indicator.COMPILATION, summary[1].indicator)
-                assertEquals("compilation should be OK (value)", "OK", summary[1].reportValue)
-                assertEquals("checkstyle should be OK (key)", Indicator.CHECKSTYLE, summary[2].indicator)
-                assertEquals("checkstyle should be OK (value)", "OK", summary[2].reportValue)
-                assertEquals("junit should be OK (key)", Indicator.TEACHER_UNIT_TESTS, summary[3].indicator)
-                assertEquals("junit should be OK (value)", "OK", summary[3].reportValue)
+                assertEquals(5, summary.size, "Summary should be 5 lines")
+                assertEquals(Indicator.PROJECT_STRUCTURE, summary[0].indicator, "projectStructure should be OK (key)")
+                assertEquals("OK", summary[0].reportValue, "projectStructure should be OK (value)")
+                assertEquals(Indicator.COMPILATION, summary[1].indicator, "compilation should be OK (key)")
+                assertEquals("OK", summary[1].reportValue, "compilation should be OK (value)")
+                assertEquals(Indicator.CHECKSTYLE, summary[2].indicator, "checkstyle should be OK (key)")
+                assertEquals("OK", summary[2].reportValue, "checkstyle should be OK (value)")
+                assertEquals(Indicator.TEACHER_UNIT_TESTS, summary[3].indicator, "junit should be OK (key)")
+                assertEquals("OK", summary[3].reportValue, "junit should be OK (value)")
 
                 val submission = reportResult.modelAndView!!.modelMap["submission"] as Submission
                 assertEquals(SubmissionStatus.VALIDATED_REBUILT, submission.getStatus())
@@ -1336,21 +1336,21 @@ class UploadControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
-        assertEquals("Summary should be 6 lines", 6, summary.size)
-        assertEquals("projectStructure should be OK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
-        assertEquals("projectStructure should be OK (value)", "OK", summary[0].reportValue)
-        assertEquals("compilation should be OK (key)", Indicator.COMPILATION, summary[1].indicator)
-        assertEquals("compilation should be OK (value)", "OK", summary[1].reportValue)
-        assertEquals("checkstyle should be OK (key)", Indicator.CHECKSTYLE, summary[2].indicator)
-        assertEquals("checkstyle should be OK (value)", "OK", summary[2].reportValue)
-        assertEquals("student tests should be OK (key)", Indicator.STUDENT_UNIT_TESTS, summary[3].indicator)
-        assertEquals("student tests should be OK (value)", "OK", summary[3].reportValue)
-        assertEquals("student tests should pass 1 test", 1, summary[3].reportProgress)
-        assertEquals("student tests should have total 1 tests", 1, summary[3].reportGoal)
-        assertEquals("teacher tests should be OK (key)", Indicator.TEACHER_UNIT_TESTS, summary[4].indicator)
-        assertEquals("teacher tests should be OK (value)", "OK", summary[4].reportValue)
-        assertEquals("teacher tests should pass 2 tests", 2, summary[4].reportProgress)
-        assertEquals("teacher tests should have total 2 tests", 2, summary[4].reportGoal)
+        assertEquals(6, summary.size, "Summary should be 6 lines")
+        assertEquals(Indicator.PROJECT_STRUCTURE, summary[0].indicator, "projectStructure should be OK (key)")
+        assertEquals("OK", summary[0].reportValue, "projectStructure should be OK (value)")
+        assertEquals(Indicator.COMPILATION, summary[1].indicator, "compilation should be OK (key)")
+        assertEquals("OK", summary[1].reportValue, "compilation should be OK (value)")
+        assertEquals(Indicator.CHECKSTYLE, summary[2].indicator, "checkstyle should be OK (key)")
+        assertEquals("OK", summary[2].reportValue, "checkstyle should be OK (value)")
+        assertEquals(Indicator.STUDENT_UNIT_TESTS, summary[3].indicator, "student tests should be OK (key)")
+        assertEquals("OK", summary[3].reportValue, "student tests should be OK (value)")
+        assertEquals(1, summary[3].reportProgress, "student tests should pass 1 test")
+        assertEquals(1, summary[3].reportGoal, "student tests should have total 1 tests")
+        assertEquals(Indicator.TEACHER_UNIT_TESTS, summary[4].indicator, "teacher tests should be OK (key)")
+        assertEquals("OK", summary[4].reportValue, "teacher tests should be OK (value)")
+        assertEquals(2, summary[4].reportProgress, "teacher tests should pass 2 tests")
+        assertEquals(2, summary[4].reportGoal, "teacher tests should have total 2 tests")
 
         @Suppress("UNCHECKED_CAST")
         val structureErrors = reportResult.modelAndView!!.modelMap["structureErrors"] as List<String>
@@ -1394,21 +1394,21 @@ class UploadControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
-        assertEquals("Summary should be 6 lines", 6, summary.size)
-        assertEquals("projectStructure should be OK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
-        assertEquals("projectStructure should be OK (value)", "OK", summary[0].reportValue)
-        assertEquals("compilation should be OK (key)", Indicator.COMPILATION, summary[1].indicator)
-        assertEquals("compilation should be OK (value)", "OK", summary[1].reportValue)
-        assertEquals("checkstyle should be OK (key)", Indicator.CHECKSTYLE, summary[2].indicator)
-        assertEquals("checkstyle should be OK (value)", "OK", summary[2].reportValue)
-        assertEquals("student tests should be OK (key)", Indicator.STUDENT_UNIT_TESTS, summary[3].indicator)
-        assertEquals("student tests should be OK (value)", "OK", summary[3].reportValue)
-        assertEquals("student tests should pass 2 tests", 2, summary[3].reportProgress)
-        assertEquals("student tests should have total 2 tests", 2, summary[3].reportGoal)
-        assertEquals("teacher tests should be OK (key)", Indicator.TEACHER_UNIT_TESTS, summary[4].indicator)
-        assertEquals("teacher tests should be OK (value)", "OK", summary[4].reportValue)
-        assertEquals("teacher tests should pass 2 tests", 2, summary[4].reportProgress)
-        assertEquals("teacher tests should have total 2 tests", 2, summary[4].reportGoal)
+        assertEquals(6, summary.size, "Summary should be 6 lines")
+        assertEquals(Indicator.PROJECT_STRUCTURE, summary[0].indicator, "projectStructure should be OK (key)")
+        assertEquals("OK", summary[0].reportValue, "projectStructure should be OK (value)")
+        assertEquals(Indicator.COMPILATION, summary[1].indicator, "compilation should be OK (key)")
+        assertEquals("OK", summary[1].reportValue, "compilation should be OK (value)")
+        assertEquals(Indicator.CHECKSTYLE, summary[2].indicator, "checkstyle should be OK (key)")
+        assertEquals("OK", summary[2].reportValue, "checkstyle should be OK (value)")
+        assertEquals(Indicator.STUDENT_UNIT_TESTS, summary[3].indicator, "student tests should be OK (key)")
+        assertEquals("OK", summary[3].reportValue, "student tests should be OK (value)")
+        assertEquals(2, summary[3].reportProgress, "student tests should pass 2 tests")
+        assertEquals(2, summary[3].reportGoal, "student tests should have total 2 tests")
+        assertEquals(Indicator.TEACHER_UNIT_TESTS, summary[4].indicator, "teacher tests should be OK (key)")
+        assertEquals("OK", summary[4].reportValue, "teacher tests should be OK (value)")
+        assertEquals(2, summary[4].reportProgress, "teacher tests should pass 2 tests")
+        assertEquals(2, summary[4].reportGoal, "teacher tests should have total 2 tests")
 
         @Suppress("UNCHECKED_CAST")
         val structureErrors = reportResult.modelAndView!!.modelMap["structureErrors"] as List<String>
@@ -1448,17 +1448,17 @@ class UploadControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
-        assertEquals("Summary should be 5 lines", 5, summary.size)
-        assertEquals("projectStructure should be OK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
-        assertEquals("projectStructure should be OK (value)", "OK", summary[0].reportValue)
-        assertEquals("compilation should be OK (key)", Indicator.COMPILATION, summary[1].indicator)
-        assertEquals("compilation should be OK (value)", "OK", summary[1].reportValue)
-        assertEquals("checkstyle should be OK (key)", Indicator.CHECKSTYLE, summary[2].indicator)
-        assertEquals("checkstyle should be OK (value)", "OK", summary[2].reportValue)
-        assertEquals("teacher tests should be OK (key)", Indicator.TEACHER_UNIT_TESTS, summary[3].indicator)
-        assertEquals("teacher tests should be OK (value)", "OK", summary[3].reportValue)
-        assertEquals("teacher tests should pass 2 tests", 2, summary[3].reportProgress)
-        assertEquals("teacher tests should have total 2 tests", 2, summary[3].reportGoal)
+        assertEquals(5, summary.size, "Summary should be 5 lines")
+        assertEquals(Indicator.PROJECT_STRUCTURE, summary[0].indicator, "projectStructure should be OK (key)")
+        assertEquals("OK", summary[0].reportValue, "projectStructure should be OK (value)")
+        assertEquals(Indicator.COMPILATION, summary[1].indicator, "compilation should be OK (key)")
+        assertEquals("OK", summary[1].reportValue, "compilation should be OK (value)")
+        assertEquals(Indicator.CHECKSTYLE, summary[2].indicator, "checkstyle should be OK (key)")
+        assertEquals("OK", summary[2].reportValue, "checkstyle should be OK (value)")
+        assertEquals(Indicator.TEACHER_UNIT_TESTS, summary[3].indicator, "teacher tests should be OK (key)")
+        assertEquals("OK", summary[3].reportValue, "teacher tests should be OK (value)")
+        assertEquals(2, summary[3].reportProgress, "teacher tests should pass 2 tests")
+        assertEquals(2, summary[3].reportGoal, "teacher tests should have total 2 tests")
 
         val buildResult = reportResult.modelAndView!!.modelMap["buildReport"] as BuildReport
 
@@ -1483,17 +1483,17 @@ class UploadControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
-        assertEquals("Summary should be 6 lines", 6, summary.size)
-        assertEquals("projectStructure should be OK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
-        assertEquals("projectStructure should be OK (value)", "OK", summary[0].reportValue)
-        assertEquals("compilation should be OK (key)", Indicator.COMPILATION, summary[1].indicator)
-        assertEquals("compilation should be OK (value)", "OK", summary[1].reportValue)
-        assertEquals("checkstyle should be OK (key)", Indicator.CHECKSTYLE, summary[2].indicator)
-        assertEquals("checkstyle should be OK (value)", "OK", summary[2].reportValue)
-        assertEquals("student tests should be NOK (key)", Indicator.STUDENT_UNIT_TESTS, summary[3].indicator)
-        assertEquals("student tests should be NOK (value)", "Not Enough Tests", summary[3].reportValue)
-        assertEquals("teacher tests should be OK (key)", Indicator.TEACHER_UNIT_TESTS, summary[4].indicator)
-        assertEquals("teacher tests should be OK (value)", "OK", summary[4].reportValue)
+        assertEquals(6, summary.size, "Summary should be 6 lines")
+        assertEquals(Indicator.PROJECT_STRUCTURE, summary[0].indicator, "projectStructure should be OK (key)")
+        assertEquals("OK", summary[0].reportValue, "projectStructure should be OK (value)")
+        assertEquals(Indicator.COMPILATION, summary[1].indicator, "compilation should be OK (key)")
+        assertEquals("OK", summary[1].reportValue, "compilation should be OK (value)")
+        assertEquals(Indicator.CHECKSTYLE, summary[2].indicator, "checkstyle should be OK (key)")
+        assertEquals("OK", summary[2].reportValue, "checkstyle should be OK (value)")
+        assertEquals(Indicator.STUDENT_UNIT_TESTS, summary[3].indicator, "student tests should be NOK (key)")
+        assertEquals("Not Enough Tests", summary[3].reportValue, "student tests should be NOK (value)")
+        assertEquals(Indicator.TEACHER_UNIT_TESTS, summary[4].indicator, "teacher tests should be OK (key)")
+        assertEquals("OK", summary[4].reportValue, "teacher tests should be OK (value)")
 
         @Suppress("UNCHECKED_CAST")
         val structureErrors = reportResult.modelAndView!!.modelMap["structureErrors"] as List<String>
@@ -1528,17 +1528,17 @@ class UploadControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
-        assertEquals("Summary should be 6 lines", 6, summary.size)
-        assertEquals("projectStructure should be OK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
-        assertEquals("projectStructure should be OK (value)", "OK", summary[0].reportValue)
-        assertEquals("compilation should be OK (key)", Indicator.COMPILATION, summary[1].indicator)
-        assertEquals("compilation should be OK (value)", "OK", summary[1].reportValue)
-        assertEquals("checkstyle should be OK (key)", Indicator.CHECKSTYLE, summary[2].indicator)
-        assertEquals("checkstyle should be OK (value)", "OK", summary[2].reportValue)
-        assertEquals("student tests should be NOK (key)", Indicator.STUDENT_UNIT_TESTS, summary[3].indicator)
-        assertEquals("student tests should be NOK (value)", "Not Enough Tests", summary[3].reportValue)
-        assertEquals("teacher tests should be OK (key)", Indicator.TEACHER_UNIT_TESTS, summary[4].indicator)
-        assertEquals("teacher tests should be OK (value)", "OK", summary[4].reportValue)
+        assertEquals(6, summary.size, "Summary should be 6 lines")
+        assertEquals(Indicator.PROJECT_STRUCTURE, summary[0].indicator, "projectStructure should be OK (key)")
+        assertEquals("OK", summary[0].reportValue, "projectStructure should be OK (value)")
+        assertEquals(Indicator.COMPILATION, summary[1].indicator, "compilation should be OK (key)")
+        assertEquals("OK", summary[1].reportValue, "compilation should be OK (value)")
+        assertEquals(Indicator.CHECKSTYLE, summary[2].indicator, "checkstyle should be OK (key)")
+        assertEquals("OK", summary[2].reportValue, "checkstyle should be OK (value)")
+        assertEquals(Indicator.STUDENT_UNIT_TESTS, summary[3].indicator, "student tests should be NOK (key)")
+        assertEquals("Not Enough Tests", summary[3].reportValue, "student tests should be NOK (value)")
+        assertEquals(Indicator.TEACHER_UNIT_TESTS, summary[4].indicator, "teacher tests should be OK (key)")
+        assertEquals("OK", summary[4].reportValue, "teacher tests should be OK (value)")
 
         @Suppress("UNCHECKED_CAST")
         val structureErrors = reportResult.modelAndView!!.modelMap["structureErrors"] as List<String>
@@ -1569,15 +1569,15 @@ class UploadControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
-        assertEquals("Summary should be 5 lines", 5, summary.size)
-        assertEquals("projectStructure should be OK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
-        assertEquals("projectStructure should be OK (value)", "OK", summary[0].reportValue)
-        assertEquals("compilation should be OK (key)", Indicator.COMPILATION, summary[1].indicator)
-        assertEquals("compilation should be OK (value)", "OK", summary[1].reportValue)
-        assertEquals("checkstyle should be OK (key)", Indicator.CHECKSTYLE, summary[2].indicator)
-        assertEquals("checkstyle should be OK (value)", "OK", summary[2].reportValue)
-        assertEquals("junit should be OK (key)", Indicator.TEACHER_UNIT_TESTS, summary[3].indicator)
-        assertEquals("junit should be OK (value)", "OK", summary[3].reportValue)
+        assertEquals(5, summary.size, "Summary should be 5 lines")
+        assertEquals(Indicator.PROJECT_STRUCTURE, summary[0].indicator, "projectStructure should be OK (key)")
+        assertEquals("OK", summary[0].reportValue, "projectStructure should be OK (value)")
+        assertEquals(Indicator.COMPILATION, summary[1].indicator, "compilation should be OK (key)")
+        assertEquals("OK", summary[1].reportValue, "compilation should be OK (value)")
+        assertEquals(Indicator.CHECKSTYLE, summary[2].indicator, "checkstyle should be OK (key)")
+        assertEquals("OK", summary[2].reportValue, "checkstyle should be OK (value)")
+        assertEquals(Indicator.TEACHER_UNIT_TESTS, summary[3].indicator, "junit should be OK (key)")
+        assertEquals("OK", summary[3].reportValue, "junit should be OK (value)")
     }
 
     @Test
@@ -1596,20 +1596,19 @@ class UploadControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
-        assertEquals("Summary should be 5 lines", 5, summary.size)
-        assertEquals("projectStructure should be OK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
-        assertEquals("projectStructure should be OK (value)", "OK", summary[0].reportValue)
-        assertEquals("compilation should be OK (key)", Indicator.COMPILATION, summary[1].indicator)
-        assertEquals("compilation should be OK (value)", "OK", summary[1].reportValue)
-        assertEquals("checkstyle should be OK (key)", Indicator.CHECKSTYLE, summary[2].indicator)
-        assertEquals("checkstyle should be OK (value)", "OK", summary[2].reportValue)
-        assertEquals("junit should be NOK (key)", Indicator.TEACHER_UNIT_TESTS, summary[3].indicator)
-        assertEquals("junit should be NOK (value)", "NOK", summary[3].reportValue)
+        assertEquals(5, summary.size, "Summary should be 5 lines")
+        assertEquals(Indicator.PROJECT_STRUCTURE, summary[0].indicator, "projectStructure should be OK (key)")
+        assertEquals("OK", summary[0].reportValue, "projectStructure should be OK (value)")
+        assertEquals(Indicator.COMPILATION, summary[1].indicator, "compilation should be OK (key)")
+        assertEquals("OK", summary[1].reportValue, "compilation should be OK (value)")
+        assertEquals(Indicator.CHECKSTYLE, summary[2].indicator, "checkstyle should be OK (key)")
+        assertEquals("OK", summary[2].reportValue, "checkstyle should be OK (value)")
+        assertEquals(Indicator.TEACHER_UNIT_TESTS, summary[3].indicator, "junit should be NOK (key)")
+        assertEquals("NOK", summary[3].reportValue, "junit should be NOK (value)")
 
         val buildResult = reportResult.modelAndView!!.modelMap["buildReport"] as BuildReport
-        assertTrue("Should exist a failure with OutOfMemoryError",
-                buildResult.junitResults.first { it.testClassName == "TestTeacherProject" }
-                .junitMethodResults.any { it.failureType == "java.lang.OutOfMemoryError" })
+        assertTrue(buildResult.junitResults.first { it.testClassName == "TestTeacherProject" }
+                .junitMethodResults.any { it.failureType == "java.lang.OutOfMemoryError" }, "Should exist a failure with OutOfMemoryError")
 
     }
 
@@ -1712,7 +1711,7 @@ class UploadControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val report = reportResult.modelAndView!!.modelMap["submissions"] as List<SubmissionInfo>
-        assertTrue("report should be empty", report.isEmpty())
+        assertTrue(report.isEmpty(), "report should be empty")
 
         this.mvc.perform(get("/buildReport/$submissionId")
                 .with(user(STUDENT_1)))
@@ -1854,9 +1853,9 @@ class UploadControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
-        assertEquals("Summary should be 1 line", 1, summary.size)
-        assertEquals("projectStructure should be NOK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
-        assertEquals("projectStructure should be NOK (value)", "NOK", summary[0].reportValue)
+        assertEquals(1, summary.size, "Summary should be 1 line")
+        assertEquals(Indicator.PROJECT_STRUCTURE, summary[0].indicator, "projectStructure should be NOK (key)")
+        assertEquals("NOK", summary[0].reportValue, "projectStructure should be NOK (value)")
 
         @Suppress("UNCHECKED_CAST")
         val structureErrors = reportResult.modelAndView!!.modelMap["structureErrors"] as List<String>
@@ -1892,10 +1891,10 @@ class UploadControllerTests {
             val assignments = mvcResult.modelAndView!!.modelMap["assignments"] as List<Assignment>
             val assignment = assignments[0]
 
-            Assert.assertEquals("dummyAssignment4", assignment.id)
-            Assert.assertEquals("Dummy Assignment", assignment.name)
-            Assert.assertEquals(true, assignment.active)
-            Assert.assertEquals(AssignmentVisibility.PUBLIC, assignment.visibility)
+            Assertions.assertEquals("dummyAssignment4", assignment.id)
+            Assertions.assertEquals("Dummy Assignment", assignment.name)
+            Assertions.assertEquals(true, assignment.active)
+            Assertions.assertEquals(AssignmentVisibility.PUBLIC, assignment.visibility)
 
         } finally {
             // cleanup assignment files
@@ -1936,10 +1935,10 @@ class UploadControllerTests {
             val assignments = mvcResult.modelAndView!!.modelMap["assignments"] as List<Assignment>
             val assignment = assignments[0]
 
-            Assert.assertEquals("dummyAssignment4", assignment.id)
-            Assert.assertEquals("Dummy Assignment", assignment.name)
-            Assert.assertEquals(true, assignment.active)
-            Assert.assertEquals(AssignmentVisibility.PUBLIC, assignment.visibility)
+            Assertions.assertEquals("dummyAssignment4", assignment.id)
+            Assertions.assertEquals("Dummy Assignment", assignment.name)
+            Assertions.assertEquals(true, assignment.active)
+            Assertions.assertEquals(AssignmentVisibility.PUBLIC, assignment.visibility)
 
         } finally {
             // cleanup assignment files
@@ -2040,23 +2039,22 @@ class UploadControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
-        assertEquals("Summary should be 5 lines", 5, summary.size)
-        assertEquals("projectStructure should be OK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
-        assertEquals("projectStructure should be OK (value)", "OK", summary[0].reportValue)
-        assertEquals("compilation should be OK (key)", Indicator.COMPILATION, summary[1].indicator)
-        assertEquals("compilation should be OK (value)", "OK", summary[1].reportValue)
+        assertEquals(5, summary.size, "Summary should be 5 lines")
+        assertEquals(Indicator.PROJECT_STRUCTURE, summary[0].indicator, "projectStructure should be OK (key)")
+        assertEquals("OK", summary[0].reportValue, "projectStructure should be OK (value)")
+        assertEquals(Indicator.COMPILATION, summary[1].indicator, "compilation should be OK (key)")
+        assertEquals("OK", summary[1].reportValue, "compilation should be OK (value)")
 
         @Suppress("UNCHECKED_CAST")
         val structureErrors = reportResult.modelAndView!!.modelMap["structureErrors"] as List<String>
-        assertTrue("Structure errors should be empty", structureErrors.isEmpty())
+        assertTrue(structureErrors.isEmpty(), "Structure errors should be empty")
 
         // Verify main resources are copied to the mavenized folder
         val submissionDB = submissionRepository.findById(submissionId.toLong()).get()
         val mavenizedFolder = File(dropProjectProperties.mavenizedProjects.rootLocation,
             Submission.relativeUploadFolder("testJavaProj", submissionDB.submissionDate))
         val mavenizedProjectFolder = File(mavenizedFolder, "${submissionDB.submissionId}-mavenized")
-        assertTrue("src/main/resources/application.properties should be copied to mavenized folder",
-            File(mavenizedProjectFolder, "src/main/resources/application.properties").exists())
+        assertTrue(File(mavenizedProjectFolder, "src/main/resources/application.properties").exists(), "src/main/resources/application.properties should be copied to mavenized folder")
     }
 
     @Test
@@ -2076,13 +2074,13 @@ class UploadControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
-        assertEquals("Summary should be 1 line", 1, summary.size)
-        assertEquals("projectStructure should be NOK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
-        assertEquals("projectStructure should be NOK (value)", "NOK", summary[0].reportValue)
+        assertEquals(1, summary.size, "Summary should be 1 line")
+        assertEquals(Indicator.PROJECT_STRUCTURE, summary[0].indicator, "projectStructure should be NOK (key)")
+        assertEquals("NOK", summary[0].reportValue, "projectStructure should be NOK (value)")
 
         @Suppress("UNCHECKED_CAST")
         val structureErrors = reportResult.modelAndView!!.modelMap["structureErrors"] as List<String>
-        assertTrue("Should have structure errors", structureErrors.isNotEmpty())
+        assertTrue(structureErrors.isNotEmpty(), "Should have structure errors")
         assertThat(structureErrors,
             hasItems("The project does not contain a 'src/main/java/org/dropProject/sampleAssignments/testProj' folder"))
     }
@@ -2105,14 +2103,13 @@ class UploadControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
-        assertEquals("Summary should be 1 line", 1, summary.size)
-        assertEquals("projectStructure should be NOK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
-        assertEquals("projectStructure should be NOK (value)", "NOK", summary[0].reportValue)
+        assertEquals(1, summary.size, "Summary should be 1 line")
+        assertEquals(Indicator.PROJECT_STRUCTURE, summary[0].indicator, "projectStructure should be NOK (key)")
+        assertEquals("NOK", summary[0].reportValue, "projectStructure should be NOK (value)")
 
         @Suppress("UNCHECKED_CAST")
         val structureErrors = reportResult.modelAndView!!.modelMap["structureErrors"] as List<String>
-        assertTrue("Should have error about missing pom.xml",
-            structureErrors.any { it.contains("pom.xml", ignoreCase = true) })
+        assertTrue(structureErrors.any { it.contains("pom.xml", ignoreCase = true) }, "Should have error about missing pom.xml")
     }
 
     @Test
@@ -2132,18 +2129,18 @@ class UploadControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
-        assertEquals("Summary should be 5 lines", 5, summary.size)
-        assertEquals("projectStructure should be OK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
-        assertEquals("projectStructure should be OK (value)", "OK", summary[0].reportValue)
-        assertEquals("compilation should be OK (key)", Indicator.COMPILATION, summary[1].indicator)
-        assertEquals("compilation should be OK (value)", "OK", summary[1].reportValue)
-        assertEquals("checkstyle should be OK (key)", Indicator.CHECKSTYLE, summary[2].indicator)
-        assertEquals("checkstyle should be OK (value)", "OK", summary[2].reportValue)
-        assertEquals("junit should be NOK (key)", Indicator.TEACHER_UNIT_TESTS, summary[3].indicator)
-        assertEquals("junit should be NOK (value)", "NOK", summary[3].reportValue)
+        assertEquals(5, summary.size, "Summary should be 5 lines")
+        assertEquals(Indicator.PROJECT_STRUCTURE, summary[0].indicator, "projectStructure should be OK (key)")
+        assertEquals("OK", summary[0].reportValue, "projectStructure should be OK (value)")
+        assertEquals(Indicator.COMPILATION, summary[1].indicator, "compilation should be OK (key)")
+        assertEquals("OK", summary[1].reportValue, "compilation should be OK (value)")
+        assertEquals(Indicator.CHECKSTYLE, summary[2].indicator, "checkstyle should be OK (key)")
+        assertEquals("OK", summary[2].reportValue, "checkstyle should be OK (value)")
+        assertEquals(Indicator.TEACHER_UNIT_TESTS, summary[3].indicator, "junit should be NOK (key)")
+        assertEquals("NOK", summary[3].reportValue, "junit should be NOK (value)")
 
         val buildResult = reportResult.modelAndView!!.modelMap["buildReport"] as BuildReport
-        assertTrue("Should have JUnit errors", buildResult.hasJUnitErrors(TestType.TEACHER) == true)
+        assertTrue(buildResult.hasJUnitErrors(TestType.TEACHER) == true, "Should have JUnit errors")
     }
 
     @Test
@@ -2163,16 +2160,16 @@ class UploadControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
-        assertTrue("Summary should have at least 4 lines", summary.size >= 4)
-        assertEquals("projectStructure should be OK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
-        assertEquals("projectStructure should be OK (value)", "OK", summary[0].reportValue)
-        assertEquals("compilation should be OK (key)", Indicator.COMPILATION, summary[1].indicator)
-        assertEquals("compilation should be OK (value)", "OK", summary[1].reportValue)
-        assertEquals("checkstyle should be NOK (key)", Indicator.CHECKSTYLE, summary[2].indicator)
-        assertEquals("checkstyle should be NOK (value)", "NOK", summary[2].reportValue)
+        assertTrue(summary.size >= 4, "Summary should have at least 4 lines")
+        assertEquals(Indicator.PROJECT_STRUCTURE, summary[0].indicator, "projectStructure should be OK (key)")
+        assertEquals("OK", summary[0].reportValue, "projectStructure should be OK (value)")
+        assertEquals(Indicator.COMPILATION, summary[1].indicator, "compilation should be OK (key)")
+        assertEquals("OK", summary[1].reportValue, "compilation should be OK (value)")
+        assertEquals(Indicator.CHECKSTYLE, summary[2].indicator, "checkstyle should be NOK (key)")
+        assertEquals("NOK", summary[2].reportValue, "checkstyle should be NOK (value)")
 
         val buildResult = reportResult.modelAndView!!.modelMap["buildReport"] as BuildReport
-        assertTrue("Should have checkstyle errors", buildResult.checkstyleErrors.isNotEmpty())
+        assertTrue(buildResult.checkstyleErrors.isNotEmpty(), "Should have checkstyle errors")
     }
 
     @Test
@@ -2200,13 +2197,13 @@ class UploadControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
-        assertTrue("Summary should have at least 1 line", summary.isNotEmpty())
-        assertEquals("projectStructure should be OK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
-        assertEquals("projectStructure should be OK (value)", "OK", summary[0].reportValue)
+        assertTrue(summary.isNotEmpty(), "Summary should have at least 1 line")
+        assertEquals(Indicator.PROJECT_STRUCTURE, summary[0].indicator, "projectStructure should be OK (key)")
+        assertEquals("OK", summary[0].reportValue, "projectStructure should be OK (value)")
 
         @Suppress("UNCHECKED_CAST")
         val structureErrors = reportResult.modelAndView!!.modelMap["structureErrors"] as List<String>
-        assertTrue("Structure errors should be empty", structureErrors.isEmpty())
+        assertTrue(structureErrors.isEmpty(), "Structure errors should be empty")
     }
 
     @Test
@@ -2227,13 +2224,13 @@ class UploadControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
-        assertEquals("Summary should be 1 line", 1, summary.size)
-        assertEquals("projectStructure should be NOK (key)", Indicator.PROJECT_STRUCTURE, summary[0].indicator)
-        assertEquals("projectStructure should be NOK (value)", "NOK", summary[0].reportValue)
+        assertEquals(1, summary.size, "Summary should be 1 line")
+        assertEquals(Indicator.PROJECT_STRUCTURE, summary[0].indicator, "projectStructure should be NOK (key)")
+        assertEquals("NOK", summary[0].reportValue, "projectStructure should be NOK (value)")
 
         @Suppress("UNCHECKED_CAST")
         val structureErrors = reportResult.modelAndView!!.modelMap["structureErrors"] as List<String>
-        assertTrue("Should have errors about missing Maven structure", structureErrors.isNotEmpty())
+        assertTrue(structureErrors.isNotEmpty(), "Should have errors about missing Maven structure")
     }
 
     @Test
@@ -2317,8 +2314,8 @@ class UploadControllerTests {
         assertEquals(1, submissions.size)
 
         val lastSubmission = submissions[0].lastSubmission
-        assertNotNull("reportElements should not be null", lastSubmission.reportElements)
-        assertTrue("reportElements should not be empty", lastSubmission.reportElements!!.isNotEmpty())
+        assertNotNull(lastSubmission.reportElements, "reportElements should not be null")
+        assertTrue(lastSubmission.reportElements!!.isNotEmpty(), "reportElements should not be empty")
         assertEquals(Indicator.PROJECT_STRUCTURE, lastSubmission.reportElements!![0].indicator)
         assertEquals("NOK", lastSubmission.reportElements!![0].reportValue)
     }
@@ -2353,7 +2350,7 @@ class UploadControllerTests {
         try {
             submissionId.toLong()
         } catch (e: Exception) {
-            fail("Deveria ter conseguido submeter, mas deu erro: $submissionId")
+            fail<Unit>("Deveria ter conseguido submeter, mas deu erro: $submissionId")
         }
 
     }
@@ -2387,7 +2384,7 @@ class UploadControllerTests {
                 authors = listOf("teacher2" to "Teacher 2"),
                 expectedResultMatcher = status().isForbidden
             )
-            fail("Deveria ter lançado uma exceção de parsing pois a resposta 403 não é JSON")
+            fail<Unit>("Deveria ter lançado uma exceção de parsing pois a resposta 403 não é JSON")
         } catch (e: Exception) {
 
         }
@@ -2431,7 +2428,7 @@ class UploadControllerTests {
         try {
             submissionId.toLong()
         } catch (e: Exception) {
-            fail("Deveria ter conseguido submeter (está na ACL), mas deu erro: $submissionId")
+            fail<Unit>("Deveria ter conseguido submeter (está na ACL), mas deu erro: $submissionId")
         }
 
         val submissionDB = submissionRepository.findById(submissionId.toLong()).get()
@@ -2499,22 +2496,19 @@ class UploadControllerTests {
         val ownerPage = this.mvc.perform(get("/upload/testJavaProj").with(user(TEACHER_1)))
             .andExpect(status().isOk)
             .andReturn().response.contentAsString
-        assertTrue("the owner should see the info link", ownerPage.contains(infoLink))
+        assertTrue(ownerPage.contains(infoLink), "the owner should see the info link")
 
         // a teacher that is neither the owner nor in the ACL doesn't
         val otherTeacherPage = this.mvc.perform(get("/upload/testJavaProj").with(user(TEACHER_2)))
             .andExpect(status().isOk)
             .andReturn().response.contentAsString
-        assertFalse(
-            "teacher2 should not be offered a link that gives him an access denied page",
-            otherTeacherPage.contains(infoLink)
-        )
+        assertFalse(otherTeacherPage.contains(infoLink), "teacher2 should not be offered a link that gives him an access denied page")
 
         // students never see it
         val studentPage = this.mvc.perform(get("/upload/testJavaProj").with(user(STUDENT_1)))
             .andExpect(status().isOk)
             .andReturn().response.contentAsString
-        assertFalse("students should not see the info link", studentPage.contains(infoLink))
+        assertFalse(studentPage.contains(infoLink), "students should not see the info link")
 
         // ... but once teacher2 is added to the ACL, he does
         assignmentACLRepository.save(AssignmentACL(assignmentId = "testJavaProj", userId = "teacher2"))
@@ -2522,7 +2516,7 @@ class UploadControllerTests {
         val aclTeacherPage = this.mvc.perform(get("/upload/testJavaProj").with(user(TEACHER_2)))
             .andExpect(status().isOk)
             .andReturn().response.contentAsString
-        assertTrue("a teacher in the ACL should see the info link", aclTeacherPage.contains(infoLink))
+        assertTrue(aclTeacherPage.contains(infoLink), "a teacher in the ACL should see the info link")
     }
 }
 

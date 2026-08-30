@@ -23,9 +23,8 @@ import org.dropproject.TestsHelper
 import org.dropproject.dao.Assignment
 import org.dropproject.forms.SubmissionMethod
 import org.dropproject.repository.AssignmentRepository
-import org.junit.Before
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
@@ -35,13 +34,11 @@ import org.springframework.security.core.userdetails.User
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
-import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import org.springframework.transaction.annotation.Transactional
 
-@RunWith(SpringRunner::class)
 @AutoConfigureMockMvc
 @SpringBootTest
 @TestPropertySource(locations = ["classpath:drop-project-test.properties"])
@@ -64,7 +61,7 @@ class McpControllerTests: APIControllerTests {
         return "Bearer $personalToken"
     }
 
-    @Before
+    @BeforeEach
     fun setup() {
         // Create test assignments
         val assignment1 = Assignment(

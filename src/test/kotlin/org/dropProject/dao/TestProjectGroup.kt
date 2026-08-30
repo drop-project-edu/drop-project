@@ -19,8 +19,8 @@
  */
 package org.dropproject.dao
 
-import junit.framework.TestCase.*
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
 
 class TestProjectGroup {
 

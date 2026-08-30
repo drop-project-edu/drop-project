@@ -19,10 +19,10 @@
  */
 package org.dropproject.data
 
-import junit.framework.TestCase.assertEquals
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.dropproject.dao.Author
 import org.dropproject.dao.ProjectGroup
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class TestProjectGroup {
 

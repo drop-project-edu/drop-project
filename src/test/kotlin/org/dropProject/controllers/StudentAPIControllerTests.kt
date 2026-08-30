@@ -29,10 +29,9 @@ import org.dropproject.forms.SubmissionMethod
 import org.dropproject.repository.AssigneeRepository
 import org.dropproject.repository.AssignmentRepository
 import org.hamcrest.Matchers.*
-import org.junit.Assert.assertEquals
-import org.junit.Before
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
@@ -41,12 +40,10 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
-import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 
-@RunWith(SpringRunner::class)
 @AutoConfigureMockMvc
 @SpringBootTest
 @TestPropertySource(locations = ["classpath:drop-project-test.properties"])
@@ -65,7 +62,7 @@ class StudentAPIControllerTests: APIControllerTests {
     @Autowired
     private lateinit var testsHelper: TestsHelper
 
-    @Before
+    @BeforeEach
     fun setup() {
         // create initial assignment
         val assignment01 = Assignment(id = "testJavaProj", name = "Test Project (for automatic tests)",

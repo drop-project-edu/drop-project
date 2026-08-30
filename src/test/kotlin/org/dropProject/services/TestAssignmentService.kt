@@ -19,21 +19,18 @@
  */
 package org.dropproject.services
 
-import junit.framework.TestCase.assertEquals
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.dropproject.dao.Assignment
 import org.dropproject.dao.Language
 import org.dropproject.forms.AssignmentForm
 import org.dropproject.forms.SubmissionMethod
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
-import org.springframework.test.context.junit4.SpringRunner
 
-@RunWith(SpringRunner::class)
 @AutoConfigureMockMvc
 @SpringBootTest
 @TestPropertySource(locations = ["classpath:drop-project-test.properties"])

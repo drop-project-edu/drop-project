@@ -19,7 +19,7 @@
  */
 package org.dropproject.services
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.io.File
 
 class TestZipService {

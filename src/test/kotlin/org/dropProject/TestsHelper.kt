@@ -42,7 +42,7 @@ import org.dropproject.repository.SubmissionRepository
 import org.dropproject.services.ZipService
 import org.eclipse.jgit.api.Git
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.junit.Assert
+import org.junit.jupiter.api.Assertions
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.io.ResourceLoader
 import org.springframework.http.MediaType
@@ -247,7 +247,7 @@ class TestsHelper {
         val id = gitSubmissionRepository.findAll().last().id
 
         val gitSubmission = gitSubmissionRepository.findById(id).get()
-        Assert.assertFalse(gitSubmission.connected)
+        Assertions.assertFalse(gitSubmission.connected)
 
         // inject public and private key
         gitSubmission.gitRepositoryPrivKey = privateKey
@@ -262,7 +262,7 @@ class TestsHelper {
                 .andExpect(MockMvcResultMatchers.flash().attribute("message", "Ligado com sucesso ao repositório git"))
 
         val updatedGitSubmission = gitSubmissionRepository.findById(id).get()
-        Assert.assertTrue(updatedGitSubmission.connected)
+        Assertions.assertTrue(updatedGitSubmission.connected)
 
         /*** GET /upload/ ***/
         mvc.perform(MockMvcRequestBuilders.get("/upload/${assignmentId}").with(user(student)))
@@ -388,8 +388,8 @@ class TestsHelper {
             val projectRoot = resourceLoader.getResource(getProjectPath(projectName, submissionStructure, language)).file
             val path = File(projectRoot, "AUTHORS.txt").toPath()
             val lines = Files.readAllLines(path)
-            Assert.assertEquals("student1;Student 1", lines[0])
-            Assert.assertEquals("student2;Student 2", lines[1])
+            Assertions.assertEquals("student1;Student 1", lines[0])
+            Assertions.assertEquals("student2;Student 2", lines[1])
 
             try {
                 val authors: Pair<User, List<Pair<String, String>>?> = when (index) {

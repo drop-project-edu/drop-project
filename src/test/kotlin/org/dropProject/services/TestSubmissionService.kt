@@ -25,21 +25,18 @@ import org.dropproject.dao.Language
 import org.dropproject.dao.SubmissionStructure
 import org.dropproject.dao.TestVisibility
 import org.dropproject.forms.SubmissionMethod
-import org.junit.Assert.*
-import org.junit.Before
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.core.io.ResourceLoader
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
-import org.springframework.test.context.junit4.SpringRunner
 import java.io.File
 
 
-@RunWith(SpringRunner::class)
 @AutoConfigureMockMvc
 @SpringBootTest
 @TestPropertySource(locations = ["classpath:drop-project-test.properties"])
@@ -54,7 +51,7 @@ class TestSubmissionService {
 
         try {
             submissionService.getProjectAuthors(File("src/test/sampleAUTHORS_TXT/without_id.txt"))
-            fail("Should have thrown an exception")
+            fail<Unit>("Should have thrown an exception")
         } catch (e: InvalidProjectStructureException) {
             assertEquals("The student number must be filled in for all group members", e.message)
         }

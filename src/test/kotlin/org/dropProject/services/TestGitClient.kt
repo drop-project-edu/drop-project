@@ -21,25 +21,20 @@ package org.dropproject.services
 
 import org.apache.commons.io.FileUtils
 import org.eclipse.jgit.api.Git
-import org.junit.After
-import org.junit.Assert.*
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.junit4.SpringRunner
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
 import java.io.File
 import java.nio.file.Files
 
 
-@RunWith(SpringRunner::class)
-@ActiveProfiles("test")
 class TestGitClient {
 
     val gitClient = GitClient()
 
     private val foldersToCleanup = mutableListOf<File>()
 
-    @After
+    @AfterEach
     fun cleanup() {
         foldersToCleanup.forEach { FileUtils.deleteQuietly(it) }
         foldersToCleanup.clear()

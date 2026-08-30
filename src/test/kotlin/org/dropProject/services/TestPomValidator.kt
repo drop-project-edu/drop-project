@@ -19,18 +19,15 @@
  */
 package org.dropproject.services
 
-import org.junit.Assert.*
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
-import org.springframework.test.context.junit4.SpringRunner
 import java.io.File
 
 
-@RunWith(SpringRunner::class)
 @SpringBootTest
 @TestPropertySource(locations = ["classpath:drop-project-test.properties"])
 @ActiveProfiles("test")
@@ -46,8 +43,8 @@ class TestPomValidator {
 
         val result = pomValidator.validateStudentPom(studentPom, teacherPom, acceptsStudentTests = true)
 
-        assertTrue("Validation should pass for matching POMs", result.isValid)
-        assertTrue("No errors expected", result.errors.isEmpty())
+        assertTrue(result.isValid, "Validation should pass for matching POMs")
+        assertTrue(result.errors.isEmpty(), "No errors expected")
     }
 
     @Test
@@ -57,11 +54,10 @@ class TestPomValidator {
 
         val result = pomValidator.validateStudentPom(studentPom, teacherPom, acceptsStudentTests = true)
 
-        assertFalse("Validation should fail for extra dependencies", result.isValid)
-        assertTrue("Should have error messages", result.errors.isNotEmpty())
-        assertTrue("Should mention extra dependencies",
-            result.errors.any { it.contains("extra dependencies", ignoreCase = true) ||
-                                it.contains("commons-lang3") })
+        assertFalse(result.isValid, "Validation should fail for extra dependencies")
+        assertTrue(result.errors.isNotEmpty(), "Should have error messages")
+        assertTrue(result.errors.any { it.contains("extra dependencies", ignoreCase = true) ||
+                                it.contains("commons-lang3") }, "Should mention extra dependencies")
     }
 
     @Test
@@ -71,11 +67,10 @@ class TestPomValidator {
 
         val result = pomValidator.validateStudentPom(studentPom, teacherPom, acceptsStudentTests = true)
 
-        assertFalse("Validation should fail for missing dependencies", result.isValid)
-        assertTrue("Should have error messages", result.errors.isNotEmpty())
-        assertTrue("Should mention missing dependencies",
-            result.errors.any { it.contains("missing", ignoreCase = true) ||
-                                it.contains("junit") })
+        assertFalse(result.isValid, "Validation should fail for missing dependencies")
+        assertTrue(result.errors.isNotEmpty(), "Should have error messages")
+        assertTrue(result.errors.any { it.contains("missing", ignoreCase = true) ||
+                                it.contains("junit") }, "Should mention missing dependencies")
     }
 
     @Test
@@ -85,11 +80,10 @@ class TestPomValidator {
 
         val result = pomValidator.validateStudentPom(studentPom, teacherPom, acceptsStudentTests = true)
 
-        assertFalse("Validation should fail for different versions", result.isValid)
-        assertTrue("Should have error messages", result.errors.isNotEmpty())
+        assertFalse(result.isValid, "Validation should fail for different versions")
+        assertTrue(result.errors.isNotEmpty(), "Should have error messages")
         // Different version should be detected as both extra (new version) and missing (old version)
-        assertTrue("Should detect version mismatch",
-            result.errors.any { it.contains("junit:junit") && it.contains("4.13.1") && it.contains("4.13.2") })
+        assertTrue(result.errors.any { it.contains("junit:junit") && it.contains("4.13.1") && it.contains("4.13.2") }, "Should detect version mismatch")
     }
 
     @Test
@@ -99,8 +93,8 @@ class TestPomValidator {
 
         val result = pomValidator.validateStudentPom(studentPom, teacherPom, acceptsStudentTests = true)
 
-        assertTrue("Validation should pass for matching parent", result.isValid)
-        assertTrue("No errors expected", result.errors.isEmpty())
+        assertTrue(result.isValid, "Validation should pass for matching parent")
+        assertTrue(result.errors.isEmpty(), "No errors expected")
     }
 
     @Test
@@ -110,10 +104,9 @@ class TestPomValidator {
 
         val result = pomValidator.validateStudentPom(studentPom, teacherPom, acceptsStudentTests = true)
 
-        assertFalse("Validation should fail for different parent version", result.isValid)
-        assertTrue("Should have error messages", result.errors.isNotEmpty())
-        assertTrue("Should detect parent version mismatch",
-            result.errors.any { it.contains("3.5.10") && it.contains("4.0.2") })
+        assertFalse(result.isValid, "Validation should fail for different parent version")
+        assertTrue(result.errors.isNotEmpty(), "Should have error messages")
+        assertTrue(result.errors.any { it.contains("3.5.10") && it.contains("4.0.2") }, "Should detect parent version mismatch")
     }
 
     @Test
@@ -123,10 +116,9 @@ class TestPomValidator {
 
         val result = pomValidator.validateStudentPom(studentPom, teacherPom, acceptsStudentTests = true)
 
-        assertFalse("Validation should fail for missing parent", result.isValid)
-        assertTrue("Should have error messages", result.errors.isNotEmpty())
-        assertTrue("Should mention the expected parent",
-            result.errors.any { it.contains("spring-boot-starter-parent") })
+        assertFalse(result.isValid, "Validation should fail for missing parent")
+        assertTrue(result.errors.isNotEmpty(), "Should have error messages")
+        assertTrue(result.errors.any { it.contains("spring-boot-starter-parent") }, "Should mention the expected parent")
     }
 
     @Test
@@ -136,7 +128,7 @@ class TestPomValidator {
 
         val result = pomValidator.validateStudentPom(studentPom, teacherPom, acceptsStudentTests = true)
 
-        assertTrue("Validation should pass when neither has parent", result.isValid)
+        assertTrue(result.isValid, "Validation should pass when neither has parent")
     }
 
     @Test
@@ -146,7 +138,7 @@ class TestPomValidator {
 
         val result = pomValidator.validateStudentPom(studentPom, teacherPom, acceptsStudentTests = true)
 
-        assertTrue("Validation should pass for matching Kotlin POMs", result.isValid)
-        assertTrue("No errors expected", result.errors.isEmpty())
+        assertTrue(result.isValid, "Validation should pass for matching Kotlin POMs")
+        assertTrue(result.errors.isEmpty(), "No errors expected")
     }
 }

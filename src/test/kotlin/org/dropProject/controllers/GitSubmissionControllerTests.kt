@@ -19,11 +19,10 @@
  */
 package org.dropproject.controllers
 
-import org.junit.After
-import org.junit.Assert.*
-import org.junit.Before
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.dropproject.config.DropProjectProperties
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
@@ -34,7 +33,6 @@ import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequ
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
-import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
@@ -46,7 +44,6 @@ import org.dropproject.repository.*
 import org.hamcrest.Matchers.hasProperty
 import java.io.File
 
-@RunWith(SpringRunner::class)
 @AutoConfigureMockMvc
 @SpringBootTest
 @TestPropertySource(locations = ["classpath:drop-project-test.properties"])
@@ -77,7 +74,7 @@ class GitSubmissionControllerTests {
     val STUDENT_2 = User("student2", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
     val TEACHER_1 = User("teacher1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
 
-    @Before
+    @BeforeEach
     fun initMavenizedFolder() {
         val folder = File(dropProjectProperties.mavenizedProjects.rootLocation)
         if (folder.exists()) {
@@ -86,7 +83,7 @@ class GitSubmissionControllerTests {
         folder.mkdirs()
     }
 
-    @Before
+    @BeforeEach
     fun initAssignment() {
 
         // create initial assignment
@@ -97,7 +94,7 @@ class GitSubmissionControllerTests {
         assignmentRepository.save(assignment01)
     }
 
-    @After
+    @AfterEach
     fun cleanup() {
         val folder = File(dropProjectProperties.mavenizedProjects.rootLocation)
         if (folder.exists()) {
@@ -164,7 +161,7 @@ class GitSubmissionControllerTests {
 
         try {
             gitSubmissionRepository.findById(1).get()
-            fail("git submission shouldn't exist in the database")
+            fail<Unit>("git submission shouldn't exist in the database")
         } catch (e: Exception) {
         }
 
@@ -208,10 +205,10 @@ class GitSubmissionControllerTests {
 
         try {
             val gitSubmission = gitSubmissionRepository.findById(1).get()
-            assertTrue("git submission should exist in the database", true)
+            assertTrue(true, "git submission should exist in the database")
             assertEquals("git@github.com:someuser/cs1Assignment1.git", gitSubmission.gitRepositoryUrl)
         } catch (e: Exception) {
-            fail("git submission should exist in the database")
+            fail<Unit>("git submission should exist in the database")
         }
 
     }
@@ -240,13 +237,13 @@ class GitSubmissionControllerTests {
 
         @Suppress("UNCHECKED_CAST")
         val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
-        assertEquals("Summary should be 4 lines", 4, summary.size)
-        assertEquals("projectStructure should be OK (key)", Indicator.PROJECT_STRUCTURE, summary.get(0).indicator)
-        assertEquals("projectStructure should be OK (value)", "OK", summary.get(0).reportValue)
-        assertEquals("compilation should be OK (key)", Indicator.COMPILATION, summary.get(1).indicator)
-        assertEquals("compilation should be OK (value)", "OK", summary.get(1).reportValue)
-        assertEquals("checkstyle should be OK (key)", Indicator.CHECKSTYLE, summary.get(2).indicator)
-        assertEquals("checkstyle should be OK (value)", "OK", summary.get(2).reportValue)
+        assertEquals(4, summary.size, "Summary should be 4 lines")
+        assertEquals(Indicator.PROJECT_STRUCTURE, summary.get(0).indicator, "projectStructure should be OK (key)")
+        assertEquals("OK", summary.get(0).reportValue, "projectStructure should be OK (value)")
+        assertEquals(Indicator.COMPILATION, summary.get(1).indicator, "compilation should be OK (key)")
+        assertEquals("OK", summary.get(1).reportValue, "compilation should be OK (value)")
+        assertEquals(Indicator.CHECKSTYLE, summary.get(2).indicator, "checkstyle should be OK (key)")
+        assertEquals("OK", summary.get(2).reportValue, "checkstyle should be OK (value)")
 
         /*** POST /rebuildFull/1 ***/
         this.mvc.perform(post("/rebuildFull/1")

@@ -25,10 +25,9 @@ import org.dropproject.extensions.getContent
 import org.dropproject.forms.SubmissionMethod
 import org.dropproject.repository.*
 import org.dropproject.services.SubmissionService
-import org.junit.Assert.assertNull
-import org.junit.Before
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
@@ -39,7 +38,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
-import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
@@ -48,7 +46,6 @@ import org.springframework.transaction.annotation.Transactional
 import java.sql.Timestamp
 import java.time.LocalDateTime
 
-@RunWith(SpringRunner::class)
 @AutoConfigureMockMvc
 @SpringBootTest
 @TestPropertySource(locations = ["classpath:drop-project-test.properties"])
@@ -156,7 +153,7 @@ class TeacherAPIControllerTests: APIControllerTests {
         return submission.id
     }
 
-    @Before
+    @BeforeEach
     fun setup() {
 
         assigneeRepository.deleteAll()
@@ -227,7 +224,7 @@ class TeacherAPIControllerTests: APIControllerTests {
             .andReturn()
 
         // the api is stateless, so the personal token authentication must not create a session
-        assertNull("the api shouldn't create sessions", result.request.getSession(false))
+        assertNull(result.request.getSession(false), "the api shouldn't create sessions")
     }
 
     @Test

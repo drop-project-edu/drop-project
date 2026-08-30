@@ -45,12 +45,11 @@ import org.hamcrest.Matchers
 import org.hamcrest.Matchers.*
 import org.hamcrest.collection.IsCollectionWithSize.hasSize
 import org.json.JSONObject
-import org.junit.Assert.*
-import org.junit.FixMethodOrder
-import org.junit.Ignore
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.MethodSorters
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.TestMethodOrder
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.MethodOrderer
 import org.springframework.beans.factory.annotation.Autowired
 import org.dropproject.config.DropProjectProperties
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
@@ -66,7 +65,6 @@ import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequ
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
-import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
@@ -80,12 +78,11 @@ const val sampleJavaAssignmentRepo = "git@github.com:drop-project-edu/sampleJava
 const val sampleKotlinAssignmentRepo = "git@github.com:drop-project-edu/sampleKotlinAssignment.git"
 const val sampleJavaAssignmentWithJUnit5Repo = "git@github.com:drop-project-edu/sampleJavaAssignmentWithJunit5.git"
 
-@RunWith(SpringRunner::class)
 @AutoConfigureMockMvc
 @SpringBootTest
 @TestPropertySource(locations = ["classpath:drop-project-test.properties"])
 @ActiveProfiles("test")
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@TestMethodOrder(MethodOrderer.MethodName::class)
 class AssignmentControllerTests {
 
     @Autowired
@@ -351,7 +348,7 @@ class AssignmentControllerTests {
         }
     }
 
-    @Ignore("THIS TEST IS FAILING BECAUSE BITBUCKET DOESNT RECOGNIZE THE PUBLIC KEY")
+    @Disabled("THIS TEST IS FAILING BECAUSE BITBUCKET DOESNT RECOGNIZE THE PUBLIC KEY")
     @Test
     @WithMockUser("teacher1", roles = ["TEACHER"])
     @DirtiesContext
@@ -466,7 +463,7 @@ class AssignmentControllerTests {
 
         try {
             assignmentRepository.findById("dummyAssignment3").get()
-            fail("dummyAssignment shouldn't exist in the database")
+            fail<Unit>("dummyAssignment shouldn't exist in the database")
         } catch (e: Exception) {
         }
 
@@ -500,8 +497,7 @@ class AssignmentControllerTests {
                 .andExpect(header().string("Location", "/assignment/setup-git/assignmentId"))
 
             assertTrue(assignmentRepository.existsById("assignmentId"))
-            assertFalse("the leftover folder should have been cleared before cloning",
-                File(leftoverFolder, "leftover.txt").exists())
+            assertFalse(File(leftoverFolder, "leftover.txt").exists(), "the leftover folder should have been cleared before cloning")
 
         } finally {
             leftoverFolder.deleteRecursively()
@@ -824,7 +820,7 @@ class AssignmentControllerTests {
 
         // confirm it is now active
         val assignment = assignmentRepository.findById("testJavaProj").get()
-        assertTrue("assignment is not active", assignment.active)
+        assertTrue(assignment.active, "assignment is not active")
     }
 
 
@@ -904,7 +900,7 @@ class AssignmentControllerTests {
             .andExpect(flash().attribute("message", "Assignment was successfully deleted"))
 
         // check if the assignment folder was also deleted
-        assertFalse("$assignmentFolder should have been deleted", assignmentFolder.exists())
+        assertFalse(assignmentFolder.exists(), "$assignmentFolder should have been deleted")
     }
 
     @Test
@@ -1012,17 +1008,14 @@ class AssignmentControllerTests {
             .andExpect(flash().attribute("message", "Assignment was successfully deleted"))
 
         // check if the assignment folder was deleted
-        assertFalse("$assignmentFolder should have been deleted", assignmentFolder.exists())
+        assertFalse(assignmentFolder.exists(), "$assignmentFolder should have been deleted")
 
         // check if the submission folder was deleted
         val submissionFolder = File(dropProjectProperties.storage.uploadLocation, submission.submissionFolder)
-        assertFalse("$submissionFolder should have been deleted", submissionFolder.exists())
+        assertFalse(submissionFolder.exists(), "$submissionFolder should have been deleted")
 
         // check if the submission was deleted from the database
-        assertTrue(
-            "$submissionId should have been deleted from the DB",
-            submissionRepository.findById(submissionId).isEmpty
-        )
+        assertTrue(submissionRepository.findById(submissionId).isEmpty, "$submissionId should have been deleted from the DB")
     }
 
     @Test
@@ -1047,16 +1040,10 @@ class AssignmentControllerTests {
         assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = "student1"))
 
         //check if assignment is in Assignee Repository
-        assertTrue(
-            "${assignment.id} should be in assignee repository",
-            assigneeRepository.findByAuthorUserId(STUDENT_1.username).isNotEmpty()
-        )
+        assertTrue(assigneeRepository.findByAuthorUserId(STUDENT_1.username).isNotEmpty(), "${assignment.id} should be in assignee repository")
 
         //check if assignment is in assignment Repository
-        assertTrue(
-            "${assignment.id} should be in assignment repository",
-            assignmentRepository.existsById(assignment.id)
-        )
+        assertTrue(assignmentRepository.existsById(assignment.id), "${assignment.id} should be in assignment repository")
 
         // succeed on deleting the assignment
         this.mvc.perform(
@@ -1069,20 +1056,11 @@ class AssignmentControllerTests {
             .andExpect(flash().attribute("message", "Assignment was successfully deleted"))
 
         //check if assignment was deleted in Assignee Repository
-        assertFalse(
-            "${assignment.id} should have been deleted from assignee repository",
-            assigneeRepository.existsByAssignmentId(assignment.id)
-        )
-        assertTrue(
-            "${assignment.id} should have been deleted from assignee repository",
-            assigneeRepository.findByAuthorUserId(STUDENT_1.username).isEmpty()
-        )
+        assertFalse(assigneeRepository.existsByAssignmentId(assignment.id), "${assignment.id} should have been deleted from assignee repository")
+        assertTrue(assigneeRepository.findByAuthorUserId(STUDENT_1.username).isEmpty(), "${assignment.id} should have been deleted from assignee repository")
 
         //check if assignment was deleted in assignment Repository
-        assertFalse(
-            "${assignment.id} should have been deleted from assignment repository",
-            assignmentRepository.existsById(assignment.id)
-        )
+        assertFalse(assignmentRepository.existsById(assignment.id), "${assignment.id} should have been deleted from assignment repository")
     }
 
     @Test
@@ -1182,10 +1160,7 @@ class AssignmentControllerTests {
 
             // the assignments are not serializable, so the cache must keep them in the heap. Otherwise, it
             // silently fails to store them (and logs a NotSerializableException on every request)
-            assertNotNull(
-                "the archived assignments were not cached",
-                cacheManager.getCache(CACHE_ARCHIVED_ASSIGNMENTS_KEY)?.get("cacheTester")
-            )
+            assertNotNull(cacheManager.getCache(CACHE_ARCHIVED_ASSIGNMENTS_KEY)?.get("cacheTester"), "the archived assignments were not cached")
 
         } finally {
             assignmentRepository.deleteById("archivedProjToCache")
@@ -1712,7 +1687,7 @@ class AssignmentControllerTests {
         assertFalse(assignmentRepository.existsById("anotherProjToDelete"))
         assertEquals(0, submissionRepository.countByAssignmentIdAndStatusNot("testJavaProj",
             SubmissionStatus.DELETED.code))
-        assertFalse("the folder of the assignment was not deleted", assignmentFolder.exists())
+        assertFalse(assignmentFolder.exists(), "the folder of the assignment was not deleted")
     }
 
     @Test
@@ -2540,7 +2515,7 @@ class AssignmentControllerTests {
         try {
             val (assignment, _, _) = testsHelper.createHistoricalAssignment(
                 assignmentRepository, dropProjectProperties, assignmentId)
-            assertTrue("assignment should start active", assignment.active)
+            assertTrue(assignment.active, "assignment should start active")
 
             // simulate the report that was produced when the assignment was connected to the git repository
             assignmentReportRepository.save(AssignmentReport(assignmentId = assignmentId,
@@ -2567,15 +2542,13 @@ class AssignmentControllerTests {
             // the new configuration doesn't match the contents of the repository, so the assignment
             // must have been marked inactive
             val updatedAssignment = assignmentRepository.findById(assignmentId).get()
-            assertFalse("assignment should have been marked inactive", updatedAssignment.active)
-            assertTrue("assignment should have been updated", updatedAssignment.calculateStudentTestsCoverage)
+            assertFalse(updatedAssignment.active, "assignment should have been marked inactive")
+            assertTrue(updatedAssignment.calculateStudentTestsCoverage, "assignment should have been updated")
 
             // the previous report was replaced by the result of the new validation
             val reports = assignmentReportRepository.findByAssignmentId(assignmentId)
-            assertTrue("the previous report should have been cleared",
-                reports.none { it.message == "report before the edit" })
-            assertTrue("the new report should contain errors",
-                reports.any { it.type == AssignmentValidator.InfoType.ERROR })
+            assertTrue(reports.none { it.message == "report before the edit" }, "the previous report should have been cleared")
+            assertTrue(reports.any { it.type == AssignmentValidator.InfoType.ERROR }, "the new report should contain errors")
 
         } finally {
             assignmentFolder.deleteRecursively()
@@ -2613,7 +2586,7 @@ class AssignmentControllerTests {
 
             val updatedAssignment = assignmentRepository.findById(assignmentId).get()
             assertEquals("New Name", updatedAssignment.name)
-            assertTrue("assignment should still be active", updatedAssignment.active)
+            assertTrue(updatedAssignment.active, "assignment should still be active")
 
             // the assignment wasn't validated again, so the previous report is still there
             val reports = assignmentReportRepository.findByAssignmentId(assignmentId)
