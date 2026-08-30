@@ -29,6 +29,7 @@ import org.dropproject.TestsHelper.Companion.sampleJavaAssignmentPrivateKey
 import org.dropproject.TestsHelper.Companion.sampleJavaAssignmentPublicKey
 import org.dropproject.dao.*
 import org.dropproject.data.SubmissionInfo
+import org.dropproject.Constants.CACHE_ARCHIVED_ASSIGNMENTS_KEY
 import org.dropproject.config.PendingExport
 import org.dropproject.extensions.formatJustDate
 import org.dropproject.forms.AssignmentForm
@@ -54,6 +55,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.dropproject.config.DropProjectProperties
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.cache.CacheManager
 import org.springframework.http.MediaType
 import org.springframework.mock.web.MockMultipartFile
 import org.springframework.security.core.authority.SimpleGrantedAuthority
@@ -88,6 +90,9 @@ class AssignmentControllerTests {
 
     @Autowired
     lateinit var mvc: MockMvc
+
+    @Autowired
+    lateinit var cacheManager: CacheManager
 
     @Autowired
     lateinit var assignmentRepository: AssignmentRepository
@@ -1148,6 +1153,43 @@ class AssignmentControllerTests {
             if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment4").exists()) {
                 File(dropProjectProperties.assignments.rootLocation, "dummyAssignment4").deleteRecursively()
             }
+        }
+    }
+
+    @Test
+    @DirtiesContext
+    fun test_13_1_archivedAssignmentsAreCached() {
+
+        val user = User("cacheTester", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
+
+        try {
+            assignmentRepository.save(
+                Assignment(
+                    id = "archivedProjToCache", name = "Archived Project", packageName = "org.dummy",
+                    ownerUserId = "cacheTester", submissionMethod = SubmissionMethod.UPLOAD, active = false,
+                    archived = true, gitRepositoryUrl = "git://dummyRepo", gitRepositoryFolder = "archivedProjToCache"
+                )
+            )
+
+            cacheManager.getCache(CACHE_ARCHIVED_ASSIGNMENTS_KEY)?.clear()
+
+            this.mvc.perform(
+                get("/assignment/archived")
+                    .with(SecurityMockMvcRequestPostProcessors.user(user))
+            )
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("assignments", hasSize<Assignment>(1)))
+
+            // the assignments are not serializable, so the cache must keep them in the heap. Otherwise, it
+            // silently fails to store them (and logs a NotSerializableException on every request)
+            assertNotNull(
+                "the archived assignments were not cached",
+                cacheManager.getCache(CACHE_ARCHIVED_ASSIGNMENTS_KEY)?.get("cacheTester")
+            )
+
+        } finally {
+            assignmentRepository.deleteById("archivedProjToCache")
+            cacheManager.getCache(CACHE_ARCHIVED_ASSIGNMENTS_KEY)?.clear()
         }
     }
 

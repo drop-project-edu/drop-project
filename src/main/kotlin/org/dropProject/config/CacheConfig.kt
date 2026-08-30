@@ -35,6 +35,11 @@ class CacheConfig {
         val cachingProvider = Caching.getCachingProvider()
         val cacheManager = cachingProvider.cacheManager
         val cacheConfiguration = MutableConfiguration<Any, Any>()
+
+        // the cached values are kept in the heap, instead of being serialized, which is the default of JSR-107
+        // and would require the assignments (and everything they reference) to implement Serializable
+        cacheConfiguration.isStoreByValue = false
+
         if (cacheManager.getCache<Any, Any>(Constants.CACHE_ARCHIVED_ASSIGNMENTS_KEY) == null) {
             cacheManager.createCache(Constants.CACHE_ARCHIVED_ASSIGNMENTS_KEY, cacheConfiguration)
         }
