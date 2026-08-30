@@ -877,19 +877,21 @@ class AssignmentControllerTests {
 
         // try to delete the assignment but DP will issue an error since it has submissions
         this.mvc.perform(
-            post("/assignment/delete/testJavaProj")
+            post("/assignment/delete")
+                .param("ids", "testJavaProj")
                 .with(user(TEACHER_1))
         )
             .andExpect(status().isFound)
             .andExpect(header().string("Location", "/assignment/my"))
-            .andExpect(flash().attribute("error", "Assignment can't be deleted because it has submissions"))
+            .andExpect(flash().attribute("error", "Assignment testJavaProj can't be deleted because it has submissions"))
 
         // remove the submission
         submissionRepository.deleteById(submissionId)
 
         // try to delete the assignment again, this time with success
         this.mvc.perform(
-            post("/assignment/delete/testJavaProj")
+            post("/assignment/delete")
+                .param("ids", "testJavaProj")
                 .with(user(TEACHER_1))
         )
             .andExpect(status().isFound)
@@ -936,7 +938,8 @@ class AssignmentControllerTests {
 
         // delete the assignment 1
         this.mvc.perform(
-            post("/assignment/delete/testJavaProj")
+            post("/assignment/delete")
+                .param("ids", "testJavaProj")
                 .with(user(TEACHER_1))
         )
             .andExpect(status().isFound)
@@ -985,7 +988,8 @@ class AssignmentControllerTests {
 
         // try to delete the assignment with force = true using someone who hasn't the admin role
         this.mvc.perform(
-            post("/assignment/delete/testJavaProj")
+            post("/assignment/delete")
+                .param("ids", "testJavaProj")
                 .param("force", "true")
                 .with(user(TEACHER_1))
         )
@@ -993,7 +997,8 @@ class AssignmentControllerTests {
 
         // try to delete the assignment with force = true using someone who has the admin role
         this.mvc.perform(
-            post("/assignment/delete/testJavaProj")
+            post("/assignment/delete")
+                .param("ids", "testJavaProj")
                 .param("force", "true")
                 .with(user(User("admin", "", mutableListOf(SimpleGrantedAuthority("ROLE_DROP_PROJECT_ADMIN")))))
         )
@@ -1050,7 +1055,8 @@ class AssignmentControllerTests {
 
         // succeed on deleting the assignment
         this.mvc.perform(
-            post("/assignment/delete/testJavaProj")
+            post("/assignment/delete")
+                .param("ids", "testJavaProj")
                 .with(user(TEACHER_1))
         )
             .andExpect(status().isFound)
@@ -1601,6 +1607,70 @@ class AssignmentControllerTests {
         } finally {
             File(dropProjectProperties.assignments.rootLocation, "dummyAssignment1").deleteRecursively()
         }
+    }
+
+    @Test
+    @DirtiesContext
+    fun test_20_4_deleteSeveralAssignmentsWithTheirSubmissions() {
+
+        // the assignment folder is a copy of the sample one, since the deletion removes it from the disk
+        val assignmentFolder = File(dropProjectProperties.assignments.rootLocation, "testJavaProjToDelete")
+        FileUtils.copyDirectory(File(dropProjectProperties.assignments.rootLocation, "testJavaProj"), assignmentFolder)
+
+        val assignment01 = Assignment(
+            id = "testJavaProj", name = "Test Project (for automatic tests)",
+            packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
+            submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
+            gitRepositoryFolder = "testJavaProjToDelete"
+        )
+        assignmentRepository.save(assignment01)
+
+        val assignment02 = Assignment(
+            id = "anotherProjToDelete", name = "Another Test Project (for automatic tests)",
+            packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
+            submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo2",
+            gitRepositoryFolder = "anotherProjToDelete"
+        )
+        assignmentRepository.save(assignment02)
+
+        testsHelper.makeSeveralSubmissions(listOf("projectOK", "projectInvalidStructure1"), mvc)
+        assertEquals(2, submissionRepository.countByAssignmentIdAndStatusNot("testJavaProj",
+            SubmissionStatus.DELETED.code))
+
+        // deleting the submissions together with the assignment is only allowed to admins
+        this.mvc.perform(
+            post("/assignment/delete")
+                .with(user(TEACHER_1))
+                .param("ids", "testJavaProj")
+                .param("force", "true")
+        )
+            .andExpect(status().isForbidden)
+
+        assertTrue(assignmentRepository.existsById("testJavaProj"))
+
+        val admin = User("admin", "", mutableListOf(
+            SimpleGrantedAuthority("ROLE_TEACHER"), SimpleGrantedAuthority("ROLE_DROP_PROJECT_ADMIN")))
+
+        this.mvc.perform(
+            post("/assignment/delete")
+                .with(user(admin))
+                .param("ids", "testJavaProj", "anotherProjToDelete")
+                .param("force", "true")
+        )
+            .andExpect(status().isFound)
+            .andExpect(header().string("Location", "/assignment/my"))
+            .andExpect(
+                flash().attribute(
+                    "message",
+                    "Deleted 2 assignments, together with all their submissions"
+                )
+            )
+
+        assertFalse(assignmentRepository.existsById("testJavaProj"))
+        assertFalse(assignmentRepository.existsById("anotherProjToDelete"))
+        assertEquals(0, submissionRepository.countByAssignmentIdAndStatusNot("testJavaProj",
+            SubmissionStatus.DELETED.code))
+        assertFalse("the folder of the assignment was not deleted", assignmentFolder.exists())
     }
 
     @Test
@@ -2407,7 +2477,7 @@ class AssignmentControllerTests {
 
         assertEquals(2, assignmentTagRepository.findAll().size)
 
-        this.mvc.perform(post("/assignment/delete/dummyAssignmentToDelete"))
+        this.mvc.perform(post("/assignment/delete").param("ids", "dummyAssignmentToDelete"))
             .andExpect(status().isFound)
             .andExpect(flash().attribute("message", "Assignment was successfully deleted"))
             .andExpect(header().string("Location", "/assignment/my"))

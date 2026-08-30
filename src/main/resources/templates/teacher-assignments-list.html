@@ -57,6 +57,13 @@
                                 <span class="glyphicon glyphicon-export"></span> Export with submissions
                             </button>
                         </li>
+                        <li th:if="${#authorization.expression('hasRole(''DROP_PROJECT_ADMIN'')')}"
+                            class="divider" role="separator"></li>
+                        <li th:if="${#authorization.expression('hasRole(''DROP_PROJECT_ADMIN'')')}">
+                            <button type="button" data-toggle="modal" data-target="#bulkDeleteModal">
+                                <span class="glyphicon glyphicon-trash"></span> Delete with submissions
+                            </button>
+                        </li>
                     </ul>
                 </div>
 
@@ -136,7 +143,8 @@
                 <a th:href="@{'/leaderboard/' + ${assignment.id}}" th:if="${assignment.showLeaderBoard}" alt="Show leaderboard">
                     <img th:src="@{/img/trophy_16.png}" alt="Leaderboard" />
                 </a>
-                <form th:action="@{'/assignment/delete/' + ${assignment.id}}" method="post" style="display: inline;">
+                <form th:action="@{/assignment/delete}" method="post" style="display: inline;">
+                    <input type="hidden" name="ids" th:value="${assignment.id}"/>
                     <button class="glyphicon glyphicon-trash" aria-hidden="true" type="submit"
                             style="border: 0;" data-toggle="confirmation" data-title="Delete assignment?" title="Delete assignment"></button>
                 </form>
@@ -145,6 +153,29 @@
         </tr>
         </tbody>
     </table>
+
+    <div id="bulkDeleteModal" class="modal fade" tabindex="-1" role="dialog"
+         th:if="${#authorization.expression('hasRole(''DROP_PROJECT_ADMIN'')')}">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Delete assignments</h5>
+                </div>
+                <div class="modal-body">
+                    <p>The <strong><span data-bulk-count>0</span></strong> selected assignment(s) will be deleted,
+                        together with all their submissions and the respective files.</p>
+                    <p>This cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button form="bulkForm" th:formaction="@{/assignment/delete}" name="force" value="true"
+                            class="btn btn-danger">
+                        Yes, delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     </div>
 

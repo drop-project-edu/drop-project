@@ -755,34 +755,82 @@ class AssignmentController(
     }
 
     /**
-     * Controller to handle the deletion of an [Assignment].
-     * @param assignmentId is a String representing the relevant Assignment
+     * Controller to handle the deletion of one or more [Assignment]s. The assignments are either deleted one at a
+     * time, from the assignment's page, or several at a time, selecting them in the assignments list.
+     *
+     * @param assignmentIds are the ids of the assignments to delete
+     * @param forceDelete if true, the submissions of the assignments are deleted as well. Otherwise, an assignment
+     * that has submissions is not deleted. Only admins are allowed to force the deletion.
      * @param redirectAttributes is a RedirectAttributes
      * @param principal is a [Principal] representing the user making the request
      * @return A String with the name of the relevant View
      */
-    @RequestMapping(value = ["/delete/{assignmentId}"], method = [(RequestMethod.POST)])
-    fun deleteAssignment(@PathVariable assignmentId: String,
-                         @RequestParam(name = "force", required = false, defaultValue = "false") forceDelete: Boolean,
-                         redirectAttributes: RedirectAttributes,
-                         principal: Principal,
-                         request: HttpServletRequest): String {
+    @RequestMapping(value = ["/delete"], method = [(RequestMethod.POST)])
+    fun deleteAssignments(@RequestParam(name = "ids", required = false) assignmentIds: List<String>?,
+                          @RequestParam(name = "force", required = false, defaultValue = "false") forceDelete: Boolean,
+                          redirectAttributes: RedirectAttributes,
+                          principal: Principal,
+                          request: HttpServletRequest): String {
 
-        val assignment = assignmentRepository.findById(assignmentId)
-            .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
+        val isAdmin = request.isUserInRole("DROP_PROJECT_ADMIN")
 
-        if (forceDelete && !request.isUserInRole("DROP_PROJECT_ADMIN")) {
+        if (forceDelete && !isAdmin) {
             throw AccessDeniedException("Assignment can only be force-deleted by an admin")
         }
 
-        if (!request.isUserInRole("DROP_PROJECT_ADMIN") && principal.realName() != assignment.ownerUserId) {
-            throw AccessDeniedException("Assignments can only be deleted by their owner or an admin")
-        }
+        // the same assignment may come twice, since the checkboxes of the pages that are not being shown are
+        // submitted as hidden inputs
+        val distinctAssignmentIds = assignmentIds.orEmpty().distinct()
 
-        if (!forceDelete && submissionRepository.countByAssignmentIdAndStatusNot(assignment.id, SubmissionStatus.DELETED.code).toInt() > 0) {
-            redirectAttributes.addFlashAttribute("error", "Assignment can't be deleted because it has submissions")
+        if (distinctAssignmentIds.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Error: You didn't select any assignment to delete")
             return "redirect:/assignment/my"
         }
+
+        // all the assignments are checked before deleting any of them, so that one that is refused doesn't leave
+        // this half done
+        val assignments = mutableListOf<Assignment>()
+        for (assignmentId in distinctAssignmentIds) {
+
+            val assignment = assignmentRepository.findById(assignmentId).orElse(null)
+            if (assignment == null) {
+                // the page may have been open when someone else deleted the assignment
+                redirectAttributes.addFlashAttribute("error",
+                    "Error: The assignment ${assignmentId} no longer exists. Please refresh the page and try again")
+                return "redirect:/assignment/my"
+            }
+
+            if (!isAdmin && principal.realName() != assignment.ownerUserId) {
+                throw AccessDeniedException("Assignments can only be deleted by their owner or an admin")
+            }
+
+            if (!forceDelete && submissionRepository.countByAssignmentIdAndStatusNot(assignment.id,
+                    SubmissionStatus.DELETED.code) > 0) {
+                redirectAttributes.addFlashAttribute("error",
+                    "Assignment ${assignment.id} can't be deleted because it has submissions")
+                return "redirect:/assignment/my"
+            }
+
+            assignments.add(assignment)
+        }
+
+        assignments.forEach { deleteAssignmentAndItsFiles(it, forceDelete) }
+
+        redirectAttributes.addFlashAttribute("message", when {
+            assignments.size == 1 -> "Assignment was successfully deleted"
+            forceDelete -> "Deleted ${assignments.size} assignments, together with all their submissions"
+            else -> "Deleted ${assignments.size} assignments"
+        })
+        return "redirect:/assignment/my"
+    }
+
+    /**
+     * Removes an assignment from the database and then deletes its files. When [forceDelete] is true, the files of
+     * the submissions are also deleted.
+     */
+    private fun deleteAssignmentAndItsFiles(assignment: Assignment, forceDelete: Boolean) {
+
+        val assignmentId = assignment.id
 
         // remove everything from the DB in a single transaction. only after it succeeds do we start removing
         // files, since those deletions can't be rolled back
@@ -823,9 +871,6 @@ class AssignmentController(
         if (assignment.archived) {
             cacheManager.getCache(CACHE_ARCHIVED_ASSIGNMENTS_KEY)?.clear()
         }
-
-        redirectAttributes.addFlashAttribute("message", "Assignment was successfully deleted")
-        return "redirect:/assignment/my"
     }
 
     /**
