@@ -19,6 +19,8 @@
  */
 package org.dropproject.controllers
 
+import org.junit.jupiter.api.extension.ExtendWith
+import org.dropproject.ResetStateExtension
 import org.dropproject.TestsHelper
 import org.dropproject.dao.*
 import org.dropproject.extensions.getContent
@@ -35,14 +37,12 @@ import org.springframework.core.io.ClassPathResource
 import org.springframework.core.io.ResourceLoader
 import org.springframework.http.MediaType
 import org.springframework.security.core.authority.SimpleGrantedAuthority
-import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import org.springframework.transaction.annotation.Transactional
 import java.sql.Timestamp
 import java.time.LocalDateTime
 
@@ -50,7 +50,7 @@ import java.time.LocalDateTime
 @SpringBootTest
 @TestPropertySource(locations = ["classpath:drop-project-test.properties"])
 @ActiveProfiles("test")
-@Transactional
+@ExtendWith(ResetStateExtension::class)
 class TeacherAPIControllerTests: APIControllerTests {
 
     @Autowired
@@ -107,11 +107,11 @@ class TeacherAPIControllerTests: APIControllerTests {
         lateinit var group : ProjectGroup
         if (groups.isEmpty()) {
             group = ProjectGroup()
-            group.authors.add(author)
         } else {
             group = groups[0]
         }
-        group.submissions.add(submission)
+        // note: ProjectGroup.authors and ProjectGroup.submissions are the inverse side of the
+        // relation, so it is enough to save the owning side (author.group / submission.group) below
         projectGroupRepository.save(group)
 
         author.group = group
@@ -177,7 +177,6 @@ class TeacherAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to get current assignments without authentication`() {
         this.mvc.perform(
             get("/api/teacher/assignments/current")
@@ -189,7 +188,6 @@ class TeacherAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to get current assignments with invalid token`() {
         this.mvc.perform(
             get("/api/teacher/assignments/current")
@@ -199,7 +197,6 @@ class TeacherAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to get current assignments with a student profile`() {
         val token = generateToken("student1", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")), mvc)
 
@@ -212,7 +209,6 @@ class TeacherAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to get current assignments with a student profile and without content type`() {
         val token = generateToken("student1", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")), mvc)
 
@@ -228,7 +224,6 @@ class TeacherAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to download a submission with an admin profile`() {
         // an admin passes the authorization rule of the chain, but not the check that the controller makes, so this
         // is a denial that is thrown by the controller. it must be reported exactly like the ones that the chain
@@ -243,7 +238,6 @@ class TeacherAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to get current assignments with a teacher profile`() {
         val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
 
@@ -271,7 +265,6 @@ class TeacherAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to get an assignment's latest submissions with a teacher profile`() {
         val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
 
@@ -303,7 +296,6 @@ class TeacherAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to get a group's submissions to an assignment with a teacher profile`() {
         val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
 
@@ -333,7 +325,6 @@ class TeacherAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to get a submission's build report`() {
         val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
 
@@ -381,7 +372,6 @@ class TeacherAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to download a non-existing submission zip file`() {
         val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
 
@@ -393,7 +383,6 @@ class TeacherAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to search for an existing student`() {
         val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
 
@@ -412,7 +401,6 @@ class TeacherAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to search for a non existing student`() {
         val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
 
@@ -426,7 +414,6 @@ class TeacherAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to search for an assignment`() {
         val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
 
@@ -445,7 +432,6 @@ class TeacherAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to search for a non existing assignment`() {
         val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
 
@@ -459,7 +445,6 @@ class TeacherAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to access a student's history`() {
         val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
 
@@ -546,7 +531,6 @@ class TeacherAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to access a non existent student's history`() {
         val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
 
@@ -558,7 +542,6 @@ class TeacherAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to mark a submission as final`() {
         val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
 
@@ -570,7 +553,6 @@ class TeacherAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to mark a non existing submission as final`() {
         val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
 

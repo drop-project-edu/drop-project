@@ -19,6 +19,8 @@
  */
 package org.dropproject.controllers
 
+import org.junit.jupiter.api.extension.ExtendWith
+import org.dropproject.ResetStateExtension
 import org.dropproject.TestsHelper
 import org.dropproject.dao.Assignment
 import org.dropproject.dao.Indicator
@@ -44,7 +46,6 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.User
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
-import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.servlet.MockMvc
@@ -57,6 +58,7 @@ import java.io.File
 @SpringBootTest
 @TestPropertySource(locations=["classpath:drop-project-test.properties"])
 @ActiveProfiles("test")
+@ExtendWith(ResetStateExtension::class)
 class UploadKotlinControllerTests {
 
     @Autowired
@@ -114,7 +116,6 @@ class UploadKotlinControllerTests {
 
 
     @Test
-    @DirtiesContext
     fun submitProjectOK() {
 
         val assignment = assignmentRepository.findById("testKotlinProj").get()
@@ -153,7 +154,6 @@ class UploadKotlinControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun submitProjectStyleErrors1() {
 
         val assignment = assignmentRepository.findById("testKotlinProj").get()
@@ -199,7 +199,6 @@ class UploadKotlinControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun submitProjectStyleErrorsAboveThreshold() {
 
         val assignment = assignmentRepository.findById("testKotlinProj").get()
@@ -246,7 +245,6 @@ class UploadKotlinControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun submitProjectCompilationError() {
 
         val assignment = assignmentRepository.findById("testKotlinProj").get()
@@ -269,7 +267,6 @@ class UploadKotlinControllerTests {
 
     // https://github.com/drop-project-edu/drop-project/issues/97
     @Test
-    @DirtiesContext
     fun submitKotlinProjectWithJavaFileInThePackage() {
 
         val assignment = assignmentRepository.findById("testKotlinProj2").get()
@@ -300,7 +297,6 @@ class UploadKotlinControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun submitProjectAndCheckREADME() {
 
         val assignment = assignmentRepository.findById("testKotlinProj2").get()
@@ -348,7 +344,6 @@ class UploadKotlinControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun getUploadPageAndCheckInstructions() {
 
         fun normalizeString(input: String): String {

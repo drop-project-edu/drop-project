@@ -19,6 +19,8 @@
  */
 package org.dropproject.controllers
 
+import org.junit.jupiter.api.extension.ExtendWith
+import org.dropproject.ResetStateExtension
 import org.dropproject.TestsHelper
 import org.dropproject.dao.Assignment
 import org.dropproject.dao.AssignmentTag
@@ -49,7 +51,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.security.test.context.support.WithMockUser
-import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.servlet.MockMvc
@@ -65,6 +66,7 @@ import java.util.concurrent.TimeUnit
 @TestPropertySource(locations=["classpath:drop-project-test.properties"])
 @ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.MethodName::class)
+@ExtendWith(ResetStateExtension::class)
 class AdminControllerTests {
 
     @Autowired
@@ -90,7 +92,6 @@ class AdminControllerTests {
 
     @Test
     @WithMockUser("admin",roles=["DROP_PROJECT_ADMIN"])
-    @DirtiesContext
     fun test_00_getDashboard() {
         this.mvc.perform(get("/admin/dashboard"))
                 .andExpect(status().isOk)
@@ -98,7 +99,6 @@ class AdminControllerTests {
 
     @Test
     @WithMockUser("admin",roles=["DROP_PROJECT_ADMIN"])
-    @DirtiesContext
     fun test_01_changeMavenOutput() {
         this.mvc.perform(post("/admin/dashboard")
                 .param("showMavenOutput", "true")
@@ -110,7 +110,6 @@ class AdminControllerTests {
 
     @Test
     @WithMockUser("admin",roles=["DROP_PROJECT_ADMIN"])
-    @DirtiesContext
     fun test_02_showPendingAndAbort() {
         val result = this.mvc.perform(get("/admin/showPending"))
                 .andExpect(status().isOk)
@@ -151,7 +150,6 @@ class AdminControllerTests {
 
     @Test
     @WithMockUser("admin",roles=["DROP_PROJECT_ADMIN"])
-    @DirtiesContext
     fun test_03_showPendingIncludesRebuildingAndSubmittedForRebuild() {
 
         val assignment01 = Assignment(id = "testJavaProj", name = "Test Project (for automatic tests)",
@@ -191,7 +189,6 @@ class AdminControllerTests {
 
     @Test
     @WithMockUser("admin",roles=["DROP_PROJECT_ADMIN"])
-    @DirtiesContext
     fun test_04_showPendingListsAndKillsARealOrphanedMavenProcess() {
 
         val assignment01 = Assignment(id = "testJavaProj", name = "Test Project (for automatic tests)",
@@ -271,7 +268,6 @@ class AdminControllerTests {
 
     @Test
     @WithMockUser("admin",roles=["DROP_PROJECT_ADMIN"])
-    @DirtiesContext
     fun `test showTags displays all tags with usage counts and then deletes one`() {
 
         val assignment1 = Assignment(id = "testJavaProj1", name = "Test Project (for automatic tests)",
@@ -321,7 +317,6 @@ class AdminControllerTests {
 
     @Test
     @WithMockUser("admin", roles = ["DROP_PROJECT_ADMIN"])
-    @DirtiesContext
     fun `test getAllAssignments shows only non-archived assignments`() {
         val activeAssignment = Assignment(id = "activeProj", name = "Active Project",
             packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
@@ -349,7 +344,6 @@ class AdminControllerTests {
 
     @Test
     @WithMockUser("admin", roles = ["DROP_PROJECT_ADMIN"])
-    @DirtiesContext
     fun `test getAllAssignments shows assignments from all owners`() {
         val assignment1 = Assignment(id = "proj-teacher1", name = "Project Teacher 1",
             packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
@@ -376,7 +370,6 @@ class AdminControllerTests {
 
     @Test
     @WithMockUser("teacher1", roles = ["TEACHER"])
-    @DirtiesContext
     fun `test getAllAssignments is forbidden for non-admins`() {
         mvc.perform(get("/admin/assignments"))
             .andExpect(forwardedUrl("/access-denied"))

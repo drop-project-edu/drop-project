@@ -19,6 +19,8 @@
  */
 package org.dropproject.controllers
 
+import org.junit.jupiter.api.extension.ExtendWith
+import org.dropproject.ResetStateExtension
 import net.lingala.zip4j.ZipFile
 import org.apache.commons.io.FileUtils
 import org.junit.jupiter.api.AfterEach
@@ -34,7 +36,6 @@ import org.springframework.http.MediaType
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.User
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
-import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.servlet.MockMvc
@@ -63,6 +64,7 @@ import kotlin.collections.LinkedHashMap
 @SpringBootTest
 @TestPropertySource(locations = ["classpath:drop-project-test.properties"])
 @ActiveProfiles("test")
+@ExtendWith(ResetStateExtension::class)
 class ReportControllerTests {
 
     @Autowired
@@ -169,7 +171,6 @@ class ReportControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun reportIsNotAccessibleToStudents() {
 
         this.mvc.perform(get("/report/testJavaProj")
@@ -179,7 +180,6 @@ class ReportControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun reportForMultipleSubmissions() {
 
         testsHelper.makeSeveralSubmissions(
@@ -214,7 +214,6 @@ class ReportControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun testMySubmissions() {
 
         testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", defaultAssignmentId, STUDENT_1)
@@ -238,7 +237,6 @@ class ReportControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun downloadMavenProject() {
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", defaultAssignmentId, STUDENT_1)
@@ -256,7 +254,6 @@ class ReportControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun downloadOriginalProject() {
 
         val originalZipFile =
@@ -283,7 +280,6 @@ class ReportControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun downloadOriginalAll() {
 
         testsHelper.uploadProject(this.mvc, "projectCompilationErrors", defaultAssignmentId, STUDENT_1)
@@ -311,7 +307,6 @@ class ReportControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun downloadMavenizedAll() {
 
         testsHelper.uploadProject(this.mvc, "projectCompilationErrors", defaultAssignmentId, STUDENT_1)
@@ -338,7 +333,6 @@ class ReportControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun downloadOriginalProjectFromGitSubmission() {
 
         val assignment = assignmentRepository.findById("sampleJavaProject").get()
@@ -360,7 +354,6 @@ class ReportControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun downloadMavenProjectFromGitSubmission() {
 
         val assignment = assignmentRepository.findById("sampleJavaProject").get()
@@ -384,7 +377,6 @@ class ReportControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `download maven project for a previous git submission uses historical code and teacher files`() {
 
         val assignmentFolder = File(dropProjectProperties.assignments.rootLocation, "historicalTeacherFilesTest")
@@ -423,7 +415,6 @@ class ReportControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun downloadMavenizedAllFromGitSubmissions() {
 
         val assignment = assignmentRepository.findById("sampleJavaProject").get()
@@ -454,7 +445,6 @@ class ReportControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun leaderboardNotAccessible() {
         this.mvc.perform(
             get("/leaderboard/testJavaProj")
@@ -464,7 +454,6 @@ class ReportControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun leaderboardOK() {
 
         val assignment = assignmentRepository.findById(defaultAssignmentId).get()
@@ -534,7 +523,6 @@ class ReportControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun exportCSV() {
 
         val now = Date()
@@ -576,7 +564,6 @@ class ReportControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun exportCSVWithStudentTests() {
 
         val assignment = assignmentRepository.findById(defaultAssignmentId).get()
@@ -626,7 +613,6 @@ class ReportControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun exportCSVWithMandatoryTests() {
 
         val assignment = assignmentRepository.findById(defaultAssignmentId).get()
@@ -676,7 +662,6 @@ class ReportControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun exportCSVWithGitRepository() {
 
         val assignment = assignmentRepository.findById(defaultAssignmentId).get()
@@ -740,7 +725,6 @@ class ReportControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun testTestMatrix() {
         testsHelper.uploadProject(this.mvc, "projectJUnitErrors", defaultAssignmentId, STUDENT_1)
 
@@ -775,7 +759,6 @@ class ReportControllerTests {
      * and 2 failed tests.
      */
     @Test
-    @DirtiesContext
     fun testSignalledGroups() {
         val student3 = User("student3", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
 
@@ -820,7 +803,6 @@ class ReportControllerTests {
      * -- a String with a message saying that there are no signalled groups.
      */
     @Test
-    @DirtiesContext
     fun testSignalledGroupsViaMVC_NoGroupsAreSignalled() {
         val student3 = User("student3", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
 
@@ -1146,7 +1128,6 @@ class ReportControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun testStudentHistory() {
 
         /**
@@ -1202,7 +1183,6 @@ class ReportControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `test student history shows the submitter name declared in each submission's own group`() {
 
         // student1 submits solo, declaring himself as "Student A" -> group #1
@@ -1233,7 +1213,6 @@ class ReportControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun testSubmissionsReport() {
 
         testsHelper.uploadProject(
@@ -1259,7 +1238,6 @@ class ReportControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `test submitter name shown is scoped to the group being displayed, not any group the student is in`() {
 
         // student1 submits solo, declaring himself as "Student A" -> creates group #1
@@ -1289,7 +1267,6 @@ class ReportControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun testStudentList() {
 
         // create some authors
@@ -1326,7 +1303,6 @@ class ReportControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun testGetReportByOtherElementOfTheGroup() {
 
         // student1 makes a submission in name of the group (student1, student2)
@@ -1351,7 +1327,6 @@ class ReportControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun testCheckPlagiarismJava() {
 
         testsHelper.uploadProject(this.mvc, "projectCompilationErrors", defaultAssignmentId, STUDENT_1)
@@ -1385,7 +1360,6 @@ class ReportControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun testCheckPlagiarismKotlin() {
 
         val assignmentKotlin = Assignment(id = "testKotlinProj", name = "Test Project (for automatic tests)",
@@ -1424,7 +1398,6 @@ class ReportControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun testPlagiarismReportIsStored() {
 
         testsHelper.uploadProject(this.mvc, "projectCompilationErrors", defaultAssignmentId, STUDENT_1)
@@ -1465,7 +1438,6 @@ class ReportControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `download submission asset`() {
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectWithREADME", defaultAssignmentId, STUDENT_1)
@@ -1488,7 +1460,6 @@ class ReportControllerTests {
 
 
     @Test
-    @DirtiesContext
     fun `leaderboard group URL has no extra slash`() {
         val assignment = assignmentRepository.findById(defaultAssignmentId).get()
         assignment.showLeaderBoard = true

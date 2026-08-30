@@ -19,6 +19,8 @@
  */
 package org.dropproject.controllers
 
+import org.junit.jupiter.api.extension.ExtendWith
+import org.dropproject.ResetStateExtension
 import org.junit.jupiter.api.Assertions.*
 import org.dropproject.TestsHelper
 import org.dropproject.dao.*
@@ -55,7 +57,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.User
 import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
-import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.servlet.MockMvc
@@ -73,6 +74,7 @@ import java.util.*
 @SpringBootTest
 @TestPropertySource(locations = ["classpath:drop-project-test.properties"])
 @ActiveProfiles("test")
+@ExtendWith(ResetStateExtension::class)
 class UploadControllerTests {
 
     @Autowired
@@ -193,7 +195,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun getUploadPage() {
 
         this.mvc.perform(get("/upload/testJavaProj")
@@ -206,7 +207,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun getUploadPageWithCooloff() {
 
         val assignment = assignmentRepository.findById("testJavaProj").get()
@@ -222,7 +222,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun uploadProjectGoesIntoRightFolder() {
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", "testJavaProj", STUDENT_1)
@@ -235,7 +234,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun uploadProjectInvalidStructure1() {
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", "testJavaProj", STUDENT_1)
@@ -259,7 +257,6 @@ class UploadControllerTests {
 
 
     @Test
-    @DirtiesContext
     fun uploadProjectInvalidStructure2() {
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectInvalidStructure2", "testJavaProj", STUDENT_1)
@@ -281,7 +278,6 @@ class UploadControllerTests {
 
 
     @Test
-    @DirtiesContext
     fun uploadProjectDoesntCompile() {
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
@@ -308,7 +304,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun uploadProjectWithCompilationErrorsThenCooloff() { // cooloff is reduced for structure or compilation errors
 
         val assignment = assignmentRepository.findById("testJavaProj").get()
@@ -332,7 +327,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun uploadProjectThenCooloff() {
 
         val assignment = assignmentRepository.findById("testJavaProj").get()
@@ -357,7 +351,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun uploadProjectCheckstyleErrors() {
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectCheckstyleErrors", "testJavaProj", STUDENT_1)
@@ -396,7 +389,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun uploadProjectOK() {
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectOK", "testJavaProj", STUDENT_1)
@@ -435,7 +427,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun uploadProjectJava17() {
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectJava17", "testJavaProj", STUDENT_1)
@@ -458,7 +449,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun uploadProjectWithREADME() {
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectWithREADME", "testJavaProj", STUDENT_1)
@@ -475,7 +465,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun multipleSubmissionsIncrementsCounter() {
 
         this.mvc.perform(get("/upload/testJavaProj")
@@ -492,7 +481,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun cantSeeOtherSubmissions() {
 
         testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", "testJavaProj", STUDENT_1)
@@ -504,7 +492,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun uploadProjectHackingAttempt() {
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectHackingAttempt", "testJavaProj", STUDENT_1)
@@ -525,7 +512,6 @@ class UploadControllerTests {
 
 
     @Test
-    @DirtiesContext
     fun uploadInGroupAndThenInAnotherGroup() {
 
         val projectRoot = resourceLoader.getResource("file:src/test/sampleProjects/compact/java/projectCompilationErrors").file
@@ -585,7 +571,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun uploadProjectJunitErrors() {
         val submissionId = testsHelper.uploadProject(this.mvc, "projectJUnitErrors", "testJavaProj", STUDENT_1)
 
@@ -652,7 +637,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun uploadProjectJunit5Errors() {
         // this test is similar to uploadProjectJunitErrors but with a JUnit 5 enabled assignment
 
@@ -731,7 +715,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun uploadProjectJunitWithSkippedTests() {
 
         // this assignment has one test marked with @Disabled
@@ -773,7 +756,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun uploadProjectJunitErrors_HiddenTestsVisibility() {
 
         val assignment = assignmentRepository.findById("testJavaProj").get()
@@ -828,7 +810,6 @@ class UploadControllerTests {
 
     // tests an AUTHORS.txt that is not in UTF-8
     @Test
-    @DirtiesContext
     fun uploadProjectOtherEncoding() {
 
         val uploader = User("a21702482", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
@@ -856,7 +837,6 @@ class UploadControllerTests {
     // tests an AUTHORS.txt that has a weird character at the beginning (\uFFEF), also called a BOM
     @Test
     @WithMockUser("a21702482", roles = ["STUDENT"])
-    @DirtiesContext
     fun uploadProjectWithBOM() {
 
         val uploader = User("a21702482", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
@@ -880,7 +860,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun uploadGroupWithDuplicateMembers() {
 
         val projectRoot = resourceLoader.getResource("file:src/test/sampleProjects/compact/java/projectCompilationErrors").file
@@ -926,7 +905,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun uploadProjectJunitErrorsWithTwoTestFiles() {
 
         // this assignment has two test files
@@ -978,7 +956,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun uploadProjectUnexpectedCharacter() {
         val uploader = User("p4453", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
         val submissionId = testsHelper.uploadProject(this.mvc, "projectUnexpectedCharacter", "testJavaProj", uploader)
@@ -999,7 +976,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun homeRedirectsToActiveAssignmentOnlyWhenYouAreInWhiteList() {
 
         // remove student1 from any white lists that might exist
@@ -1018,7 +994,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun accessAssignmentWithWhiteList() {
 
         assigneeRepository.save(Assignee(assignmentId = "testJavaProj", authorUserId = "student1"))
@@ -1033,7 +1008,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun markAsFinal() {
 
         testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
@@ -1074,7 +1048,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun cleanupSubmissions() {
 
         testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
@@ -1106,7 +1079,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun cleanupDoesntRemoveFilesOfGroupsWithoutAFinalSubmission() {
 
         testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
@@ -1133,7 +1105,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun cleanupIsNotAvailableForGitAssignments() {
 
         assignmentRepository.save(Assignment(id = "testGitProj", name = "Test Git Project (for automatic tests)",
@@ -1155,7 +1126,6 @@ class UploadControllerTests {
 
     // assignment's src/main should not overwrite student submission
     @Test
-    @DirtiesContext
     fun assignmentFilesDontOverwriteSubmissionFiles() {
 
         try {
@@ -1193,7 +1163,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun uploadProjectToInexistentAssignment() {
         this.mvc.perform(get("/upload/inexistentAssignment")
                 .with(user(STUDENT_1)))
@@ -1201,7 +1170,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun uploadProjectToNonAccessibleAssignmentBecauseItsNotInWhiteList() {
 
         assigneeRepository.save(Assignee(assignmentId = "testJavaProj", authorUserId = "student1"))
@@ -1212,7 +1180,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `upload group project when one member is not in whitelist`() {
 
         // create whitelist with only student1
@@ -1226,7 +1193,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun uploadProjectWithErrors_then_updateAssignment_then_rebuildFull() {
 
         val testFile = File("${dropProjectProperties.assignments.rootLocation}/testJavaProj/src/test/java/org/dropProject/sampleAssignments/testProj/TestTeacherProject.java")
@@ -1313,7 +1279,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun uploadProjectWithStudentTests() {
 
         val assignment = Assignment(id = "testJavaProjWithCoverage",    // <<< this is very important for this test
@@ -1372,7 +1337,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun uploadProjectWithStudentTestsUsingJUnit5() {
 
         val assignment = Assignment(id = "testJavaProjJUnit5",
@@ -1427,7 +1391,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun uploadProjectWithStudentTestsForAssignmentThatDoesntRequireStudentTests() {
 
         val assignment = Assignment(id = "testJavaProjWithCoverage",    // <<< this is very important for this test
@@ -1467,7 +1430,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun uploadProjectWithoutStudentTestsForAssignmentThatRequiresStudentTests() {
 
         val assignment = assignmentRepository.findById("testJavaProj").get()
@@ -1512,7 +1474,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun uploadProjectWithoutEnoughStudentTests() {
 
         val assignment = assignmentRepository.findById("testJavaProj").get()
@@ -1558,7 +1519,6 @@ class UploadControllerTests {
 
 
     @Test
-    @DirtiesContext
     fun uploadProjectWithTestInputFiles() {
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectWithTestInputFiles", "testJavaProj", STUDENT_1)
@@ -1581,7 +1541,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun uploadProjectOutOfMemory() {
 
         val assignment = assignmentRepository.findById("testJavaProj").get()
@@ -1613,7 +1572,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun uploadProjectWithLargeOutput() {  // too many println's
 
         val assignment = assignmentRepository.findById("testJavaProj").get()
@@ -1631,7 +1589,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun rebuild() {
         val submissionId = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
 
@@ -1659,7 +1616,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun abortRebuild() {
         val submissionId = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
 
@@ -1694,7 +1650,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun uploadAndDeleteOneSubmission() {
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
@@ -1719,7 +1674,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun uploadMultipleAndDeleteJustOneSubmission() {
 
         val submissionId1 = testsHelper.uploadProject(this.mvc, "projectCompilationErrors", "testJavaProj", STUDENT_1)
@@ -1743,7 +1697,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `upload by one element of the group and get report by the other element`() {
 
         // student1 makes a submission in name of the group (student1, student2)
@@ -1779,7 +1732,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `upload project that violates the group restrictions of the assignment`() {
 
         val projectGroupRestrictions = ProjectGroupRestrictions(minGroupSize = 2, maxGroupSize = 2, exceptions = "student3")
@@ -1802,7 +1754,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `student in exceptions list but not in allowlist can access and submit individually`() {
 
         // allowlist only contains student2, not student1
@@ -1827,7 +1778,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `upload group project as teacher`() {
 
         val projectGroupRestrictions = ProjectGroupRestrictions(minGroupSize = 2, maxGroupSize = 2)
@@ -1842,7 +1792,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `upload a project with test classes that dont follow the TestXXX convention should show an error`() {
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectWithStudentTestNotValid", "testJavaProj", STUDENT_1)
@@ -1863,7 +1812,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `student home page should show public assignments`() {
 
         try {// list assigments should return empty
@@ -1905,7 +1853,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `teacher home page should show his own assignments and public assignments`() {
 
         val teacher = User("p1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
@@ -1965,7 +1912,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `upload without authentication should return 401 unauthorized`() {
         // Create a mock multipart file by manually creating the zip
         val projectFolder = resourceLoader.getResource("file:src/test/sampleProjects/compact/java/projectOK").file
@@ -1983,7 +1929,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to upload with cooloff then disable and upload again`() {
 
         val assignment = assignmentRepository.findById("testJavaProj").get()
@@ -2023,7 +1968,6 @@ class UploadControllerTests {
     // ===================================
 
     @Test
-    @DirtiesContext
     fun `upload Maven project with correct structure and pom`() {
 
         val assignment = assignmentRepository.findById("testJavaProj").get()
@@ -2058,7 +2002,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `upload Maven project with invalid structure`() {
 
         val assignment = assignmentRepository.findById("testJavaProj").get()
@@ -2086,7 +2029,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `upload Maven project without pom xml`() {
 
         val assignment = assignmentRepository.findById("testJavaProj").get()
@@ -2113,7 +2055,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `upload Maven project with JUnit errors`() {
 
         val assignment = assignmentRepository.findById("testJavaProj").get()
@@ -2144,7 +2085,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `upload Maven project with checkstyle errors`() {
 
         val assignment = assignmentRepository.findById("testJavaProj").get()
@@ -2173,7 +2113,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `upload Kotlin Maven project`() {
         val assignment = Assignment(
             id = "testKotlinProj", name = "Test Project (for automatic tests)",
@@ -2207,7 +2146,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `compact project should be rejected by Maven assignment`() {
 
         val assignment = assignmentRepository.findById("testJavaProj").get()
@@ -2234,7 +2172,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `coverage is only visible to teacher when coverageVisibleToStudents is false`() {
 
         val assignment = Assignment(id = "testJavaProjWithCoverage",
@@ -2265,7 +2202,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `coverage is visible to students when coverageVisibleToStudents is true`() {
 
         val assignment = Assignment(id = "testJavaProjWithCoverage",
@@ -2295,7 +2231,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun uploadProjectInvalidStructure_IndicatorsShouldBeVisibleInReport() {
 
         val submissionId = testsHelper.uploadProject(this.mvc, "projectInvalidStructure1", "testJavaProj", STUDENT_1)
@@ -2321,7 +2256,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `teacher can submit to private assignment with whitelist`() {
 
         // 1. Vai buscar o assignment 'testJavaProj' (dono é teacher1)
@@ -2357,7 +2291,6 @@ class UploadControllerTests {
 
 
     @Test
-    @DirtiesContext
     fun `teacher2 cannot submit to private assignment without whitelist or authorized people`() {
 
         // 1. Tornar o assignment privado
@@ -2391,7 +2324,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `teacher2 can submit to private assignment when in authorized people but not in whitelist`() {
 
         // 1. Tornar o assignment privado
@@ -2482,7 +2414,6 @@ class UploadControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `show assignment info button is only visible to the assignment's teachers`() {
 
         val infoLink = "/assignment/info/testJavaProj"

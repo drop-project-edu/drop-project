@@ -19,6 +19,8 @@
  */
 package org.dropproject.services
 
+import org.junit.jupiter.api.extension.ExtendWith
+import org.dropproject.ResetStateExtension
 import org.dropproject.data.AuthorDetails
 import org.dropproject.repository.ProjectGroupRepository
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -26,7 +28,6 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 
@@ -35,6 +36,7 @@ import org.springframework.test.context.TestPropertySource
 @SpringBootTest
 @TestPropertySource(locations = ["classpath:drop-project-test.properties"])
 @ActiveProfiles("test")
+@ExtendWith(ResetStateExtension::class)
 class TestProjectGroupService {
 
     @Autowired
@@ -44,7 +46,6 @@ class TestProjectGroupService {
     private lateinit var projectGroupRepository: ProjectGroupRepository
 
     @Test
-    @DirtiesContext
     fun testCreateGroupWithOneStudentTwice() {
 
         val authors = arrayListOf(AuthorDetails("username1", "user1"))
@@ -59,7 +60,6 @@ class TestProjectGroupService {
     }
 
     @Test
-    @DirtiesContext
     fun testCreateGroupWithTwoStudentsTwice() {
 
         val authors = arrayListOf(AuthorDetails("username1", "user1"), AuthorDetails("username2", "user2"))

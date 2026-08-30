@@ -19,6 +19,8 @@
  */
 package org.dropproject.controllers
 
+import org.junit.jupiter.api.extension.ExtendWith
+import org.dropproject.ResetStateExtension
 import org.dropproject.config.DropProjectProperties
 import org.dropproject.dao.Assignment
 import org.dropproject.dao.Author
@@ -39,7 +41,6 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.User
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
-import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.servlet.MockMvc
@@ -58,6 +59,7 @@ import java.io.File
 @TestPropertySource(locations = ["classpath:drop-project-test.properties"],
         properties = ["drop-project.git.reject-public-student-repositories=true"])
 @ActiveProfiles("test")
+@ExtendWith(ResetStateExtension::class)
 class PublicGitRepositoryTests {
 
     @Autowired
@@ -109,7 +111,6 @@ class PublicGitRepositoryTests {
     }
 
     @Test
-    @DirtiesContext
     fun test_connectingAPublicRepositoryIsRefused() {
 
         this.mvc.perform(post("/student/setup-git")
@@ -126,7 +127,6 @@ class PublicGitRepositoryTests {
     }
 
     @Test
-    @DirtiesContext
     fun test_connectingAPrivateRepositoryProceedsToTheDeployKeyStep() {
 
         this.mvc.perform(post("/student/setup-git")
@@ -140,7 +140,6 @@ class PublicGitRepositoryTests {
     }
 
     @Test
-    @DirtiesContext
     fun test_refreshingARepositoryThatBecamePublicIsRefused() {
 
         // simulate a submission that was connected while the repository was still private

@@ -19,6 +19,8 @@
  */
 package org.dropproject.controllers
 
+import org.junit.jupiter.api.extension.ExtendWith
+import org.dropproject.ResetStateExtension
 import org.dropproject.TestsHelper
 import org.dropproject.dao.Assignment
 import org.dropproject.forms.SubmissionMethod
@@ -31,19 +33,17 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.User
-import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
-import org.springframework.transaction.annotation.Transactional
 
 @AutoConfigureMockMvc
 @SpringBootTest
 @TestPropertySource(locations = ["classpath:drop-project-test.properties"])
 @ActiveProfiles("test")
-@Transactional
+@ExtendWith(ResetStateExtension::class)
 class McpControllerTests: APIControllerTests {
 
     @Autowired
@@ -87,7 +87,6 @@ class McpControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to initialize without a bearer token`() {
         // McpBearerTokenFilter lets the unauthenticated requests through, so this is reported by the entry point of
         // the chain. it must be a 401, telling the client to authenticate, and not the default empty 403
@@ -102,7 +101,6 @@ class McpControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to initialize with an invalid bearer token`() {
         mvc.perform(
             post("/mcp/")
@@ -115,7 +113,6 @@ class McpControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun testMcpInitialize() {
         val authHeader = getBearerToken("teacher1")
         val requestJson = """
@@ -139,7 +136,6 @@ class McpControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun testMcpToolsList() {
         val authHeader = getBearerToken("teacher1")
         val requestJson = """
@@ -260,7 +256,6 @@ class McpControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun testMcpGetAssignmentInfo() {
         val authHeader = getBearerToken("teacher1")
         val requestJson = """
@@ -292,7 +287,6 @@ class McpControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun testMcpSearchAssignments() {
         val authHeader = getBearerToken("teacher1")
         val requestJson = """
@@ -323,7 +317,6 @@ class McpControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun testMcpGetSubmissionCode() {
         val authHeader = getBearerToken("teacher1")
 
@@ -363,7 +356,6 @@ class McpControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun testMcpGetSubmissionInfo() {
         val authHeader = getBearerToken("teacher1")
 
@@ -405,7 +397,6 @@ class McpControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun testMcpGetFileContent() {
         val authHeader = getBearerToken("teacher1")
 

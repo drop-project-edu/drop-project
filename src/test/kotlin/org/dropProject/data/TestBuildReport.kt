@@ -19,6 +19,8 @@
  */
 package org.dropproject.data
 
+import org.junit.jupiter.api.extension.ExtendWith
+import org.dropproject.ResetStateExtension
 import org.dropproject.dao.Assignment
 import org.dropproject.dao.Language
 import org.dropproject.forms.SubmissionMethod
@@ -36,6 +38,7 @@ import org.springframework.test.context.TestPropertySource
 @SpringBootTest
 @TestPropertySource(locations=["classpath:drop-project-test.properties"])
 @ActiveProfiles("test")
+@ExtendWith(ResetStateExtension::class)
 class TestBuildReport {
 
     @Autowired

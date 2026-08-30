@@ -19,6 +19,8 @@
  */
 package org.dropproject.controllers
 
+import org.junit.jupiter.api.extension.ExtendWith
+import org.dropproject.ResetStateExtension
 import org.dropproject.TestsHelper
 import org.dropproject.dao.Assignee
 import org.dropproject.dao.Assignment
@@ -37,7 +39,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.security.core.authority.SimpleGrantedAuthority
-import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.servlet.MockMvc
@@ -48,6 +49,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 @SpringBootTest
 @TestPropertySource(locations = ["classpath:drop-project-test.properties"])
 @ActiveProfiles("test")
+@ExtendWith(ResetStateExtension::class)
 class StudentAPIControllerTests: APIControllerTests {
 
     @Autowired
@@ -96,7 +98,6 @@ class StudentAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to get current assignments without authentication`() {
         this.mvc.perform(
             get("/api/student/assignments/current")
@@ -105,7 +106,6 @@ class StudentAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to get current assignments with invalid token`() {
         this.mvc.perform(
             get("/api/student/assignments/current")
@@ -115,7 +115,6 @@ class StudentAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to get current assignments with a malformed authorization header`() {
         // a header that is not valid base64 is a malformed credential, so it must get the same 401 as an
         // invalid token, instead of blowing up into a 500
@@ -127,7 +126,6 @@ class StudentAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to get current assignments with student1`() {
 
         val token = generateToken("student1", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")), mvc)
@@ -175,7 +173,6 @@ class StudentAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to get current assignments with student2`() {
 
         val token = generateToken("student2", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")), mvc)
@@ -192,7 +189,6 @@ class StudentAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `upload a submission file with invalid structure`() {
 
         val token = generateToken("student1", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")), mvc)
@@ -219,7 +215,6 @@ class StudentAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `upload a submission file with failing tests`() {
 
         val token = generateToken("student1", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")), mvc)
@@ -247,7 +242,6 @@ class StudentAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to get existent assignment information`() {
 
         val assignmentId = "sampleJavaProject"
@@ -268,7 +262,6 @@ class StudentAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to get nonexistent assignment information`() {
 
         val token = generateToken("student1", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")), mvc)
@@ -282,7 +275,6 @@ class StudentAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to get current assignments with student2 including one with instructions_md`() {
 
         val assignment = Assignment(id = "testKotlinProj2", name = "Test Project (for automatic tests)",
@@ -337,7 +329,6 @@ class StudentAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to upload to Maven assignment via API should fail`() {
 
         // Create Maven assignment

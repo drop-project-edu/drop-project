@@ -78,6 +78,13 @@ class PendingTasks {
 
         return removed
     }
+
+    /**
+     * Removes all pending tasks, regardless of creation date.
+     */
+    fun clear() {
+        pendingTasks.clear()
+    }
 }
 
 @Configuration

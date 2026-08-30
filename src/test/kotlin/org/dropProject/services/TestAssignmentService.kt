@@ -19,6 +19,8 @@
  */
 package org.dropproject.services
 
+import org.junit.jupiter.api.extension.ExtendWith
+import org.dropproject.ResetStateExtension
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.dropproject.dao.Assignment
 import org.dropproject.dao.Language
@@ -35,6 +37,7 @@ import org.springframework.test.context.TestPropertySource
 @SpringBootTest
 @TestPropertySource(locations = ["classpath:drop-project-test.properties"])
 @ActiveProfiles("test")
+@ExtendWith(ResetStateExtension::class)
 class AssignmentServiceTests() {
 
     @Autowired

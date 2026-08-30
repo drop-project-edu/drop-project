@@ -19,6 +19,8 @@
  */
 package org.dropproject.controllers
 
+import org.junit.jupiter.api.extension.ExtendWith
+import org.dropproject.ResetStateExtension
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import net.lingala.zip4j.ZipFile
@@ -62,7 +64,6 @@ import org.springframework.security.core.userdetails.User
 import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
-import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.servlet.MockMvc
@@ -83,6 +84,7 @@ const val sampleJavaAssignmentWithJUnit5Repo = "git@github.com:drop-project-edu/
 @TestPropertySource(locations = ["classpath:drop-project-test.properties"])
 @ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.MethodName::class)
+@ExtendWith(ResetStateExtension::class)
 class AssignmentControllerTests {
 
     @Autowired
@@ -132,7 +134,6 @@ class AssignmentControllerTests {
 
     @Test
     @WithMockUser("teacher1", roles = ["TEACHER"])
-    @DirtiesContext
     fun test_00_getNewAssignmentForm() {
         this.mvc.perform(get("/assignment/new"))
             .andExpect(status().isOk)
@@ -141,7 +142,6 @@ class AssignmentControllerTests {
 
     @Test
     @WithMockUser("teacher1", roles = ["TEACHER"])
-    @DirtiesContext
     fun test_01_createInvalidAssignment() {
 
         mvc.perform(post("/assignment/new"))
@@ -285,7 +285,6 @@ class AssignmentControllerTests {
 
     @Test
     @WithMockUser("teacher1", roles = ["TEACHER"])
-    @DirtiesContext
     fun test_02_createNewAssignmentAndConnectWithGithub() {
 
         try {
@@ -351,7 +350,6 @@ class AssignmentControllerTests {
     @Disabled("THIS TEST IS FAILING BECAUSE BITBUCKET DOESNT RECOGNIZE THE PUBLIC KEY")
     @Test
     @WithMockUser("teacher1", roles = ["TEACHER"])
-    @DirtiesContext
     fun test_03_createNewAssignmentAndConnectWithBitbucket() {
 
         try {
@@ -438,7 +436,6 @@ class AssignmentControllerTests {
 
     @Test
     @WithMockUser("teacher1", roles = ["TEACHER"])
-    @DirtiesContext
     fun test_04_createAssignmentWithInvalidGitRepository() {
 
         val mvcResult = this.mvc.perform(
@@ -471,7 +468,6 @@ class AssignmentControllerTests {
 
     @Test
     @WithMockUser("teacher1", roles = ["TEACHER"])
-    @DirtiesContext
     fun test_04a_createAssignmentClearsLeftoverFolderFromPreviouslyDeletedAssignment() {
 
         // simulate a leftover folder from a previously deleted assignment with the same id (issue #111): e.g.
@@ -506,7 +502,6 @@ class AssignmentControllerTests {
 
     @Test
     @WithMockUser("teacher1", roles = ["TEACHER"])
-    @DirtiesContext
     fun test_04b_createAssignmentRejectsGitRepositoryFolderAlreadyUsedByAnotherAssignment() {
 
         // an assignment (e.g. previously imported) whose gitRepositoryFolder doesn't match its own id
@@ -544,7 +539,6 @@ class AssignmentControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun test_05_listAssignments() {
 
         val user = User("p1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
@@ -602,7 +596,6 @@ class AssignmentControllerTests {
 
     @Test
     @WithMockUser("teacher1", roles = ["TEACHER"])
-    @DirtiesContext
     fun test_06_createNewAssignmentAndForgetToConnectWithGithub() {  // assignment should be marked as inactive
 
         // post form
@@ -629,7 +622,6 @@ class AssignmentControllerTests {
 
     @Test
     @WithMockUser("teacher1", roles = ["TEACHER"])
-    @DirtiesContext
     fun test_07_showOnlyActiveAssignments() {
 
         try {
@@ -676,7 +668,6 @@ class AssignmentControllerTests {
 
     @Test
     @WithMockUser(username = "teacher1", roles = ["TEACHER"])
-    @DirtiesContext
     fun test_08_createAssignmentWithOtherTeachers() {
 
         try {
@@ -720,7 +711,6 @@ class AssignmentControllerTests {
 
     @Test
     @WithMockUser("teacher1", roles = ["TEACHER"])
-    @DirtiesContext
     fun test_09_createNewAssignmentAndEdit() {
 
         try {
@@ -800,7 +790,6 @@ class AssignmentControllerTests {
 
     @Test
     @WithMockUser("teacher1", roles = ["TEACHER"])
-    @DirtiesContext
     fun test_10_checkAssignmentHasNoErrors() {
 
         // create initial assignment
@@ -826,7 +815,6 @@ class AssignmentControllerTests {
 
     @Test
     @WithMockUser("teacher1", roles = ["TEACHER"])
-    @DirtiesContext
     fun test_11_getAssignmentInfo() {
 
         // create initial assignment
@@ -849,7 +837,6 @@ class AssignmentControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun test_12_deleteAssignment() {
 
         val STUDENT_1 = User("student1", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
@@ -904,7 +891,6 @@ class AssignmentControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun test_12_1_deleteAssignmentWithOtherAssignments() {
 
         val TEACHER_1 = User("teacher1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
@@ -959,7 +945,6 @@ class AssignmentControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun test_12_2_deleteAssignmentWithForce() {
 
         val STUDENT_1 = User("student1", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
@@ -1019,7 +1004,6 @@ class AssignmentControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun test_12_3_deleteAssignmentAndCheckRepositories() {
         val STUDENT_1 = User("student1", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
         val TEACHER_1 = User("teacher1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
@@ -1064,7 +1048,6 @@ class AssignmentControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun test_13_listArchivedAssignments() {
 
         val user = User("p1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
@@ -1135,7 +1118,6 @@ class AssignmentControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun test_13_1_archivedAssignmentsAreCached() {
 
         val user = User("cacheTester", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
@@ -1171,7 +1153,6 @@ class AssignmentControllerTests {
     // refreshAssignmentGitRepository
     @Test
     @WithMockUser("teacher1", roles = ["TEACHER"])
-    @DirtiesContext
     fun test_14_refreshAssignmentGitRepository() {
 
         try {
@@ -1198,7 +1179,6 @@ class AssignmentControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun test_15_markAllAsFinal() {
 
         val assignmentId = testsHelper.defaultAssignmentId
@@ -1248,7 +1228,6 @@ class AssignmentControllerTests {
 
     @Test
     @WithMockUser("teacher1", roles = ["TEACHER"])
-    @DirtiesContext
     fun test_16_createNewAssignmentWithTags() {
 
         // check available tags
@@ -1289,7 +1268,6 @@ class AssignmentControllerTests {
 
     @Test
     @WithMockUser("teacher1", roles = ["TEACHER"])
-    @DirtiesContext
     fun test_17_updateAssignmentWithTags() {
 
         try {
@@ -1343,7 +1321,6 @@ class AssignmentControllerTests {
 
     @Test
     @WithMockUser("teacher1", roles = ["TEACHER"])
-    @DirtiesContext
     fun test_18_createNewAssignmentAndInfoWithTestMethods() {
 
         try {
@@ -1380,7 +1357,6 @@ class AssignmentControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun test_19_listAssignmentsFilteredByTags() {
 
         val user = User("p1", "", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")))
@@ -1458,7 +1434,6 @@ class AssignmentControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun test_20_exportAssignment() {
 
         try {
@@ -1529,7 +1504,6 @@ class AssignmentControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun test_20_1_downloadExpiredExport() {
 
         // exports are deleted after a while, so downloading one that no longer exists must be explained to the user
@@ -1543,7 +1517,6 @@ class AssignmentControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun test_20_2_exportSeveralAssignments() {
 
         try {
@@ -1603,7 +1576,6 @@ class AssignmentControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun test_20_3_exportAssignmentsOfAnotherTeacher() {
 
         try {
@@ -1627,7 +1599,6 @@ class AssignmentControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun test_20_4_deleteSeveralAssignmentsWithTheirSubmissions() {
 
         // the assignment folder is a copy of the sample one, since the deletion removes it from the disk
@@ -1691,7 +1662,6 @@ class AssignmentControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun test_21_importAssignmentOnly() {
 
         try {
@@ -1732,7 +1702,6 @@ class AssignmentControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun test_22_exportAssignmentAndSubmissions() {
 
         val assignment01 = Assignment(
@@ -1834,7 +1803,6 @@ class AssignmentControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun test_23_importAssignmentAndSubmissions() {
 
         try {
@@ -1879,7 +1847,6 @@ class AssignmentControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun test_24_exportAssignmentAndGitSubmissions() {
 
         val assignment01 = Assignment(
@@ -1949,7 +1916,6 @@ class AssignmentControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun test_25_importAssignmentAndGitSubmissions() {
 
         try {
@@ -1996,7 +1962,6 @@ class AssignmentControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun test_26_reconnectAssignment() {
 
         try {
@@ -2055,7 +2020,6 @@ class AssignmentControllerTests {
 
     @Test
     @WithMockUser("teacher1", roles = ["TEACHER"])
-    @DirtiesContext
     fun test_27_createNewAssignmentAndInfoWithTestMethodsWithJUnit5() {
 
         try {
@@ -2104,7 +2068,6 @@ class AssignmentControllerTests {
 
     @Test
     @WithMockUser("teacher1", roles = ["TEACHER"])
-    @DirtiesContext
     fun test_28_createAssignmentWithProjectGroupRestrictions() {
 
         try {
@@ -2216,7 +2179,6 @@ class AssignmentControllerTests {
 
     @Test
     @WithMockUser("teacher1", roles = ["TEACHER"])
-    @DirtiesContext
     fun test_29_createNewAssignmentAndTryToConnectWithoutSettingUpAccessKeys() {
 
         // POST /assignment/new
@@ -2252,7 +2214,6 @@ class AssignmentControllerTests {
 
     @Test
     @WithMockUser("teacher1", roles = ["TEACHER"])
-    @DirtiesContext
     fun test_30_createNewKotlinAssignmentAndConnectWithGithub() {
 
         try {
@@ -2315,7 +2276,6 @@ class AssignmentControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun test_31_listAssignmentsAfterSomeSubmissions() {
 
         try {
@@ -2371,7 +2331,6 @@ class AssignmentControllerTests {
 
     @Test
     @WithMockUser("teacher1", roles = ["TEACHER"])
-    @DirtiesContext
     fun test_32_refreshSSHKeysForAllAssignments() {
 
 //        println(GitClient().computeSshFingerprint(TestsHelper.sampleJavaAssignmentPublicKey))
@@ -2398,7 +2357,6 @@ class AssignmentControllerTests {
 
     @Test
     @WithMockUser("teacher1", roles = ["TEACHER"])
-    @DirtiesContext
     fun test_33_createAssignmentWithACLContainingSpaces() {
         mvc.perform(
             post("/assignment/new")
@@ -2417,7 +2375,6 @@ class AssignmentControllerTests {
 
     @Test
     @WithMockUser("teacher1", roles = ["TEACHER"])
-    @DirtiesContext
     fun test_34_createAssignmentWithACLContainingSemicolons() {
         mvc.perform(
             post("/assignment/new")
@@ -2437,7 +2394,6 @@ class AssignmentControllerTests {
 
     @Test
     @WithMockUser("teacher1", roles = ["TEACHER"])
-    @DirtiesContext
     fun test_tagFilterPreservedAfterToggle() {
         val assignment = Assignment(
             id = "testJavaProj", name = "Test Project (for automatic tests)",
@@ -2459,7 +2415,6 @@ class AssignmentControllerTests {
 
     @Test
     @WithMockUser("teacher1", roles = ["TEACHER"])
-    @DirtiesContext
     fun test_assignmentIdWithBackslashIsRejected() {
         mvc.perform(
             post("/assignment/new")
@@ -2476,7 +2431,6 @@ class AssignmentControllerTests {
 
     @Test
     @WithMockUser("teacher1", roles = ["TEACHER"])
-    @DirtiesContext
     fun test_deleteAssignmentWithTags() {
 
         this.mvc.perform(
@@ -2507,7 +2461,6 @@ class AssignmentControllerTests {
 
     @Test
     @WithMockUser("teacher1", roles = ["TEACHER"])
-    @DirtiesContext
     fun test_editAssignmentChangingValidationRelevantFieldMarksItInactive() {
 
         val assignmentId = "revalidateOnEditTest"
@@ -2557,7 +2510,6 @@ class AssignmentControllerTests {
 
     @Test
     @WithMockUser("teacher1", roles = ["TEACHER"])
-    @DirtiesContext
     fun test_editAssignmentWithoutChangingValidationRelevantFieldsDoesntValidateAgain() {
 
         val assignmentId = "revalidateOnEditTest2"
@@ -2600,7 +2552,6 @@ class AssignmentControllerTests {
 
     @Test
     @WithMockUser("teacher1", roles = ["TEACHER"])
-    @DirtiesContext
     fun test_editAssignmentChangingEvaluationRelevantFieldWarnsAboutExistingSubmissions() {
 
         val assignmentId = "rebuildWarningTest"
@@ -2645,7 +2596,6 @@ class AssignmentControllerTests {
 
     @Test
     @WithMockUser("teacher1", roles = ["TEACHER"])
-    @DirtiesContext
     fun test_editAssignmentChangingEvaluationRelevantFieldWithoutSubmissionsDoesntWarn() {
 
         val assignmentId = "rebuildWarningTest2"

@@ -19,6 +19,8 @@
  */
 package org.dropproject.services
 
+import org.junit.jupiter.api.extension.ExtendWith
+import org.dropproject.ResetStateExtension
 import org.dropproject.TestsHelper
 import org.dropproject.config.PendingExport
 import org.dropproject.config.PendingTasks
@@ -38,7 +40,6 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.servlet.MockMvc
@@ -49,6 +50,7 @@ import java.util.*
 @SpringBootTest
 @TestPropertySource(locations=["classpath:drop-project-test.properties"])
 @ActiveProfiles("test")
+@ExtendWith(ResetStateExtension::class)
 class ScheduledTasksTests {
 
     @Autowired
@@ -73,7 +75,6 @@ class ScheduledTasksTests {
     lateinit var pendingTasks: PendingTasks
 
     @Test
-    @DirtiesContext
     fun `cleanExpiredSubmissions aborts stale submissions and rebuilds but leaves a fresh rebuild alone`() {
 
         val assignment01 = Assignment(id = "testJavaProj", name = "Test Project (for automatic tests)",
@@ -134,7 +135,6 @@ class ScheduledTasksTests {
     }
 
     @Test
-    @DirtiesContext
     fun `cleanExpiredExports only deletes the exports that are too old`() {
 
         val zipFile = File.createTempFile("export", ".zip")

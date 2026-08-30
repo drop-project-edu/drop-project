@@ -19,6 +19,8 @@
  */
 package org.dropproject.services
 
+import org.junit.jupiter.api.extension.ExtendWith
+import org.dropproject.ResetStateExtension
 import org.dropproject.controllers.InvalidProjectStructureException
 import org.dropproject.dao.Assignment
 import org.dropproject.dao.Language
@@ -41,6 +43,7 @@ import java.io.File
 @SpringBootTest
 @TestPropertySource(locations = ["classpath:drop-project-test.properties"])
 @ActiveProfiles("test")
+@ExtendWith(ResetStateExtension::class)
 class TestSubmissionService {
 
     @Autowired

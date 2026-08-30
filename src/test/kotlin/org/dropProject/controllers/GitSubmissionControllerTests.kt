@@ -19,6 +19,8 @@
  */
 package org.dropproject.controllers
 
+import org.junit.jupiter.api.extension.ExtendWith
+import org.dropproject.ResetStateExtension
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -30,7 +32,6 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.User
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
-import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.servlet.MockMvc
@@ -48,6 +49,7 @@ import java.io.File
 @SpringBootTest
 @TestPropertySource(locations = ["classpath:drop-project-test.properties"])
 @ActiveProfiles("test")
+@ExtendWith(ResetStateExtension::class)
 class GitSubmissionControllerTests {
 
     @Autowired
@@ -108,7 +110,6 @@ class GitSubmissionControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun getGitSubmitPage() {
 
         this.mvc.perform(get("/upload/${defaultAssignmentId}")
@@ -120,7 +121,6 @@ class GitSubmissionControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun test_connectSubmissionWithoutGitRepositoryUrl() {
 
         // without the parameter at all
@@ -144,7 +144,6 @@ class GitSubmissionControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun test_connectSubmissionWithInvalidGitRepository() {
 
         this.mvc.perform(MockMvcRequestBuilders.post("/student/setup-git")
@@ -168,7 +167,6 @@ class GitSubmissionControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun test_connectSubmissionWithInexistentGitRepositoryAndThenTryWithACorrectOne() {
 
         // setup a connection to an inexistent git repo
@@ -192,7 +190,6 @@ class GitSubmissionControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun test_connectSubmissionWithValidButInexistentGitRepository() {
 
         this.mvc.perform(MockMvcRequestBuilders.post("/student/setup-git")
@@ -214,7 +211,6 @@ class GitSubmissionControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun test_connectAndBuildReport() {
 
         /*** GET /upload/testJavaPro ***/
@@ -268,7 +264,6 @@ class GitSubmissionControllerTests {
 
 
     @Test
-    @DirtiesContext
     fun test_connectWithARepositoryWithoutAuthors_txt() {
 
         /*** POST /student/setup-git ***/
@@ -336,7 +331,6 @@ class GitSubmissionControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun test_connectAndBuildReportAndDisconnect() {
 
         testsHelper.connectToGitRepositoryAndBuildReport(mvc, gitSubmissionRepository, defaultAssignmentId,
@@ -358,7 +352,6 @@ class GitSubmissionControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun test_connectAndRefresh() {
 
         // try to refresh a submission that doesn't exist
