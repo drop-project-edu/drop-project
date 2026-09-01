@@ -19,42 +19,34 @@
  */
 package org.dropproject.controllers
 
-import org.dropproject.TestsHelper
+import org.dropproject.AssignmentFixtures
+import org.dropproject.basicAuthHeader
+import org.dropproject.DropProjectIntegrationTest
 import org.dropproject.dao.*
 import org.dropproject.extensions.getContent
 import org.dropproject.forms.SubmissionMethod
 import org.dropproject.repository.*
 import org.dropproject.services.SubmissionService
-import org.junit.Assert.assertNull
-import org.junit.Before
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.core.io.ClassPathResource
 import org.springframework.core.io.ResourceLoader
 import org.springframework.http.MediaType
 import org.springframework.security.core.authority.SimpleGrantedAuthority
-import org.springframework.test.annotation.DirtiesContext
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.TestPropertySource
-import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import org.springframework.transaction.annotation.Transactional
 import java.sql.Timestamp
 import java.time.LocalDateTime
 
-@RunWith(SpringRunner::class)
-@AutoConfigureMockMvc
-@SpringBootTest
-@TestPropertySource(locations = ["classpath:drop-project-test.properties"])
-@ActiveProfiles("test")
-@Transactional
-class TeacherAPIControllerTests: APIControllerTests {
+@DropProjectIntegrationTest
+class TeacherAPIControllerTests: ApiTestSupport {
+
+    @Autowired
+    lateinit var assignmentFixtures: AssignmentFixtures
 
     @Autowired
     lateinit var mvc: MockMvc
@@ -86,8 +78,6 @@ class TeacherAPIControllerTests: APIControllerTests {
     @Autowired
     lateinit var resourceLoader: ResourceLoader
 
-    @Autowired
-    lateinit var testsHelper: TestsHelper
 
     @Autowired
     lateinit var submissionService: SubmissionService
@@ -110,11 +100,11 @@ class TeacherAPIControllerTests: APIControllerTests {
         lateinit var group : ProjectGroup
         if (groups.isEmpty()) {
             group = ProjectGroup()
-            group.authors.add(author)
         } else {
             group = groups[0]
         }
-        group.submissions.add(submission)
+        // note: ProjectGroup.authors and ProjectGroup.submissions are the inverse side of the
+        // relation, so it is enough to save the owning side (author.group / submission.group) below
         projectGroupRepository.save(group)
 
         author.group = group
@@ -156,7 +146,7 @@ class TeacherAPIControllerTests: APIControllerTests {
         return submission.id
     }
 
-    @Before
+    @BeforeEach
     fun setup() {
 
         assigneeRepository.deleteAll()
@@ -164,11 +154,7 @@ class TeacherAPIControllerTests: APIControllerTests {
         authorRepository.deleteAll()
 
         // create initial assignment
-        val assignment01 = Assignment(id = "testJavaProj", name = "Test Project (for automatic tests)",
-            packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
-            submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummy",
-            gitRepositoryFolder = "testJavaProj")
-        assignmentRepository.save(assignment01)
+        assignmentFixtures.createDefaultAssignment()
         assigneeRepository.save(Assignee(assignmentId = "testJavaProj", authorUserId = "student1"))
 
         val author = Author(name = "Student 1", userId = "student1")
@@ -180,7 +166,6 @@ class TeacherAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to get current assignments without authentication`() {
         this.mvc.perform(
             get("/api/teacher/assignments/current")
@@ -192,46 +177,42 @@ class TeacherAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to get current assignments with invalid token`() {
         this.mvc.perform(
             get("/api/teacher/assignments/current")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("student1", "invalid")))
+                .header("authorization", basicAuthHeader("student1", "invalid")))
             .andExpect(status().isUnauthorized)
     }
 
     @Test
-    @DirtiesContext
     fun `try to get current assignments with a student profile`() {
         val token = generateToken("student1", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")), mvc)
 
         this.mvc.perform(
             get("/api/teacher/assignments/current")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("student1", token)))
+                .header("authorization", basicAuthHeader("student1", token)))
             .andExpect(status().isForbidden)
             .andExpect(content().json("""{"error":"Access denied"}"""))
     }
 
     @Test
-    @DirtiesContext
     fun `try to get current assignments with a student profile and without content type`() {
         val token = generateToken("student1", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")), mvc)
 
         // most api clients don't set a content type on GET requests, but they must get the same 403 anyway
         val result = this.mvc.perform(
             get("/api/teacher/assignments/current")
-                .header("authorization", testsHelper.header("student1", token)))
+                .header("authorization", basicAuthHeader("student1", token)))
             .andExpect(status().isForbidden)
             .andReturn()
 
         // the api is stateless, so the personal token authentication must not create a session
-        assertNull("the api shouldn't create sessions", result.request.getSession(false))
+        assertNull(result.request.getSession(false), "the api shouldn't create sessions")
     }
 
     @Test
-    @DirtiesContext
     fun `try to download a submission with an admin profile`() {
         // an admin passes the authorization rule of the chain, but not the check that the controller makes, so this
         // is a denial that is thrown by the controller. it must be reported exactly like the ones that the chain
@@ -240,20 +221,19 @@ class TeacherAPIControllerTests: APIControllerTests {
 
         this.mvc.perform(
             get("/api/teacher/download/1")
-                .header("authorization", testsHelper.header("admin", token)))
+                .header("authorization", basicAuthHeader("admin", token)))
             .andExpect(status().isForbidden)
             .andExpect(content().json("""{"error":"Access denied"}"""))
     }
 
     @Test
-    @DirtiesContext
     fun `try to get current assignments with a teacher profile`() {
         val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
 
         this.mvc.perform(
             get("/api/teacher/assignments/current")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("teacher1", token)))
+                .header("authorization", basicAuthHeader("teacher1", token)))
             .andExpect(status().isOk)
             .andExpect(content().json("""
                 [
@@ -274,14 +254,13 @@ class TeacherAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to get an assignment's latest submissions with a teacher profile`() {
         val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
 
         this.mvc.perform(
             get("/api/teacher/assignments/testJavaProj/submissions")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("teacher1", token)))
+                .header("authorization", basicAuthHeader("teacher1", token)))
             .andExpect(status().isOk)
             .andExpect(content().json("""
                 [
@@ -306,14 +285,13 @@ class TeacherAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to get a group's submissions to an assignment with a teacher profile`() {
         val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
 
         this.mvc.perform(
             get("/api/teacher/assignments/testJavaProj/submissions/1")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("teacher1", token)))
+                .header("authorization", basicAuthHeader("teacher1", token)))
             .andExpect(status().isOk)
             .andExpect(content().json("""
                 [
@@ -336,14 +314,13 @@ class TeacherAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to get a submission's build report`() {
         val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
 
         this.mvc.perform(
             get("/api/teacher/submissions/1")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("teacher1", token)))
+                .header("authorization", basicAuthHeader("teacher1", token)))
             .andExpect(status().isOk()).andExpect(content().json("""
                 {"numSubmissions":2,
                  "assignment":{"id":"testJavaProj",
@@ -384,26 +361,24 @@ class TeacherAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to download a non-existing submission zip file`() {
         val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
 
         this.mvc.perform(
             get("/api/teacher/download/1")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("teacher1", token)))
+                .header("authorization", basicAuthHeader("teacher1", token)))
             .andExpect(status().isNotFound)
     }
 
     @Test
-    @DirtiesContext
     fun `try to search for an existing student`() {
         val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
 
         this.mvc.perform(
             get("/api/teacher/studentSearch/student1")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("teacher1", token)))
+                .header("authorization", basicAuthHeader("teacher1", token)))
             .andExpect(status().isOk()).andExpect(content().json("""
                 [
                   {
@@ -415,28 +390,26 @@ class TeacherAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to search for a non existing student`() {
         val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
 
         this.mvc.perform(
             get("/api/teacher/studentSearch/student2")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("teacher1", token)))
+                .header("authorization", basicAuthHeader("teacher1", token)))
             .andExpect(status().isOk()).andExpect(content().json("""
                 []
             """.trimIndent()))
     }
 
     @Test
-    @DirtiesContext
     fun `try to search for an assignment`() {
         val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
 
         this.mvc.perform(
             get("/api/teacher/assignmentSearch/testJavaProj")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("teacher1", token)))
+                .header("authorization", basicAuthHeader("teacher1", token)))
             .andExpect(status().isOk()).andExpect(content().json("""
                 [
                   {
@@ -448,28 +421,26 @@ class TeacherAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to search for a non existing assignment`() {
         val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
 
         this.mvc.perform(
             get("/api/teacher/assignmentSearch/testProj")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("teacher1", token)))
+                .header("authorization", basicAuthHeader("teacher1", token)))
             .andExpect(status().isOk()).andExpect(content().json("""
                 []
             """.trimIndent()))
     }
 
     @Test
-    @DirtiesContext
     fun `try to access a student's history`() {
         val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
 
         this.mvc.perform(
             get("/api/teacher/studentHistory/student1")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("teacher1", token)))
+                .header("authorization", basicAuthHeader("teacher1", token)))
             .andExpect(status().isOk())
             .andExpect(content().json("""
                     {
@@ -549,38 +520,35 @@ class TeacherAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to access a non existent student's history`() {
         val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
 
         this.mvc.perform(
             get("/api/teacher/studentHistory/student2")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("teacher1", token)))
+                .header("authorization", basicAuthHeader("teacher1", token)))
             .andExpect(status().isNotFound)
     }
 
     @Test
-    @DirtiesContext
     fun `try to mark a submission as final`() {
         val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
 
         this.mvc.perform(
             get("/api/teacher/submissions/1/markAsFinal")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("teacher1", token)))
+                .header("authorization", basicAuthHeader("teacher1", token)))
             .andExpect(status().isOk()).andExpect(content().string("true"))
     }
 
     @Test
-    @DirtiesContext
     fun `try to mark a non existing submission as final`() {
         val token = generateToken("teacher1", mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
 
         this.mvc.perform(
             get("/api/teacher/submissions/0/markAsFinal")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("teacher1", token)))
+                .header("authorization", basicAuthHeader("teacher1", token)))
             .andExpect(status().isOk()).andExpect(content().string("false"))
     }
 }

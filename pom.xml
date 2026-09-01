@@ -32,6 +32,8 @@
 		<license.licenseName>apache_v2</license.licenseName>
 		<orchid.version>0.21.1</orchid.version>
 		<antlr.version>4.13.0</antlr.version>
+		<!-- tests tagged @Tag("integration") are excluded by the 'fast' profile (mvn test -Pfast) -->
+		<surefire.excludedGroups></surefire.excludedGroups>
 	</properties>
 
 	<dependencies>
@@ -314,12 +316,6 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.github.stefanbirkner</groupId>
-			<artifactId>system-rules</artifactId>
-			<version>1.19.0</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
 			<groupId>org.jetbrains.kotlin</groupId>
 			<artifactId>kotlin-test</artifactId>
 			<version>${kotlin.version}</version>
@@ -342,6 +338,13 @@
 					<scope>provided</scope>
 				</dependency>
 			</dependencies>
+		</profile>
+		<profile>
+			<!-- quick feedback loop: skips the tests that run real maven builds or reach github.com -->
+			<id>fast</id>
+			<properties>
+				<surefire.excludedGroups>integration</surefire.excludedGroups>
+			</properties>
 		</profile>
 	</profiles>
 
@@ -435,13 +438,9 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>3.5.3</version>
-				<dependencies>
-					<dependency>
-						<groupId>org.apache.maven.surefire</groupId>
-						<artifactId>surefire-junit47</artifactId>
-						<version>3.5.3</version>
-					</dependency>
-				</dependencies>
+				<configuration>
+					<excludedGroups>${surefire.excludedGroups}</excludedGroups>
+				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.jacoco</groupId>
@@ -484,10 +483,10 @@
 				<configuration>
 					<excludes>
 						<!-- exclude all the classes that have @Profile("!test") -->
-						<exclude>org/dropProject/controllers/ApplicationContextListener.class</exclude>
-						<exclude>org/dropProject/AsyncConfig.class</exclude>
+						<exclude>org/dropproject/controllers/ApplicationContextListener.class</exclude>
+						<exclude>org/dropproject/config/AsyncConfig.class</exclude>
 						<exclude>edu/uoc/**</exclude>
-						<exclude>org/dropProject/lti/**</exclude> <!-- exclude moodle related classes -->
+						<exclude>org/dropproject/lti/**</exclude> <!-- exclude moodle related classes -->
 					</excludes>
 				</configuration>
 			</plugin>

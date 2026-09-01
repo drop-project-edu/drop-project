@@ -245,6 +245,20 @@ class GitClient {
     }
 
     /**
+     * Derives the public key (openssh format) from [privateKey], so that only the private key
+     * needs to be distributed.
+     *
+     * @return a String with the public key
+     */
+    fun derivePublicKey(privateKey: ByteArray): String {
+        val keyPair = KeyPair.load(JSch(), privateKey, null)
+        val publicKeyOutputStream = ByteArrayOutputStream()
+        keyPair.writePublicKey(publicKeyOutputStream, "")
+        keyPair.dispose()
+        return publicKeyOutputStream.toString()
+    }
+
+    /**
      * Returns information about the last commit that is available in a GitHub repository.
      *
      * @return a [CommitInfo]

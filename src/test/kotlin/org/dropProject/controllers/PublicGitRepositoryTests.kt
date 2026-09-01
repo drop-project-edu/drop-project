@@ -19,6 +19,9 @@
  */
 package org.dropproject.controllers
 
+import org.dropproject.TestUsers.STUDENT_1
+import org.junit.jupiter.api.Tag
+import org.dropproject.DropProjectIntegrationTest
 import org.dropproject.config.DropProjectProperties
 import org.dropproject.dao.Assignment
 import org.dropproject.dao.Author
@@ -29,21 +32,15 @@ import org.dropproject.repository.AssignmentRepository
 import org.dropproject.repository.AuthorRepository
 import org.dropproject.repository.GitSubmissionRepository
 import org.dropproject.repository.ProjectGroupRepository
-import org.junit.After
-import org.junit.Assert.*
-import org.junit.Before
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.User
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
-import org.springframework.test.annotation.DirtiesContext
-import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
-import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
@@ -55,12 +52,10 @@ import java.io.File
  * The rest of the test suite runs with this validation turned off (see drop-project-test.properties),
  * so this class turns it on explicitly.
  */
-@RunWith(SpringRunner::class)
-@AutoConfigureMockMvc
-@SpringBootTest
-@TestPropertySource(locations = ["classpath:drop-project-test.properties"],
-        properties = ["drop-project.git.reject-public-student-repositories=true"])
-@ActiveProfiles("test")
+@DropProjectIntegrationTest
+@Tag("integration")
+// merged with the @TestPropertySource brought in by @DropProjectIntegrationTest
+@TestPropertySource(properties = ["drop-project.git.reject-public-student-repositories=true"])
 class PublicGitRepositoryTests {
 
     @Autowired
@@ -83,8 +78,6 @@ class PublicGitRepositoryTests {
 
     val assignmentId = "sampleJavaProject"
 
-    val STUDENT_1 = User("student1", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")))
-
     // a repository owned by the drop project organization that is public and is expected to stay public
     val publicRepositoryUrl = "git@github.com:drop-project-edu/sampleJavaAssignment.git"
 
@@ -94,7 +87,7 @@ class PublicGitRepositoryTests {
     val expectedErrorMsg = "Your repository is public, which allows other students to copy your work. " +
             "Make it private and try again."
 
-    @Before
+    @BeforeEach
     fun initAssignment() {
         val assignment = Assignment(id = assignmentId, name = "Test Project (for automatic tests)",
                 packageName = "org.dropProject.samples.sampleJavaAssignment", ownerUserId = "teacher1",
@@ -103,7 +96,7 @@ class PublicGitRepositoryTests {
         assignmentRepository.save(assignment)
     }
 
-    @After
+    @AfterEach
     fun cleanup() {
         val submissionsFolder = File(dropProjectProperties.storage.rootLocation)
         if (submissionsFolder.exists()) {
@@ -112,8 +105,7 @@ class PublicGitRepositoryTests {
     }
 
     @Test
-    @DirtiesContext
-    fun test_connectingAPublicRepositoryIsRefused() {
+    fun `connecting a public repository is refused`() {
 
         this.mvc.perform(post("/student/setup-git")
                 .param("assignmentId", assignmentId)
@@ -125,12 +117,11 @@ class PublicGitRepositoryTests {
                 // the form must keep the url that was typed, so that the student doesn't have to type it again
                 .andExpect(model().attribute("gitRepositoryUrl", publicRepositoryUrl))
 
-        assertEquals("no git submission should have been created", 0, gitSubmissionRepository.count())
+        assertEquals(0, gitSubmissionRepository.count(), "no git submission should have been created")
     }
 
     @Test
-    @DirtiesContext
-    fun test_connectingAPrivateRepositoryProceedsToTheDeployKeyStep() {
+    fun `connecting a private repository proceeds to the deploy key step`() {
 
         this.mvc.perform(post("/student/setup-git")
                 .param("assignmentId", assignmentId)
@@ -139,12 +130,11 @@ class PublicGitRepositoryTests {
                 .andExpect(status().isOk)
                 .andExpect(view().name("student-setup-git"))
 
-        assertEquals("the git submission should have been created", 1, gitSubmissionRepository.count())
+        assertEquals(1, gitSubmissionRepository.count(), "the git submission should have been created")
     }
 
     @Test
-    @DirtiesContext
-    fun test_refreshingARepositoryThatBecamePublicIsRefused() {
+    fun `refreshing a repository that became public is refused`() {
 
         // simulate a submission that was connected while the repository was still private
         val gitSubmission = createConnectedGitSubmission(publicRepositoryUrl)

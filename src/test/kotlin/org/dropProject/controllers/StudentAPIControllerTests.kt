@@ -19,7 +19,11 @@
  */
 package org.dropproject.controllers
 
-import org.dropproject.TestsHelper
+import org.dropproject.AssignmentFixtures
+import org.dropproject.SubmissionFixtures
+import org.dropproject.basicAuthHeader
+import org.junit.jupiter.api.Tag
+import org.dropproject.DropProjectIntegrationTest
 import org.dropproject.dao.Assignee
 import org.dropproject.dao.Assignment
 import org.dropproject.dao.AssignmentVisibility
@@ -29,29 +33,22 @@ import org.dropproject.forms.SubmissionMethod
 import org.dropproject.repository.AssigneeRepository
 import org.dropproject.repository.AssignmentRepository
 import org.hamcrest.Matchers.*
-import org.junit.Assert.assertEquals
-import org.junit.Before
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.security.core.authority.SimpleGrantedAuthority
-import org.springframework.test.annotation.DirtiesContext
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.TestPropertySource
-import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 
-@RunWith(SpringRunner::class)
-@AutoConfigureMockMvc
-@SpringBootTest
-@TestPropertySource(locations = ["classpath:drop-project-test.properties"])
-@ActiveProfiles("test")
-class StudentAPIControllerTests: APIControllerTests {
+@DropProjectIntegrationTest
+@Tag("integration")
+class StudentAPIControllerTests: ApiTestSupport {
+
+    @Autowired
+    lateinit var assignmentFixtures: AssignmentFixtures
 
     @Autowired
     lateinit var mvc: MockMvc
@@ -63,16 +60,12 @@ class StudentAPIControllerTests: APIControllerTests {
     lateinit var assigneeRepository: AssigneeRepository
 
     @Autowired
-    private lateinit var testsHelper: TestsHelper
+    lateinit var submissionFixtures: SubmissionFixtures
 
-    @Before
+    @BeforeEach
     fun setup() {
         // create initial assignment
-        val assignment01 = Assignment(id = "testJavaProj", name = "Test Project (for automatic tests)",
-            packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
-            submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummy",
-            gitRepositoryFolder = "testJavaProj")
-        assignmentRepository.save(assignment01)
+        assignmentFixtures.createDefaultAssignment()
         assigneeRepository.save(Assignee(assignmentId = "testJavaProj", authorUserId = "student1"))
         assigneeRepository.save(Assignee(assignmentId = "testJavaProj", authorUserId = "student2"))
 
@@ -99,7 +92,6 @@ class StudentAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to get current assignments without authentication`() {
         this.mvc.perform(
             get("/api/student/assignments/current")
@@ -108,17 +100,15 @@ class StudentAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to get current assignments with invalid token`() {
         this.mvc.perform(
             get("/api/student/assignments/current")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("student1", "invalid")))
+                .header("authorization", basicAuthHeader("student1", "invalid")))
             .andExpect(status().isUnauthorized)
     }
 
     @Test
-    @DirtiesContext
     fun `try to get current assignments with a malformed authorization header`() {
         // a header that is not valid base64 is a malformed credential, so it must get the same 401 as an
         // invalid token, instead of blowing up into a 500
@@ -130,7 +120,6 @@ class StudentAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to get current assignments with student1`() {
 
         val token = generateToken("student1", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")), mvc)
@@ -138,7 +127,7 @@ class StudentAPIControllerTests: APIControllerTests {
         this.mvc.perform(
             get("/api/student/assignments/current")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("student1", token)))
+                .header("authorization", basicAuthHeader("student1", token)))
             .andExpect(status().isOk)
             .andExpect(content().json("""
                 [
@@ -178,7 +167,6 @@ class StudentAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to get current assignments with student2`() {
 
         val token = generateToken("student2", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")), mvc)
@@ -186,7 +174,7 @@ class StudentAPIControllerTests: APIControllerTests {
         this.mvc.perform(
             get("/api/student/assignments/current")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("student2", token)))
+                .header("authorization", basicAuthHeader("student2", token)))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.length()", `is`(2)))
             .andExpect(jsonPath("$[*].id", containsInAnyOrder("testJavaProj", "testJavaProjPublic")))
@@ -195,12 +183,11 @@ class StudentAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `upload a submission file with invalid structure`() {
 
         val token = generateToken("student1", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")), mvc)
 
-        val submissionId = testsHelper.uploadProjectByAPI(this.mvc, "projectInvalidStructure1", "testJavaProj",
+        val submissionId = submissionFixtures.uploadProjectByAPI("projectInvalidStructure1", "testJavaProj",
             Pair("student1", token))
 
         assertEquals(1, submissionId)
@@ -208,7 +195,7 @@ class StudentAPIControllerTests: APIControllerTests {
         this.mvc.perform(
             get("/api/student/submissions/$submissionId")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("student1", token)))
+                .header("authorization", basicAuthHeader("student1", token)))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.assignment.id", `is`("testJavaProj")))
             .andExpect(jsonPath("$.assignment.submissionMethod", `is`("UPLOAD")))
@@ -222,12 +209,11 @@ class StudentAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `upload a submission file with failing tests`() {
 
         val token = generateToken("student1", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")), mvc)
 
-        val submissionId = testsHelper.uploadProjectByAPI(this.mvc, "projectJUnitErrors", "testJavaProj",
+        val submissionId = submissionFixtures.uploadProjectByAPI("projectJUnitErrors", "testJavaProj",
             Pair("student1", token))
 
         assertEquals(1, submissionId)
@@ -235,7 +221,7 @@ class StudentAPIControllerTests: APIControllerTests {
         this.mvc.perform(
             get("/api/student/submissions/$submissionId")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("student1", token)))
+                .header("authorization", basicAuthHeader("student1", token)))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.assignment.id", `is`("testJavaProj")))
             .andExpect(jsonPath("$.submission.status", `is`("VALIDATED")))
@@ -250,7 +236,6 @@ class StudentAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to get existent assignment information`() {
 
         val assignmentId = "sampleJavaProject"
@@ -260,7 +245,7 @@ class StudentAPIControllerTests: APIControllerTests {
         this.mvc.perform(
             get("/api/student/assignments/${assignmentId}")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("student1", token)))
+                .header("authorization", basicAuthHeader("student1", token)))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.assignment.id", `is`("sampleJavaProject")))
             .andExpect(jsonPath("$.assignment.language", `is`("JAVA")))
@@ -271,7 +256,6 @@ class StudentAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to get nonexistent assignment information`() {
 
         val token = generateToken("student1", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")), mvc)
@@ -279,13 +263,12 @@ class StudentAPIControllerTests: APIControllerTests {
         this.mvc.perform(
             get("/api/student/assignments/nonexistentID")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("student1", token)))
+                .header("authorization", basicAuthHeader("student1", token)))
             .andExpect(jsonPath("$.assignment").doesNotExist())
             .andExpect(jsonPath("$.errorCode", `is`(404)))
     }
 
     @Test
-    @DirtiesContext
     fun `try to get current assignments with student2 including one with instructions_md`() {
 
         val assignment = Assignment(id = "testKotlinProj2", name = "Test Project (for automatic tests)",
@@ -300,7 +283,7 @@ class StudentAPIControllerTests: APIControllerTests {
         val result = this.mvc.perform(
             get("/api/student/assignments/current")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("authorization", testsHelper.header("student2", token)))
+                .header("authorization", basicAuthHeader("student2", token)))
             .andExpect(status().isOk)
             .andExpect(content().json("""
                 [
@@ -340,7 +323,6 @@ class StudentAPIControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to upload to Maven assignment via API should fail`() {
 
         // Create Maven assignment
@@ -361,15 +343,15 @@ class StudentAPIControllerTests: APIControllerTests {
         val token = generateToken("student1", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")), mvc)
 
         // Try to upload via API
-        val projectFolder = testsHelper.resourceLoader.getResource("file:src/test/sampleProjects/maven/java/projectOK-maven").file
-        val zipFile = testsHelper.zipService.createZipFromFolder("test", projectFolder)
+        val projectFolder = submissionFixtures.resourceLoader.getResource("file:src/test/sampleProjects/maven/java/projectOK-maven").file
+        val zipFile = submissionFixtures.zipService.createZipFromFolder("test", projectFolder)
         zipFile.deleteOnExit()
 
         this.mvc.perform(
             org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/api/student/submissions/new")
                 .file(org.springframework.mock.web.MockMultipartFile("file", zipFile.name, "application/zip", zipFile.readBytes()))
                 .param("assignmentId", "testMavenProjAPI")
-                .header("authorization", testsHelper.header("student1", token)))
+                .header("authorization", basicAuthHeader("student1", token)))
             .andExpect(status().isInternalServerError)
             .andExpect(jsonPath("$.error", containsString("API submissions are not supported for Maven-structured assignments")))
     }

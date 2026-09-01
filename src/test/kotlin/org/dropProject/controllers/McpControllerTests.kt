@@ -19,35 +19,38 @@
  */
 package org.dropproject.controllers
 
-import org.dropproject.TestsHelper
+import org.dropproject.AssignmentFixtures
+import org.dropproject.SubmissionFixtures
+import org.dropproject.TestUsers.STUDENT_1
+import org.junit.jupiter.api.Tag
+import org.dropproject.DropProjectIntegrationTest
 import org.dropproject.dao.Assignment
+import org.dropproject.dao.Author
+import org.dropproject.dao.ProjectGroup
+import org.dropproject.dao.Submission
+import org.dropproject.dao.SubmissionStatus
 import org.dropproject.forms.SubmissionMethod
 import org.dropproject.repository.AssignmentRepository
-import org.junit.Before
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.dropproject.repository.AuthorRepository
+import org.dropproject.repository.ProjectGroupRepository
+import org.dropproject.repository.SubmissionRepository
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.User
-import org.springframework.test.annotation.DirtiesContext
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.TestPropertySource
-import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
-import org.springframework.transaction.annotation.Transactional
+import java.util.Date
 
-@RunWith(SpringRunner::class)
-@AutoConfigureMockMvc
-@SpringBootTest
-@TestPropertySource(locations = ["classpath:drop-project-test.properties"])
-@ActiveProfiles("test")
-@Transactional
-class McpControllerTests: APIControllerTests {
+@DropProjectIntegrationTest
+@Tag("integration")
+class McpControllerTests: ApiTestSupport {
+
+    @Autowired
+    lateinit var assignmentFixtures: AssignmentFixtures
 
     @Autowired
     lateinit var mvc: MockMvc
@@ -56,7 +59,16 @@ class McpControllerTests: APIControllerTests {
     lateinit var assignmentRepository: AssignmentRepository
 
     @Autowired
-    private lateinit var testsHelper: TestsHelper
+    lateinit var submissionFixtures: SubmissionFixtures
+
+    @Autowired
+    lateinit var authorRepository: AuthorRepository
+
+    @Autowired
+    lateinit var projectGroupRepository: ProjectGroupRepository
+
+    @Autowired
+    lateinit var submissionRepository: SubmissionRepository
 
     private fun getBearerToken(username: String, role: String = "ROLE_TEACHER"): String {
         // Generate personal token for user and use it directly as Bearer token
@@ -64,33 +76,17 @@ class McpControllerTests: APIControllerTests {
         return "Bearer $personalToken"
     }
 
-    @Before
+    @BeforeEach
     fun setup() {
         // Create test assignments
-        val assignment1 = Assignment(
-            id = "testMcpAssignment",
-            name = "Test MCP Assignment",
-            packageName = "org.dropProject.samples.testAssignment",
-            ownerUserId = "teacher1",
-            submissionMethod = SubmissionMethod.UPLOAD,
-            active = true,
-            gitRepositoryUrl = "git://dummy",
-            gitRepositoryFolder = "testMcpAssignment"
-        )
-        assignmentRepository.save(assignment1)
+        assignmentFixtures.createDefaultAssignment(id = "testMcpAssignment", name = "Test MCP Assignment",
+            packageName = "org.dropProject.samples.testAssignment")
 
         // create initial assignments
-        val assignment02 = Assignment(
-            id = "testJavaProj", name = "Test Project (for automatic tests)",
-            packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
-            submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
-            gitRepositoryFolder = "testJavaProj"
-        )
-        assignmentRepository.save(assignment02)
+        assignmentFixtures.createDefaultAssignment()
     }
 
     @Test
-    @DirtiesContext
     fun `try to initialize without a bearer token`() {
         // McpBearerTokenFilter lets the unauthenticated requests through, so this is reported by the entry point of
         // the chain. it must be a 401, telling the client to authenticate, and not the default empty 403
@@ -105,7 +101,6 @@ class McpControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to initialize with an invalid bearer token`() {
         mvc.perform(
             post("/mcp/")
@@ -118,8 +113,7 @@ class McpControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
-    fun testMcpInitialize() {
+    fun `mcp initialize`() {
         val authHeader = getBearerToken("teacher1")
         val requestJson = """
             {
@@ -142,8 +136,7 @@ class McpControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
-    fun testMcpToolsList() {
+    fun `mcp tools list`() {
         val authHeader = getBearerToken("teacher1")
         val requestJson = """
             {
@@ -263,8 +256,7 @@ class McpControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
-    fun testMcpGetAssignmentInfo() {
+    fun `mcp get assignment info`() {
         val authHeader = getBearerToken("teacher1")
         val requestJson = """
             {
@@ -295,8 +287,7 @@ class McpControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
-    fun testMcpSearchAssignments() {
+    fun `mcp search assignments`() {
         val authHeader = getBearerToken("teacher1")
         val requestJson = """
             {
@@ -326,13 +317,11 @@ class McpControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
-    fun testMcpGetSubmissionCode() {
+    fun `mcp get submission code`() {
         val authHeader = getBearerToken("teacher1")
 
         // First, create a submission
-        val submissionId = testsHelper.uploadProject(this.mvc,
-            "projectOK", "testJavaProj",
+        val submissionId = submissionFixtures.uploadProject("projectOK", "testJavaProj",
             User("student1", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT"))))
 
         val requestJson = """
@@ -366,15 +355,12 @@ class McpControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
     fun `try to get the submission code with a student token`() {
         // the token only carries the roles that its owner had when it was generated, so a student token must not be
         // able to reach the teacher-only tools
         val authHeader = getBearerToken("student1", role = "ROLE_STUDENT")
 
-        val submissionId = testsHelper.uploadProject(this.mvc,
-            "projectOK", "testJavaProj",
-            User("student1", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT"))))
+        val submissionId = submissionFixtures.uploadProject("projectOK", "testJavaProj", STUDENT_1)
 
         val requestJson = """
             {
@@ -405,13 +391,11 @@ class McpControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
-    fun testMcpGetSubmissionInfo() {
+    fun `mcp get submission info`() {
         val authHeader = getBearerToken("teacher1")
 
         // First, create a submission
-        val submissionId = testsHelper.uploadProject(this.mvc,
-            "projectOK", "testJavaProj",
+        val submissionId = submissionFixtures.uploadProject("projectOK", "testJavaProj",
             User("student1", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT"))))
 
         val requestJson = """
@@ -447,13 +431,11 @@ class McpControllerTests: APIControllerTests {
     }
 
     @Test
-    @DirtiesContext
-    fun testMcpGetFileContent() {
+    fun `mcp get file content`() {
         val authHeader = getBearerToken("teacher1")
 
         // First, create a submission
-        val submissionId = testsHelper.uploadProject(this.mvc,
-            "projectOK", "testJavaProj",
+        val submissionId = submissionFixtures.uploadProject("projectOK", "testJavaProj",
             User("student1", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT"))))
 
         // Read a specific file
@@ -485,5 +467,143 @@ class McpControllerTests: APIControllerTests {
             .andExpect(content().string(org.hamcrest.Matchers.containsString("\"type\":\"text\"")))
             .andExpect(content().string(org.hamcrest.Matchers.containsString("\"mimeType\":\"text/x-java\"")))
             .andExpect(content().string(org.hamcrest.Matchers.containsString("class Main")))
+    }
+
+    @Test
+    fun `mcp search student returns the matching students and their submission history`() {
+        val authHeader = getBearerToken("teacher1")
+
+        // seed a student with one submission, without going through a real build
+        val group = ProjectGroup()
+        projectGroupRepository.save(group)
+        val author = Author(name = "Gandalf Grey", userId = "gandalf")
+        author.group = group
+        authorRepository.save(author)
+        val submission = Submission(submissionId = "1", submissionDate = Date(),
+            status = SubmissionStatus.VALIDATED.code, statusDate = Date(), assignmentId = "testJavaProj",
+            assignmentGitHash = null, submitterUserId = "gandalf")
+        submission.group = group
+        submissionRepository.save(submission)
+
+        val requestJson = """
+            {
+                "jsonrpc": "2.0",
+                "id": "test-8",
+                "method": "tools/call",
+                "params": {
+                    "name": "search_student",
+                    "arguments": {
+                        "query": "gand"
+                    }
+                }
+            }
+        """.trimIndent()
+
+        mvc.perform(
+            post("/mcp/")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", authHeader)
+                .content(requestJson)
+        )
+            .andExpect(status().isOk)
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("\"id\":\"test-8\"")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("Found 1 student(s) matching 'gand'")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("# Student: Gandalf Grey")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("**Student ID:** gandalf")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("## Submission History (1 assignment(s))")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("**Assignment ID:** testJavaProj")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("**Status:** VALIDATED")))
+    }
+
+    @Test
+    fun `mcp search student without submissions reports the empty history`() {
+        val authHeader = getBearerToken("teacher1")
+
+        val group = ProjectGroup()
+        projectGroupRepository.save(group)
+        val author = Author(name = "Bilbo Baggins", userId = "bilbo")
+        author.group = group
+        authorRepository.save(author)
+
+        val requestJson = """
+            {
+                "jsonrpc": "2.0",
+                "id": "test-9",
+                "method": "tools/call",
+                "params": {
+                    "name": "search_student",
+                    "arguments": {
+                        "query": "bilbo"
+                    }
+                }
+            }
+        """.trimIndent()
+
+        mvc.perform(
+            post("/mcp/")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", authHeader)
+                .content(requestJson)
+        )
+            .andExpect(status().isOk)
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("Found 1 student(s) matching 'bilbo'")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("No submissions found for this student.")))
+    }
+
+    @Test
+    fun `mcp search student with no matches reports it`() {
+        val authHeader = getBearerToken("teacher1")
+
+        val requestJson = """
+            {
+                "jsonrpc": "2.0",
+                "id": "test-10",
+                "method": "tools/call",
+                "params": {
+                    "name": "search_student",
+                    "arguments": {
+                        "query": "nobodyWithThisName"
+                    }
+                }
+            }
+        """.trimIndent()
+
+        mvc.perform(
+            post("/mcp/")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", authHeader)
+                .content(requestJson)
+        )
+            .andExpect(status().isOk)
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("No students found matching 'nobodyWithThisName'")))
+    }
+
+    @Test
+    fun `mcp get submission info for a nonexistent submission reports it`() {
+        val authHeader = getBearerToken("teacher1")
+
+        val requestJson = """
+            {
+                "jsonrpc": "2.0",
+                "id": "test-11",
+                "method": "tools/call",
+                "params": {
+                    "name": "get_submission_info",
+                    "arguments": {
+                        "submissionId": 99999
+                    }
+                }
+            }
+        """.trimIndent()
+
+        mvc.perform(
+            post("/mcp/")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", authHeader)
+                .content(requestJson)
+        )
+            .andExpect(status().isOk)
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("\"id\":\"test-11\"")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("Submission not found or inaccessible")))
     }
 }

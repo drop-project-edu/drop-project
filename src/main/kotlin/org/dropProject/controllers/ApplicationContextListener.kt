@@ -20,6 +20,7 @@
 package org.dropproject.controllers
 
 
+import org.dropproject.DotEnv
 import org.dropproject.dao.*
 import org.dropproject.extensions.getContent
 import org.dropproject.forms.SubmissionMethod
@@ -63,47 +64,6 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
                                  val dropProjectProperties: DropProjectProperties,
                                  val environment: org.springframework.core.env.Environment) : ApplicationListener<ContextRefreshedEvent> {
 
-    companion object {
-        val sampleJavaAssignmentPrivateKey = """
-            -----BEGIN RSA PRIVATE KEY-----
-            MIIEowIBAAKCAQEAs3TOBSiW0ug1ikAtI16HeuNeHBKsXjdKhoVVw2bRjZwzyp0z
-            Yn8TzI9TVjIXsKPpm0thVaftd2bznWfSBBTtKOXiww7yre1PyPzeSGtBRm+2Nh/H
-            BaLayyEAOouMLNFs57k+fPAGPcIp8Wexsa0vXsZ7LW67tT842Cb7yiJjdWhVOQrn
-            horfOJWi159fBWuzCmrWNJzHfVJPR1QmYcmJ+yabD8Zpi/H3XeHg0j2I45gLnego
-            ZLH53Ecidm/yZ665mQE6qFA280w4sC2MMUlOGA90RzaSF/1d89vyqNKQhvvcc3q1
-            scV/Cqn1ghSPJUsrloIuuktFN4Wpc60TLlrsRwIDAQABAoIBAA1nssII46dSiDlR
-            DO4g8A7acBu5u114VN1SlXL4ubuRyP6gGogHhROZOzjrmgBsZhVfHqC24BK0worm
-            B/adF5AgB/3ZHoCmgvi5BuOy+1fHHX3Shtvha+WTjABTjz+Dz1ZJ7KSJi3XOjLKH
-            M+tZS/oQ6n+cz3G9DMJ8uv9A7VwGNIUnT5zDFigt65v+ul70/SxyU4N8KMR9G5HE
-            TQIe7/4Lsfe7cUWp9mLxVOTG/Ha56u5rEN7vWUwn1t/rLOCy8CY9rCZ3TIT+vjbl
-            imoNq86B1PGfNjiIJldhWPhwZc7AaKAtJ7YDy+FLFgsEgMX9VBewSm43WSCPatta
-            cExq1HECgYEAxk/DOOhJgXtrizVy3CQZKR90bmglUSYrAz9FPh3oxrRu6Zlh630x
-            HKljedpCVBbybjYLDD/QsYNA0o+MRmOH+W9hFhXHmalWnHOyxMXJ8AwkgiegLwr8
-            CigH+pBf31MwVl+/mNOrA5yrFaQrefhlTmB+JVIxL9pWoPdIKJpKbbECgYEA56jj
-            3f3jgS37e/Y+RY6aMwlYP2LaIDTNt1fWfrdKklS45S8YiWZOOcCdQ3tzs+Lgq+ZB
-            f0qZDc47afuK3PFcmBjL6vA4FYVnGeOKyl6aVOmAdC2lZziz411m0MGYq4wAeguV
-            rUqwdrf3ON0tDF1KKFrjbQY4msSd5gK+03jxn3cCgYA/2byknP3Vx9Q3jSz/Pkwv
-            lmYZikTBnQVqVTvJJT4mhD/VzMHfXX6rmMpjmGeUxZKm85WZCw75qKX9ZaSnoTJN
-            mJPs1XRfwEsXspTTkE9Vj8NNeM61dtbxujPfdA66TAGbPdblsPk1/4KCREqPSe/s
-            TVswTwdxPd54k0XTdOIT8QKBgQDSrywF0gidjIdCFxJNSkL9FYuXojyEu+E31H/0
-            IJiGetzpOqrTEyMjrQSZweXZfQYd8DwzG1IVVzF70tRY2n3+qdaTJcOr9vZseh/Y
-            qq8reG1lu7nJJa2co26FfvxtT9eDJ5QJ1XqljeweYDC/JPzztK1Pky/ZueVssaSB
-            SWZeQwKBgBx9G3mJ1mLkSpnX+ig5Cqil7zLyNJpLqjMt82ftqK/UbtNGAg4yxsDW
-            3a+wZiW/dwSmnUdfWs1SlO5H5tPOxLbW7/4OO8v7pUaAG/W/oK3HK1MgeKAFX4Wv
-            v3h9YHdvBHkGlTtQPQlt0p1ic8AsLeGmZxnBr0pfLW9JbNrAUwsi
-            -----END RSA PRIVATE KEY-----
-        """.trimIndent()
-
-        val sampleJavaAssignmentPublicKey = """
-            ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCzdM4FKJbS6DWKQC0jXod6414cEq
-            xeN0qGhVXDZtGNnDPKnTNifxPMj1NWMhewo+mbS2FVp+13ZvOdZ9IEFO0o5eLDDvKt
-            7U/I/N5Ia0FGb7Y2H8cFotrLIQA6i4ws0WznuT588AY9winxZ7GxrS9exnstbru1Pz
-            jYJvvKImN1aFU5CueGit84laLXn18Fa7MKatY0nMd9Uk9HVCZhyYn7JpsPxmmL8fdd
-            4eDSPYjjmAud6ChksfncRyJ2b/JnrrmZATqoUDbzTDiwLYwxSU4YD3RHNpIX/V3z2/
-            Ko0pCG+9xzerWxxX8KqfWCFI8lSyuWgi66S0U3halzrRMuWuxH
-        """.trimIndent()
-    }
-
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
     /**
@@ -120,8 +80,9 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
         LOG.info("Maven use current JDK: ${dropProjectProperties.maven.useCurrentJdk}")
         LOG.info("Java home (running JVM): ${System.getProperty("java.home")}")
         LOG.info("Environment variables:")
+        val sensitiveEnvVariable = Regex("KEY|SECRET|TOKEN|PASSWORD", RegexOption.IGNORE_CASE)
         for ((key, value) in System.getenv()) {
-            LOG.info("\t$key : $value")
+            LOG.info("\t$key : ${if (sensitiveEnvVariable.containsMatchIn(key)) "***redacted***" else value}")
         }
         LOG.info("*************************************************")
 
@@ -151,8 +112,15 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
         // It it's a fresh instance, create two initial assignments (one in Java and the other in Kotlin) just to play
         val assignments = assignmentRepository.findAll()
         if (assignments.size == 0) {
-            createAndPopulateSampleJavaAssignment()
-            createAndPopulateSampleKotlinAssignment()
+            val samplePrivateKey = DotEnv.resolve("DP_SAMPLE_JAVA_ASSIGNMENT_PRIVATE_KEY")
+            if (samplePrivateKey != null) {
+                val samplePublicKey = gitClient.derivePublicKey(samplePrivateKey.toByteArray())
+                createAndPopulateSampleJavaAssignment(samplePrivateKey, samplePublicKey)
+                createAndPopulateSampleKotlinAssignment(samplePrivateKey, samplePublicKey)
+            } else {
+                LOG.warn("Sample assignments not created: no ssh key for the sample repositories. " +
+                        "Set DP_SAMPLE_JAVA_ASSIGNMENT_PRIVATE_KEY or create a .env file (see .env.example)")
+            }
         }
 
         LOG.info("Updating assignment metrics")
@@ -160,13 +128,13 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
         LOG.info("Finished updating assignment metrics")
     }
 
-    private fun createAndPopulateSampleJavaAssignment() {
+    private fun createAndPopulateSampleJavaAssignment(privateKey: String, publicKey: String) {
         val assignment = assignmentRepository.save(Assignment(id = "sampleJavaProject", name = "Sample Java Assignment",
             packageName = "org.dropProject.samples.sampleJavaAssignment", ownerUserId = "teacher1",
             submissionMethod = SubmissionMethod.UPLOAD,
             gitRepositoryUrl = "git@github.com:drop-project-edu/sampleJavaAssignment.git",
-            gitRepositoryPrivKey = sampleJavaAssignmentPrivateKey,
-            gitRepositoryPubKey = sampleJavaAssignmentPublicKey,
+            gitRepositoryPrivKey = privateKey,
+            gitRepositoryPubKey = publicKey,
             gitRepositoryFolder = "sampleJavaProject",
             active = true))
 
@@ -251,13 +219,13 @@ class ApplicationContextListener(val assignmentRepository: AssignmentRepository,
         }
     }
 
-    private fun createAndPopulateSampleKotlinAssignment() {
+    private fun createAndPopulateSampleKotlinAssignment(privateKey: String, publicKey: String) {
         val assignment = assignmentRepository.save(Assignment(id = "sampleKotlinProject", name = "Sample Kotlin Assignment",
                 packageName = "org.dropProject.samples.sampleKotlinAssignment", ownerUserId = "teacher1",
                 submissionMethod = SubmissionMethod.UPLOAD, language = Language.KOTLIN,
                 gitRepositoryUrl = "git@github.com:drop-project-edu/sampleKotlinAssignment.git",
-                gitRepositoryPrivKey = sampleJavaAssignmentPrivateKey,
-                gitRepositoryPubKey = sampleJavaAssignmentPublicKey,
+                gitRepositoryPrivKey = privateKey,
+                gitRepositoryPubKey = publicKey,
                 gitRepositoryFolder = "sampleKotlinProject",
                 active = true))
 

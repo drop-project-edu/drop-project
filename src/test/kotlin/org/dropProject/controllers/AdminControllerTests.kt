@@ -19,7 +19,11 @@
  */
 package org.dropproject.controllers
 
-import org.dropproject.TestsHelper
+import org.dropproject.AssignmentFixtures
+import org.dropproject.SubmissionFixtures
+import org.dropproject.TestUsers.STUDENT_1
+import org.junit.jupiter.api.Tag
+import org.dropproject.DropProjectIntegrationTest
 import org.dropproject.dao.Assignment
 import org.dropproject.dao.AssignmentTag
 import org.dropproject.dao.RebuildStatus
@@ -38,22 +42,13 @@ import org.dropproject.repository.AssignmentTagRepository
 import org.dropproject.repository.RebuildStatusRepository
 import org.dropproject.repository.SubmissionRepository
 import org.dropproject.services.AssignmentService
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertTrue
-import org.junit.FixMethodOrder
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.MethodSorters
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.security.test.context.support.WithMockUser
-import org.springframework.test.annotation.DirtiesContext
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.TestPropertySource
-import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
@@ -62,19 +57,18 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.forward
 import java.io.File
 import java.util.concurrent.TimeUnit
 
-@RunWith(SpringRunner::class)
-@AutoConfigureMockMvc
-@SpringBootTest
-@TestPropertySource(locations=["classpath:drop-project-test.properties"])
-@ActiveProfiles("test")
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@DropProjectIntegrationTest
+@Tag("integration")
 class AdminControllerTests {
+
+    @Autowired
+    lateinit var assignmentFixtures: AssignmentFixtures
 
     @Autowired
     lateinit var mvc : MockMvc
 
     @Autowired
-    lateinit var testsHelper: TestsHelper
+    lateinit var submissionFixtures: SubmissionFixtures
 
     @Autowired
     lateinit var submissionRepository : SubmissionRepository
@@ -93,16 +87,14 @@ class AdminControllerTests {
 
     @Test
     @WithMockUser("admin",roles=["DROP_PROJECT_ADMIN"])
-    @DirtiesContext
-    fun test_00_getDashboard() {
+    fun `get dashboard`() {
         this.mvc.perform(get("/admin/dashboard"))
                 .andExpect(status().isOk)
     }
 
     @Test
     @WithMockUser("admin",roles=["DROP_PROJECT_ADMIN"])
-    @DirtiesContext
-    fun test_01_changeMavenOutput() {
+    fun `change maven output`() {
         this.mvc.perform(post("/admin/dashboard")
                 .param("showMavenOutput", "true")
                 .param("asyncTimeout", "30")
@@ -113,8 +105,7 @@ class AdminControllerTests {
 
     @Test
     @WithMockUser("admin",roles=["DROP_PROJECT_ADMIN"])
-    @DirtiesContext
-    fun test_02_showPendingAndAbort() {
+    fun `show pending and abort`() {
         val result = this.mvc.perform(get("/admin/showPending"))
                 .andExpect(status().isOk)
                 .andReturn()
@@ -125,12 +116,8 @@ class AdminControllerTests {
 
         // make a submission
         // create initial assignments
-        val assignment01 = Assignment(id = "testJavaProj", name = "Test Project (for automatic tests)",
-                packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
-                submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
-                gitRepositoryFolder = "testJavaProj")
-        assignmentRepository.save(assignment01)
-        testsHelper.makeSeveralSubmissions(listOf("projectInvalidStructure1"), mvc)
+        assignmentFixtures.createDefaultAssignment()
+        submissionFixtures.makeSeveralSubmissions(listOf("projectInvalidStructure1"))
 
         // mark this submission as submitted
         val submission = submissionRepository.findById(1)
@@ -154,15 +141,10 @@ class AdminControllerTests {
 
     @Test
     @WithMockUser("admin",roles=["DROP_PROJECT_ADMIN"])
-    @DirtiesContext
-    fun test_03_showPendingIncludesRebuildingAndSubmittedForRebuild() {
+    fun `show pending includes rebuilding and submitted for rebuild`() {
 
-        val assignment01 = Assignment(id = "testJavaProj", name = "Test Project (for automatic tests)",
-                packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
-                submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
-                gitRepositoryFolder = "testJavaProj")
-        assignmentRepository.save(assignment01)
-        testsHelper.makeSeveralSubmissions(listOf("projectInvalidStructure1", "projectInvalidStructure1"), mvc)
+        assignmentFixtures.createDefaultAssignment()
+        submissionFixtures.makeSeveralSubmissions(listOf("projectInvalidStructure1", "projectInvalidStructure1"))
 
         // simulate a submission stuck rebuilding...
         val rebuildingSubmission = submissionRepository.findById(1).get()
@@ -194,8 +176,7 @@ class AdminControllerTests {
 
     @Test
     @WithMockUser("admin",roles=["DROP_PROJECT_ADMIN"])
-    @DirtiesContext
-    fun test_04_showPendingListsAndKillsARealOrphanedMavenProcess() {
+    fun `show pending lists and kills a real orphaned maven process`() {
 
         val assignment01 = Assignment(id = "testJavaProj", name = "Test Project (for automatic tests)",
                 packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
@@ -207,20 +188,20 @@ class AdminControllerTests {
         // (SyncTaskExecutor), so this real (never-ending) Maven build has to be kicked off on a background thread,
         // otherwise it would block this test forever.
         val uploadThread = Thread {
-            testsHelper.uploadProject(mvc, "projectWithInfiniteLoop", "testJavaProj", testsHelper.STUDENT_1)
+            submissionFixtures.uploadProject("projectWithInfiniteLoop", "testJavaProj", STUDENT_1)
         }
         uploadThread.isDaemon = true
         uploadThread.start()
 
         try {
             // the submission row is saved (with status SUBMITTED) before the Maven build even starts, so it's
-            // safe to assume it'll be submission #1 in this freshly-dirtied context, well before the build itself
-            // (which never finishes on its own) completes
+            // safe to assume it'll be submission #1 (ResetStateExtension restarts identities between tests),
+            // well before the build itself (which never finishes on its own) completes
             val submissionDeadline = System.currentTimeMillis() + 10_000
             while (!submissionRepository.findById(1).isPresent && System.currentTimeMillis() < submissionDeadline) {
                 Thread.sleep(200)
             }
-            assertTrue("submission should have been created", submissionRepository.findById(1).isPresent)
+            assertTrue(submissionRepository.findById(1).isPresent, "submission should have been created")
 
             // poll until the real Maven/Surefire process(es) for this submission show up as orphaned. In the
             // "test" profile the async timeout is hardcoded to 0, so anything alive for at least a second
@@ -237,7 +218,7 @@ class AdminControllerTests {
                 orphaned = all.filter { it.submissionId == 1L }
                 if (orphaned.isEmpty()) Thread.sleep(1000)
             }
-            assertTrue("the real Maven build should have shown up as an orphaned process", orphaned.isNotEmpty())
+            assertTrue(orphaned.isNotEmpty(), "the real Maven build should have shown up as an orphaned process")
 
             // killing an unrelated pid must be refused and not affect the real build
             this.mvc.perform(post("/admin/killProcess/999999999"))
@@ -254,11 +235,10 @@ class AdminControllerTests {
 
             // killing the top-level Maven process should unblock the background thread's call, one way or another
             uploadThread.join(30_000)
-            assertFalse("the background upload should have completed once its process was killed", uploadThread.isAlive)
+            assertFalse(uploadThread.isAlive, "the background upload should have completed once its process was killed")
 
             for (process in orphaned) {
-                assertFalse("process ${process.pid} should no longer be alive",
-                    ProcessHandle.of(process.pid).map { it.isAlive }.orElse(false))
+                assertFalse(ProcessHandle.of(process.pid).map { it.isAlive }.orElse(false), "process ${process.pid} should no longer be alive")
             }
 
         } finally {
@@ -275,7 +255,6 @@ class AdminControllerTests {
 
     @Test
     @WithMockUser("admin",roles=["DROP_PROJECT_ADMIN"])
-    @DirtiesContext
     fun `test showTags displays all tags with usage counts and then deletes one`() {
 
         val assignment1 = Assignment(id = "testJavaProj1", name = "Test Project (for automatic tests)",
@@ -325,7 +304,6 @@ class AdminControllerTests {
 
     @Test
     @WithMockUser("admin", roles = ["DROP_PROJECT_ADMIN"])
-    @DirtiesContext
     fun `test getAllAssignments shows only non-archived assignments`() {
         val activeAssignment = Assignment(id = "activeProj", name = "Active Project",
             packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
@@ -353,7 +331,6 @@ class AdminControllerTests {
 
     @Test
     @WithMockUser("admin", roles = ["DROP_PROJECT_ADMIN"])
-    @DirtiesContext
     fun `test getAllAssignments shows assignments from all owners`() {
         val assignment1 = Assignment(id = "proj-teacher1", name = "Project Teacher 1",
             packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
@@ -380,7 +357,6 @@ class AdminControllerTests {
 
     @Test
     @WithMockUser("teacher1", roles = ["TEACHER"])
-    @DirtiesContext
     fun `test getAllAssignments is forbidden for non-admins`() {
         mvc.perform(get("/admin/assignments"))
             .andExpect(forwardedUrl("/access-denied"))

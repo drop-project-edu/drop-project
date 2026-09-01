@@ -109,4 +109,11 @@ class CooloffOverrideService {
         val now = LocalDateTime.now()
         overrides.entries.removeIf { it.value.expiryTime.isBefore(now) }
     }
+
+    /**
+     * Removes all overrides, regardless of expiry.
+     */
+    fun clearAll() {
+        overrides.clear()
+    }
 }

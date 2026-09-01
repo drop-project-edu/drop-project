@@ -19,7 +19,9 @@
  */
 package org.dropproject.services
 
-import org.dropproject.TestsHelper
+import org.dropproject.AssignmentFixtures
+import org.dropproject.SubmissionFixtures
+import org.dropproject.DropProjectIntegrationTest
 import org.dropproject.config.PendingExport
 import org.dropproject.config.PendingTasks
 import org.dropproject.dao.Assignment
@@ -29,36 +31,28 @@ import org.dropproject.forms.SubmissionMethod
 import org.dropproject.repository.AssignmentRepository
 import org.dropproject.repository.RebuildStatusRepository
 import org.dropproject.repository.SubmissionRepository
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.annotation.DirtiesContext
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.TestPropertySource
-import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
 import java.io.File
 import java.util.*
 
-@RunWith(SpringRunner::class)
-@AutoConfigureMockMvc
-@SpringBootTest
-@TestPropertySource(locations=["classpath:drop-project-test.properties"])
-@ActiveProfiles("test")
+@DropProjectIntegrationTest
 class ScheduledTasksTests {
+
+    @Autowired
+    lateinit var assignmentFixtures: AssignmentFixtures
 
     @Autowired
     lateinit var mvc: MockMvc
 
     @Autowired
-    lateinit var testsHelper: TestsHelper
+    lateinit var submissionFixtures: SubmissionFixtures
 
     @Autowired
     lateinit var scheduledTasks: ScheduledTasks
@@ -76,17 +70,12 @@ class ScheduledTasksTests {
     lateinit var pendingTasks: PendingTasks
 
     @Test
-    @DirtiesContext
     fun `cleanExpiredSubmissions aborts stale submissions and rebuilds but leaves a fresh rebuild alone`() {
 
-        val assignment01 = Assignment(id = "testJavaProj", name = "Test Project (for automatic tests)",
-                packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
-                submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummyRepo",
-                gitRepositoryFolder = "testJavaProj")
-        assignmentRepository.save(assignment01)
+        assignmentFixtures.createDefaultAssignment()
 
-        testsHelper.makeSeveralSubmissions(listOf("projectInvalidStructure1", "projectInvalidStructure1",
-            "projectInvalidStructure1", "projectInvalidStructure1"), mvc)
+        submissionFixtures.makeSeveralSubmissions(listOf("projectInvalidStructure1", "projectInvalidStructure1",
+            "projectInvalidStructure1", "projectInvalidStructure1"))
 
         val twoHoursAgo = Date(System.currentTimeMillis() - 2 * 3600 * 1000)
         // statusDate is deliberately frozen to an old value when entering REBUILDING (dontUpdateStatusDate=true),
@@ -137,7 +126,6 @@ class ScheduledTasksTests {
     }
 
     @Test
-    @DirtiesContext
     fun `cleanExpiredExports only deletes the exports that are too old`() {
 
         val zipFile = File.createTempFile("export", ".zip")
@@ -148,12 +136,12 @@ class ScheduledTasksTests {
 
         // while it hasn't expired, the export is kept
         assertEquals(0, scheduledTasks.deleteExportsCreatedBefore(beforeTheExport))
-        assertTrue("the export shouldn't have been deleted yet", zipFile.exists())
+        assertTrue(zipFile.exists(), "the export shouldn't have been deleted yet")
         assertNotNull(pendingTasks.get("taskId"))
 
         // ... but once it expires, both the file and the task are disposed of
         assertEquals(1, scheduledTasks.deleteExportsCreatedBefore(afterTheExport))
-        assertFalse("the expired export should have been deleted", zipFile.exists())
+        assertFalse(zipFile.exists(), "the expired export should have been deleted")
         assertNull(pendingTasks.get("taskId"))
     }
 }
