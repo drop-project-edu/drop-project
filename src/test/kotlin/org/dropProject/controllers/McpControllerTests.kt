@@ -24,8 +24,15 @@ import org.dropproject.SubmissionFixtures
 import org.junit.jupiter.api.Tag
 import org.dropproject.DropProjectIntegrationTest
 import org.dropproject.dao.Assignment
+import org.dropproject.dao.Author
+import org.dropproject.dao.ProjectGroup
+import org.dropproject.dao.Submission
+import org.dropproject.dao.SubmissionStatus
 import org.dropproject.forms.SubmissionMethod
 import org.dropproject.repository.AssignmentRepository
+import org.dropproject.repository.AuthorRepository
+import org.dropproject.repository.ProjectGroupRepository
+import org.dropproject.repository.SubmissionRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -35,6 +42,7 @@ import org.springframework.security.core.userdetails.User
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
+import java.util.Date
 
 @DropProjectIntegrationTest
 @Tag("integration")
@@ -51,6 +59,15 @@ class McpControllerTests: ApiTestSupport {
 
     @Autowired
     lateinit var submissionFixtures: SubmissionFixtures
+
+    @Autowired
+    lateinit var authorRepository: AuthorRepository
+
+    @Autowired
+    lateinit var projectGroupRepository: ProjectGroupRepository
+
+    @Autowired
+    lateinit var submissionRepository: SubmissionRepository
 
     private fun getBearerToken(username: String): String {
         // Generate personal token for user and use it directly as Bearer token
@@ -413,5 +430,143 @@ class McpControllerTests: ApiTestSupport {
             .andExpect(content().string(org.hamcrest.Matchers.containsString("\"type\":\"text\"")))
             .andExpect(content().string(org.hamcrest.Matchers.containsString("\"mimeType\":\"text/x-java\"")))
             .andExpect(content().string(org.hamcrest.Matchers.containsString("class Main")))
+    }
+
+    @Test
+    fun `mcp search student returns the matching students and their submission history`() {
+        val authHeader = getBearerToken("teacher1")
+
+        // seed a student with one submission, without going through a real build
+        val group = ProjectGroup()
+        projectGroupRepository.save(group)
+        val author = Author(name = "Gandalf Grey", userId = "gandalf")
+        author.group = group
+        authorRepository.save(author)
+        val submission = Submission(submissionId = "1", submissionDate = Date(),
+            status = SubmissionStatus.VALIDATED.code, statusDate = Date(), assignmentId = "testJavaProj",
+            assignmentGitHash = null, submitterUserId = "gandalf")
+        submission.group = group
+        submissionRepository.save(submission)
+
+        val requestJson = """
+            {
+                "jsonrpc": "2.0",
+                "id": "test-8",
+                "method": "tools/call",
+                "params": {
+                    "name": "search_student",
+                    "arguments": {
+                        "query": "gand"
+                    }
+                }
+            }
+        """.trimIndent()
+
+        mvc.perform(
+            post("/mcp/")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", authHeader)
+                .content(requestJson)
+        )
+            .andExpect(status().isOk)
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("\"id\":\"test-8\"")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("Found 1 student(s) matching 'gand'")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("# Student: Gandalf Grey")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("**Student ID:** gandalf")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("## Submission History (1 assignment(s))")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("**Assignment ID:** testJavaProj")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("**Status:** VALIDATED")))
+    }
+
+    @Test
+    fun `mcp search student without submissions reports the empty history`() {
+        val authHeader = getBearerToken("teacher1")
+
+        val group = ProjectGroup()
+        projectGroupRepository.save(group)
+        val author = Author(name = "Bilbo Baggins", userId = "bilbo")
+        author.group = group
+        authorRepository.save(author)
+
+        val requestJson = """
+            {
+                "jsonrpc": "2.0",
+                "id": "test-9",
+                "method": "tools/call",
+                "params": {
+                    "name": "search_student",
+                    "arguments": {
+                        "query": "bilbo"
+                    }
+                }
+            }
+        """.trimIndent()
+
+        mvc.perform(
+            post("/mcp/")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", authHeader)
+                .content(requestJson)
+        )
+            .andExpect(status().isOk)
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("Found 1 student(s) matching 'bilbo'")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("No submissions found for this student.")))
+    }
+
+    @Test
+    fun `mcp search student with no matches reports it`() {
+        val authHeader = getBearerToken("teacher1")
+
+        val requestJson = """
+            {
+                "jsonrpc": "2.0",
+                "id": "test-10",
+                "method": "tools/call",
+                "params": {
+                    "name": "search_student",
+                    "arguments": {
+                        "query": "nobodyWithThisName"
+                    }
+                }
+            }
+        """.trimIndent()
+
+        mvc.perform(
+            post("/mcp/")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", authHeader)
+                .content(requestJson)
+        )
+            .andExpect(status().isOk)
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("No students found matching 'nobodyWithThisName'")))
+    }
+
+    @Test
+    fun `mcp get submission info for a nonexistent submission reports it`() {
+        val authHeader = getBearerToken("teacher1")
+
+        val requestJson = """
+            {
+                "jsonrpc": "2.0",
+                "id": "test-11",
+                "method": "tools/call",
+                "params": {
+                    "name": "get_submission_info",
+                    "arguments": {
+                        "submissionId": 99999
+                    }
+                }
+            }
+        """.trimIndent()
+
+        mvc.perform(
+            post("/mcp/")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", authHeader)
+                .content(requestJson)
+        )
+            .andExpect(status().isOk)
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("\"id\":\"test-11\"")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("Submission not found or inaccessible")))
     }
 }

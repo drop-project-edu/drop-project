@@ -483,10 +483,10 @@
 				<configuration>
 					<excludes>
 						<!-- exclude all the classes that have @Profile("!test") -->
-						<exclude>org/dropProject/controllers/ApplicationContextListener.class</exclude>
-						<exclude>org/dropProject/AsyncConfig.class</exclude>
+						<exclude>org/dropproject/controllers/ApplicationContextListener.class</exclude>
+						<exclude>org/dropproject/config/AsyncConfig.class</exclude>
 						<exclude>edu/uoc/**</exclude>
-						<exclude>org/dropProject/lti/**</exclude> <!-- exclude moodle related classes -->
+						<exclude>org/dropproject/lti/**</exclude> <!-- exclude moodle related classes -->
 					</excludes>
 				</configuration>
 			</plugin>
