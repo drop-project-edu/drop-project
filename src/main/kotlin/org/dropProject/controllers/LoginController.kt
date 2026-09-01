@@ -75,8 +75,13 @@ class LoginController(val personalTokenRepository: PersonalTokenRepository) {
             personalTokenRepository.save(previousToken)
         }
 
+        // tokens are valid until the end of the current academic year (august 31). when that day is
+        // not strictly in the future - august 31 itself included - use next year's, otherwise the
+        // token would already be expired at creation
         val currentDate = LocalDate.now()
-        val expirationLocalDate = if (currentDate.month.value > 8) LocalDate.of(currentDate.year+1,8,31) else LocalDate.of(currentDate.year,8,31)
+        val thisYearsExpiration = LocalDate.of(currentDate.year, 8, 31)
+        val expirationLocalDate = if (currentDate.isBefore(thisYearsExpiration)) thisYearsExpiration
+                                  else LocalDate.of(currentDate.year + 1, 8, 31)
         val expirationDate = Date.from(expirationLocalDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
 
         // make sure we generate a unique token
