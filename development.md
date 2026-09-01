@@ -81,7 +81,17 @@ file). In production, logs are written only to a rolling file and the console is
 
 ## Unit Tests
 
-To execute the unit tests, run:
+For a quick feedback loop, run only the fast tests (skips the tests that run real maven
+builds or reach github.com - no setup needed):
+
+    mvn test -Pfast
+
+The full test suite needs ssh keys to access the sample repositories on github. Set them
+up once with:
+
+    curl -s https://dropproject.org/drop-project-test.env -o .env
+
+(see `.env.example` for details) and then run:
 
     mvn test
 

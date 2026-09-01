@@ -23,7 +23,18 @@ jobs:
       - name: Build with Maven
         env:
           DP_MVN_REPO: ~/.m2
-        run: mvn --batch-mode --update-snapshots verify
+          DP_SAMPLE_JAVA_ASSIGNMENT_PRIVATE_KEY: ${{ secrets.DP_SAMPLE_JAVA_ASSIGNMENT_PRIVATE_KEY }}
+          DP_SAMPLE_JAVA_SUBMISSION_PRIVATE_KEY: ${{ secrets.DP_SAMPLE_JAVA_SUBMISSION_PRIVATE_KEY }}
+        # secrets are not available to workflows triggered by pull requests from forks; in that case
+        # run only the fast suite (which needs no ssh keys) and skip the jacoco coverage gate,
+        # since it is calibrated for the full suite
+        run: |
+          if [ -n "$DP_SAMPLE_JAVA_ASSIGNMENT_PRIVATE_KEY" ]; then
+            mvn --batch-mode --update-snapshots verify
+          else
+            echo "Test ssh keys not available (pull request from a fork?) - running the fast suite only"
+            mvn --batch-mode --update-snapshots test -Pfast
+          fi
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
