@@ -405,9 +405,6 @@ class AssignmentGitConnectionTests : AssignmentTestBase() {
     @WithMockUser("teacher1", roles = ["TEACHER"])
     fun `refresh ssh keys for all assignments`() {
 
-//        println(GitClient().computeSshFingerprint(TestKeys.sampleJavaAssignmentPublicKey))
-        println(GitClient().computeSshFingerprint(ApplicationContextListener.sampleJavaAssignmentPublicKey))
-
         try {
             val createdAssignment = assignmentFixtures.createAndSetupAssignment("dummyAssignment1", "Dummy Assignment",
                 "org.dummy",
