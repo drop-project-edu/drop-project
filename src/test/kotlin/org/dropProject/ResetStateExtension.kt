@@ -66,5 +66,9 @@ class ResetStateExtension : AfterEachCallback {
         // clear in-memory service state
         appContext.getBean(CooloffOverrideService::class.java).clearAll()
         appContext.getBean(PendingTasks::class.java).clear()
+
+        // restore the real git and maven behavior for tests that don't use the fakes
+        appContext.getBean(FakeGitClient::class.java).clearRemotes()
+        appContext.getBean(FakeBuildRunner::class.java).reset()
     }
 }
