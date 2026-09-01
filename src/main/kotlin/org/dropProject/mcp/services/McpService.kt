@@ -21,6 +21,7 @@ package org.dropproject.mcp.services
 
 import jakarta.servlet.http.HttpServletRequest
 import org.dropproject.controllers.TeacherAPIController
+import org.dropproject.dao.PersonalToken
 import org.dropproject.dao.SubmissionStatus
 import org.dropproject.dao.TokenStatus
 import org.dropproject.extensions.realName
@@ -100,16 +101,17 @@ class McpService(
     }
 
     /**
-     * Validates a personal token used as Bearer token and returns the associated user ID.
+     * Validates a personal token used as Bearer token, returning it so that the caller can use both the user id and
+     * the roles that it carries. Returns null if the token doesn't exist, was revoked or has expired.
      */
-    fun validateBearerToken(token: String): String? {
+    fun validateBearerToken(token: String): PersonalToken? {
         return try {
             val tokenEntity = personalTokenRepository.getByPersonalToken(token)
 
             if (tokenEntity != null &&
                 tokenEntity.status == TokenStatus.ACTIVE &&
                 tokenEntity.expirationDate.after(Date())) {
-                tokenEntity.userId
+                tokenEntity
             } else {
                 null
             }

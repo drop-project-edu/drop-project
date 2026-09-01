@@ -58,9 +58,9 @@ class McpControllerTests: APIControllerTests {
     @Autowired
     private lateinit var testsHelper: TestsHelper
 
-    private fun getBearerToken(username: String): String {
+    private fun getBearerToken(username: String, role: String = "ROLE_TEACHER"): String {
         // Generate personal token for user and use it directly as Bearer token
-        val personalToken = generateToken(username, mutableListOf(SimpleGrantedAuthority("ROLE_TEACHER")), mvc)
+        val personalToken = generateToken(username, mutableListOf(SimpleGrantedAuthority(role)), mvc)
         return "Bearer $personalToken"
     }
 
@@ -363,6 +363,45 @@ class McpControllerTests: APIControllerTests {
             .andExpect(content().string(org.hamcrest.Matchers.containsString("## Available Files")))
             .andExpect(content().string(org.hamcrest.Matchers.containsString("get_file_content")))
             .andExpect(content().string(org.hamcrest.Matchers.containsString("src/main/java/org/dropProject/sampleAssignments/testProj/Main.java")))
+    }
+
+    @Test
+    @DirtiesContext
+    fun `try to get the submission code with a student token`() {
+        // the token only carries the roles that its owner had when it was generated, so a student token must not be
+        // able to reach the teacher-only tools
+        val authHeader = getBearerToken("student1", role = "ROLE_STUDENT")
+
+        val submissionId = testsHelper.uploadProject(this.mvc,
+            "projectOK", "testJavaProj",
+            User("student1", "", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT"))))
+
+        val requestJson = """
+            {
+                "jsonrpc": "2.0",
+                "id": "test-4",
+                "method": "tools/call",
+                "params": {
+                    "name": "get_submission_code",
+                    "arguments": {
+                        "submissionId": ${submissionId}
+                    }
+                }
+            }
+        """.trimIndent()
+
+        mvc.perform(
+            post("/mcp/")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", authHeader)
+                .content(requestJson)
+        )
+            .andExpect(status().isOk)
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("\"error\"")))
+            .andExpect(content().string(
+                org.hamcrest.Matchers.containsString("is not allowed to access submission code")))
+            .andExpect(content().string(
+                org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("## Available Files"))))
     }
 
     @Test

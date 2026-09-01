@@ -24,6 +24,7 @@ import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.dropproject.mcp.services.McpService
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.core.userdetails.User
 import org.springframework.web.filter.OncePerRequestFilter
@@ -44,14 +45,21 @@ class McpBearerTokenFilter(
         
         if (authHeader?.startsWith("Bearer ") == true) {
             val token = authHeader.substring(7)
-            val userId = mcpService.validateBearerToken(token)
-            
-            if (userId != null) {
-                // Create authentication with the user
+            val personalToken = mcpService.validateBearerToken(token)
+
+            if (personalToken != null) {
+                // The token carries the roles that its owner had when it was generated, so it must never grant more
+                // than those. The tools are responsible for checking whether the role is enough for what they do.
+                val authorities = personalToken.profiles
+                    .split(",")
+                    .map { it.trim() }
+                    .filter { it.isNotEmpty() }
+                    .map { SimpleGrantedAuthority(it) }
+
                 val user = User.builder()
-                    .username(userId)
+                    .username(personalToken.userId)
                     .password("[PROTECTED]")
-                    .authorities("ROLE_TEACHER") // For MCP, we assume teacher role
+                    .authorities(authorities)
                     .build()
                 
                 val authentication = UsernamePasswordAuthenticationToken(
