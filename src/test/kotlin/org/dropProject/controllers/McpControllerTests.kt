@@ -24,6 +24,7 @@ import org.dropproject.SubmissionFixtures
 import org.dropproject.TestUsers.STUDENT_1
 import org.junit.jupiter.api.Tag
 import org.dropproject.DropProjectIntegrationTest
+import org.dropproject.config.DropProjectProperties
 import org.dropproject.dao.Assignment
 import org.dropproject.dao.Author
 import org.dropproject.dao.ProjectGroup
@@ -53,6 +54,7 @@ import org.springframework.security.core.userdetails.User
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
+import java.io.File
 import java.util.Date
 
 @DropProjectIntegrationTest
@@ -85,6 +87,9 @@ class McpControllerTests: ApiTestSupport {
 
     @Autowired
     lateinit var assignmentACLRepository: AssignmentACLRepository
+
+    @Autowired
+    lateinit var dropProjectProperties: DropProjectProperties
 
     private fun getBearerToken(username: String, role: String = "ROLE_TEACHER"): String {
         // Generate personal token for user and use it directly as Bearer token
@@ -174,7 +179,7 @@ class McpControllerTests: ApiTestSupport {
                     "tools": [
                         {
                             "name": "get_assignment_info",
-                            "description": "Get comprehensive information about a programming assignment in Drop Project, including instructions, requirements, due dates, submission methods, and grading criteria. Useful when a student or teacher needs detailed assignment context.",
+                            "description": "Get comprehensive information about a programming assignment in Drop Project, including instructions, requirements, due dates, submission methods, and grading criteria. Useful when a student or teacher needs detailed assignment context. The assignment's settings are listed with the names of the create_assignment arguments that set them, so that an assignment can be recreated from them, e.g. for a new edition of the same course.",
                             "inputSchema": {
                                 "type": "object",
                                 "properties": {
@@ -486,6 +491,66 @@ class McpControllerTests: ApiTestSupport {
             .andExpect(content().string(org.hamcrest.Matchers.containsString("testMcpAssignment")))
             .andExpect(content().string(org.hamcrest.Matchers.containsString("Test MCP Assignment")))
             .andExpect(content().string(org.hamcrest.Matchers.containsString("Assignment:")))
+    }
+
+    @Test
+    fun `mcp get assignment info lists every setting needed to recreate the assignment`() {
+
+        // a teacher who reuses an assignment in the next school year has to repeat all of its settings in the
+        // create_assignment call, so get_assignment_info must report them, including the ones that are not set
+        assignmentFixtures.createAndSetupAssignment("reusableAssignment", "Reusable Assignment",
+            "org.dropProject.samples.sampleJavaAssignment", "UPLOAD", sampleJavaAssignmentRepo,
+            assignees = "student1,student2", acl = "teacher2", tags = "project",
+            dueDate = "2026-10-15T23:59", minGroupSize = "1", maxGroupSize = "3", visibility = "PRIVATE")
+
+        try {
+            val authHeader = getBearerToken("teacher1")
+            val requestJson = """
+                {
+                    "jsonrpc": "2.0",
+                    "id": "test-3",
+                    "method": "tools/call",
+                    "params": {
+                        "name": "get_assignment_info",
+                        "arguments": {
+                            "assignmentId": "reusableAssignment"
+                        }
+                    }
+                }
+            """.trimIndent()
+
+            val response = mvc.perform(
+                post("/mcp/")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", authHeader)
+                    .content(requestJson)
+            )
+                .andExpect(status().isOk)
+                .andReturn().response.contentAsString
+
+            listOf(
+                "**assignmentName:** Reusable Assignment",
+                "**gitRepositoryUrl:** $sampleJavaAssignmentRepo",
+                "**language:** JAVA",
+                "**packageName:** org.dropProject.samples.sampleJavaAssignment",
+                "**submissionMethod:** UPLOAD",
+                "**submissionStructure:** COMPACT",
+                "**dueDate:** 2026-10-15T23:59",
+                "**acceptsStudentTests:** false",
+                "**hiddenTestsVisibility:** SHOW_PROGRESS",
+                "**minGroupSize:** 1",
+                "**maxGroupSize:** 3",
+                "**visibility:** PRIVATE",
+                "**assignees:** student1,student2",
+                "**acl:** teacher2",
+                "**tags:** project",
+                "**cooloffPeriod:** not set"  // settings the assignment doesn't use are reported as unset, not omitted
+            ).forEach { assertThat(response, containsString(it)) }
+
+        } finally {
+            // cleanup assignment files
+            File(dropProjectProperties.assignments.rootLocation, "reusableAssignment").deleteRecursively()
+        }
     }
 
     @Test

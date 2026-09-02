@@ -24,6 +24,23 @@ import org.dropproject.mcp.data.McpTool
 import org.dropproject.mcp.data.McpToolCallResult
 import org.dropproject.mcp.services.McpService
 import java.security.Principal
+import java.time.ZoneId
+import java.util.Date
+
+/**
+ * Appends a line describing one of the assignment's settings. Empty and null values are described as
+ * "not set", to tell the settings that the assignment doesn't use from the ones that this listing forgot.
+ */
+private fun StringBuilder.appendSetting(name: String, value: Any?) {
+    val description = value?.toString()?.ifBlank { null } ?: "not set"
+    appendLine("**$name:** $description")
+}
+
+/**
+ * Formats a date the way create_assignment expects to receive it, e.g. '2026-10-15T23:59'.
+ */
+private fun Date.toIso8601(): String =
+    toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime().toString()
 
 /**
  * Command to retrieve comprehensive information about a programming assignment.
@@ -38,31 +55,45 @@ data class GetAssignmentInfo(val assignmentId: String) : ToolCommand {
             assignmentId, principal, isAdmin = true // MCP users are treated as admins
         )
 
+        val assignment = assignmentDetail.assignment
+
         // Format assignment detail for MCP response
         val assignmentText = buildString {
-            appendLine("# Assignment: ${assignmentDetail.assignment.name}")
-            appendLine("**ID:** ${assignmentDetail.assignment.id}")
-            appendLine("**Package:** ${assignmentDetail.assignment.packageName}")
-            appendLine("**Owner:** ${assignmentDetail.assignment.ownerUserId}")
-            appendLine("**Submission Method:** ${assignmentDetail.assignment.submissionMethod}")
-            appendLine("**Active:** ${assignmentDetail.assignment.active}")
+            appendLine("# Assignment: ${assignment.name}")
+            appendLine("**ID:** ${assignment.id}")
+            appendLine("**Owner:** ${assignment.ownerUserId}")
+            appendLine("**Active:** ${assignment.active}")
+            appendLine("**Archived:** ${assignment.archived}")
 
-            if (assignmentDetail.assignment.instructions != null) {
+            // the whole configuration is listed with the names of the create_assignment arguments that set it, so
+            // that an assignment can be recreated from this listing (e.g. for a new edition of the same course)
+            appendLine("\n## Configuration")
+            appendLine("Named after the create_assignment arguments that set each setting.\n")
+            appendSetting("assignmentName", assignment.name)
+            appendSetting("gitRepositoryUrl", assignment.gitRepositoryUrl)
+            appendSetting("language", assignment.language)
+            appendSetting("packageName", assignment.packageName)
+            appendSetting("submissionMethod", assignment.submissionMethod)
+            appendSetting("submissionStructure", assignment.submissionStructure)
+            appendSetting("dueDate", assignment.dueDate?.toIso8601())
+            appendSetting("acceptsStudentTests", assignment.acceptsStudentTests)
+            appendSetting("minStudentTests", assignment.minStudentTests)
+            appendSetting("calculateStudentTestsCoverage", assignment.calculateStudentTestsCoverage)
+            appendSetting("hiddenTestsVisibility", assignment.hiddenTestsVisibility)
+            appendSetting("mandatoryTestsSuffix", assignment.mandatoryTestsSuffix)
+            appendSetting("leaderboardType", assignment.leaderboardType)
+            appendSetting("cooloffPeriod", assignment.cooloffPeriod)
+            appendSetting("maxMemoryMb", assignment.maxMemoryMb)
+            appendSetting("minGroupSize", assignment.projectGroupRestrictions?.minGroupSize)
+            appendSetting("maxGroupSize", assignment.projectGroupRestrictions?.maxGroupSize)
+            appendSetting("visibility", assignment.visibility)
+            appendSetting("assignees", assignmentDetail.assignees.joinToString(",") { it.authorUserId })
+            appendSetting("acl", assignmentDetail.acl.joinToString(",") { it.userId })
+            appendSetting("tags", assignmentDetail.tags.joinToString(","))
+
+            if (assignment.instructions != null) {
                 appendLine("\n## Instructions")
-                appendLine(assignmentDetail.assignment.instructions.toString())
-            }
-
-            if (assignmentDetail.assignment.dueDate != null) {
-                appendLine("\n**Due Date:** ${assignmentDetail.assignment.dueDate}")
-            }
-
-            appendLine("**Language:** ${assignmentDetail.assignment.language}")
-
-            if (assignmentDetail.assignees.isNotEmpty()) {
-                appendLine("\n## Assignees (${assignmentDetail.assignees.size})")
-                assignmentDetail.assignees.forEach { assignee ->
-                    appendLine("- ${assignee.authorUserId}")
-                }
+                appendLine(assignment.instructions.toString())
             }
 
             if (assignmentDetail.tests.isNotEmpty()) {
@@ -110,7 +141,9 @@ data class GetAssignmentInfo(val assignmentId: String) : ToolCommand {
                 name = "get_assignment_info",
                 description = "Get comprehensive information about a programming assignment in Drop Project, " +
                         "including instructions, requirements, due dates, submission methods, and grading criteria. " +
-                        "Useful when a student or teacher needs detailed assignment context.",
+                        "Useful when a student or teacher needs detailed assignment context. The assignment's " +
+                        "settings are listed with the names of the create_assignment arguments that set them, so " +
+                        "that an assignment can be recreated from them, e.g. for a new edition of the same course.",
                 inputSchema = mapOf(
                     "type" to "object",
                     "properties" to mapOf(

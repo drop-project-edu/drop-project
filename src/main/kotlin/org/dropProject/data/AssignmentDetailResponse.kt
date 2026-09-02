@@ -37,6 +37,11 @@ data class AssignmentDetailResponse(
     @JsonView(JSONViews.TeacherAPI::class)
     val acl: List<AssignmentACL>,
 
+    // the names of the assignment's tags, loaded while the assignment is still attached to the
+    // persistence context, since assignment.tags is lazy
+    @JsonView(JSONViews.TeacherAPI::class)
+    val tags: List<String>,
+
     @JsonView(JSONViews.TeacherAPI::class)
     val tests: List<AssignmentTestMethod>,
 

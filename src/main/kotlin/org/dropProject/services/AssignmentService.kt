@@ -1422,6 +1422,7 @@ class AssignmentService(
             assignment = assignment,
             assignees = assignees,
             acl = acl,
+            tags = assignment.tagsStr,
             tests = tests,
             reports = assignmentReports,
             reportMessage = reportMessage,
