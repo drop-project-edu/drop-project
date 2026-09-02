@@ -58,7 +58,10 @@ data class McpError(
 data class McpInitializeResult(
     val protocolVersion: String = "2024-11-05",
     val capabilities: McpServerCapabilities,
-    val serverInfo: McpServerInfo
+    val serverInfo: McpServerInfo,
+    // optional, as per the spec: describes how to use this server, for the client to give to its model in the
+    // same way it would use a system prompt
+    val instructions: String? = null
 )
 
 @JsonInclude(JsonInclude.Include.NON_NULL)

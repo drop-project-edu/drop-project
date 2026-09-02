@@ -44,7 +44,6 @@ import org.dropproject.repository.*
 import org.dropproject.security.RequiresAssignmentOwnerOrACL
 import org.dropproject.services.*
 import org.eclipse.jgit.api.Git
-import org.eclipse.jgit.api.errors.RefNotAdvertisedException
 import org.slf4j.LoggerFactory
 import org.springframework.cache.CacheManager
 import org.springframework.core.io.FileSystemResource
@@ -78,8 +77,6 @@ class AssignmentController(
     val assigneeRepository: AssigneeRepository,
     val assignmentACLRepository: AssignmentACLRepository,
     val submissionRepository: SubmissionRepository,
-    val gitSubmissionRepository: GitSubmissionRepository,
-    val projectGroupRestrictionsRepository: ProjectGroupRestrictionsRepository,
     val gitClient: GitClient,
     val submissionService: SubmissionService,
     val assignmentService: AssignmentService,
@@ -131,53 +128,8 @@ class AssignmentController(
             .map { "'" + it.name + "'" }
             .joinToString(separator = ",", prefix = "[", postfix = "]")
 
-        if (assignmentForm.acceptsStudentTests &&
-            (assignmentForm.minStudentTests == null || assignmentForm.minStudentTests!! < 1)) {
-            LOG.warn("Error: You must require at least one student test")
-            bindingResult.rejectValue("acceptsStudentTests", "acceptsStudentTests.atLeastOne", "Error: You must require at least one student test")
-        }
-
-        if (!assignmentForm.acceptsStudentTests && assignmentForm.minStudentTests != null) {
-            LOG.warn("If you require ${assignmentForm.minStudentTests} student tests, you must check 'Accepts student tests'")
-            bindingResult.rejectValue("acceptsStudentTests", "acceptsStudentTests.mustCheck",
-                "Error: If you require ${assignmentForm.minStudentTests} student tests, you must check 'Accepts student tests'")
-        }
-
-        if (!assignmentForm.acceptsStudentTests && assignmentForm.calculateStudentTestsCoverage) {
-            LOG.warn("If you want to calculate coverage of student tests, you must check 'Accepts student tests'")
-            bindingResult.rejectValue("acceptsStudentTests", "acceptsStudentTests.mustCheck",
-                "Error: If you want to calculate coverage of student tests, you must check 'Accepts student tests'")
-        }
-
-        if (assignmentForm.minGroupSize != null && assignmentForm.minGroupSize!! < 1) {
-            LOG.warn("Min group size must be >= 1")
-            bindingResult.rejectValue("minGroupSize", "minGroupSize.greaterThan1",
-                "Error: Min group size must be >= 1")
-        }
-
-        if (assignmentForm.maxGroupSize != null && assignmentForm.minGroupSize == null) {
-            LOG.warn("If you fill in the max group size, you must also fill in the min group size")
-            bindingResult.rejectValue("minGroupSize", "minGroupSize.mustExist",
-                "Error: If you fill in the max group size, you must also fill in the min group size")
-        }
-
-        if (assignmentForm.minGroupSize != null && assignmentForm.maxGroupSize != null &&
-            assignmentForm.minGroupSize!! > assignmentForm.maxGroupSize!!) {
-            LOG.warn("Max must be greater or equal to min")
-            bindingResult.rejectValue("minGroupSize", "minGroupSize.maxGreaterThanMin",
-                "Error: Max must be greater or equal to min")
-        }
-
-        if (!assignmentForm.exceptions.isNullOrBlank() && assignmentForm.minGroupSize == null) {
-            LOG.warn("Exceptions to group size should only be filled in when you set the min group size")
-            bindingResult.rejectValue("exceptions", "exceptions.minSizeNotSet",
-                "Error: Exceptions to group size should only be filled in when you set the min group size")
-        }
-
-        if (assignmentForm.visibility == AssignmentVisibility.PRIVATE && assignmentForm.assignees.isNullOrEmpty()) {
-            LOG.warn("Exceptions to group size should only be filled in when you set the min group size")
-            bindingResult.rejectValue("assignees", "assignees.mustBeFilled",
-                "Error: For PRIVATE assignments, you have to fill in the authorized submitters")
+        assignmentService.validateAssignmentForm(assignmentForm, principal).forEach {
+            bindingResult.rejectValue(it.field, it.code, it.message)
         }
 
         if (bindingResult.hasErrors()) {
@@ -187,47 +139,16 @@ class AssignmentController(
         var assignment: Assignment
         if (!assignmentForm.editMode) {   // create
 
-            if (assignmentForm.acl?.split(",")?.contains(principal.realName()) == true) {
-                LOG.warn("Assignment ACL should not include the owner")
-                bindingResult.rejectValue("acl", "acl.includeOwner",
-                    "Error: You don't need to give autorization to yourself, only other teachers")
-                return "assignment-form"
-            }
-
-            // check if it already exists an assignment with this id
-            if (assignmentRepository.existsById(assignmentForm.assignmentId!!)) {
-                LOG.warn("An assignment already exists with this ID: ${assignmentForm.assignmentId}")
-                bindingResult.rejectValue("assignmentId", "assignment.duplicate", "Error: An assignment already exists with this ID")
-                return "assignment-form"
-            }
-
-            // verify if there is another (still existing) assignment connected to this git repository folder.
-            // Normally impossible for a brand new assignment (gitRepositoryFolder is always == assignmentId, and
-            // we already checked above that no assignment exists with this id), but an imported assignment can
-            // have a gitRepositoryFolder that doesn't match its own id, so this guards against that collision
-            val existingAssignmentWithSameFolder = assignmentRepository.findByGitRepositoryFolder(assignmentForm.assignmentId!!)
-            if (existingAssignmentWithSameFolder != null) {
-                LOG.warn("Assignment ${existingAssignmentWithSameFolder.id} already uses this git repository folder: ${assignmentForm.assignmentId}")
-                bindingResult.rejectValue("assignmentId", "assignment.duplicateFolder",
-                    "Error: There is already an assignment using this git repository folder")
-                return "assignment-form"
-            }
-
             val gitRepository = assignmentForm.gitRepositoryUrl!!
-            if (!gitRepository.startsWith("git@")) {
-                LOG.warn("Invalid git repository url: ${assignmentForm.gitRepositoryUrl}")
-                bindingResult.rejectValue("gitRepositoryUrl", "repository.notSSh", "Error: Only SSH style urls are accepted (must start with 'git@')")
-                return "assignment-form"
-            }
 
             // check if we can connect to given git repository
             try {
                 val directory = File(dropProjectProperties.assignments.rootLocation, assignmentForm.assignmentId)
 
                 // a leftover folder from a previously deleted assignment with this same id may still be here (e.g.
-                // if the OS hadn't yet released file handles JGit held open when that assignment was deleted). We
-                // already checked above that no other, currently existing assignment claims this folder, so it's
-                // safe to clear it before cloning.
+                // if the OS hadn't yet released file handles JGit held open when that assignment was deleted).
+                // validateAssignmentForm already checked that no other, currently existing assignment claims this
+                // folder, so it's safe to clear it before cloning.
                 if (directory.exists()) {
                     LOG.info("[${assignmentForm.assignmentId}] Removing leftover folder from a previously deleted assignment: ${directory}")
                     directory.deleteRecursively()
@@ -251,7 +172,7 @@ class AssignmentController(
                 }
             }
 
-            val newAssignment = createAssignmentBasedOnForm(assignmentForm, principal)
+            val newAssignment = assignmentService.buildAssignmentFromForm(assignmentForm, principal)
 
             if (!mustSetupGitConnection) {
                 // update hash
@@ -340,38 +261,9 @@ class AssignmentController(
             }
         }
 
-        if (!(assignmentForm.acl.isNullOrBlank())) {
-            val userIds = assignmentForm.acl!!.split(",")
-
-            // Validate each userId
-            for (userId in userIds) {
-                val trimmedUserId = userId.trim()
-                if (trimmedUserId.contains(" ") || trimmedUserId.contains(";")) {
-                    bindingResult.rejectValue("acl", "acl.invalidFormat",
-                        "Error: User IDs must be comma-separated. '$trimmedUserId' contains invalid characters (spaces or semicolons).")
-                    return "assignment-form"
-                }
-            }
-
-            // first delete existing to prevent duplicates
-            assignmentACLRepository.deleteByAssignmentId(assignmentForm.assignmentId!!)
-
-            for (userId in userIds) {
-                val trimmedUserId = userId.trim()
-                assignmentACLRepository.save(AssignmentACL(assignmentId = assignmentForm.assignmentId!!, userId = trimmedUserId))
-            }
-        }
-
-        // first delete all assignees to prevent duplicates
-        assignmentForm.assignmentId?.let { assignmentId ->
-            assigneeRepository.deleteByAssignmentId(assignmentId)
-            assigneeRepository.flush()  // due to some weird issue, I have to flush (see: https://github.com/spring-projects/spring-data-jpa/issues/1100)
-        }
-        val assigneesStr = assignmentForm.assignees?.split(",").orEmpty().map { it -> it.trim() }
-        for (assigneeStr in assigneesStr) {
-            if (!assigneeStr.isBlank()) {
-                assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = assigneeStr))
-            }
+        assignmentService.updateAssignmentACLAndAssignees(assignment, assignmentForm)?.let {
+            bindingResult.rejectValue(it.field, it.code, it.message)
+            return "assignment-form"
         }
 
         if (mustSetupGitConnection) {
@@ -386,46 +278,6 @@ class AssignmentController(
         }
     }
 
-    /**
-     * Creates a new [Assignment] based on the contents of an [AssignmentForm].
-     * @param assignmentForm, the AssignmentForm from which the Assignment contents will be copied
-     * @param principal is a [Principal] representing the user making the request
-     * @return the created Assignment
-     */
-    private fun createAssignmentBasedOnForm(assignmentForm: AssignmentForm, principal: Principal): Assignment {
-        val newAssignment = Assignment(id = assignmentForm.assignmentId!!, name = assignmentForm.assignmentName!!,
-            packageName = assignmentForm.assignmentPackage, language = assignmentForm.language!!,
-            submissionStructure = assignmentForm.submissionStructure,
-            dueDate = if (assignmentForm.dueDate != null) java.sql.Timestamp.valueOf(assignmentForm.dueDate) else null,
-            acceptsStudentTests = assignmentForm.acceptsStudentTests,
-            minStudentTests = assignmentForm.minStudentTests,
-            calculateStudentTestsCoverage = assignmentForm.calculateStudentTestsCoverage,
-            coverageVisibleToStudents = assignmentForm.coverageVisibleToStudents,
-            mandatoryTestsSuffix = assignmentForm.mandatoryTestsSuffix,
-            cooloffPeriod = assignmentForm.cooloffPeriod,
-            maxMemoryMb = assignmentForm.maxMemoryMb, submissionMethod = assignmentForm.submissionMethod!!,
-            gitRepositoryUrl = assignmentForm.gitRepositoryUrl!!, ownerUserId = principal.realName(),
-            gitRepositoryFolder = assignmentForm.assignmentId!!, showLeaderBoard = assignmentForm.leaderboardType != null,
-            hiddenTestsVisibility = assignmentForm.hiddenTestsVisibility,
-            leaderboardType = assignmentForm.leaderboardType,
-            visibility = assignmentForm.visibility)
-
-        // we only need to check minGroupSize since maxGroupSize and exceptions depend on this field
-        if (assignmentForm.minGroupSize != null) {
-            val projectGroupRestrictions = ProjectGroupRestrictions(minGroupSize = assignmentForm.minGroupSize!!,
-                maxGroupSize = assignmentForm.maxGroupSize,
-                exceptions = assignmentForm.exceptions)
-            projectGroupRestrictionsRepository.save(projectGroupRestrictions)
-            newAssignment.projectGroupRestrictions = projectGroupRestrictions
-        }
-
-        // associate tags
-        val tagNames = assignmentForm.assignmentTags?.lowercase(Locale.getDefault())?.split(",")
-        tagNames?.forEach {
-            assignmentService.addTagToAssignment(newAssignment, it)
-        }
-        return newAssignment
-    }
 
     /**
      * Handles requests for for an [Assignment]'s "Info" page.
@@ -570,40 +422,10 @@ class AssignmentController(
         val assignment = assignmentRepository.findById(assignmentId)
             .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
 
-        if (assignment.gitRepositoryPrivKey == null) {
-            LOG.warn("Unable to pull git repository for ${assignmentId} because private key is null")
-            return ResponseEntity("{ \"error\": \"Error pulling from ${assignment.gitRepositoryUrl}\"}", HttpStatus.INTERNAL_SERVER_ERROR)
-        }
+        val result = assignmentService.refreshAssignmentFromGitRepository(assignment, principal)
 
-        try {
-            LOG.info("Pulling git repository for ${assignmentId}")
-            gitClient.pull(File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder), assignment.gitRepositoryPrivKey!!.toByteArray())
-
-            // update hash
-            val git = Git.open(File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder))
-            assignment.gitCurrentHash = gitClient.getLastCommitInfo(git)?.sha1
-
-            // remove the reportId from all git submissions (if there are any) to signal the student that he should
-            // generate a report again
-            val gitSubmissionsForThisAssignment = gitSubmissionRepository.findByAssignmentId(assignmentId)
-            for (gitSubmission in gitSubmissionsForThisAssignment) {
-                gitSubmission.lastSubmissionId = null
-                gitSubmissionRepository.save(gitSubmission)
-            }
-
-            if (!gitSubmissionsForThisAssignment.isEmpty()) {
-                LOG.info("Reset reportId for ${gitSubmissionsForThisAssignment.size} git submissions")
-            }
-
-            // revalidate the assignment
-            assignmentService.validateAndStoreReport(assignment, principal)
-
-        } catch (re: RefNotAdvertisedException) {
-            LOG.warn("Couldn't pull git repository for ${assignmentId}: head is invalid")
-            return ResponseEntity("{ \"error\": \"Error pulling from ${assignment.gitRepositoryUrl}. Probably you don't have any commits yet.\"}", HttpStatus.INTERNAL_SERVER_ERROR)
-        } catch (e: Exception) {
-            LOG.warn("Couldn't pull git repository for ${assignmentId}", e)
-            return ResponseEntity("{ \"error\": \"Error pulling from ${assignment.gitRepositoryUrl}\"}", HttpStatus.INTERNAL_SERVER_ERROR)
+        if (result.error != null) {
+            return ResponseEntity("{ \"error\": \"${result.error}\"}", HttpStatus.INTERNAL_SERVER_ERROR)
         }
 
         return ResponseEntity("{ \"success\": \"true\"}", HttpStatus.OK);
@@ -635,12 +457,7 @@ class AssignmentController(
         }
 
         if (assignment.gitRepositoryPubKey == null) {
-            // generate key pair
-            val (privKey, pubKey) = gitClient.generateKeyPair()
-
-            assignment.gitRepositoryPrivKey = String(privKey)
-            assignment.gitRepositoryPubKey = String(pubKey)
-            assignmentRepository.save(assignment)
+            assignmentService.generateGitConnectionKeyPair(assignment)
         }
 
         if (assignment.gitRepositoryUrl.orEmpty().contains("github")) {
@@ -674,42 +491,21 @@ class AssignmentController(
             .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
 
         if (assignment.gitRepositoryPrivKey == null) {
-            LOG.warn("gitRepositoryUrl is null???")
             redirectAttributes.addFlashAttribute("error", "Something went wrong with the credentials generation. Please try again")
             return "redirect:/assignment/setup-git/${assignment.id}?reconnect=${reconnect}"
         }
 
-        run {
-            val assignmentFolder = File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder)
-            if (assignmentFolder.exists()) {
-                assignmentFolder.deleteRecursively()
-            }
-        }
+        val result = assignmentService.connectAssignmentToGitRepository(assignment, principal)
 
-        val gitRepository = assignment.gitRepositoryUrl
-        try {
-            val directory = File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder)
-            gitClient.clone(gitRepository, directory, assignment.gitRepositoryPrivKey!!.toByteArray()).use { }
-            LOG.info("[${assignmentId}] Successfuly cloned ${gitRepository} to ${directory}")
-            // update hash
-            Git.open(File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder)).use { git ->
-                assignment.gitCurrentHash = gitClient.getLastCommitInfo(git)?.sha1
-            }
-            assignmentRepository.save(assignment)
-        } catch (e: Exception) {
-            LOG.info("Error cloning ${gitRepository} - ${e}")
-            model["error"] = "Error cloning ${gitRepository} - ${e.message}. Are you sure you added the public key to the repository?"
+        if (result.error != null) {
+            model["error"] = result.error
             model["assignment"] = assignment
             model["reconnect"] = reconnect
             return "setup-git"
         }
 
-        // check that the assignment repository is a valid assignment structure
-        if (assignmentService.validateAndStoreReport(assignment, principal)) {
-            assignmentRepository.save(assignment)  // assignment.buildResult was updated
-
+        if (result.validationFailed) {
             redirectAttributes.addFlashAttribute("error", "Assignment has problems. Please check the 'Validation Report'")
-            LOG.info("Assignment has problems. Please check the 'Validation Report'")
             return "redirect:/assignment/info/${assignment.id}"
         }
 

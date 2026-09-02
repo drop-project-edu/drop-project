@@ -45,7 +45,11 @@ sealed interface ToolCommand {
             "search_student" to SearchStudent::from,
             "get_submission_code" to GetSubmissionCode::from,
             "get_submission_info" to GetSubmissionInfo::from,
-            "get_file_content" to GetFileContent::from
+            "get_file_content" to GetFileContent::from,
+            "create_assignment" to CreateAssignment::from,
+            "connect_assignment" to ConnectAssignment::from,
+            "refresh_assignment" to RefreshAssignment::from,
+            "set_assignment_active" to SetAssignmentActive::from
         )
 
         /**
@@ -74,7 +78,11 @@ sealed interface ToolCommand {
                 SearchStudent.toMcpTool(),
                 GetSubmissionCode.toMcpTool(),
                 GetSubmissionInfo.toMcpTool(),
-                GetFileContent.toMcpTool()
+                GetFileContent.toMcpTool(),
+                CreateAssignment.toMcpTool(),
+                ConnectAssignment.toMcpTool(),
+                RefreshAssignment.toMcpTool(),
+                SetAssignmentActive.toMcpTool()
             )
         }
     }

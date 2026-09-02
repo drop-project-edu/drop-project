@@ -27,6 +27,8 @@ import org.dropproject.dao.TokenStatus
 import org.dropproject.extensions.realName
 import org.dropproject.mcp.commands.ToolCommand
 import org.dropproject.mcp.data.*
+import org.dropproject.dao.Assignment
+import org.dropproject.repository.AssignmentRepository
 import org.dropproject.repository.PersonalTokenRepository
 import org.dropproject.repository.SubmissionRepository
 import org.dropproject.services.AssignmentService
@@ -50,6 +52,7 @@ class McpService(
     val submissionRepository: SubmissionRepository,
     val assignmentTeacherFiles: AssignmentTeacherFiles,
     val reportService: ReportService,
+    val assignmentRepository: AssignmentRepository,
     val request: HttpServletRequest,
     private val personalTokenRepository: PersonalTokenRepository
 ) {
@@ -63,7 +66,8 @@ class McpService(
             serverInfo = McpServerInfo(
                 name = "DropProject",
                 version = "1.0.0"
-            )
+            ),
+            instructions = SERVER_INSTRUCTIONS
         )
     }
 
@@ -87,8 +91,40 @@ class McpService(
      * @param principal The authenticated principal making the request
      * @return The tool execution result
      */
+    @Transactional  // overrides the read-only transaction of the class, since some of the tools write
     fun callTool(toolName: String, arguments: Map<String, Any>, principal: Principal): McpToolCallResult {
         return ToolCommand.from(toolName, arguments).handle(this, principal)
+    }
+
+    /**
+     * Check that the current user has the TEACHER role, throwing if they don't.
+     *
+     * @param action describes what the user was trying to do, to be included in the error message
+     */
+    fun requireTeacher(action: String) {
+        if (!isTeacher()) {
+            throw AccessDeniedException("Only teachers can $action")
+        }
+    }
+
+    /**
+     * Returns the [Assignment] with the given id, provided that the current user is allowed to change it, i.e.
+     * is a teacher and either owns it or was given access to it.
+     *
+     * @param assignmentId identifies the assignment
+     * @param principal is the authenticated principal making the request
+     * @throws AccessDeniedException if the user is not allowed to change the assignment
+     */
+    fun getAssignmentToChange(assignmentId: String, principal: Principal): Assignment {
+        val assignment = assignmentRepository.findById(assignmentId)
+            .orElseThrow { IllegalArgumentException("Assignment $assignmentId not found") }
+
+        if (!assignmentService.isAuthorizedTeacher(assignment, principal.realName(), request)) {
+            throw AccessDeniedException("Assignment $assignmentId can only be changed by its owner " +
+                    "(${assignment.ownerUserId}) or by the teachers that were given access to it")
+        }
+
+        return assignment
     }
 
     /**
@@ -118,5 +154,36 @@ class McpService(
         } catch (e: Exception) {
             null
         }
+    }
+
+    companion object {
+
+        /**
+         * Given to the client at initialization, to be used in the same way as a system prompt. It only describes
+         * what can't be inferred from the tools themselves, i.e. that an assignment is defined outside of Drop
+         * Project and the order in which the steps that create one have to happen.
+         */
+        val SERVER_INSTRUCTIONS = """
+            Drop Project is a platform where teachers create programming assignments and students submit their
+            code to be automatically compiled, tested and graded.
+
+            An assignment is not defined inside Drop Project: it is defined by a git repository owned by the
+            teacher, containing a Maven project with the teacher's unit tests and the instructions shown to the
+            students. Drop Project keeps a read-only clone of that repository. Creating an assignment is therefore
+            a sequence of steps, and only some of them happen here:
+
+            1. Write the assignment's Maven project and push it to a git repository. Drop Project never creates or
+               writes to repositories, so this has to be done with git and the git host's own tooling.
+            2. create_assignment - registers the assignment and returns an ssh public key.
+            3. Install that public key on the repository as a read-only deploy key. Drop Project doesn't do this
+               either, for the same reason.
+            4. connect_assignment - clones the repository and validates the files that came with it.
+            5. Fix whatever the validation report complains about, push, and call refresh_assignment. Repeat until
+               the report has no errors.
+            6. set_assignment_active - students can only submit after this.
+
+            Only SSH git urls (git@...) are accepted, and an assignment can't be activated while its validation
+            report has errors.
+        """.trimIndent()
     }
 }

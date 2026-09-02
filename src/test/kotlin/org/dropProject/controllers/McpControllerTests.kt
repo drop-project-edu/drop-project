@@ -30,10 +30,20 @@ import org.dropproject.dao.ProjectGroup
 import org.dropproject.dao.Submission
 import org.dropproject.dao.SubmissionStatus
 import org.dropproject.forms.SubmissionMethod
+import org.dropproject.dao.Language
+import org.dropproject.repository.AssigneeRepository
+import org.dropproject.repository.AssignmentACLRepository
 import org.dropproject.repository.AssignmentRepository
 import org.dropproject.repository.AuthorRepository
 import org.dropproject.repository.ProjectGroupRepository
 import org.dropproject.repository.SubmissionRepository
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.containsString
+import org.hamcrest.Matchers.not
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -69,6 +79,12 @@ class McpControllerTests: ApiTestSupport {
 
     @Autowired
     lateinit var submissionRepository: SubmissionRepository
+
+    @Autowired
+    lateinit var assigneeRepository: AssigneeRepository
+
+    @Autowired
+    lateinit var assignmentACLRepository: AssignmentACLRepository
 
     private fun getBearerToken(username: String, role: String = "ROLE_TEACHER"): String {
         // Generate personal token for user and use it directly as Bearer token
@@ -133,6 +149,10 @@ class McpControllerTests: ApiTestSupport {
             .andExpect(content().string(org.hamcrest.Matchers.containsString("\"name\":\"DropProject\"")))
             .andExpect(content().string(org.hamcrest.Matchers.containsString("\"protocolVersion\":\"2024-11-05\"")))
             .andExpect(content().string(org.hamcrest.Matchers.containsString("\"version\":\"1.0.0\"")))
+            // the instructions tell the client the order of the steps that create an assignment, which it can't
+            // infer from the tools alone
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("\"instructions\":")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("read-only deploy key")))
     }
 
     @Test
@@ -239,7 +259,189 @@ class McpControllerTests: ApiTestSupport {
                                 },
                                 "required": ["submissionId", "path"]
                             }
+                        },
+                    {
+                        "name": "create_assignment",
+                        "description": "Create a new assignment in Drop Project and get back the ssh public key that must be installed as a read-only deploy key on its git repository. The repository must already exist and contain the teacher's Maven project (pom.xml, unit tests and instructions) - Drop Project only reads repositories, it never creates or writes to them. The assignment is created inactive and disconnected; call connect_assignment once the deploy key is in place. Only teachers can use this tool.",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "assignmentId": {
+                                    "type": "string",
+                                    "description": "Unique ID of the assignment, also used as the name of the folder where its repository is cloned. Only letters, numbers, hyphens and underscores"
+                                },
+                                "assignmentName": {
+                                    "type": "string",
+                                    "description": "Human readable name of the assignment, shown to the students"
+                                },
+                                "gitRepositoryUrl": {
+                                    "type": "string",
+                                    "description": "SSH url of the git repository that defines the assignment, e.g. 'git@github.com:owner/repo.git'. Only SSH urls are accepted"
+                                },
+                                "language": {
+                                    "type": "string",
+                                    "enum": [
+                                        "JAVA",
+                                        "KOTLIN"
+                                    ],
+                                    "description": "Programming language of the assignment. Defaults to JAVA"
+                                },
+                                "packageName": {
+                                    "type": "string",
+                                    "description": "Java/Kotlin package of the assignment, e.g. 'org.dropproject.samples'. Without it, Drop Project can't filter the stacktraces shown to the students"
+                                },
+                                "submissionMethod": {
+                                    "type": "string",
+                                    "enum": [
+                                        "UPLOAD",
+                                        "GIT"
+                                    ],
+                                    "description": "How students submit: UPLOAD of a zip file or connecting their own GIT repository. Defaults to UPLOAD"
+                                },
+                                "submissionStructure": {
+                                    "type": "string",
+                                    "enum": [
+                                        "COMPACT",
+                                        "MAVEN"
+                                    ],
+                                    "description": "Expected structure of the submitted projects. Defaults to COMPACT"
+                                },
+                                "dueDate": {
+                                    "type": "string",
+                                    "description": "Date after which submissions are marked as late, in ISO-8601 format, e.g. '2026-10-15T23:59'. Optional"
+                                },
+                                "acceptsStudentTests": {
+                                    "type": "boolean",
+                                    "description": "Whether students are expected to submit their own unit tests"
+                                },
+                                "minStudentTests": {
+                                    "type": "number",
+                                    "description": "Minimum number of unit tests that the students must write. Only valid together with acceptsStudentTests"
+                                },
+                                "calculateStudentTestsCoverage": {
+                                    "type": "boolean",
+                                    "description": "Whether to calculate the coverage of the students' own tests. Only valid together with acceptsStudentTests"
+                                },
+                                "hiddenTestsVisibility": {
+                                    "type": "string",
+                                    "enum": [
+                                        "HIDE_EVERYTHING",
+                                        "SHOW_OK_NOK",
+                                        "SHOW_PROGRESS"
+                                    ],
+                                    "description": "How much students get to know about the results of the hidden tests"
+                                },
+                                "mandatoryTestsSuffix": {
+                                    "type": "string",
+                                    "description": "Suffix of the test methods that students must pass to have their submission considered valid. Optional"
+                                },
+                                "leaderboardType": {
+                                    "type": "string",
+                                    "enum": [
+                                        "TESTS_OK",
+                                        "ELLAPSED",
+                                        "COVERAGE"
+                                    ],
+                                    "description": "Criterion used to sort the leaderboard. Without it, the assignment has no leaderboard"
+                                },
+                                "cooloffPeriod": {
+                                    "type": "number",
+                                    "description": "Minutes that students must wait between submissions. Optional"
+                                },
+                                "maxMemoryMb": {
+                                    "type": "number",
+                                    "description": "Memory limit, in MB, of the evaluation of each submission. Must be >= 32. Optional"
+                                },
+                                "minGroupSize": {
+                                    "type": "number",
+                                    "description": "Minimum number of students per group. Without it, the assignment has no group restrictions"
+                                },
+                                "maxGroupSize": {
+                                    "type": "number",
+                                    "description": "Maximum number of students per group. Only valid together with minGroupSize"
+                                },
+                                "visibility": {
+                                    "type": "string",
+                                    "enum": [
+                                        "PUBLIC",
+                                        "ONLY_BY_LINK",
+                                        "PRIVATE"
+                                    ],
+                                    "description": "PUBLIC (listed to every student), ONLY_BY_LINK (the default) or PRIVATE (only the authorized submitters, which then must be filled in)"
+                                },
+                                "assignees": {
+                                    "type": "string",
+                                    "description": "Comma separated user ids of the students who are allowed to submit. Without it, any student can submit"
+                                },
+                                "acl": {
+                                    "type": "string",
+                                    "description": "Comma separated user ids of the other teachers who may change this assignment. The owner must not be included"
+                                },
+                                "tags": {
+                                    "type": "string",
+                                    "description": "Comma separated tags used to organize assignments, e.g. 'project,25/26'"
+                                }
+                            },
+                            "required": [
+                                "assignmentId",
+                                "assignmentName",
+                                "gitRepositoryUrl"
+                            ]
                         }
+                    },
+                    {
+                        "name": "connect_assignment",
+                        "description": "Clone the git repository of an assignment into Drop Project and validate the teacher files it contains, returning the validation report. This only works after the public key returned by create_assignment was installed on the repository as a deploy key, and can safely be called again if it wasn't installed yet. Only the owner of the assignment and the teachers authorized on it can use this tool.",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "assignmentId": {
+                                    "type": "string",
+                                    "description": "The ID of the assignment to connect"
+                                }
+                            },
+                            "required": [
+                                "assignmentId"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "refresh_assignment",
+                        "description": "Pull the git repository of an assignment so that Drop Project picks up the commits that were pushed to it, and validate the assignment files again, returning the new validation report. Use it after fixing whatever the previous report complained about. Only the owner of the assignment and the teachers authorized on it can use this tool.",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "assignmentId": {
+                                    "type": "string",
+                                    "description": "The ID of the assignment to refresh"
+                                }
+                            },
+                            "required": [
+                                "assignmentId"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "set_assignment_active",
+                        "description": "Activate or deactivate an assignment, controlling whether students can submit to it. An assignment can only be activated after it was connected to its git repository and its validation report has no errors. Only the owner of the assignment and the teachers authorized on it can use this tool.",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "assignmentId": {
+                                    "type": "string",
+                                    "description": "The ID of the assignment to activate or deactivate"
+                                },
+                                "active": {
+                                    "type": "boolean",
+                                    "description": "true to let students submit to the assignment, false to stop them"
+                                }
+                            },
+                            "required": [
+                                "assignmentId",
+                                "active"
+                            ]
+                        }
+                    }
                     ]
                 }
             }
@@ -605,5 +807,221 @@ class McpControllerTests: ApiTestSupport {
             .andExpect(status().isOk)
             .andExpect(content().string(org.hamcrest.Matchers.containsString("\"id\":\"test-11\"")))
             .andExpect(content().string(org.hamcrest.Matchers.containsString("Submission not found or inaccessible")))
+    }
+
+    /**
+     * Calls a tool and returns the body of the response, so that the assertions can be made on it.
+     */
+    private fun callTool(toolName: String, arguments: String, authHeader: String): String {
+        val requestJson = """
+            {
+                "jsonrpc": "2.0",
+                "id": "tool-call",
+                "method": "tools/call",
+                "params": {
+                    "name": "$toolName",
+                    "arguments": $arguments
+                }
+            }
+        """.trimIndent()
+
+        return mvc.perform(
+            post("/mcp/")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", authHeader)
+                .content(requestJson)
+        )
+            .andExpect(status().isOk)
+            .andReturn().response.contentAsString
+    }
+
+    @Test
+    fun `mcp create assignment`() {
+        val authHeader = getBearerToken("teacher1")
+
+        val response = callTool("create_assignment", """
+            {
+                "assignmentId": "mcpCreatedAssignment",
+                "assignmentName": "Assignment created through MCP",
+                "gitRepositoryUrl": "git@github.com:drop-project-edu/sampleJavaAssignment.git",
+                "packageName": "org.dropproject.samples",
+                "language": "KOTLIN",
+                "tags": "mcp,sample",
+                "acl": "teacher2",
+                "assignees": "student1,student2"
+            }
+        """.trimIndent(), authHeader)
+
+        // the public key is what the teacher has to install on the repository, so it must come back
+        assertThat(response, containsString("ssh-rsa "))
+        assertThat(response, containsString("settings/keys"))
+        assertThat(response, containsString("connect_assignment"))
+        // the private key must never leave the server
+        assertThat(response, not(containsString("PRIVATE KEY")))
+
+        val assignment = assignmentRepository.findById("mcpCreatedAssignment").get()
+        assertEquals("Assignment created through MCP", assignment.name)
+        assertEquals("teacher1", assignment.ownerUserId)
+        assertEquals(Language.KOTLIN, assignment.language)
+        assertNotNull(assignment.gitRepositoryPubKey)
+        assertNotNull(assignment.gitRepositoryPrivKey)
+
+        // it was not connected to git yet, so it can't be usable
+        assertFalse(assignment.active)
+        assertNull(assignment.gitCurrentHash)
+
+        assertEquals(listOf("student1", "student2"),
+            assigneeRepository.findByAssignmentIdOrderByAuthorUserId("mcpCreatedAssignment").map { it.authorUserId })
+        assertEquals(listOf("teacher2"),
+            assignmentACLRepository.findByAssignmentId("mcpCreatedAssignment").map { it.userId })
+    }
+
+    @Test
+    fun `try to create an assignment with an id that is already taken`() {
+        val authHeader = getBearerToken("teacher1")
+
+        val response = callTool("create_assignment", """
+            {
+                "assignmentId": "testMcpAssignment",
+                "assignmentName": "Duplicated",
+                "gitRepositoryUrl": "git@github.com:drop-project-edu/sampleJavaAssignment.git"
+            }
+        """.trimIndent(), authHeader)
+
+        assertThat(response, containsString("An assignment already exists with this ID"))
+        assertThat(response, containsString("\"isError\":true"))
+
+        // the existing assignment was left alone
+        assertEquals("Test MCP Assignment", assignmentRepository.findById("testMcpAssignment").get().name)
+    }
+
+    @Test
+    fun `try to create an assignment with a non ssh git url`() {
+        val authHeader = getBearerToken("teacher1")
+
+        val response = callTool("create_assignment", """
+            {
+                "assignmentId": "httpsAssignment",
+                "assignmentName": "Cloned over https",
+                "gitRepositoryUrl": "https://github.com/drop-project-edu/sampleJavaAssignment.git"
+            }
+        """.trimIndent(), authHeader)
+
+        assertThat(response, containsString("Only SSH style urls are accepted"))
+        assertFalse(assignmentRepository.existsById("httpsAssignment"))
+    }
+
+    @Test
+    fun `try to create an assignment with an invalid id`() {
+        val authHeader = getBearerToken("teacher1")
+
+        val response = callTool("create_assignment", """
+            {
+                "assignmentId": "not a valid id",
+                "assignmentName": "Invalid",
+                "gitRepositoryUrl": "git@github.com:drop-project-edu/sampleJavaAssignment.git"
+            }
+        """.trimIndent(), authHeader)
+
+        assertThat(response, containsString("must only contain letters, numbers, hyphens and underscores"))
+    }
+
+    @Test
+    fun `try to create an assignment with a student token`() {
+        val authHeader = getBearerToken("student1", "ROLE_STUDENT")
+
+        val response = callTool("create_assignment", """
+            {
+                "assignmentId": "studentCreatedAssignment",
+                "assignmentName": "Created by a student",
+                "gitRepositoryUrl": "git@github.com:drop-project-edu/sampleJavaAssignment.git"
+            }
+        """.trimIndent(), authHeader)
+
+        assertThat(response, containsString("Only teachers can create assignments"))
+        assertFalse(assignmentRepository.existsById("studentCreatedAssignment"))
+    }
+
+    @Test
+    fun `connect assignment reports that the deploy key is missing`() {
+        val authHeader = getBearerToken("teacher1")
+
+        callTool("create_assignment", """
+            {
+                "assignmentId": "notConnectedYet",
+                "assignmentName": "Not connected yet",
+                "gitRepositoryUrl": "git@github.com:drop-project-edu/thisRepositoryDoesNotExist.git"
+            }
+        """.trimIndent(), authHeader)
+
+        val response = callTool("connect_assignment", """{"assignmentId": "notConnectedYet"}""", authHeader)
+
+        assertThat(response, containsString("\"isError\":true"))
+        assertThat(response, containsString("Could not connect"))
+        // the key is repeated, so that it can be installed without having to go back to create_assignment
+        assertThat(response, containsString("ssh-rsa "))
+        assertThat(response, containsString("connect_assignment again"))
+
+        assertNull(assignmentRepository.findById("notConnectedYet").get().gitCurrentHash)
+    }
+
+    @Test
+    fun `try to connect an assignment of another teacher`() {
+        val authHeader = getBearerToken("teacher1")
+
+        callTool("create_assignment", """
+            {
+                "assignmentId": "ownedByTeacher1",
+                "assignmentName": "Owned by teacher1",
+                "gitRepositoryUrl": "git@github.com:drop-project-edu/sampleJavaAssignment.git"
+            }
+        """.trimIndent(), authHeader)
+
+        val response = callTool("connect_assignment", """{"assignmentId": "ownedByTeacher1"}""",
+            getBearerToken("teacher2"))
+
+        assertThat(response, containsString("can only be changed by its owner"))
+    }
+
+    @Test
+    fun `try to activate an assignment that is not connected to git`() {
+        val authHeader = getBearerToken("teacher1")
+
+        callTool("create_assignment", """
+            {
+                "assignmentId": "neverConnected",
+                "assignmentName": "Never connected",
+                "gitRepositoryUrl": "git@github.com:drop-project-edu/sampleJavaAssignment.git"
+            }
+        """.trimIndent(), authHeader)
+
+        val response = callTool("set_assignment_active",
+            """{"assignmentId": "neverConnected", "active": true}""", authHeader)
+
+        assertThat(response, containsString("\"isError\":true"))
+        assertThat(response, containsString("not connected to its git repository yet"))
+        assertFalse(assignmentRepository.findById("neverConnected").get().active)
+    }
+
+    @Test
+    fun `deactivate an assignment`() {
+        val authHeader = getBearerToken("teacher1")
+
+        // testMcpAssignment is created active by the fixture
+        val response = callTool("set_assignment_active",
+            """{"assignmentId": "testMcpAssignment", "active": false}""", authHeader)
+
+        assertThat(response, containsString("is now inactive"))
+        assertFalse(assignmentRepository.findById("testMcpAssignment").get().active)
+    }
+
+    @Test
+    fun `try to refresh an assignment that was never connected to git`() {
+        val authHeader = getBearerToken("teacher1")
+
+        val response = callTool("refresh_assignment", """{"assignmentId": "testMcpAssignment"}""", authHeader)
+
+        assertThat(response, containsString("\"isError\":true"))
+        assertThat(response, containsString("Could not refresh"))
     }
 }

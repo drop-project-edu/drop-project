@@ -39,6 +39,7 @@ import org.dropproject.forms.AssignmentForm
 import org.dropproject.forms.SubmissionMethod
 import org.dropproject.repository.*
 import org.eclipse.jgit.api.Git
+import org.eclipse.jgit.api.errors.RefNotAdvertisedException
 import org.kohsuke.github.GitHub
 import org.slf4j.LoggerFactory
 import org.dropproject.config.DropProjectProperties
@@ -57,6 +58,20 @@ import java.security.Principal
 import java.util.*
 
 data class AssignmentImportResult(val type: String, val message: String, val redirectUrl: String)
+
+/**
+ * A problem that was found while validating an [AssignmentForm]. [field] is the name of the offending form field
+ * and [code] the message code, so that the web layer can turn this into a BindingResult rejection, while the
+ * callers that have no form to go back to (e.g. the MCP tools) can just report [message].
+ */
+data class AssignmentFormError(val field: String, val code: String, val message: String)
+
+/**
+ * The outcome of connecting an [Assignment] to its git repository, or of refreshing it from there. [error] is null
+ * if the repository was successfully cloned or pulled, and [validationFailed] tells whether the assignment files
+ * that came with it have problems that prevent the assignment from being used by students.
+ */
+data class AssignmentGitConnectionResult(val error: String?, val validationFailed: Boolean = false)
 
 /**
  * AssignmentService provides [Assignment] related functionality (e.g. list of assignments).
@@ -363,6 +378,320 @@ class AssignmentService(
         clearAllTags(existingAssignment)
         tagNames?.forEach {
             addTagToAssignment(existingAssignment, it)
+        }
+    }
+
+    /**
+     * Validates the rules of an [AssignmentForm] that the bean validation annotations of the form itself can't
+     * express, because they involve more than one field or need to look into the database.
+     *
+     * The cross-field rules are all evaluated together, so that the web form can show every problem at once. The
+     * rules that only apply to the creation of a new assignment are only evaluated when none of the previous ones
+     * failed, and the first one that fails is the only one reported, since each of them makes the next meaningless.
+     *
+     * @param assignmentForm is the [AssignmentForm] to validate
+     * @param principal is a [Principal] representing the user making the request
+     * @return the problems that were found, or an empty list if the form is valid
+     */
+    fun validateAssignmentForm(assignmentForm: AssignmentForm, principal: Principal): List<AssignmentFormError> {
+
+        val errors = mutableListOf<AssignmentFormError>()
+
+        if (assignmentForm.acceptsStudentTests &&
+            (assignmentForm.minStudentTests == null || assignmentForm.minStudentTests!! < 1)) {
+            errors.add(AssignmentFormError("acceptsStudentTests", "acceptsStudentTests.atLeastOne",
+                "Error: You must require at least one student test"))
+        }
+
+        if (!assignmentForm.acceptsStudentTests && assignmentForm.minStudentTests != null) {
+            errors.add(AssignmentFormError("acceptsStudentTests", "acceptsStudentTests.mustCheck",
+                "Error: If you require ${assignmentForm.minStudentTests} student tests, you must check 'Accepts student tests'"))
+        }
+
+        if (!assignmentForm.acceptsStudentTests && assignmentForm.calculateStudentTestsCoverage) {
+            errors.add(AssignmentFormError("acceptsStudentTests", "acceptsStudentTests.mustCheck",
+                "Error: If you want to calculate coverage of student tests, you must check 'Accepts student tests'"))
+        }
+
+        if (assignmentForm.minGroupSize != null && assignmentForm.minGroupSize!! < 1) {
+            errors.add(AssignmentFormError("minGroupSize", "minGroupSize.greaterThan1",
+                "Error: Min group size must be >= 1"))
+        }
+
+        if (assignmentForm.maxGroupSize != null && assignmentForm.minGroupSize == null) {
+            errors.add(AssignmentFormError("minGroupSize", "minGroupSize.mustExist",
+                "Error: If you fill in the max group size, you must also fill in the min group size"))
+        }
+
+        if (assignmentForm.minGroupSize != null && assignmentForm.maxGroupSize != null &&
+            assignmentForm.minGroupSize!! > assignmentForm.maxGroupSize!!) {
+            errors.add(AssignmentFormError("minGroupSize", "minGroupSize.maxGreaterThanMin",
+                "Error: Max must be greater or equal to min"))
+        }
+
+        if (!assignmentForm.exceptions.isNullOrBlank() && assignmentForm.minGroupSize == null) {
+            errors.add(AssignmentFormError("exceptions", "exceptions.minSizeNotSet",
+                "Error: Exceptions to group size should only be filled in when you set the min group size"))
+        }
+
+        if (assignmentForm.visibility == AssignmentVisibility.PRIVATE && assignmentForm.assignees.isNullOrEmpty()) {
+            errors.add(AssignmentFormError("assignees", "assignees.mustBeFilled",
+                "Error: For PRIVATE assignments, you have to fill in the authorized submitters"))
+        }
+
+        if (errors.isEmpty() && !assignmentForm.editMode) {
+            validateNewAssignmentForm(assignmentForm, principal)?.let { errors.add(it) }
+        }
+
+        errors.forEach { LOG.warn(it.message) }
+
+        return errors
+    }
+
+    /**
+     * Validates the rules that only apply to the creation of a new [Assignment], returning the first problem that
+     * was found. The fields that the bean validation of the form is responsible for are skipped when they are
+     * missing, since this may be called before those errors were reported to the user.
+     */
+    private fun validateNewAssignmentForm(assignmentForm: AssignmentForm, principal: Principal): AssignmentFormError? {
+
+        if (assignmentForm.acl?.split(",")?.contains(principal.realName()) == true) {
+            return AssignmentFormError("acl", "acl.includeOwner",
+                "Error: You don't need to give autorization to yourself, only other teachers")
+        }
+
+        val assignmentId = assignmentForm.assignmentId ?: return null
+
+        // check if it already exists an assignment with this id
+        if (assignmentRepository.existsById(assignmentId)) {
+            return AssignmentFormError("assignmentId", "assignment.duplicate",
+                "Error: An assignment already exists with this ID")
+        }
+
+        // verify if there is another (still existing) assignment connected to this git repository folder.
+        // Normally impossible for a brand new assignment (gitRepositoryFolder is always == assignmentId, and
+        // we already checked above that no assignment exists with this id), but an imported assignment can
+        // have a gitRepositoryFolder that doesn't match its own id, so this guards against that collision
+        if (assignmentRepository.findByGitRepositoryFolder(assignmentId) != null) {
+            return AssignmentFormError("assignmentId", "assignment.duplicateFolder",
+                "Error: There is already an assignment using this git repository folder")
+        }
+
+        val gitRepositoryUrl = assignmentForm.gitRepositoryUrl ?: return null
+
+        if (!gitRepositoryUrl.startsWith("git@")) {
+            return AssignmentFormError("gitRepositoryUrl", "repository.notSSh",
+                "Error: Only SSH style urls are accepted (must start with 'git@')")
+        }
+
+        return null
+    }
+
+    /**
+     * Creates a new [Assignment] based on the contents of an [AssignmentForm], together with its group
+     * restrictions and its tags.
+     *
+     * The returned assignment is not saved and is not yet connected to its git repository, which is the
+     * responsibility of the caller (see [connectAssignmentToGitRepository]).
+     *
+     * @param assignmentForm, the AssignmentForm from which the Assignment contents will be copied
+     * @param principal is a [Principal] representing the user making the request
+     * @return the created Assignment
+     */
+    fun buildAssignmentFromForm(assignmentForm: AssignmentForm, principal: Principal): Assignment {
+        val newAssignment = Assignment(id = assignmentForm.assignmentId!!, name = assignmentForm.assignmentName!!,
+            packageName = assignmentForm.assignmentPackage, language = assignmentForm.language!!,
+            submissionStructure = assignmentForm.submissionStructure,
+            dueDate = if (assignmentForm.dueDate != null) java.sql.Timestamp.valueOf(assignmentForm.dueDate) else null,
+            acceptsStudentTests = assignmentForm.acceptsStudentTests,
+            minStudentTests = assignmentForm.minStudentTests,
+            calculateStudentTestsCoverage = assignmentForm.calculateStudentTestsCoverage,
+            coverageVisibleToStudents = assignmentForm.coverageVisibleToStudents,
+            mandatoryTestsSuffix = assignmentForm.mandatoryTestsSuffix,
+            cooloffPeriod = assignmentForm.cooloffPeriod,
+            maxMemoryMb = assignmentForm.maxMemoryMb, submissionMethod = assignmentForm.submissionMethod!!,
+            gitRepositoryUrl = assignmentForm.gitRepositoryUrl!!, ownerUserId = principal.realName(),
+            gitRepositoryFolder = assignmentForm.assignmentId!!, showLeaderBoard = assignmentForm.leaderboardType != null,
+            hiddenTestsVisibility = assignmentForm.hiddenTestsVisibility,
+            leaderboardType = assignmentForm.leaderboardType,
+            visibility = assignmentForm.visibility)
+
+        // we only need to check minGroupSize since maxGroupSize and exceptions depend on this field
+        if (assignmentForm.minGroupSize != null) {
+            val projectGroupRestrictions = ProjectGroupRestrictions(minGroupSize = assignmentForm.minGroupSize!!,
+                maxGroupSize = assignmentForm.maxGroupSize,
+                exceptions = assignmentForm.exceptions)
+            projectGroupRestrictionsRepository.save(projectGroupRestrictions)
+            newAssignment.projectGroupRestrictions = projectGroupRestrictions
+        }
+
+        // associate tags
+        val tagNames = assignmentForm.assignmentTags?.lowercase(Locale.getDefault())?.split(",")
+        tagNames?.forEach {
+            addTagToAssignment(newAssignment, it)
+        }
+        return newAssignment
+    }
+
+    /**
+     * Replaces the ACL and the assignees of [assignment] with the ones described in [assignmentForm].
+     *
+     * @return the problem that was found with the ACL, or null if it was applied successfully. Note that the
+     * assignees are only applied when the ACL is valid.
+     */
+    fun updateAssignmentACLAndAssignees(assignment: Assignment, assignmentForm: AssignmentForm): AssignmentFormError? {
+
+        if (!(assignmentForm.acl.isNullOrBlank())) {
+            val userIds = assignmentForm.acl!!.split(",")
+
+            // Validate each userId
+            for (userId in userIds) {
+                val trimmedUserId = userId.trim()
+                if (trimmedUserId.contains(" ") || trimmedUserId.contains(";")) {
+                    return AssignmentFormError("acl", "acl.invalidFormat",
+                        "Error: User IDs must be comma-separated. '$trimmedUserId' contains invalid characters (spaces or semicolons).")
+                }
+            }
+
+            // first delete existing to prevent duplicates
+            assignmentACLRepository.deleteByAssignmentId(assignment.id)
+
+            for (userId in userIds) {
+                assignmentACLRepository.save(AssignmentACL(assignmentId = assignment.id, userId = userId.trim()))
+            }
+        }
+
+        // first delete all assignees to prevent duplicates
+        assigneeRepository.deleteByAssignmentId(assignment.id)
+        assigneeRepository.flush()  // due to some weird issue, I have to flush (see: https://github.com/spring-projects/spring-data-jpa/issues/1100)
+
+        val assigneesStr = assignmentForm.assignees?.split(",").orEmpty().map { it -> it.trim() }
+        for (assigneeStr in assigneesStr) {
+            if (!assigneeStr.isBlank()) {
+                assigneeRepository.save(Assignee(assignmentId = assignment.id, authorUserId = assigneeStr))
+            }
+        }
+
+        return null
+    }
+
+    /**
+     * Generates a new ssh key pair for [assignment] and stores it, replacing any key pair that it already had.
+     *
+     * Drop Project only ever reads the assignment's repository, so the public key is meant to be installed on it
+     * as a read-only deploy key. The private key never leaves the server.
+     *
+     * @param assignment is the [Assignment] that will be connected to a git repository
+     * @return the public key that must be installed on the repository
+     */
+    fun generateGitConnectionKeyPair(assignment: Assignment): String {
+        val (privKey, pubKey) = gitClient.generateKeyPair()
+
+        assignment.gitRepositoryPrivKey = String(privKey)
+        assignment.gitRepositoryPubKey = String(pubKey)
+        assignmentRepository.save(assignment)
+
+        return assignment.gitRepositoryPubKey!!
+    }
+
+    /**
+     * Clones the git repository of [assignment] using the private key that was generated for it, and validates the
+     * assignment files that were just cloned.
+     *
+     * This is only expected to succeed after the matching public key was installed as a deploy key on the
+     * repository, so it is safe to call again after that was done.
+     *
+     * @param assignment is the [Assignment] to connect
+     * @param principal is a [Principal] representing the user making the request
+     * @return the outcome of the connection
+     */
+    fun connectAssignmentToGitRepository(assignment: Assignment, principal: Principal): AssignmentGitConnectionResult {
+
+        if (assignment.gitRepositoryPrivKey == null) {
+            LOG.warn("[${assignment.id}] Trying to connect to git without a private key")
+            return AssignmentGitConnectionResult(
+                error = "Something went wrong with the credentials generation. Please try again")
+        }
+
+        val directory = File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder)
+        if (directory.exists()) {
+            directory.deleteRecursively()
+        }
+
+        val gitRepository = assignment.gitRepositoryUrl
+        try {
+            gitClient.clone(gitRepository, directory, assignment.gitRepositoryPrivKey!!.toByteArray()).use { }
+            LOG.info("[${assignment.id}] Successfuly cloned ${gitRepository} to ${directory}")
+
+            // update hash
+            Git.open(directory).use { git ->
+                assignment.gitCurrentHash = gitClient.getLastCommitInfo(git)?.sha1
+            }
+            assignmentRepository.save(assignment)
+        } catch (e: Exception) {
+            LOG.info("Error cloning ${gitRepository} - ${e}")
+            return AssignmentGitConnectionResult(
+                error = "Error cloning ${gitRepository} - ${e.message}. Are you sure you added the public key to the repository?")
+        }
+
+        // check that the assignment repository is a valid assignment structure
+        if (validateAndStoreReport(assignment, principal)) {
+            assignmentRepository.save(assignment)  // assignment.buildResult was updated
+            LOG.info("[${assignment.id}] Assignment has problems. Please check the 'Validation Report'")
+            return AssignmentGitConnectionResult(error = null, validationFailed = true)
+        }
+
+        return AssignmentGitConnectionResult(error = null)
+    }
+
+    /**
+     * Pulls the git repository of [assignment], so that Drop Project picks up the changes that the teacher pushed
+     * to it, and validates the assignment files again.
+     *
+     * @param assignment is the [Assignment] to refresh
+     * @param principal is a [Principal] representing the user making the request
+     * @return the outcome of the refresh
+     */
+    fun refreshAssignmentFromGitRepository(assignment: Assignment, principal: Principal): AssignmentGitConnectionResult {
+
+        if (assignment.gitRepositoryPrivKey == null) {
+            LOG.warn("Unable to pull git repository for ${assignment.id} because private key is null")
+            return AssignmentGitConnectionResult(error = "Error pulling from ${assignment.gitRepositoryUrl}")
+        }
+
+        val directory = File(dropProjectProperties.assignments.rootLocation, assignment.gitRepositoryFolder)
+        try {
+            LOG.info("Pulling git repository for ${assignment.id}")
+            gitClient.pull(directory, assignment.gitRepositoryPrivKey!!.toByteArray())
+
+            // update hash
+            val git = Git.open(directory)
+            assignment.gitCurrentHash = gitClient.getLastCommitInfo(git)?.sha1
+
+            // remove the reportId from all git submissions (if there are any) to signal the student that he should
+            // generate a report again
+            val gitSubmissionsForThisAssignment = gitSubmissionRepository.findByAssignmentId(assignment.id)
+            for (gitSubmission in gitSubmissionsForThisAssignment) {
+                gitSubmission.lastSubmissionId = null
+                gitSubmissionRepository.save(gitSubmission)
+            }
+
+            if (!gitSubmissionsForThisAssignment.isEmpty()) {
+                LOG.info("Reset reportId for ${gitSubmissionsForThisAssignment.size} git submissions")
+            }
+
+            // revalidate the assignment
+            val validationFailed = validateAndStoreReport(assignment, principal)
+
+            return AssignmentGitConnectionResult(error = null, validationFailed = validationFailed)
+
+        } catch (re: RefNotAdvertisedException) {
+            LOG.warn("Couldn't pull git repository for ${assignment.id}: head is invalid")
+            return AssignmentGitConnectionResult(
+                error = "Error pulling from ${assignment.gitRepositoryUrl}. Probably you don't have any commits yet.")
+        } catch (e: Exception) {
+            LOG.warn("Couldn't pull git repository for ${assignment.id}", e)
+            return AssignmentGitConnectionResult(error = "Error pulling from ${assignment.gitRepositoryUrl}")
         }
     }
 
