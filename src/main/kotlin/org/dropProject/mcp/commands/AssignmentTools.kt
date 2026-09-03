@@ -22,11 +22,69 @@ package org.dropproject.mcp.commands
 import org.dropproject.dao.Assignment
 import org.dropproject.dao.AssignmentReport
 import org.dropproject.services.AssignmentValidator
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.util.Date
+
+/**
+ * The date as a [LocalDateTime] in the server's time zone, which is how [org.dropproject.forms.AssignmentForm]
+ * holds the due date.
+ */
+internal fun Date.toLocalDateTime(): LocalDateTime =
+    toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime()
+
+/**
+ * Formats a date the way the assignment tools expect to receive it, e.g. '2026-10-15T23:59'.
+ */
+internal fun Date.toIso8601(): String = toLocalDateTime().toString()
 
 /**
  * Helpers shared by the tools that create and maintain assignments.
  */
 object AssignmentTools {
+
+    /**
+     * The whole configuration of [assignment], keyed by the names of the create_assignment and edit_assignment
+     * arguments that set each setting, so that an assignment can be recreated from this listing and so that the
+     * changes made by an edit can be described in the same terms that requested them.
+     *
+     * Empty and null values are rendered as "not set", to tell the settings that the assignment doesn't use from
+     * the ones that this listing forgot.
+     */
+    fun settings(assignment: Assignment, assignees: List<String>, acl: List<String>,
+                 tags: List<String>): Map<String, String> {
+
+        val settings = LinkedHashMap<String, String>()
+
+        fun setting(name: String, value: Any?) {
+            settings[name] = value?.toString()?.ifBlank { null } ?: "not set"
+        }
+
+        setting("assignmentName", assignment.name)
+        setting("gitRepositoryUrl", assignment.gitRepositoryUrl)
+        setting("language", assignment.language)
+        setting("packageName", assignment.packageName)
+        setting("submissionMethod", assignment.submissionMethod)
+        setting("submissionStructure", assignment.submissionStructure)
+        setting("dueDate", assignment.dueDate?.toIso8601())
+        setting("acceptsStudentTests", assignment.acceptsStudentTests)
+        setting("minStudentTests", assignment.minStudentTests)
+        setting("calculateStudentTestsCoverage", assignment.calculateStudentTestsCoverage)
+        setting("coverageVisibleToStudents", assignment.coverageVisibleToStudents)
+        setting("hiddenTestsVisibility", assignment.hiddenTestsVisibility)
+        setting("mandatoryTestsSuffix", assignment.mandatoryTestsSuffix)
+        setting("leaderboardType", assignment.leaderboardType)
+        setting("cooloffPeriod", assignment.cooloffPeriod)
+        setting("maxMemoryMb", assignment.maxMemoryMb)
+        setting("minGroupSize", assignment.projectGroupRestrictions?.minGroupSize)
+        setting("maxGroupSize", assignment.projectGroupRestrictions?.maxGroupSize)
+        setting("visibility", assignment.visibility)
+        setting("assignees", assignees.joinToString(","))
+        setting("acl", acl.joinToString(","))
+        setting("tags", tags.joinToString(","))
+
+        return settings
+    }
 
     /**
      * Renders the validation report of an assignment, i.e. what Drop Project has to say about the contents of the

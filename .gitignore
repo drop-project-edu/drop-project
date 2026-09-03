@@ -10,3 +10,4 @@ plagiarism
 /src/main/resources/config
 .env
 backups
+/.claude/skills/

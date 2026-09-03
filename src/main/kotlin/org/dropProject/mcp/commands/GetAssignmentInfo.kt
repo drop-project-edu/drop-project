@@ -24,23 +24,6 @@ import org.dropproject.mcp.data.McpTool
 import org.dropproject.mcp.data.McpToolCallResult
 import org.dropproject.mcp.services.McpService
 import java.security.Principal
-import java.time.ZoneId
-import java.util.Date
-
-/**
- * Appends a line describing one of the assignment's settings. Empty and null values are described as
- * "not set", to tell the settings that the assignment doesn't use from the ones that this listing forgot.
- */
-private fun StringBuilder.appendSetting(name: String, value: Any?) {
-    val description = value?.toString()?.ifBlank { null } ?: "not set"
-    appendLine("**$name:** $description")
-}
-
-/**
- * Formats a date the way create_assignment expects to receive it, e.g. '2026-10-15T23:59'.
- */
-private fun Date.toIso8601(): String =
-    toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime().toString()
 
 /**
  * Command to retrieve comprehensive information about a programming assignment.
@@ -69,27 +52,12 @@ data class GetAssignmentInfo(val assignmentId: String) : ToolCommand {
             // that an assignment can be recreated from this listing (e.g. for a new edition of the same course)
             appendLine("\n## Configuration")
             appendLine("Named after the create_assignment arguments that set each setting.\n")
-            appendSetting("assignmentName", assignment.name)
-            appendSetting("gitRepositoryUrl", assignment.gitRepositoryUrl)
-            appendSetting("language", assignment.language)
-            appendSetting("packageName", assignment.packageName)
-            appendSetting("submissionMethod", assignment.submissionMethod)
-            appendSetting("submissionStructure", assignment.submissionStructure)
-            appendSetting("dueDate", assignment.dueDate?.toIso8601())
-            appendSetting("acceptsStudentTests", assignment.acceptsStudentTests)
-            appendSetting("minStudentTests", assignment.minStudentTests)
-            appendSetting("calculateStudentTestsCoverage", assignment.calculateStudentTestsCoverage)
-            appendSetting("hiddenTestsVisibility", assignment.hiddenTestsVisibility)
-            appendSetting("mandatoryTestsSuffix", assignment.mandatoryTestsSuffix)
-            appendSetting("leaderboardType", assignment.leaderboardType)
-            appendSetting("cooloffPeriod", assignment.cooloffPeriod)
-            appendSetting("maxMemoryMb", assignment.maxMemoryMb)
-            appendSetting("minGroupSize", assignment.projectGroupRestrictions?.minGroupSize)
-            appendSetting("maxGroupSize", assignment.projectGroupRestrictions?.maxGroupSize)
-            appendSetting("visibility", assignment.visibility)
-            appendSetting("assignees", assignmentDetail.assignees.joinToString(",") { it.authorUserId })
-            appendSetting("acl", assignmentDetail.acl.joinToString(",") { it.userId })
-            appendSetting("tags", assignmentDetail.tags.joinToString(","))
+            AssignmentTools.settings(
+                assignment,
+                assignees = assignmentDetail.assignees.map { it.authorUserId },
+                acl = assignmentDetail.acl.map { it.userId },
+                tags = assignmentDetail.tags
+            ).forEach { (name, value) -> appendLine("**$name:** $value") }
 
             if (assignment.instructions != null) {
                 appendLine("\n## Instructions")

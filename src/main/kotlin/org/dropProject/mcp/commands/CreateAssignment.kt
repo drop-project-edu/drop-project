@@ -31,8 +31,6 @@ import org.dropproject.mcp.data.McpTool
 import org.dropproject.mcp.data.McpToolCallResult
 import org.dropproject.mcp.services.McpService
 import java.security.Principal
-import java.time.LocalDateTime
-import java.time.format.DateTimeParseException
 
 /**
  * Command to create a new assignment, together with the ssh key pair that Drop Project will use to read the git
@@ -110,7 +108,8 @@ data class CreateAssignment(val assignmentForm: AssignmentForm) : ToolCommand {
                         "exist and contain the teacher's Maven project (pom.xml, unit tests and instructions) - " +
                         "Drop Project only reads repositories, it never creates or writes to them. The assignment " +
                         "is created inactive and disconnected; call connect_assignment once the deploy key is in " +
-                        "place. Only teachers can use this tool.",
+                        "place, and edit_assignment to change any of these settings later. Only teachers can use " +
+                        "this tool.",
                 inputSchema = mapOf(
                     "type" to "object",
                     "properties" to mapOf(
@@ -167,6 +166,11 @@ data class CreateAssignment(val assignmentForm: AssignmentForm) : ToolCommand {
                             "type" to "boolean",
                             "description" to "Whether to calculate the coverage of the students' own tests. Only " +
                                     "valid together with acceptsStudentTests"
+                        ),
+                        "coverageVisibleToStudents" to mapOf(
+                            "type" to "boolean",
+                            "description" to "Whether the students get to see the coverage of their own tests. " +
+                                    "Only meaningful together with calculateStudentTestsCoverage"
                         ),
                         "hiddenTestsVisibility" to mapOf(
                             "type" to "string",
@@ -241,87 +245,49 @@ data class CreateAssignment(val assignmentForm: AssignmentForm) : ToolCommand {
          */
         fun from(arguments: Map<String, Any>): CreateAssignment {
 
-            val assignmentId = requiredString(arguments, "assignmentId")
+            val settings = AssignmentArguments(arguments)
+
+            val assignmentId = settings.requiredString("assignmentId")
             if (!assignmentId.matches(Regex("^[a-zA-Z0-9_-]+$"))) {
                 throw IllegalArgumentException(
                     "assignmentId must only contain letters, numbers, hyphens and underscores")
             }
 
-            val maxMemoryMb = number(arguments, "maxMemoryMb")
+            val maxMemoryMb = settings.number("maxMemoryMb")
             if (maxMemoryMb != null && maxMemoryMb < 32) {
                 throw IllegalArgumentException("maxMemoryMb must be >= 32")
             }
 
             val form = AssignmentForm(
                 assignmentId = assignmentId,
-                assignmentName = requiredString(arguments, "assignmentName"),
-                gitRepositoryUrl = requiredString(arguments, "gitRepositoryUrl"),
-                assignmentPackage = string(arguments, "packageName"),
-                assignmentTags = string(arguments, "tags"),
-                language = enum(arguments, "language", Language.entries) ?: Language.JAVA,
-                submissionMethod = enum(arguments, "submissionMethod", SubmissionMethod.entries)
+                assignmentName = settings.requiredString("assignmentName"),
+                gitRepositoryUrl = settings.requiredString("gitRepositoryUrl"),
+                assignmentPackage = settings.string("packageName"),
+                assignmentTags = settings.string("tags"),
+                language = settings.enum("language", Language.entries) ?: Language.JAVA,
+                submissionMethod = settings.enum("submissionMethod", SubmissionMethod.entries)
                     ?: SubmissionMethod.UPLOAD,
-                submissionStructure = enum(arguments, "submissionStructure", SubmissionStructure.entries)
+                submissionStructure = settings.enum("submissionStructure", SubmissionStructure.entries)
                     ?: SubmissionStructure.COMPACT,
-                dueDate = dateTime(arguments, "dueDate"),
-                acceptsStudentTests = boolean(arguments, "acceptsStudentTests") ?: false,
-                minStudentTests = number(arguments, "minStudentTests"),
-                calculateStudentTestsCoverage = boolean(arguments, "calculateStudentTestsCoverage") ?: false,
-                coverageVisibleToStudents = boolean(arguments, "coverageVisibleToStudents") ?: false,
-                hiddenTestsVisibility = enum(arguments, "hiddenTestsVisibility", TestVisibility.entries),
-                mandatoryTestsSuffix = string(arguments, "mandatoryTestsSuffix"),
-                leaderboardType = enum(arguments, "leaderboardType", LeaderboardType.entries),
-                cooloffPeriod = number(arguments, "cooloffPeriod"),
+                dueDate = settings.dateTime("dueDate"),
+                acceptsStudentTests = settings.boolean("acceptsStudentTests") ?: false,
+                minStudentTests = settings.number("minStudentTests"),
+                calculateStudentTestsCoverage = settings.boolean("calculateStudentTestsCoverage") ?: false,
+                coverageVisibleToStudents = settings.boolean("coverageVisibleToStudents") ?: false,
+                hiddenTestsVisibility = settings.enum("hiddenTestsVisibility", TestVisibility.entries),
+                mandatoryTestsSuffix = settings.string("mandatoryTestsSuffix"),
+                leaderboardType = settings.enum("leaderboardType", LeaderboardType.entries),
+                cooloffPeriod = settings.number("cooloffPeriod"),
                 maxMemoryMb = maxMemoryMb,
-                minGroupSize = number(arguments, "minGroupSize"),
-                maxGroupSize = number(arguments, "maxGroupSize"),
-                visibility = enum(arguments, "visibility", AssignmentVisibility.entries)
+                minGroupSize = settings.number("minGroupSize"),
+                maxGroupSize = settings.number("maxGroupSize"),
+                visibility = settings.enum("visibility", AssignmentVisibility.entries)
                     ?: AssignmentVisibility.ONLY_BY_LINK,
-                assignees = string(arguments, "assignees"),
-                acl = string(arguments, "acl")
+                assignees = settings.string("assignees"),
+                acl = settings.string("acl")
             )
 
             return CreateAssignment(form)
-        }
-
-        private fun requiredString(arguments: Map<String, Any>, name: String): String {
-            return string(arguments, name)
-                ?: throw IllegalArgumentException("$name is required and must be a non empty string")
-        }
-
-        private fun string(arguments: Map<String, Any>, name: String): String? {
-            val value = arguments[name] ?: return null
-            if (value !is String) {
-                throw IllegalArgumentException("$name must be a string")
-            }
-            return value.ifBlank { null }
-        }
-
-        private fun number(arguments: Map<String, Any>, name: String): Int? {
-            val value = arguments[name] ?: return null
-            return (value as? Number)?.toInt()
-                ?: throw IllegalArgumentException("$name must be a number")
-        }
-
-        private fun boolean(arguments: Map<String, Any>, name: String): Boolean? {
-            val value = arguments[name] ?: return null
-            return value as? Boolean
-                ?: throw IllegalArgumentException("$name must be a boolean")
-        }
-
-        private fun <T : Enum<T>> enum(arguments: Map<String, Any>, name: String, values: List<T>): T? {
-            val value = string(arguments, name) ?: return null
-            return values.find { it.name.equals(value, ignoreCase = true) }
-                ?: throw IllegalArgumentException("$name must be one of ${values.joinToString { it.name }}")
-        }
-
-        private fun dateTime(arguments: Map<String, Any>, name: String): LocalDateTime? {
-            val value = string(arguments, name) ?: return null
-            return try {
-                LocalDateTime.parse(value)
-            } catch (e: DateTimeParseException) {
-                throw IllegalArgumentException("$name must be a date in ISO-8601 format, e.g. '2026-10-15T23:59'")
-            }
         }
     }
 }

@@ -267,7 +267,7 @@ class McpControllerTests: ApiTestSupport {
                         },
                     {
                         "name": "create_assignment",
-                        "description": "Create a new assignment in Drop Project and get back the ssh public key that must be installed as a read-only deploy key on its git repository. The repository must already exist and contain the teacher's Maven project (pom.xml, unit tests and instructions) - Drop Project only reads repositories, it never creates or writes to them. The assignment is created inactive and disconnected; call connect_assignment once the deploy key is in place. Only teachers can use this tool.",
+                        "description": "Create a new assignment in Drop Project and get back the ssh public key that must be installed as a read-only deploy key on its git repository. The repository must already exist and contain the teacher's Maven project (pom.xml, unit tests and instructions) - Drop Project only reads repositories, it never creates or writes to them. The assignment is created inactive and disconnected; call connect_assignment once the deploy key is in place, and edit_assignment to change any of these settings later. Only teachers can use this tool.",
                         "inputSchema": {
                             "type": "object",
                             "properties": {
@@ -326,6 +326,10 @@ class McpControllerTests: ApiTestSupport {
                                 "calculateStudentTestsCoverage": {
                                     "type": "boolean",
                                     "description": "Whether to calculate the coverage of the students' own tests. Only valid together with acceptsStudentTests"
+                                },
+                                "coverageVisibleToStudents": {
+                                    "type": "boolean",
+                                    "description": "Whether the students get to see the coverage of their own tests. Only meaningful together with calculateStudentTestsCoverage"
                                 },
                                 "hiddenTestsVisibility": {
                                     "type": "string",
@@ -391,6 +395,133 @@ class McpControllerTests: ApiTestSupport {
                                 "assignmentId",
                                 "assignmentName",
                                 "gitRepositoryUrl"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "edit_assignment",
+                        "description": "Change the configuration of an assignment that already exists in Drop Project. Only the settings that are passed are changed: the ones that are left out keep their current value, and the ones that are passed empty are cleared. The id of the assignment and the git repository that defines it can't be changed. Changing a setting that Drop Project cross-checks against the files of that repository validates the assignment again, and marks it inactive if they no longer match. Only the owner of the assignment and the teachers authorized on it can use this tool.",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "assignmentId": {
+                                    "type": "string",
+                                    "description": "The ID of the assignment to change. It is not itself changeable"
+                                },
+                                "assignmentName": {
+                                    "type": "string",
+                                    "description": "Human readable name of the assignment, shown to the students"
+                                },
+                                "language": {
+                                    "type": "string",
+                                    "enum": [
+                                        "JAVA",
+                                        "KOTLIN"
+                                    ],
+                                    "description": "Programming language of the assignment"
+                                },
+                                "packageName": {
+                                    "type": "string",
+                                    "description": "Java/Kotlin package of the assignment, e.g. 'org.dropproject.samples'. Without it, Drop Project can't filter the stacktraces shown to the students"
+                                },
+                                "submissionMethod": {
+                                    "type": "string",
+                                    "enum": [
+                                        "UPLOAD",
+                                        "GIT"
+                                    ],
+                                    "description": "How students submit: UPLOAD of a zip file or connecting their own GIT repository"
+                                },
+                                "submissionStructure": {
+                                    "type": "string",
+                                    "enum": [
+                                        "COMPACT",
+                                        "MAVEN"
+                                    ],
+                                    "description": "Expected structure of the submitted projects"
+                                },
+                                "dueDate": {
+                                    "type": "string",
+                                    "description": "Date after which submissions are marked as late, in ISO-8601 format, e.g. '2026-10-15T23:59'. Pass an empty string to remove the due date"
+                                },
+                                "acceptsStudentTests": {
+                                    "type": "boolean",
+                                    "description": "Whether students are expected to submit their own unit tests"
+                                },
+                                "minStudentTests": {
+                                    "type": "number",
+                                    "description": "Minimum number of unit tests that the students must write. Only valid together with acceptsStudentTests"
+                                },
+                                "calculateStudentTestsCoverage": {
+                                    "type": "boolean",
+                                    "description": "Whether to calculate the coverage of the students' own tests. Only valid together with acceptsStudentTests"
+                                },
+                                "coverageVisibleToStudents": {
+                                    "type": "boolean",
+                                    "description": "Whether the students get to see the coverage of their own tests. Only meaningful together with calculateStudentTestsCoverage"
+                                },
+                                "hiddenTestsVisibility": {
+                                    "type": "string",
+                                    "enum": [
+                                        "HIDE_EVERYTHING",
+                                        "SHOW_OK_NOK",
+                                        "SHOW_PROGRESS"
+                                    ],
+                                    "description": "How much students get to know about the results of the hidden tests"
+                                },
+                                "mandatoryTestsSuffix": {
+                                    "type": "string",
+                                    "description": "Suffix of the test methods that students must pass to have their submission considered valid"
+                                },
+                                "leaderboardType": {
+                                    "type": "string",
+                                    "enum": [
+                                        "TESTS_OK",
+                                        "ELLAPSED",
+                                        "COVERAGE"
+                                    ],
+                                    "description": "Criterion used to sort the leaderboard. Pass an empty string to remove the leaderboard"
+                                },
+                                "cooloffPeriod": {
+                                    "type": "number",
+                                    "description": "Minutes that students must wait between submissions"
+                                },
+                                "maxMemoryMb": {
+                                    "type": "number",
+                                    "description": "Memory limit, in MB, of the evaluation of each submission. Must be >= 32"
+                                },
+                                "minGroupSize": {
+                                    "type": "number",
+                                    "description": "Minimum number of students per group. Pass an empty value to remove the group restrictions"
+                                },
+                                "maxGroupSize": {
+                                    "type": "number",
+                                    "description": "Maximum number of students per group. Only valid together with minGroupSize"
+                                },
+                                "visibility": {
+                                    "type": "string",
+                                    "enum": [
+                                        "PUBLIC",
+                                        "ONLY_BY_LINK",
+                                        "PRIVATE"
+                                    ],
+                                    "description": "PUBLIC (listed to every student), ONLY_BY_LINK or PRIVATE (only the authorized submitters, which then must be filled in)"
+                                },
+                                "assignees": {
+                                    "type": "string",
+                                    "description": "Comma separated user ids of the students who are allowed to submit, replacing the current ones. Pass an empty string to let any student submit"
+                                },
+                                "acl": {
+                                    "type": "string",
+                                    "description": "Comma separated user ids of the other teachers who may change this assignment, replacing the current ones. The owner must not be included"
+                                },
+                                "tags": {
+                                    "type": "string",
+                                    "description": "Comma separated tags used to organize assignments, replacing the current ones, e.g. 'project,25/26'"
+                                }
+                            },
+                            "required": [
+                                "assignmentId"
                             ]
                         }
                     },
@@ -1088,5 +1219,249 @@ class McpControllerTests: ApiTestSupport {
 
         assertThat(response, containsString("\"isError\":true"))
         assertThat(response, containsString("Could not refresh"))
+    }
+
+    @Test
+    fun `mcp edit assignment only changes the settings that were passed`() {
+        val authHeader = getBearerToken("teacher1")
+
+        val response = callTool("edit_assignment", """
+            {
+                "assignmentId": "testMcpAssignment",
+                "assignmentName": "Renamed through MCP",
+                "dueDate": "2026-10-15T23:59",
+                "tags": "mcp,25/26",
+                "cooloffPeriod": 10
+            }
+        """.trimIndent(), authHeader)
+
+        // the answer describes the changes with the names of the arguments that made them
+        assertThat(response, containsString("was updated"))
+        assertThat(response, containsString("assignmentName: Test MCP Assignment -> Renamed through MCP"))
+        assertThat(response, containsString("dueDate: not set -> 2026-10-15T23:59"))
+        assertThat(response, containsString("tags: not set -> mcp,25/26"))
+        assertThat(response, containsString("cooloffPeriod: not set -> 10"))
+
+        val assignment = assignmentRepository.findById("testMcpAssignment").get()
+        assertEquals("Renamed through MCP", assignment.name)
+        assertEquals(10, assignment.cooloffPeriod)
+        assertEquals(listOf("25/26", "mcp"), assignment.tagsStr.sorted())
+
+        // the settings that were not passed were left alone
+        assertEquals("org.dropProject.samples.testAssignment", assignment.packageName)
+        assertEquals(Language.JAVA, assignment.language)
+        assertEquals("git://dummy", assignment.gitRepositoryUrl)
+        assertEquals("teacher1", assignment.ownerUserId)
+    }
+
+    @Test
+    fun `mcp edit assignment clears the settings that are passed empty`() {
+        val authHeader = getBearerToken("teacher1")
+
+        callTool("edit_assignment", """
+            {
+                "assignmentId": "testMcpAssignment",
+                "dueDate": "2026-10-15T23:59",
+                "leaderboardType": "TESTS_OK",
+                "minGroupSize": 2,
+                "maxGroupSize": 4
+            }
+        """.trimIndent(), authHeader)
+
+        val response = callTool("edit_assignment", """
+            {
+                "assignmentId": "testMcpAssignment",
+                "dueDate": "",
+                "leaderboardType": "",
+                "minGroupSize": null,
+                "maxGroupSize": null
+            }
+        """.trimIndent(), authHeader)
+
+        assertThat(response, containsString("dueDate: 2026-10-15T23:59 -> not set"))
+        assertThat(response, containsString("leaderboardType: TESTS_OK -> not set"))
+        assertThat(response, containsString("minGroupSize: 2 -> not set"))
+
+        val assignment = assignmentRepository.findById("testMcpAssignment").get()
+        assertNull(assignment.dueDate)
+        assertNull(assignment.leaderboardType)
+        assertFalse(assignment.showLeaderBoard)
+        assertNull(assignment.projectGroupRestrictions)
+    }
+
+    @Test
+    fun `mcp edit assignment replaces the assignees and the authorized teachers`() {
+        val authHeader = getBearerToken("teacher1")
+
+        callTool("edit_assignment", """
+            {
+                "assignmentId": "testMcpAssignment",
+                "assignees": "student1,student2",
+                "acl": "teacher2"
+            }
+        """.trimIndent(), authHeader)
+
+        assertEquals(listOf("student1", "student2"),
+            assigneeRepository.findByAssignmentIdOrderByAuthorUserId("testMcpAssignment").map { it.authorUserId })
+        assertEquals(listOf("teacher2"),
+            assignmentACLRepository.findByAssignmentId("testMcpAssignment").map { it.userId })
+
+        val response = callTool("edit_assignment", """
+            {
+                "assignmentId": "testMcpAssignment",
+                "assignees": "student3",
+                "acl": ""
+            }
+        """.trimIndent(), authHeader)
+
+        assertThat(response, containsString("assignees: student1,student2 -> student3"))
+        assertThat(response, containsString("acl: teacher2 -> not set"))
+
+        assertEquals(listOf("student3"),
+            assigneeRepository.findByAssignmentIdOrderByAuthorUserId("testMcpAssignment").map { it.authorUserId })
+        assertEquals(emptyList<String>(),
+            assignmentACLRepository.findByAssignmentId("testMcpAssignment").map { it.userId })
+    }
+
+    @Test
+    fun `mcp edit assignment reports that nothing changed`() {
+        val authHeader = getBearerToken("teacher1")
+
+        val response = callTool("edit_assignment",
+            """{"assignmentId": "testMcpAssignment", "assignmentName": "Test MCP Assignment"}""", authHeader)
+
+        assertThat(response, containsString("Nothing changed"))
+    }
+
+    @Test
+    fun `mcp edit assignment warns about the submissions that were already evaluated`() {
+        val authHeader = getBearerToken("teacher1")
+
+        // seed a submission of the default assignment, without going through a real build
+        val group = ProjectGroup()
+        projectGroupRepository.save(group)
+        val author = Author(name = "Gandalf Grey", userId = "gandalf")
+        author.group = group
+        authorRepository.save(author)
+        val submission = Submission(submissionId = "1", submissionDate = Date(),
+            status = SubmissionStatus.VALIDATED.code, statusDate = Date(), assignmentId = "testMcpAssignment",
+            assignmentGitHash = null, submitterUserId = "gandalf")
+        submission.group = group
+        submissionRepository.save(submission)
+
+        // the package name is used to evaluate the submissions, so the ones that already exist became stale
+        val response = callTool("edit_assignment",
+            """{"assignmentId": "testMcpAssignment", "packageName": "org.dropProject.samples.renamed"}""", authHeader)
+
+        assertThat(response, containsString("1 submission(s) were evaluated with the previous configuration"))
+
+        // a change that has nothing to do with the evaluation doesn't warn about anything
+        val otherResponse = callTool("edit_assignment",
+            """{"assignmentId": "testMcpAssignment", "assignmentName": "Renamed"}""", authHeader)
+
+        assertThat(otherResponse, not(containsString("previous configuration")))
+    }
+
+    @Test
+    fun `try to change the git repository of an assignment`() {
+        val authHeader = getBearerToken("teacher1")
+
+        val response = callTool("edit_assignment", """
+            {
+                "assignmentId": "testMcpAssignment",
+                "gitRepositoryUrl": "git@github.com:drop-project-edu/sampleJavaAssignment.git"
+            }
+        """.trimIndent(), authHeader)
+
+        assertThat(response, containsString("gitRepositoryUrl can't be changed"))
+        assertEquals("git://dummy", assignmentRepository.findById("testMcpAssignment").get().gitRepositoryUrl)
+    }
+
+    @Test
+    fun `try to edit a setting that doesn't exist`() {
+        val authHeader = getBearerToken("teacher1")
+
+        // a typo must not be silently ignored, since the caller would believe the change was made
+        val response = callTool("edit_assignment",
+            """{"assignmentId": "testMcpAssignment", "assignmentPackage": "org.dropproject"}""", authHeader)
+
+        assertThat(response, containsString("Unknown argument(s): assignmentPackage"))
+        assertEquals("org.dropProject.samples.testAssignment",
+            assignmentRepository.findById("testMcpAssignment").get().packageName)
+    }
+
+    @Test
+    fun `try to edit an assignment into an invalid configuration`() {
+        val authHeader = getBearerToken("teacher1")
+
+        val response = callTool("edit_assignment",
+            """{"assignmentId": "testMcpAssignment", "minStudentTests": 2}""", authHeader)
+
+        assertThat(response, containsString("\"isError\":true"))
+        assertThat(response, containsString("The assignment was not changed"))
+        assertThat(response, containsString("you must check 'Accepts student tests'"))
+        assertNull(assignmentRepository.findById("testMcpAssignment").get().minStudentTests)
+    }
+
+    @Test
+    fun `try to edit an assignment of another teacher`() {
+        val response = callTool("edit_assignment",
+            """{"assignmentId": "testMcpAssignment", "assignmentName": "Stolen"}""", getBearerToken("teacher2"))
+
+        assertThat(response, containsString("can only be changed by its owner"))
+        assertEquals("Test MCP Assignment", assignmentRepository.findById("testMcpAssignment").get().name)
+    }
+
+    @Test
+    fun `try to edit an assignment with a student token`() {
+        val authHeader = getBearerToken("student1", "ROLE_STUDENT")
+
+        val response = callTool("edit_assignment",
+            """{"assignmentId": "testMcpAssignment", "assignmentName": "Changed by a student"}""", authHeader)
+
+        assertThat(response, containsString("Only teachers can edit assignments"))
+        assertEquals("Test MCP Assignment", assignmentRepository.findById("testMcpAssignment").get().name)
+    }
+
+    @Test
+    fun `mcp edit assignment validates the assignment again when the change affects its files`() {
+
+        assignmentFixtures.createAndSetupAssignment("connectedAssignment", "Connected Assignment",
+            "org.dropProject.samples.sampleJavaAssignment", "UPLOAD", sampleJavaAssignmentRepo,
+            activateRightAfterCloning = true)
+
+        try {
+            val authHeader = getBearerToken("teacher1")
+
+            // the coverage of the student tests is calculated with the teacher's pom.xml, which isn't prepared for
+            // it, so the assignment becomes unusable and must not stay open to submissions
+            val response = callTool("edit_assignment", """
+                {
+                    "assignmentId": "connectedAssignment",
+                    "acceptsStudentTests": true,
+                    "minStudentTests": 1,
+                    "calculateStudentTestsCoverage": true
+                }
+            """.trimIndent(), authHeader)
+
+            assertThat(response, containsString("calculateStudentTestsCoverage: false -> true"))
+            assertThat(response, containsString("Validation report"))
+            assertThat(response, containsString("ERROR: POM file is not prepared to calculate coverage"))
+            assertThat(response, containsString("was marked inactive"))
+            assertFalse(assignmentRepository.findById("connectedAssignment").get().active)
+
+            // going back makes the assignment valid again, although reactivating it is a separate decision
+            val fixed = callTool("edit_assignment",
+                """{"assignmentId": "connectedAssignment", "calculateStudentTestsCoverage": false}""", authHeader)
+
+            assertThat(fixed, containsString("Validation report"))
+            assertThat(fixed, not(containsString("ERROR")))
+            assertThat(fixed, not(containsString("was marked inactive")))
+            assertFalse(assignmentRepository.findById("connectedAssignment").get().active)
+
+        } finally {
+            // cleanup assignment files
+            File(dropProjectProperties.assignments.rootLocation, "connectedAssignment").deleteRecursively()
+        }
     }
 }

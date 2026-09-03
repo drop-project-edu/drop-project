@@ -47,6 +47,7 @@ sealed interface ToolCommand {
             "get_submission_info" to GetSubmissionInfo::from,
             "get_file_content" to GetFileContent::from,
             "create_assignment" to CreateAssignment::from,
+            "edit_assignment" to EditAssignment::from,
             "connect_assignment" to ConnectAssignment::from,
             "refresh_assignment" to RefreshAssignment::from,
             "set_assignment_active" to SetAssignmentActive::from
@@ -80,6 +81,7 @@ sealed interface ToolCommand {
                 GetSubmissionInfo.toMcpTool(),
                 GetFileContent.toMcpTool(),
                 CreateAssignment.toMcpTool(),
+                EditAssignment.toMcpTool(),
                 ConnectAssignment.toMcpTool(),
                 RefreshAssignment.toMcpTool(),
                 SetAssignmentActive.toMcpTool()
