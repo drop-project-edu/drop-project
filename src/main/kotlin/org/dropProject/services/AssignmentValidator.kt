@@ -20,6 +20,7 @@
 package org.dropproject.services
 
 import com.thoughtworks.qdox.JavaProjectBuilder
+import com.thoughtworks.qdox.model.JavaAnnotation
 import com.thoughtworks.qdox.model.impl.DefaultJavaMethod
 import org.apache.maven.model.Model
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader
@@ -29,6 +30,7 @@ import org.dropproject.dao.Language
 import org.dropproject.dao.TestVisibility
 import org.dropproject.extensions.toEscapedHtml
 import org.jetbrains.kotlin.org.jline.utils.Log
+import org.jetbrains.kotlin.psi.KtAnnotationEntry
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.slf4j.LoggerFactory
@@ -51,6 +53,12 @@ import java.nio.file.Paths
 class AssignmentValidator {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
+
+    private val JUNIT4_TEST = "org.junit.Test"
+    private val JUNIT4_IGNORE = "org.junit.Ignore"
+    private val JUNIT5_TEST = "org.junit.jupiter.api.Test"
+    private val JUNIT5_DISABLED = "org.junit.jupiter.api.Disabled"
+    private val JUNIT5_TIMEOUT = "org.junit.jupiter.api.Timeout"
 
     enum class InfoType { INFO, WARNING, ERROR }
 
@@ -272,6 +280,29 @@ class AssignmentValidator {
     }
 
     /**
+     * Checks if [annotation] is one of [fullyQualifiedNames].
+     *
+     * qdox is not able to resolve an annotation that was brought in by a wildcard import
+     * (e.g. `import org.junit.jupiter.api.*`), reporting it with its simple name instead of the fully
+     * qualified one, so the simple names are accepted as well.
+     */
+    private fun isAnnotation(annotation: JavaAnnotation, vararg fullyQualifiedNames: String): Boolean {
+        val name = annotation.type.fullyQualifiedName
+        return fullyQualifiedNames.any { it == name || it.substringAfterLast(".") == name }
+    }
+
+    /**
+     * Returns the first of [annotationEntries] that is one of [fullyQualifiedNames], or null if there is none.
+     *
+     * The kotlin parser exposes an annotation exactly as it was written in the source, so it is always
+     * matched by its simple name.
+     */
+    private fun findAnnotation(annotationEntries: List<KtAnnotationEntry>, vararg fullyQualifiedNames: String): KtAnnotationEntry? {
+        val simpleNames = fullyQualifiedNames.map { it.substringAfterLast(".") }
+        return annotationEntries.firstOrNull { simpleNames.contains(it.shortName?.asString()) }
+    }
+
+    /**
      * Validates an [Assignment]'s test files to determine if the test classes are respecting the expected
      * formats (for example, ensure that the respective filename starts with the correct prefix).
      *
@@ -305,24 +336,28 @@ class AssignmentValidator {
                     val testClassSource = builder.addSource(testClass)
                     testClassSource.classes.forEach {
 
-                        if (it.annotations.any { annotation -> annotation.type.fullyQualifiedName == "org.junit.jupiter.api.Timeout" }) {
+                        // a @Timeout on the class applies to all its test methods, but only to its own,
+                        // so this must be evaluated per test class
+                        val classHasTimeout = it.annotations.any { isAnnotation(it, JUNIT5_TIMEOUT) }
+                        if (classHasTimeout) {
                             hasGlobalTimeout = true
                         }
 
                         it.methods.forEach {
                             val methodName = it.name
+                            val methodAnnotations = it.annotations
 
-                            if (!it.annotations.any { it.type.fullyQualifiedName == "org.junit.Ignore" ||  // ignore @Ignore (junit4)
-                                            it.type.fullyQualifiedName == "org.junit.jupiter.api.Disabled" ||  // ignore @Disabled (junit5)
-                                            it.type.fullyQualifiedName == "Ignore" }) {
-                                it.annotations.forEach {
-                                    if (it.type.fullyQualifiedName == "org.junit.Test" ||  // found @Test (junit4)
-                                        it.type.fullyQualifiedName == "org.junit.jupiter.api.Test" ||  // found @Test (junit5)
-                                        it.type.fullyQualifiedName == "Test") {  // qdox doesn't handle import *
-                                        if (it.getNamedParameter("timeout") == null && !hasGlobalTimeout) {
-                                            invalidTestMethods++
-                                        } else {
+                            if (!methodAnnotations.any { isAnnotation(it, JUNIT4_IGNORE, JUNIT5_DISABLED) }) {
+                                // junit5 marks the timeout with a separate @Timeout annotation, whereas junit4
+                                // declares it as a parameter of @Test
+                                val methodHasTimeout = methodAnnotations.any { isAnnotation(it, JUNIT5_TIMEOUT) }
+
+                                methodAnnotations.forEach {
+                                    if (isAnnotation(it, JUNIT4_TEST, JUNIT5_TEST)) {
+                                        if (it.getNamedParameter("timeout") != null || methodHasTimeout || classHasTimeout) {
                                             validTestMethods++
+                                        } else {
+                                            invalidTestMethods++
                                         }
                                         testMethods.add(testClassSource.classes.get(0).name + ":" + methodName)
 
@@ -345,21 +380,38 @@ class AssignmentValidator {
                     val ktFile = ktCompiler.compile(Paths.get("").toAbsolutePath(), testClass.toPath())
                     ktFile.declarations.filter { it is KtClass }.forEach {
                         val clazz = it as KtClass
+
+                        // a @Timeout on the class applies to all its test methods, but only to its own,
+                        // so this must be evaluated per test class
+                        val classHasTimeout = findAnnotation(clazz.annotationEntries, JUNIT5_TIMEOUT) != null
+                        if (classHasTimeout) {
+                            hasGlobalTimeout = true
+                        }
+
                         clazz.declarations.filter { it is KtNamedFunction }.forEach {
                             val function = it as KtNamedFunction
+                            val functionAnnotations = function.annotationEntries
 
-                            if (function.annotationEntries.any { it.shortName?.asString() == "Test" }) {
-                                if (function.annotationEntries.first { it.shortName?.asString() == "Test"  }.text.contains("timeout")) {
-                                    validTestMethods++;
-                                } else {
-                                    invalidTestMethods++;
-                                }
+                            if (findAnnotation(functionAnnotations, JUNIT4_IGNORE, JUNIT5_DISABLED) == null) {
+                                val testAnnotation = findAnnotation(functionAnnotations, JUNIT4_TEST, JUNIT5_TEST)
 
-                                testMethods.add(clazz.name + ":" + function.name)
+                                if (testAnnotation != null) {
+                                    // junit5 marks the timeout with a separate @Timeout annotation, whereas junit4
+                                    // declares it as a parameter of @Test
+                                    if (testAnnotation.text.contains("timeout") ||
+                                            findAnnotation(functionAnnotations, JUNIT5_TIMEOUT) != null ||
+                                            classHasTimeout) {
+                                        validTestMethods++
+                                    } else {
+                                        invalidTestMethods++
+                                    }
 
-                                assignment.mandatoryTestsSuffix?.let { suffix ->
-                                    if (function.name?.endsWith(suffix) == true) {
-                                        mandatoryTestMethods++
+                                    testMethods.add(clazz.name + ":" + function.name)
+
+                                    assignment.mandatoryTestsSuffix?.let { suffix ->
+                                        if (function.name?.endsWith(suffix) == true) {
+                                            mandatoryTestMethods++
+                                        }
                                     }
                                 }
                             }

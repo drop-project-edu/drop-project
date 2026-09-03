@@ -51,6 +51,12 @@ class AssignmentValidatorTests {
             packageName = "org.dropProject.samples",
             hiddenTestsVisibility = TestVisibility.HIDE_EVERYTHING)
 
+    val dummyKotlinAssignment = Assignment(id = "dummyKotlin", name = "", gitRepositoryUrl = "",
+            gitRepositoryFolder = "", ownerUserId = "p4997", submissionMethod = SubmissionMethod.UPLOAD,
+            language = Language.KOTLIN,
+            packageName = "org.dropproject.samples.samplekotlinassignment",
+            hiddenTestsVisibility = TestVisibility.HIDE_EVERYTHING)
+
     @BeforeEach
     fun initAssignmentValidator() {
         assignmentValidator = AssignmentValidator()
@@ -175,6 +181,56 @@ class AssignmentValidatorTests {
         val report = assignmentValidator.report
         assertTrue(report.any { it.type == AssignmentValidator.InfoType.INFO &&
                 it.message == "You have defined a global timeout for the test methods."})
+    }
+
+    @Test
+    fun `Test testJavaProjJUnit5 with a class level timeout that qdox cannot resolve`() {
+
+        val assignmentFolder = resourceLoader.getResource("file:${sampleAssignmentsRootFolder}/testJavaProjJUnit5UnresolvedTimeout").file
+        assignmentValidator.validate(assignmentFolder, dummyAssignment)
+        val report = assignmentValidator.report
+        assertTrue(report.any { it.type == AssignmentValidator.InfoType.INFO &&
+                it.message == "You have defined a global timeout for the test methods."})
+        assertTrue(report.none { it.type == AssignmentValidator.InfoType.WARNING &&
+                it.message.startsWith("You haven't defined a timeout")})
+    }
+
+    @Test
+    fun `Test testJavaProjJUnit5 with a timeout on each test method`() {
+
+        val assignmentFolder = resourceLoader.getResource("file:${sampleAssignmentsRootFolder}/testJavaProjJUnit5PerMethodTimeout").file
+        assignmentValidator.validate(assignmentFolder, dummyAssignment)
+        val report = assignmentValidator.report
+        // the @Disabled test method doesn't count, even though it is also annotated with @Test
+        assertTrue(report.any { it.type == AssignmentValidator.InfoType.INFO &&
+                it.message == "You have defined 2 test methods with timeout."})
+        assertTrue(report.none { it.type == AssignmentValidator.InfoType.WARNING &&
+                it.message.startsWith("You haven't defined a timeout")})
+    }
+
+    @Test
+    fun `Test testKotlinProj with a class level timeout`() {
+
+        val assignmentFolder = resourceLoader.getResource("file:${sampleAssignmentsRootFolder}/testKotlinProjClassTimeout").file
+        assignmentValidator.validate(assignmentFolder, dummyKotlinAssignment)
+        val report = assignmentValidator.report
+        assertTrue(report.any { it.type == AssignmentValidator.InfoType.INFO &&
+                it.message == "You have defined a global timeout for the test methods."})
+        assertTrue(report.none { it.type == AssignmentValidator.InfoType.WARNING &&
+                it.message.startsWith("You haven't defined a timeout")})
+    }
+
+    @Test
+    fun `Test testKotlinProj with a timeout on each test method`() {
+
+        val assignmentFolder = resourceLoader.getResource("file:${sampleAssignmentsRootFolder}/testKotlinProjPerMethodTimeout").file
+        assignmentValidator.validate(assignmentFolder, dummyKotlinAssignment)
+        val report = assignmentValidator.report
+        // the @Disabled test method doesn't count, even though it is also annotated with @Test
+        assertTrue(report.any { it.type == AssignmentValidator.InfoType.INFO &&
+                it.message == "You have defined 2 test methods with timeout."})
+        assertTrue(report.none { it.type == AssignmentValidator.InfoType.WARNING &&
+                it.message.startsWith("You haven't defined a timeout")})
     }
 
     @Test
