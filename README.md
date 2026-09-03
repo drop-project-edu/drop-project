@@ -105,6 +105,15 @@ Just connect to `https://<server-url>/mcp/` with an Authorization header: `Beare
 }
 ```
 
+### Claude Code skills
+
+Teachers can also install a set of skills that teach Claude how to work with Drop Project:
+
+    /plugin marketplace add drop-project-edu/claude-skills
+    /plugin install dropproject-assignments@drop-project
+
+See [drop-project-edu/claude-skills](https://github.com/drop-project-edu/claude-skills) for the skills it includes.
+
 ## Plugin
 
 There is a [plugin for Intellij](https://plugins.jetbrains.com/plugin/25078-drop-project) that allows students to submit their projects directly from the IDE.
