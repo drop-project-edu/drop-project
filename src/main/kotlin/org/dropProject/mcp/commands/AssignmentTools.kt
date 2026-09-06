@@ -79,6 +79,8 @@ object AssignmentTools {
         setting("minGroupSize", assignment.projectGroupRestrictions?.minGroupSize)
         setting("maxGroupSize", assignment.projectGroupRestrictions?.maxGroupSize)
         setting("visibility", assignment.visibility)
+        setting("baseAssignmentId", assignment.baseAssignmentId)
+        setting("maxChangedLines", assignment.maxChangedLines)
         setting("assignees", assignees.joinToString(","))
         setting("acl", acl.joinToString(","))
         setting("tags", tags.joinToString(","))

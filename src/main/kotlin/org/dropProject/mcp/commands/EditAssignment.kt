@@ -65,6 +65,10 @@ data class EditAssignment(val assignmentId: String, val changes: AssignmentArgum
             .findByAssignmentIdOrderByAuthorUserId(assignment.id).map { it.authorUserId },
             assignmentService.assignmentACLRepository.findByAssignmentId(assignment.id).map { it.userId })
 
+        // a defense doesn't get to choose its group size nor its package, so they are overwritten before the form is
+        // validated and saved, exactly like the web form does
+        assignmentService.applyDefenseSettings(form)
+
         val errors = assignmentService.validateAssignmentForm(form, principal).toMutableList()
 
         // the ACL of a new assignment is validated by validateAssignmentForm, but the owner is only known here
@@ -186,6 +190,19 @@ data class EditAssignment(val assignmentId: String, val changes: AssignmentArgum
             throw IllegalArgumentException("maxMemoryMb must be >= 32")
         }
 
+        val baseAssignmentId = changes.orCurrent("baseAssignmentId", assignment.baseAssignmentId) { string(it) }
+
+        // a budget that was left over from when the assignment was a defense is dropped by applyDefenseSettings, but
+        // one that this very call asks for without a base submission to compare with can only be a mistake
+        val maxChangedLines = changes.orCurrent("maxChangedLines", assignment.maxChangedLines) { number(it) }
+        if (maxChangedLines != null && maxChangedLines < 1) {
+            throw IllegalArgumentException("maxChangedLines must be >= 1")
+        }
+        if (maxChangedLines != null && baseAssignmentId == null && changes.isPresent("maxChangedLines")) {
+            throw IllegalArgumentException("maxChangedLines is only valid together with baseAssignmentId, " +
+                    "since it limits how much a submission may diverge from the base submission")
+        }
+
         return AssignmentForm(
             editMode = true,
             assignmentId = assignment.id,
@@ -229,6 +246,8 @@ data class EditAssignment(val assignmentId: String, val changes: AssignmentArgum
             visibility = changes.orCurrent("visibility", assignment.visibility) {
                 requiredEnum(it, AssignmentVisibility.entries)
             },
+            baseAssignmentId = baseAssignmentId,
+            maxChangedLines = maxChangedLines,
             assignees = changes.orCurrent("assignees", assignees.joinToString(",").ifBlank { null }) { string(it) },
             acl = changes.orCurrent("acl", acl.joinToString(",").ifBlank { null }) { string(it) }
         )
@@ -361,6 +380,23 @@ data class EditAssignment(val assignmentId: String, val changes: AssignmentArgum
                             "enum" to AssignmentVisibility.entries.map { it.name },
                             "description" to "PUBLIC (listed to every student), ONLY_BY_LINK or PRIVATE (only the " +
                                     "authorized submitters, which then must be filled in)"
+                        ),
+                        "baseAssignmentId" to mapOf(
+                            "type" to "string",
+                            "description" to "Turns this into a defense of the assignment with this id: the " +
+                                    "students resubmit the code they had submitted there, changed as the defense " +
+                                    "asks, and every submission is compared with that base submission. The caller " +
+                                    "must be the owner or an authorized teacher of that assignment. A defense " +
+                                    "always uses its package and a group size of 1, so packageName, minGroupSize " +
+                                    "and maxGroupSize are overwritten with those values. Pass an empty string to " +
+                                    "stop this assignment from being a defense"
+                        ),
+                        "maxChangedLines" to mapOf(
+                            "type" to "number",
+                            "description" to "Maximum number of lines (under src) that a submission may change " +
+                                    "relatively to the base submission, only enforced after the defense " +
+                                    "instructions are released. Only valid together with baseAssignmentId. Pass an " +
+                                    "empty value to measure the difference without ever rejecting a submission"
                         ),
                         "assignees" to mapOf(
                             "type" to "string",

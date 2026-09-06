@@ -397,12 +397,17 @@ class AssignmentService(
      *   there, and a different package would make every submission fail the structure check.
      *
      * Meant to be called before [validateAssignmentForm], so that these are the values that get validated and saved.
-     * A form that is not a defense is left untouched.
+     * A form that is not a defense only loses the line budget, which is meaningless without a submission to compare
+     * with.
      *
      * @param assignmentForm is the [AssignmentForm] to normalize
      */
     fun applyDefenseSettings(assignmentForm: AssignmentForm) {
-        val baseAssignmentId = assignmentForm.baseAssignmentId?.takeIf { it.isNotBlank() } ?: return
+        val baseAssignmentId = assignmentForm.baseAssignmentId?.takeIf { it.isNotBlank() }
+        if (baseAssignmentId == null) {
+            assignmentForm.maxChangedLines = null
+            return
+        }
 
         assignmentForm.minGroupSize = 1
         assignmentForm.maxGroupSize = 1
