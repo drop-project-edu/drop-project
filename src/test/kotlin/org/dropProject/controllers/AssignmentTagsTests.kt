@@ -202,6 +202,25 @@ class AssignmentTagsTests : AssignmentTestBase() {
                 .andExpect(model().hasNoErrors())
                 .andExpect(model().attribute("assignments", hasSize<Assignment>(0)))
 
+            // an empty tags parameter is not a filter for the assignments without tags: everything is listed
+            this.mvc.perform(
+                get("/assignment/my?tags=")
+                    .with(SecurityMockMvcRequestPostProcessors.user(user))
+            )
+                .andExpect(status().isOk())
+                .andExpect(model().hasNoErrors())
+                .andExpect(model().attribute("assignments", hasSize<Assignment>(2)))
+                .andExpect(model().attribute("currentTags", ""))
+
+            // and neither are the empty tags that trailing commas produce
+            this.mvc.perform(
+                get("/assignment/my?tags=test,")
+                    .with(SecurityMockMvcRequestPostProcessors.user(user))
+            )
+                .andExpect(status().isOk())
+                .andExpect(model().hasNoErrors())
+                .andExpect(model().attribute("assignments", hasSize<Assignment>(2)))
+
         } finally {
             // cleanup assignment files
             if (File(dropProjectProperties.assignments.rootLocation, "dummyAssignment4").exists()) {

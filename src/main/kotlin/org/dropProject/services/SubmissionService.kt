@@ -22,8 +22,10 @@ package org.dropproject.services
 import jakarta.persistence.EntityNotFoundException
 import org.apache.commons.io.FileUtils
 import org.dropproject.Constants
+import org.dropproject.controllers.BaseSubmissionNotFoundException
 import org.dropproject.controllers.InvalidProjectGroupException
 import org.dropproject.controllers.InvalidProjectStructureException
+import org.dropproject.controllers.MaxChangedLinesExceededException
 import org.dropproject.controllers.UploadController
 import org.dropproject.dao.*
 import org.dropproject.data.AuthorDetails
@@ -87,7 +89,8 @@ class SubmissionService(
     val dropProjectProperties: DropProjectProperties,
     val cooloffOverrideService: CooloffOverrideService,
     val pomValidator: PomValidator,
-    val rebuildStatusRepository: RebuildStatusRepository
+    val rebuildStatusRepository: RebuildStatusRepository,
+    val sourceDiffService: SourceDiffService
 ) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
@@ -128,7 +131,7 @@ class SubmissionService(
             }
 
             if (retrieveReport) {
-                val reportElements = submissionReportRepository.findBySubmissionId(lastSubmission.id)
+                val reportElements = submissionReportRepository.findBySubmissionIdOrderByIdAsc(lastSubmission.id)
                 lastSubmission.reportElements = reportElements
 
                 lastSubmission.buildReport?.let { buildReportDB ->
@@ -293,6 +296,41 @@ class SubmissionService(
                 }
             }
 
+            // on the first phase of a defense, the submission is only a checkpoint of the code the student had
+            // already submitted to the project assignment, and not yet the requested changes. Teachers are always on
+            // the second phase, so that they can try the defense out before releasing it
+            val isDefenseCheckpoint = assignment.baseAssignmentId != null &&
+                    !assignment.defenseInstructionsReleased && !request.isUserInRole("TEACHER")
+
+            // a submission to a defense assignment is supposed to be a bounded set of changes on top of the group's
+            // code for the linked project assignment, so measure how much it diverges from it
+            val baseDivergenceLines = if (assignment.baseAssignmentId != null) {
+                val baseSubmission = findBaseSubmission(assignment, principal.realName())
+                if (baseSubmission == null && !request.isUserInRole("TEACHER")) {
+                    throw BaseSubmissionNotFoundException(i18n.getMessage("student.submit.noBaseSubmission",
+                        arrayOf(assignment.baseAssignmentId!!), currentLocale))
+                }
+                // teachers try the defense out without ever having submitted to the project assignment, so they are
+                // not required to have one and there is simply nothing to measure their submission against
+                baseSubmission?.let {
+                    sourceDiffService.countChangedLines(getOriginalProjectFolder(it), projectFolder)
+                }
+            } else {
+                null
+            }
+
+            // divergences are only rejected on the second phase - before that, they are just recorded, so that the
+            // teacher can see that the checkpoint didn't match the original code
+            val maxChangedLines = assignment.maxChangedLines
+            if (assignment.defenseInstructionsReleased && maxChangedLines != null &&
+                baseDivergenceLines != null && baseDivergenceLines > maxChangedLines) {
+                LOG.info("[${authors.joinToString(separator = "|")}] submission changes ${baseDivergenceLines} lines, " +
+                        "but only ${maxChangedLines} are allowed")
+                // the counts are only logged: telling the students the budget would turn it into a target
+                throw MaxChangedLinesExceededException(i18n.getMessage("student.submit.maxChangedLinesExceeded",
+                    null, currentLocale))
+            }
+
             val submission = Submission(
                 submissionId = projectFolder.name, submissionDate = Date(),
                 status = SubmissionStatus.SUBMITTED.code, statusDate = Date(), assignmentId = assignment.id,
@@ -301,6 +339,8 @@ class SubmissionService(
                 submissionMode = submissionMode
             )
             submission.group = group
+            submission.baseDivergenceLines = baseDivergenceLines
+            submission.defenseCheckpoint = isDefenseCheckpoint
             saveSubmissionAndUpdateAssignmentMetrics(submission)
 
             buildSubmission(
@@ -312,11 +352,47 @@ class SubmissionService(
                 principal = principal
             )
 
-            return ResponseEntity.ok(SubmissionResult(submissionId = submission.id))
+            // a checkpoint's build report has nothing to tell the student, so they go back to the upload page
+            return ResponseEntity.ok(SubmissionResult(submissionId = submission.id,
+                redirectTo = if (isDefenseCheckpoint) "upload/${assignment.id}" else null))
         }
 
         return ResponseEntity.internalServerError().body(SubmissionResult(error=i18n.getMessage("student.submit.fileError", null, currentLocale)))
 
+    }
+
+    /**
+     * Searches for the [Submission] that the submissions to [assignment] must be compared with, that is, the last
+     * version that the submitter's groups sent to the linked project assignment ([Assignment.baseAssignmentId]).
+     *
+     * The submission that was marked as final is the one that counts, since that's the version the teacher considers
+     * to be the group's work. If the group has none, the most recent validated submission is used instead. Deleted
+     * submissions are never used, since deletion only sets the status, leaving markedAsFinal untouched.
+     *
+     * All the groups that the submitter belongs to are searched, and not just the group of the submission being made,
+     * because the group that did the project is frequently not the one that is defending it (e.g. a project made in
+     * pairs that is defended individually).
+     *
+     * @param assignment is the defense [Assignment] that is being submitted to
+     * @param submitterUserId is a String identifying the user that is submitting
+     *
+     * @return a Submission or null, either if [assignment] is not linked to another assignment or if the submitter
+     * never submitted to it
+     */
+    fun findBaseSubmission(assignment: Assignment, submitterUserId: String): Submission? {
+        val baseAssignmentId = assignment.baseAssignmentId ?: return null
+
+        val groups = projectGroupRepository.getGroupsForAuthor(submitterUserId)
+        if (groups.isEmpty()) {
+            return null
+        }
+
+        return submissionRepository
+            .findFirstByGroupInAndAssignmentIdAndMarkedAsFinalTrueAndStatusNotOrderBySubmissionDateDesc(groups,
+                baseAssignmentId, SubmissionStatus.DELETED.code)
+            ?: submissionRepository
+                .findFirstByGroupInAndAssignmentIdAndStatusInOrderBySubmissionDateDescStatusDateDesc(groups, baseAssignmentId,
+                    listOf(SubmissionStatus.VALIDATED.code, SubmissionStatus.VALIDATED_REBUILT.code))
     }
 
     /**
@@ -761,9 +837,11 @@ class SubmissionService(
         val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission, teacherRebuild)
         mavenizedProjectFolder.deleteRecursively()
 
+        val teacherFilesFolder = evaluationTeacherFilesFolder(assignment)
+
         when (assignment.submissionStructure) {
-            SubmissionStructure.COMPACT -> mavenizeCompactStructure(projectFolder, mavenizedProjectFolder, assignment)
-            SubmissionStructure.MAVEN -> mavenizeMavenStructure(projectFolder, mavenizedProjectFolder, assignment)
+            SubmissionStructure.COMPACT -> mavenizeCompactStructure(projectFolder, mavenizedProjectFolder, assignment, teacherFilesFolder)
+            SubmissionStructure.MAVEN -> mavenizeMavenStructure(projectFolder, mavenizedProjectFolder, assignment, teacherFilesFolder)
         }
 
         // Finally remove the original project folder (the zip file is still kept)
@@ -774,6 +852,31 @@ class SubmissionService(
         }
 
         return mavenizedProjectFolder
+    }
+
+    /**
+     * The folder holding the teacher files that a submission to [assignment] must be evaluated with, or null to
+     * use the assignment's own files.
+     *
+     * Only the first phase of a defense assignment gets an override. Until the instructions are released, a
+     * submission is just a checkpoint of the code the group sent to the linked project assignment, so it is
+     * evaluated with *that* assignment's tests: the defense's own tests would fail on unchanged code and, worse,
+     * would tell the students what the defense is about before it starts.
+     */
+    private fun evaluationTeacherFilesFolder(assignment: Assignment): File? {
+        val baseAssignmentId = assignment.baseAssignmentId
+        if (baseAssignmentId == null || assignment.defenseInstructionsReleased) {
+            return null
+        }
+
+        val baseAssignment = assignmentRepository.findById(baseAssignmentId).orElse(null)
+        if (baseAssignment == null) {
+            LOG.warn("Assignment ${assignment.id} is a defense of ${baseAssignmentId}, which doesn't exist. " +
+                    "Evaluating with its own teacher files")
+            return null
+        }
+
+        return File(dropProjectProperties.assignments.rootLocation, baseAssignment.gitRepositoryFolder)
     }
 
     /**

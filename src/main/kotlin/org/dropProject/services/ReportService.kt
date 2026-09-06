@@ -165,7 +165,7 @@ class ReportService(
                     fullBuildReport.isValidating = true
                 }
                 SubmissionStatus.VALIDATED, SubmissionStatus.VALIDATED_REBUILT -> {
-                    val submissionReport = submissionReportRepository.findBySubmissionId(submission.id)
+                    val submissionReport = submissionReportRepository.findBySubmissionIdOrderByIdAsc(submission.id)
 
                     // fill the assignment in the reports
                     submissionReport.forEach { it.assignment = assignment }

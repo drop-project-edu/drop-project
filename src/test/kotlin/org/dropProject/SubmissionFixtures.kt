@@ -102,6 +102,24 @@ class SubmissionFixtures {
         return contentJSON.get("submissionId").asText()
     }
 
+    /**
+     * Uploads a project like [uploadProject], but returns the raw json body of the response, for the tests that
+     * need to look at more than the submission id.
+     */
+    fun uploadProjectRaw(projectName: String, assignmentId: String, uploader: User,
+                         submissionStructure: SubmissionStructure = SubmissionStructure.COMPACT,
+                         language: Language = Language.JAVA): String {
+
+        val multipartFile = prepareFile(projectName, submissionStructure, language, null)
+
+        return mvc.perform(MockMvcRequestBuilders.multipart("/upload")
+                .file(multipartFile)
+                .param("assignmentId", assignmentId)
+                .with(user(uploader)))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn().response.contentAsString
+    }
+
     // returns the submission id
     fun uploadProjectByAPI(projectName: String, assignmentId: String, uploader: Pair<String,String>,
                       authors: List<Pair<String,String>>? = null,

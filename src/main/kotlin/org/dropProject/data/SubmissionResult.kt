@@ -23,9 +23,16 @@ import com.fasterxml.jackson.annotation.JsonInclude
 
 /**
  * Represents the response after a submission. It will be converted to JSON
+ *
+ * @property submissionId identifies the submission that was accepted
+ * @property error describes why the submission was refused
+ * @property redirectTo is the page to send the submitter to, relative to the context path, when it shouldn't be the
+ * build report of the submission. Used by the first phase of a defense assignment, where the submission is just a
+ * checkpoint of the code the student had already submitted elsewhere, so its report has nothing to tell them
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)  // exclude nulls fields from serialization
-class SubmissionResult(val submissionId: Long? = null, val error: String? = null) {
+class SubmissionResult(val submissionId: Long? = null, val error: String? = null,
+                       val redirectTo: String? = null) {
 
     init {
         if (submissionId == null && error == null) {

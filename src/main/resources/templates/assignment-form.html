@@ -32,6 +32,73 @@
                 <p class="help-block" th:if="${!#fields.hasErrors('assignmentName')}">A longer human-friendly name (e.g., CS1 Main Project for 2018)</p>
             </div>
         </div>
+        <div class="form-group">
+            <label class="col-sm-3 control-label">Assignment type</label>
+            <div class="col-sm-9">
+                <label class="radio-inline">
+                    <input type="radio" name="assignmentType" id="assignmentTypeNormal" value="NORMAL"
+                           th:checked="${#strings.isEmpty(assignmentForm.baseAssignmentId)}" /> Normal
+                </label>
+                <label class="radio-inline">
+                    <input type="radio" name="assignmentType" id="assignmentTypeDefense" value="DEFENSE"
+                           th:checked="${!#strings.isEmpty(assignmentForm.baseAssignmentId)}" /> Defense
+                </label>
+                <p class="help-block">A defense assignment is built on top of the code that each group already submitted
+                    to another assignment</p>
+            </div>
+        </div>
+
+        <div id="defenseFieldsDiv" class="form-group"
+             th:style="${!#strings.isEmpty(assignmentForm.baseAssignmentId)} ? '' : 'display:none'">
+            <div class="col-sm-offset-3 col-sm-9">
+                <div class="panel panel-default" style="margin-bottom: 0">
+                    <div class="panel-heading">Defense settings</div>
+                    <div class="panel-body">
+
+                        <div class="form-group" th:classappend="${#fields.hasErrors('baseAssignmentId')} ? 'has-error' : ''">
+                            <label for="baseAssignmentId" class="col-sm-4 control-label">Defense of</label>
+                            <div class="col-sm-8">
+                                <!-- picking a project assignment fills in the package and the size of the change,
+                                     with out-of-band swaps, so no javascript is needed to keep them right -->
+                                <select th:field="*{baseAssignmentId}" class="form-control" id="baseAssignmentId"
+                                        th:hx-get="@{/assignment/defense-derived-fields}"
+                                        hx-trigger="change"
+                                        hx-include="#assignmentId"
+                                        hx-swap="none">
+                                    <option value="">-- choose the project assignment --</option>
+                                    <option th:each="baseAssignment : ${candidateBaseAssignments}"
+                                            th:value="${baseAssignment.id}"
+                                            th:text="${baseAssignment.id}">
+                                    </option>
+                                </select>
+                                <p class="help-block" th:if="${#fields.hasErrors('baseAssignmentId')}" th:errors="*{baseAssignmentId}">Error</p>
+                                <p class="help-block" th:if="${!#fields.hasErrors('baseAssignmentId')}">The project assignment that this one
+                                    is a defense of. Students will be able to download the code they submitted there and every submission
+                                    made here will be compared with it</p>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 0">
+                            <label for="maxChangedLines" class="col-sm-4 control-label">Max changed lines (optional)</label>
+                            <div class="col-sm-8" th:classappend="${#fields.hasErrors('maxChangedLines')} ? 'has-error' : ''">
+                                <input th:field="*{maxChangedLines}" type="number" class="form-control" id="maxChangedLines"
+                                       style="max-width: 120px" />
+                                <p class="help-block" th:if="${#fields.hasErrors('maxChangedLines')}" th:errors="*{maxChangedLines}">Error</p>
+                                <p class="help-block" th:if="${!#fields.hasErrors('maxChangedLines')}">Maximum number of lines (under src)
+                                    that a submission may change relatively to the project submission. It is only enforced after the
+                                    defense instructions are released</p>
+                                <!-- filled in by the fragment that htmx swaps in; also rendered on first load -->
+                                <p class="help-block" id="referenceSolutionDivergence"
+                                   th:style="${divergenceHint == null} ? 'display: none' : ''"
+                                   th:text="${divergenceHint}"></p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="form-group" th:classappend="${#fields.hasErrors('assignmentTags')} ? 'has-error' : ''">
             <label for="assignmentTags" class="col-sm-3 control-label">Tags</label>
             <div class="col-sm-9">
@@ -268,6 +335,8 @@
 
 <div th:replace="~{layout/layout :: footer}"></div>
 
+<!-- only this page needs htmx, so it isn't loaded by the layout -->
+<script th:src="@{/vendor/htmx-2.0.4.min.js}"></script>
 <script th:src="@{/js/dropproject.js}"></script>
 <script th:src="@{/js/bootstrap-tagsinput.min.js}"></script>
 <script th:src="@{/js/typeahead.bundle.js}"></script>
@@ -312,6 +381,52 @@
             $('#coverageVisibleToStudents').prop('checked', false);
         }
     });
+
+    // most assignments are not defenses, so their fields are only shown when the type says so. Hiding them also
+    // clears them, otherwise an assignment that stopped being a defense would silently keep its old link
+    // what the teacher had typed before switching to Defense, so that switching back doesn't lose it
+    var savedNormalSettings = null;
+
+    // a defense is done individually and its submissions are the students' own code from the project assignment, so
+    // the group size and the package are not the teacher's to choose. The server enforces this anyway
+    // (AssignmentService.applyDefenseSettings); the package itself is filled in by htmx, from the project assignment
+    function applyDefenseSettings() {
+        var isDefense = $('#assignmentTypeDefense').is(':checked');
+
+        if (isDefense) {
+            if (savedNormalSettings === null) {
+                savedNormalSettings = {
+                    minGroupSize: $('#minGroupSize').val(),
+                    maxGroupSize: $('#maxGroupSize').val(),
+                    assignmentPackage: $('#assignmentPackage').val()
+                };
+            }
+            $('#minGroupSize').val('1');
+            $('#maxGroupSize').val('1');
+        } else if (savedNormalSettings !== null) {
+            $('#minGroupSize').val(savedNormalSettings.minGroupSize);
+            $('#maxGroupSize').val(savedNormalSettings.maxGroupSize);
+            $('#assignmentPackage').val(savedNormalSettings.assignmentPackage);
+            savedNormalSettings = null;
+        }
+
+        $('#minGroupSize, #maxGroupSize, #assignmentPackage').prop('readonly', isDefense);
+    }
+
+    $('input[name="assignmentType"]').change(function() {
+        if ($('#assignmentTypeDefense').is(':checked')) {
+            $('#defenseFieldsDiv').show();
+        } else {
+            $('#defenseFieldsDiv').hide();
+            $('#baseAssignmentId').val('');
+            $('#maxChangedLines').val('');
+            $('#referenceSolutionDivergence').hide();
+        }
+        applyDefenseSettings();
+    });
+
+    // an assignment that is already a defense opens with the fields locked
+    applyDefenseSettings();
     /*]]>*/
 </script>
 

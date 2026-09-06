@@ -84,6 +84,39 @@ class AssignmentFixtures {
         return assignment
     }
 
+    /**
+     * Saves a "defense" assignment, that is, one whose submissions are compared with the group's submissions to
+     * [baseAssignmentId]. Its teacher files are the ones of [gitRepositoryFolder] (by default, the folder of the
+     * default assignment), so that its submissions can be built exactly like the ones of the linked assignment.
+     */
+    fun createDefenseAssignment(id: String = "testJavaProjDefense",
+                                baseAssignmentId: String = "testJavaProj",
+                                maxChangedLines: Int? = null,
+                                defenseInstructionsReleased: Boolean = false,
+                                name: String = "Defense of the Test Project (for automatic tests)",
+                                packageName: String = "org.dropProject.sampleAssignments.testProj",
+                                gitRepositoryFolder: String = "testJavaProj",
+                                withTestMethods: Boolean = true): Assignment {
+        val assignment = Assignment(id = id, name = name,
+            packageName = packageName, ownerUserId = "teacher1",
+            submissionMethod = SubmissionMethod.UPLOAD, active = true, gitRepositoryUrl = "git://dummy",
+            gitRepositoryFolder = gitRepositoryFolder, gitCurrentHash = "somehash",
+            baseAssignmentId = baseAssignmentId, maxChangedLines = maxChangedLines,
+            defenseInstructionsReleased = defenseInstructionsReleased)
+        assignmentRepository.save(assignment)
+
+        if (withTestMethods) {
+            assignmentTestMethodRepository.save(AssignmentTestMethod(assignment = assignment,
+                testClass = "TestTeacherProject", testMethod = "testFuncaoParaTestar"))
+            assignmentTestMethodRepository.save(AssignmentTestMethod(assignment = assignment,
+                testClass = "TestTeacherProject", testMethod = "testFuncaoLentaParaTestar"))
+            assignmentTestMethodRepository.save(AssignmentTestMethod(assignment = assignment,
+                testClass = "TestTeacherHiddenProject", testMethod = "testFuncaoParaTestarQueNaoApareceAosAlunos"))
+        }
+
+        return assignment
+    }
+
     fun createAndSetupAssignment(assignmentId: String, assignmentName: String,
                                  assignmentPackage: String, submissionMethod: String,
                                  repositoryUrl: String, privateKey: String = TestKeys.sampleJavaAssignmentPrivateKey,

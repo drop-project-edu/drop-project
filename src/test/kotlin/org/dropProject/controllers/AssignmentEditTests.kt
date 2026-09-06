@@ -282,4 +282,38 @@ class AssignmentEditTests : AssignmentTestBase() {
             assignmentFolder.deleteRecursively()
         }
     }
+
+    @Test
+    @WithMockUser("teacher1", roles = ["TEACHER"])
+    fun `archived assignments are not offered as the project of a defense`() {
+
+        assignmentFixtures.createDefaultAssignment(id = "activeProj")
+        archive(assignmentFixtures.createDefaultAssignment(id = "archivedProj"))
+
+        this.mvc.perform(get("/assignment/new"))
+            .andExpect(status().isOk)
+            .andExpect(model().attribute("candidateBaseAssignments",
+                hasItem<Assignment>(hasProperty("id", equalTo("activeProj")))))
+            .andExpect(model().attribute("candidateBaseAssignments",
+                not(hasItem<Assignment>(hasProperty("id", equalTo("archivedProj"))))))
+    }
+
+    @Test
+    @WithMockUser("teacher1", roles = ["TEACHER"])
+    fun `the project assignment of a defense stays on the list even after being archived`() {
+
+        // otherwise saving the form would silently unlink it
+        archive(assignmentFixtures.createDefaultAssignment(id = "archivedProj"))
+        assignmentFixtures.createDefenseAssignment(id = "someDefense", baseAssignmentId = "archivedProj")
+
+        this.mvc.perform(get("/assignment/edit/someDefense"))
+            .andExpect(status().isOk)
+            .andExpect(model().attribute("candidateBaseAssignments",
+                hasItem<Assignment>(hasProperty("id", equalTo("archivedProj")))))
+    }
+
+    private fun archive(assignment: Assignment) {
+        assignment.archived = true
+        assignmentRepository.save(assignment)
+    }
 }

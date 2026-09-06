@@ -31,6 +31,8 @@
            th:href="@{'/submissions?assignmentId=' + ${assignment.id} + '&groupId=' + ${submission.group.id}}">(other submissions)</a>
         <span th:if="${submission.overdue}" class="label label-danger">Overdue</span>
         <span th:if="${submission.markedAsFinal}" class="label label-success">Final</span>
+        <span th:if="${submission.defenseCheckpoint}" class="label label-info"
+              title="Submitted on the first phase of the defense, as the original code">Original</span>
     </h6>
 
     <h6 th:if="${gitSubmission} != null">
@@ -137,6 +139,22 @@
                 <h4 style="margin-top: 3px">
                     <span class="label" th:classappend="${summaryResult.cssLabel}"
                                         th:text="${summaryResult.progressSummary(isTeacher)}">14/14</span>
+                </h4>
+            </td>
+        </tr>
+        <!-- the divergence from the project submission is a teachers' indicator: students are not meant to work up
+             to it. An original submission is supposed to be the project code itself, so it has nothing to report -->
+        <tr th:if="${isTeacher and !submission.defenseCheckpoint and submission.baseDivergenceLines != null}">
+            <td>
+                <span>Lines changed</span>
+                <small class="text-muted">(relatively to the submission to
+                    <span th:text="${assignment.baseAssignmentId}"></span>)</small>
+            </td>
+            <td>
+                <h4 style="margin-top: 3px">
+                    <span class="label"
+                          th:classappend="${assignment.maxChangedLines != null and submission.baseDivergenceLines > assignment.maxChangedLines} ? 'label-warning' : 'label-default'"
+                          th:text="${submission.baseDivergenceLines}">0</span>
                 </h4>
             </td>
         </tr>

@@ -84,6 +84,7 @@ class AssignmentController(
     val cacheManager: CacheManager,
     val pendingTasks: PendingTasks,
     val dropProjectProperties: DropProjectProperties,
+    val sourceDiffService: SourceDiffService,
     val cooloffOverrideService: CooloffOverrideService) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
@@ -94,12 +95,130 @@ class AssignmentController(
      * @return A String with the name of the relevant View
      */
     @RequestMapping(value = ["/new"], method = [(RequestMethod.GET)])
-    fun getNewAssignmentForm(model: ModelMap): String {
+    fun getNewAssignmentForm(model: ModelMap, principal: Principal): String {
         model["assignmentForm"] = AssignmentForm()
         model["allTags"] = assignmentTagRepository.findAll()
             .map { "'" + it.name + "'" }
             .joinToString(separator = ",", prefix = "[", postfix = "]")
+        model["candidateBaseAssignments"] = candidateBaseAssignments(principal, null)
         return "assignment-form"
+    }
+
+    /**
+     * The number of lines that the reference solution of [assignment] changes relatively to the one of the project
+     * assignment it is a defense of, which is the size of the change that the students are being asked to make and
+     * therefore the reference for choosing [Assignment.maxChangedLines].
+     *
+     * Only "src/main" is compared, so that the teachers' unit tests, which never reach the students, are left out.
+     *
+     * @return the number of changed lines, or null when the assignment is not a defense or one of the two
+     * repositories hasn't been cloned yet
+     */
+    private fun referenceSolutionDivergence(assignment: Assignment): Int? =
+        referenceSolutionDivergence(assignment, assignment.baseAssignmentId)
+
+    /**
+     * The same as [referenceSolutionDivergence], for a project assignment that [assignment] is not (yet) linked to.
+     * Used by the assignment form, where the teacher is still choosing which one it will be.
+     */
+    private fun referenceSolutionDivergence(assignment: Assignment, baseAssignmentId: String?): Int? {
+        if (baseAssignmentId.isNullOrBlank()) {
+            return null
+        }
+        val baseAssignment = assignmentRepository.findById(baseAssignmentId).orElse(null) ?: return null
+
+        val root = dropProjectProperties.assignments.rootLocation
+        val baseFolder = File(root, baseAssignment.gitRepositoryFolder)
+        val defenseFolder = File(root, assignment.gitRepositoryFolder)
+        if (!baseFolder.exists() || !defenseFolder.exists()) {
+            return null
+        }
+
+        return sourceDiffService.countChangedLines(baseFolder, defenseFolder, sourceFolder = "src/main")
+    }
+
+    /**
+     * Renders the fields of the assignment form that are derived from the project assignment that a defense is a
+     * defense of: the package, which has to be the same one, and the size of the change that the teacher's own
+     * solution makes, which is the reference for choosing the line budget.
+     *
+     * Called by htmx whenever the teacher picks a project assignment, and answered with a fragment that is applied
+     * with out-of-band swaps, so that the form needs no javascript of its own to keep those fields right.
+     *
+     * @param baseAssignmentId identifies the project assignment that was picked
+     * @param assignmentId identifies the assignment being edited, empty while it is being created
+     * @param principal is a [Principal] representing the user making the request
+     */
+    @RequestMapping(value = ["/defense-derived-fields"], method = [(RequestMethod.GET)])
+    fun getDefenseDerivedFields(@RequestParam(name = "baseAssignmentId", required = false) baseAssignmentId: String?,
+                                @RequestParam(name = "assignmentId", required = false) assignmentId: String?,
+                                model: ModelMap, principal: Principal): String {
+
+        val baseAssignment = baseAssignmentId?.takeIf { it.isNotBlank() }
+            ?.let { assignmentRepository.findById(it).orElse(null) }
+            ?.takeIf {
+                // the teacher may only read the settings of the assignments they manage
+                it.ownerUserId == principal.realName() ||
+                        assignmentACLRepository.existsByAssignmentIdAndUserId(it.id, principal.realName())
+            }
+
+        model["derivedPackageName"] = baseAssignment?.packageName.orEmpty()
+        model["divergenceHint"] = divergenceHint(assignmentId, baseAssignment)
+
+        return "assignment-form-defense-fields :: defenseDerivedFields"
+    }
+
+    /**
+     * The sentence describing how many lines the teacher's own solution of the defense being edited changes
+     * relatively to [baseAssignment], or null when there is nothing to say yet.
+     */
+    private fun divergenceHint(assignmentId: String?, baseAssignment: Assignment?): String? {
+        if (baseAssignment == null) {
+            return null
+        }
+
+        val assignment = assignmentId?.takeIf { it.isNotBlank() }
+            ?.let { assignmentRepository.findById(it).orElse(null) }
+            ?: // while the assignment is being created its repository has not been cloned, so there is nothing to
+              // compare and the number can only be known from the next time this form is opened
+              return "The size of this change will be shown here once the assignment is created and its " +
+                      "repository is connected."
+
+        val changedLines = referenceSolutionDivergence(assignment, baseAssignment.id) ?: return null
+
+        return "Your own solution of this defense changes ${changedLines} lines (under src/main) relatively to " +
+                "the one of ${baseAssignment.id}."
+    }
+
+    /**
+     * Returns the [Assignment]s that can be linked to the assignment identified by [assignmentId] as its "project"
+     * assignment, that is, the ones the teacher has access to (owns or is on the ACL of), excluding the assignment
+     * itself and the archived ones.
+     *
+     * @param principal is a [Principal] representing the user making the request
+     * @param assignmentId is a String identifying the Assignment that is being created (null) or edited
+     * @param baseAssignmentId is a String with the Assignment that is currently linked, if any
+     *
+     * @return a List of Assignment, sorted by id
+     */
+    private fun candidateBaseAssignments(principal: Principal, assignmentId: String?,
+                                         baseAssignmentId: String? = null): List<Assignment> {
+        val accessibleThroughACL = assignmentACLRepository.findByUserId(principal.realName()).mapNotNull {
+            assignmentRepository.findById(it.assignmentId).orElse(null)
+        }
+
+        val candidates = (assignmentRepository.findAllByOwnerUserId(principal.realName()) + accessibleThroughACL)
+            .distinctBy { it.id }
+            .filter { it.id != assignmentId && !it.archived }
+            .toMutableList()
+
+        // the linked assignment must always be on the list, even when it wouldn't be offered as a new choice (it was
+        // archived, or the teacher lost access to it), otherwise saving the form would silently unlink it
+        if (baseAssignmentId != null && candidates.none { it.id == baseAssignmentId }) {
+            assignmentRepository.findById(baseAssignmentId).ifPresent { candidates.add(it) }
+        }
+
+        return candidates.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.id })
     }
 
     /**
@@ -127,6 +246,12 @@ class AssignmentController(
         model["allTags"] = assignmentTagRepository.findAll()
             .map { "'" + it.name + "'" }
             .joinToString(separator = ",", prefix = "[", postfix = "]")
+        model["candidateBaseAssignments"] = candidateBaseAssignments(principal, assignmentForm.assignmentId,
+            assignmentForm.baseAssignmentId)
+
+        // a defense doesn't get to choose its group size nor its package, so they are overwritten before the form is
+        // validated and saved
+        assignmentService.applyDefenseSettings(assignmentForm)
 
         assignmentService.validateAssignmentForm(assignmentForm, principal).forEach {
             bindingResult.rejectValue(it.field, it.code, it.message)
@@ -323,6 +448,8 @@ class AssignmentController(
             model["sshKeyFingerprint"] = assignmentDetail.sshKeyFingerprint
         }
 
+        model["referenceSolutionDivergence"] = referenceSolutionDivergence(assignment)
+
         return "assignment-detail";
     }
 
@@ -353,6 +480,9 @@ class AssignmentController(
         model["allTags"] = assignmentTagRepository.findAll()
             .map { "'" + it.name + "'" }
             .joinToString(separator = ",", prefix = "[", postfix = "]")
+        model["candidateBaseAssignments"] = candidateBaseAssignments(principal, assignmentId, assignment.baseAssignmentId)
+        model["divergenceHint"] = divergenceHint(assignmentId,
+            assignment.baseAssignmentId?.let { assignmentRepository.findById(it).orElse(null) })
 
         return "assignment-form";
     }
@@ -382,6 +512,8 @@ class AssignmentController(
             hiddenTestsVisibility = assignment.hiddenTestsVisibility,
             maxMemoryMb = assignment.maxMemoryMb,
             leaderboardType = assignment.leaderboardType,
+            baseAssignmentId = assignment.baseAssignmentId,
+            maxChangedLines = assignment.maxChangedLines,
             minGroupSize = assignment.projectGroupRestrictions?.minGroupSize,
             maxGroupSize = assignment.projectGroupRestrictions?.maxGroupSize,
             visibility = assignment.visibility
@@ -683,7 +815,7 @@ class AssignmentController(
                                @RequestParam(name = "tags", required = false) tags: String?,
                                redirectAttributes: RedirectAttributes,
                                principal: Principal): String {
-        val redirectUrl = if (tags != null) "redirect:/assignment/my?tags=$tags" else "redirect:/assignment/my"
+        val redirectUrl = if (!tags.isNullOrBlank()) "redirect:/assignment/my?tags=$tags" else "redirect:/assignment/my"
 
         val assignment = assignmentRepository.findById(assignmentId)
             .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
@@ -706,9 +838,73 @@ class AssignmentController(
         }
 
         assignment.active = !assignment.active
+
+        // closing a defense to submissions closes it altogether: leaving its instructions released would keep them
+        // visible to the students who can still open the page, and would reopen the defense on the next activation
+        val hidTheInstructions = !assignment.active && assignment.defenseInstructionsReleased
+        if (hidTheInstructions) {
+            assignment.defenseInstructionsReleased = false
+        }
+
         assignmentRepository.save(assignment)
 
-        redirectAttributes.addFlashAttribute("message", "Assignment was marked ${if (assignment.active) "active" else "inactive"}")
+        val instructionsNote = if (hidTheInstructions) " and its defense instructions were hidden" else ""
+        redirectAttributes.addFlashAttribute("message",
+            "Assignment was marked ${if (assignment.active) "active" else "inactive"}${instructionsNote}")
+        return redirectUrl
+    }
+
+    /**
+     * Controller that allows toggling the release of the defense instructions of an [Assignment], that is, moving it
+     * between the "verify" phase (where the students only resubmit the code of the linked project assignment) and the
+     * "defense" phase (where they implement the requested changes, within the assignment's line budget).
+     *
+     * @param assignmentId is a String representing the relevant Assignment
+     * @param tags is a String with the tags that are being used to filter the assignments list
+     * @param redirectAttributes is a RedirectAttributes
+     * @param principal is a [Principal] representing the user making the request
+     * @return A String with the name of the relevant View
+     */
+    @RequiresAssignmentOwnerOrACL
+    @RequestMapping(value = ["/toggle-defense-instructions/{assignmentId}"], method = [(RequestMethod.POST)])
+    fun toggleDefenseInstructions(@PathVariable assignmentId: String,
+                                  @RequestParam(name = "tags", required = false) tags: String?,
+                                  redirectAttributes: RedirectAttributes,
+                                  principal: Principal): String {
+        val redirectUrl = if (!tags.isNullOrBlank()) "redirect:/assignment/my?tags=$tags" else "redirect:/assignment/my"
+
+        val assignment = assignmentRepository.findById(assignmentId)
+            .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
+
+        if (assignment.baseAssignmentId == null) {
+            redirectAttributes.addFlashAttribute("error", "Can't release the defense instructions of assignment " +
+                    "${assignmentId} since it is not linked to a project assignment. Set that link in the assignment form.")
+            return redirectUrl
+        }
+
+        // the second phase happens on top of the first one, so the students must already have been able to submit
+        // their original code. Releasing the instructions of a closed assignment would show them an exercise that
+        // they can't submit
+        if (!assignment.defenseInstructionsReleased && !assignment.active) {
+            redirectAttributes.addFlashAttribute("error", "Can't release the defense instructions of assignment " +
+                    "${assignmentId} while it is inactive. Mark it active first.")
+            return redirectUrl
+        }
+
+        assignment.defenseInstructionsReleased = !assignment.defenseInstructionsReleased
+
+        // hiding the instructions ends the defense, so the assignment stops taking submissions as well
+        val deactivatedIt = !assignment.defenseInstructionsReleased && assignment.active
+        if (deactivatedIt) {
+            assignment.active = false
+        }
+
+        assignmentRepository.save(assignment)
+
+        val activeNote = if (deactivatedIt) " and the assignment was marked inactive" else ""
+        redirectAttributes.addFlashAttribute("message",
+            "Defense instructions of assignment ${assignmentId} are now " +
+                    "${if (assignment.defenseInstructionsReleased) "visible" else "hidden"} to the students${activeNote}")
         return redirectUrl
     }
 
@@ -1106,22 +1302,25 @@ class AssignmentController(
      * Collects [Assignment]s that have certain [tags] into the [model].
      * @param model is a [ModelMap] that will be populated with information to use in a View.
      * @param tags is a String containing the names of multiple tags. Each tag name is separated by a comma. Only the
-     * assignments that have all the tags will be placed in the model.
+     * assignments that have all the tags will be placed in the model. An empty (or absent) value is not a filter for
+     * the assignments without tags: it means that every assignment is listed.
      */
     private fun listMyFilteredAssignments(principal: Principal, tags: String?, model: ModelMap, archived: Boolean) {
         var assignments = assignmentService.getMyAssignments(principal, archived)
 
-        if (tags != null) {
-            val tagsParam = tags.split(",")
-            assignments = assignments.filter { it.tagsStr?.intersect(tagsParam)?.size == tagsParam.size }
+        // an empty string splits into a single empty tag, so the blanks have to go before anything is filtered
+        val tagsParam = tags.orEmpty().split(",").map { it.trim() }.filter { it.isNotEmpty() }
+
+        if (tagsParam.isNotEmpty()) {
+            assignments = assignments.filter { it.tagsStr?.containsAll(tagsParam) == true }
         }
 
         model["assignments"] = assignments // ordered client-side
         model["archived"] = archived
         model["allTags"] = assignmentTagRepository.findAll()
-            .map { it.selected = tags?.split(",")?.contains(it.name) ?: false; it }
+            .map { it.selected = tagsParam.contains(it.name); it }
             .sortedBy { it.name }
-        model["currentTags"] = tags ?: ""
+        model["currentTags"] = tagsParam.joinToString(",")
     }
 
 

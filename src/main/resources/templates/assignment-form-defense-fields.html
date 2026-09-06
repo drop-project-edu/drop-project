@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+  The fields of the assignment form that are derived from the project assignment that a defense is a defense of.
+  Returned to htmx when the teacher picks one, and applied with out-of-band swaps, since the two fields are in
+  different places of the form.
+-->
+<th:block th:fragment="defenseDerivedFields">
+
+    <!-- the package is the project assignment's, because the students submit the code they sent there -->
+    <input hx-swap-oob="true"
+           type="text" class="form-control" id="assignmentPackage" name="assignmentPackage"
+           maxlength="60" readonly="readonly" th:value="${derivedPackageName}"/>
+
+    <!-- how big the requested change actually is, to help choosing the line budget -->
+    <p hx-swap-oob="true" class="help-block" id="referenceSolutionDivergence"
+       th:style="${divergenceHint == null} ? 'display: none' : ''"
+       th:text="${divergenceHint}"></p>
+
+</th:block>
+
+</body>
+</html>

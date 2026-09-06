@@ -199,16 +199,19 @@ class UploadController(
         val isAuthorizedTeacher = request.isUserInRole("TEACHER") &&
                 assignmentService.isAuthorizedTeacher(assignment, principal.realName(), request)
         // Check authorization (403 if unauthorized)
-        if (!authorizationService.canAccessAssignment(assignmentId, principal.realName(),isAuthorizedTeacher)) {
-            throw AccessDeniedException("User ${principal.realName()} is not authorized to access assignment $assignmentId")
-        }
+        checkAssignmentAccess(assignmentId, principal, isAuthorizedTeacher)
 
         model["assignment"] = assignment
         // the assignment info page is restricted to the owner and the ACL, so the link to it must only be
         // shown to those teachers, otherwise the others would just get an access denied page
         model["isAuthorizedTeacher"] = isAuthorizedTeacher
         model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.realName(), assignment.id)
-        model["instructionsFragment"] = assignmentTeacherFiles.getInstructions(assignment).body //quick fix
+        model["instructionsFragment"] = instructionsFor(assignment, isAuthorizedTeacher) //quick fix
+        if (assignment.baseAssignmentId != null) {
+            // teachers are on the second phase from the start, so that they can try the defense out, and see it as
+            // the students will, before releasing it to them
+            model["defensePhase"] = if (assignment.defenseInstructionsReleased || isAuthorizedTeacher) 2 else 1
+        }
         model["packageTree"] = assignmentTeacherFiles.buildPackageTree(
                 assignment.packageName, assignment.language,
                 assignment.submissionStructure, assignment.acceptsStudentTests)
@@ -231,6 +234,11 @@ class UploadController(
 
             model["uploadForm"] = UploadForm(assignment.id)
             model["uploadSubmission"] = submission
+
+            // on a defense assignment, the students must start from the code they submitted to the linked
+            // project assignment, so the page gives them a link to download it
+            submissionService.findBaseSubmission(assignment, principal.realName())?.let { model["baseSubmission"] = it }
+
             return "student-upload-form"
         } else {
 
@@ -252,6 +260,41 @@ class UploadController(
         }
 
 
+    }
+
+    /**
+     * Refuses the request when [principal] may not open the assignment identified by [assignmentId].
+     *
+     * An assignment that is closed to submissions is refused with an [AssignmentNotActiveException], so that the
+     * access denied page can say so, instead of telling a student to ask for a permission that they already have.
+     *
+     * @throws AssignmentNotActiveException if the user is one of the assignment's intended users, but it is not active
+     * @throws AccessDeniedException if the assignment is not for this user
+     */
+    private fun checkAssignmentAccess(assignmentId: String, principal: Principal, isTeacher: Boolean) {
+        when (authorizationService.checkAssignmentAccess(assignmentId, principal.realName(), isTeacher)) {
+            AssignmentAccess.GRANTED -> {}
+            AssignmentAccess.NOT_ACTIVE -> throw AssignmentNotActiveException(assignmentId)
+            AssignmentAccess.DENIED -> throw AccessDeniedException(
+                "User ${principal.realName()} is not authorized to access assignment $assignmentId")
+        }
+    }
+
+    /**
+     * The assignment instructions to show on the submission page, or null when they must still be kept from the
+     * student.
+     *
+     * On a defense assignment, the instructions *are* the defense exercise, so they are only revealed once the
+     * teacher releases them (see [Assignment.defenseInstructionsReleased]). Until then the page shows the generic
+     * first phase text, which is the same for every defense. Teachers always see them, so that they can review the
+     * exercise before releasing it.
+     */
+    private fun instructionsFor(assignment: Assignment, isAuthorizedTeacher: Boolean): String? {
+        if (assignment.baseAssignmentId != null && !assignment.defenseInstructionsReleased && !isAuthorizedTeacher) {
+            return null
+        }
+
+        return assignmentTeacherFiles.getInstructions(assignment).body
     }
 
 
@@ -442,14 +485,14 @@ class UploadController(
         val assignment = assignmentRepository.findById(assignmentId).orElse(null) ?: throw AssignmentNotFoundException(assignmentId)
         
         // Check authorization (403 if unauthorized)
-        if (!authorizationService.canAccessAssignment(assignmentId, principal.realName(), request.isUserInRole("TEACHER"))) {
-            throw AccessDeniedException("User ${principal.realName()} is not authorized to access assignment $assignmentId")
-        }
+        checkAssignmentAccess(assignmentId, principal, request.isUserInRole("TEACHER"))
+
+        val isAuthorizedTeacher = assignmentService.isAuthorizedTeacher(assignment, principal.realName(), request)
 
         model["assignment"] = assignment
-        model["isAuthorizedTeacher"] = assignmentService.isAuthorizedTeacher(assignment, principal.realName(), request)
+        model["isAuthorizedTeacher"] = isAuthorizedTeacher
         model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.realName(), assignment.id)
-        model["instructionsFragment"] = assignmentTeacherFiles.getInstructions(assignment).body //quick fix
+        model["instructionsFragment"] = instructionsFor(assignment, isAuthorizedTeacher) //quick fix
         model["packageTree"] = assignmentTeacherFiles.buildPackageTree(
                 assignment.packageName, assignment.language,
                 assignment.submissionStructure, assignment.acceptsStudentTests)
@@ -850,6 +893,18 @@ class UploadController(
 
     @ExceptionHandler(InvalidProjectGroupException::class)
     fun handleError(e: InvalidProjectGroupException): ResponseEntity<String> {
+        LOG.warn(e.message)
+        return ResponseEntity("{\"error\": \"${e.message}\"}", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(MaxChangedLinesExceededException::class)
+    fun handleError(e: MaxChangedLinesExceededException): ResponseEntity<String> {
+        LOG.warn(e.message)
+        return ResponseEntity("{\"error\": \"${e.message}\"}", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(BaseSubmissionNotFoundException::class)
+    fun handleError(e: BaseSubmissionNotFoundException): ResponseEntity<String> {
         LOG.warn(e.message)
         return ResponseEntity("{\"error\": \"${e.message}\"}", HttpStatus.INTERNAL_SERVER_ERROR);
     }

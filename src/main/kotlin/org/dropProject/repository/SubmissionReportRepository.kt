@@ -35,6 +35,13 @@ import org.springframework.data.repository.query.Param
 interface SubmissionReportRepository : JpaRepository<SubmissionReport, Long> {
 
     fun findBySubmissionId(submissionId: Long) : List<SubmissionReport>
+
+    /**
+     * The indicators of a submission, in the order in which the build produces them: project structure, compilation,
+     * code quality, the students' own tests and only then the teacher's. That is the order in which the reports show
+     * them, and without it the database is free to return them shuffled.
+     */
+    fun findBySubmissionIdOrderByIdAsc(submissionId: Long) : List<SubmissionReport>
     fun deleteBySubmissionIdAndReportKey(submissionId: Long, reportKey: String)
 
     @Transactional

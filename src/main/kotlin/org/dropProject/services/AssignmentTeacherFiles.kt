@@ -78,9 +78,13 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
     val currentLocale : Locale = Locale.getDefault()
 
     fun getInstructions(assignment: Assignment) : AssignmentInstructions {
+        return readInstructions(assignment, "instructions")
+    }
+
+    private fun readInstructions(assignment: Assignment, filenamePrefix: String) : AssignmentInstructions {
 
         val instructions = AssignmentInstructions()
-        val files = File("${dropProjectProperties.assignments.rootLocation}/${assignment.gitRepositoryFolder}").listFiles { _, name -> name.startsWith("instructions")}
+        val files = File("${dropProjectProperties.assignments.rootLocation}/${assignment.gitRepositoryFolder}").listFiles { _, name -> name.startsWith(filenamePrefix)}
         if (files != null && files.isNotEmpty()) {
             val fragment = files.firstOrNull { it.extension.uppercase() == "MD" } ?: files[0]
             val extension = fragment.extension.uppercase()

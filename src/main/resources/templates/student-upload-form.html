@@ -30,10 +30,16 @@
         <span class="label label-warning col-sm-1" th:if="${!assignment.active}">Inactive</span>
     </div>
 
+    <h4 th:if="${assignment.baseAssignmentId != null}"
+        th:text="${defensePhase == 2} ? #{student.upload.form.defense.phase2-title}
+                 : #{student.upload.form.defense.phase1-title}">Phase 1 - download and check the original submission</h4>
+
     <p>
         <a class="btn btn-default" style="margin-right: 15px;" th:if="${isAuthorizedTeacher}" th:href="@{'/assignment/info/' + ${assignment.id}}">Show assignment info <small>(only
             visible for this assignment's teachers)</small></a>
-        <a th:if="${uploadSubmission != null}" class="btn btn-default btn-md"
+        <!-- on the first phase of a defense the checkpoint's report has nothing to tell the student, so it isn't offered -->
+        <a th:if="${uploadSubmission != null and (assignment.baseAssignmentId == null or defensePhase == 2)}"
+           class="btn btn-default btn-md"
            th:href="@{'/buildReport/' + ${uploadSubmission.id}}"
            th:text="#{student.upload.form.visualize-report-btn}">Visualizar último relatório</a>
     </p>
@@ -70,7 +76,43 @@
             </div>
         </div>
 
-        <div class="panel panel-default">
+        <div class="panel panel-info" th:if="${assignment.baseAssignmentId != null}">
+            <div class="panel-body">
+                <p th:if="${baseSubmission != null}">
+                    <a th:href="@{'/downloadOriginalProject/' + ${baseSubmission.id}}">
+                        <span class="glyphicon glyphicon-save" aria-hidden="true"></span>
+                        <span th:text="#{student.upload.form.defense.download}">Download original submission (.zip)</span>
+                    </a>
+                    <small th:text="#{student.upload.form.defense.download-info(${assignment.baseAssignmentId},${#dates.format(baseSubmission.submissionDate, 'dd/MMM HH:mm')})}"></small>
+                </p>
+                <p th:if="${baseSubmission == null and !isTeacher}" class="text-danger"
+                   th:text="#{student.upload.form.defense.no-base-submission(${assignment.baseAssignmentId})}"></p>
+                <p th:if="${baseSubmission != null and defensePhase == 1 and uploadSubmission == null}"
+                   th:text="#{student.upload.form.defense.phase1}"></p>
+                <p th:if="${baseSubmission != null and defensePhase == 1 and uploadSubmission != null}"
+                   class="text-success">
+                    <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+                    <span th:text="#{student.upload.form.defense.phase1-done(${#dates.format(uploadSubmission.submissionDate, 'dd/MMM HH:mm')})}"></span>
+                </p>
+                <!-- nothing for the student to do until the teacher releases the instructions, so say so with a
+                     spinner rather than with a page that just sits there -->
+                <p th:if="${baseSubmission != null and defensePhase == 1 and uploadSubmission != null}"
+                   class="text-muted">
+                    <i class="fas fa-circle-notch fa-spin fa-lg" aria-hidden="true" style="margin-right: 6px"></i>
+                    <span th:text="#{student.upload.form.defense.phase1-waiting}">Waiting for the defense instructions</span>
+                </p>
+                <!-- the line budget is deliberately not shown: the students are not meant to work up to it -->
+                <p th:if="${defensePhase == 2}"
+                   th:text="#{student.upload.form.defense.phase2}"></p>
+            </div>
+        </div>
+
+        <div class="panel" th:if="${instructionsFragment != null}"
+             th:classappend="${assignment.baseAssignmentId != null} ? 'panel-warning' : 'panel-default'">
+            <!-- before they are released, only the teacher gets this panel, so the title says so -->
+            <div class="panel-heading" th:if="${assignment.baseAssignmentId != null}"
+                 th:text="${assignment.defenseInstructionsReleased} ? #{student.upload.form.defense.instructions}
+                          : #{student.upload.form.defense.instructions.teacherOnly}">Defense instructions</div>
             <div class="panel-body" th:utext="${instructionsFragment}"></div>
         </div>
 

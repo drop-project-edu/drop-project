@@ -118,6 +118,15 @@
                            this.form.submit();
                            "/>
                 </form>
+                <form th:if="${assignment.baseAssignmentId != null}"
+                      th:action="@{'/assignment/toggle-defense-instructions/' + ${assignment.id}}" method="post">
+                    <input type="hidden" name="tags" th:value="${currentTags}"/>
+                    <label class="small text-muted" style="font-weight: normal;"
+                           th:title="'Release the defense instructions of ' + ${assignment.id} + ' to the students'">
+                        <input type="checkbox" th:checked="${assignment.defenseInstructionsReleased}"
+                               onChange="this.form.submit();"/> defense
+                    </label>
+                </form>
             </td>
             <td th:if="${!archived}" class="text-center">
                 <i th:if="${assignment.visibility == T(org.dropproject.dao.AssignmentVisibility).PUBLIC}" class="fa fa-globe" aria-hidden="true"

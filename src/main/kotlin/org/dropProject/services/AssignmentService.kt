@@ -351,6 +351,13 @@ class AssignmentService(
         existingAssignment.hiddenTestsVisibility = assignmentForm.hiddenTestsVisibility
         existingAssignment.leaderboardType = assignmentForm.leaderboardType
         existingAssignment.visibility = assignmentForm.visibility
+        existingAssignment.baseAssignmentId = assignmentForm.baseAssignmentId?.takeIf { it.isNotBlank() }
+        existingAssignment.maxChangedLines = assignmentForm.maxChangedLines
+
+        // an assignment that is no longer a defense of another one has no instructions to release
+        if (existingAssignment.baseAssignmentId == null) {
+            existingAssignment.defenseInstructionsReleased = false
+        }
 
         // remove projectGroupRestrictions if minGroupSize was updated to null
         if (assignmentForm.minGroupSize == null && existingAssignment.projectGroupRestrictions != null) {
@@ -378,6 +385,30 @@ class AssignmentService(
         clearAllTags(existingAssignment)
         tagNames?.forEach {
             addTagToAssignment(existingAssignment, it)
+        }
+    }
+
+    /**
+     * Forces on [assignmentForm] the settings that a defense assignment doesn't get to choose:
+     *
+     * - a group size of exactly 1, since a defense is done individually, even when the project it is a defense of
+     *   was done in group;
+     * - the package of the linked assignment, since the students submit the very code they had already submitted
+     *   there, and a different package would make every submission fail the structure check.
+     *
+     * Meant to be called before [validateAssignmentForm], so that these are the values that get validated and saved.
+     * A form that is not a defense is left untouched.
+     *
+     * @param assignmentForm is the [AssignmentForm] to normalize
+     */
+    fun applyDefenseSettings(assignmentForm: AssignmentForm) {
+        val baseAssignmentId = assignmentForm.baseAssignmentId?.takeIf { it.isNotBlank() } ?: return
+
+        assignmentForm.minGroupSize = 1
+        assignmentForm.maxGroupSize = 1
+
+        assignmentRepository.findById(baseAssignmentId).ifPresent {
+            assignmentForm.assignmentPackage = it.packageName
         }
     }
 
@@ -437,6 +468,24 @@ class AssignmentService(
         if (assignmentForm.visibility == AssignmentVisibility.PRIVATE && assignmentForm.assignees.isNullOrEmpty()) {
             errors.add(AssignmentFormError("assignees", "assignees.mustBeFilled",
                 "Error: For PRIVATE assignments, you have to fill in the authorized submitters"))
+        }
+
+        // the form only offers the assignments the teacher has access to, but the value comes from the request, so it
+        // has to be checked here as well
+        val baseAssignmentId = assignmentForm.baseAssignmentId?.takeIf { it.isNotBlank() }
+        if (baseAssignmentId != null) {
+            val baseAssignment = assignmentRepository.findById(baseAssignmentId).orElse(null)
+            if (baseAssignmentId == assignmentForm.assignmentId) {
+                errors.add(AssignmentFormError("baseAssignmentId", "baseAssignmentId.itself",
+                    "Error: An assignment can't be a defense of itself"))
+            } else if (baseAssignment == null) {
+                errors.add(AssignmentFormError("baseAssignmentId", "baseAssignmentId.inexistent",
+                    "Error: The assignment ${baseAssignmentId} doesn't exist"))
+            } else if (baseAssignment.ownerUserId != principal.realName() &&
+                !assignmentACLRepository.existsByAssignmentIdAndUserId(baseAssignmentId, principal.realName())) {
+                errors.add(AssignmentFormError("baseAssignmentId", "baseAssignmentId.notAuthorized",
+                    "Error: You are not authorized to manage the assignment ${baseAssignmentId}"))
+            }
         }
 
         if (errors.isEmpty() && !assignmentForm.editMode) {
@@ -514,6 +563,8 @@ class AssignmentService(
             gitRepositoryFolder = assignmentForm.assignmentId!!, showLeaderBoard = assignmentForm.leaderboardType != null,
             hiddenTestsVisibility = assignmentForm.hiddenTestsVisibility,
             leaderboardType = assignmentForm.leaderboardType,
+            baseAssignmentId = assignmentForm.baseAssignmentId?.takeIf { it.isNotBlank() },
+            maxChangedLines = assignmentForm.maxChangedLines,
             visibility = assignmentForm.visibility)
 
         // we only need to check minGroupSize since maxGroupSize and exceptions depend on this field
