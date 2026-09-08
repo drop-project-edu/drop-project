@@ -121,9 +121,14 @@
                 <form th:if="${assignment.baseAssignmentId != null}"
                       th:action="@{'/assignment/toggle-defense-instructions/' + ${assignment.id}}" method="post">
                     <input type="hidden" name="tags" th:value="${currentTags}"/>
+                    <!-- the instructions can only be released after the students were able to submit their original
+                         code, so the checkbox is locked while the assignment is inactive -->
                     <label class="small text-muted" style="font-weight: normal;"
-                           th:title="'Release the defense instructions of ' + ${assignment.id} + ' to the students'">
+                           th:title="${assignment.defenseInstructionsReleased or assignment.active} ?
+                                     'Release the defense instructions of ' + ${assignment.id} + ' to the students' :
+                                     'Mark assignment ' + ${assignment.id} + ' active to release its defense instructions'">
                         <input type="checkbox" th:checked="${assignment.defenseInstructionsReleased}"
+                               th:disabled="${!assignment.defenseInstructionsReleased and !assignment.active}"
                                onChange="this.form.submit();"/> defense
                     </label>
                 </form>
