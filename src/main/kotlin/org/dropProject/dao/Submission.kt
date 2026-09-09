@@ -94,6 +94,9 @@ enum class SubmissionMode {
  * @property defenseCheckpoint is a Boolean, true when the submission was made on the first phase of a defense
  * assignment, that is, when it is meant to be the student's original code and not yet the requested changes. It is
  * recorded at submission time because the phase of the assignment moves on afterwards
+ * @property defenseCheckpointAccepted is a Boolean, true when the teacher accepted this checkpoint as the group's
+ * original code even though it doesn't pass every test of the project assignment, which is what lets a group whose
+ * project submission was already failing tests move on to the second phase of the defense
  */
 
 @Entity @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -175,7 +178,10 @@ data class Submission(
         var baseDivergenceLines: Int? = null,
 
         @JsonView(JSONViews.TeacherAPI::class)
-        var defenseCheckpoint: Boolean = false
+        var defenseCheckpoint: Boolean = false,
+
+        @JsonView(JSONViews.TeacherAPI::class)
+        var defenseCheckpointAccepted: Boolean = false
 ) {
     @ManyToOne
     @JsonView(JSONViews.TeacherAPI::class)

@@ -48,6 +48,9 @@ interface SubmissionRepository : JpaRepository<Submission, Long> {
     fun findByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(group: ProjectGroup, assignmentId: String) : List<Submission>
     fun findFirstByGroupAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(group: ProjectGroup, assignmentId: String) : Submission?
     fun findFirstByGroupInAndAssignmentIdOrderBySubmissionDateDesc(groups: List<ProjectGroup>, assignmentId: String) : Submission?
+    // this should only return non-deleted submissions (excludeStatusId -> DELETED)
+    fun findFirstByGroupInAndAssignmentIdAndStatusNotOrderBySubmissionDateDesc(groups: List<ProjectGroup>, assignmentId: String, excludeStatusId: String) : Submission?
+    fun findByGroupInAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(groups: List<ProjectGroup>, assignmentId: String) : List<Submission>
     fun findFirstByGroupInAndAssignmentIdAndMarkedAsFinalTrueAndStatusNotOrderBySubmissionDateDesc(groups: List<ProjectGroup>, assignmentId: String, excludeStatusId: String) : Submission?
     fun findFirstByGroupInAndAssignmentIdAndStatusInOrderBySubmissionDateDescStatusDateDesc(groups: List<ProjectGroup>, assignmentId: String, status: List<String>) : Submission?
     fun findByStatusAndStatusDateBefore(status: String, statusDate: Date): List<Submission>

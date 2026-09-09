@@ -39,6 +39,13 @@ class BaseSubmissionNotFoundException(message: String?, cause: Throwable? = null
 class MaxChangedLinesExceededException(message: String?, cause: Throwable? = null) : RuntimeException(message, cause)
 
 /**
+ * Represents an Exception that is raised when a submission made on the first phase of a defense is not exactly the
+ * code that the group submitted to the linked project assignment. On that phase, the student is only supposed to
+ * prove that they can build and submit their own code, so anything else is refused.
+ */
+class DivergentCheckpointException(message: String?, cause: Throwable? = null) : RuntimeException(message, cause)
+
+/**
  * Thrown when a user who is one of an assignment's intended users tries to open it while it is not active.
  *
  * It is an [AccessDeniedException] so that it is reported exactly like any other denial, through the security chain

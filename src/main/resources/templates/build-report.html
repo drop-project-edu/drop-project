@@ -33,6 +33,8 @@
         <span th:if="${submission.markedAsFinal}" class="label label-success">Final</span>
         <span th:if="${submission.defenseCheckpoint}" class="label label-info"
               title="Submitted on the first phase of the defense, as the original code">Original</span>
+        <span th:if="${submission.defenseCheckpointAccepted}" class="label label-warning"
+              title="Accepted by the teacher as the group's original code, even though it doesn't pass every test">Accepted</span>
     </h6>
 
     <h6 th:if="${gitSubmission} != null">
@@ -81,6 +83,16 @@
         <form class="inline btn-group" method="post" th:action="'../markAsFinal/' + ${submission.id}">
             <input type="submit" th:if="${!submission.markedAsFinal}" value="Mark as Final" class="btn btn-default"/>
             <input type="submit" th:if="${submission.markedAsFinal}" value="Unmark as Final" class="btn btn-default"/>
+        </form>
+    </div>
+
+    <!-- the teacher's override for the first phase of a defense: this is the group's code, whatever the tests say -->
+    <div class="btn-group" role="group" th:if="${isTeacher and submission.defenseCheckpoint}" th:unless="${autoRefresh}">
+        <form class="inline btn-group" method="post" th:action="'../acceptCheckpoint/' + ${submission.id}">
+            <input type="submit" th:if="${!submission.defenseCheckpointAccepted}" value="Accept as original code"
+                   class="btn btn-default" title="Let this group start the defense even though this submission doesn't pass every test"/>
+            <input type="submit" th:if="${submission.defenseCheckpointAccepted}" value="Stop accepting as original code"
+                   class="btn btn-default"/>
         </form>
     </div>
 

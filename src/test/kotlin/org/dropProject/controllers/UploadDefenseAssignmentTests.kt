@@ -37,6 +37,8 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.dropproject.services.DefenseCheckpointStatus
+import org.springframework.security.core.userdetails.User
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
@@ -73,6 +75,18 @@ class UploadDefenseAssignmentTests : UploadTestBase() {
                     listOf("testFuncaoParaTestar", "testFuncaoLentaParaTestar"),
             "org.dropProject.sampleAssignments.testProj.TestTeacherHiddenProject" to
                     listOf("testFuncaoParaTestarQueNaoApareceAosAlunos"))))
+    }
+
+    /**
+     * Makes the next build fail one of the project assignment's teacher tests, which is what happens when a student
+     * submits code that doesn't work.
+     */
+    private fun failTheNextBuild() {
+        fakeBuildRunner.fakeNextBuilds(FakeBuild(
+            passingTests = mapOf("org.dropProject.sampleAssignments.testProj.TestTeacherProject" to
+                    listOf("testFuncaoParaTestar")),
+            failingTests = mapOf("org.dropProject.sampleAssignments.testProj.TestTeacherProject" to
+                    listOf("testFuncaoLentaParaTestar"))))
     }
 
     private fun sampleProjectFolder(projectName: String) = File("src/test/sampleProjects/compact/java/$projectName")
@@ -130,20 +144,19 @@ class UploadDefenseAssignmentTests : UploadTestBase() {
     }
 
     @Test
-    fun `on the first phase, a divergent submission is recorded but not rejected`() {
-
-        val expectedDivergence = divergenceBetween("projectOK", "projectCheckstyleErrors")
-        assertTrue(expectedDivergence > 1, "the two sample projects should differ in more than one line")
+    fun `on the first phase, a submission that is not the original code is rejected`() {
 
         submissionFixtures.uploadProject("projectOK", projectAssignmentId, STUDENT_1)
 
-        // the budget is way below the divergence, but the instructions were not released yet
-        assignmentFixtures.createDefenseAssignment(maxChangedLines = 1, defenseInstructionsReleased = false)
+        // the budget is irrelevant on the first phase: the code has to be exactly the original one
+        assignmentFixtures.createDefenseAssignment(maxChangedLines = 100, defenseInstructionsReleased = false)
 
-        val submissionId = submissionFixtures.uploadProject("projectCheckstyleErrors", defenseAssignmentId, STUDENT_1)
+        val error = submissionFixtures.uploadProject("projectCheckstyleErrors", defenseAssignmentId, STUDENT_1,
+            expectedResultMatcher = status().isInternalServerError())
 
-        assertEquals(expectedDivergence, savedSubmission(submissionId).baseDivergenceLines,
-            "the divergence should have been recorded, so that the teacher can see it")
+        assertEquals("Your submission was rejected: this is not the code you submitted to assignment " +
+                "${projectAssignmentId}. Download that submission and submit it without any change.", error)
+        assertTrue(submissionsTo(defenseAssignmentId).isEmpty(), "no submission should have been created")
     }
 
     @Test
@@ -152,8 +165,8 @@ class UploadDefenseAssignmentTests : UploadTestBase() {
         val expectedDivergence = divergenceBetween("projectOK", "projectCheckstyleErrors")
 
         submissionFixtures.uploadProject("projectOK", projectAssignmentId, STUDENT_1)
-        assignmentFixtures.createDefenseAssignment(maxChangedLines = expectedDivergence,
-            defenseInstructionsReleased = true)
+        assignmentFixtures.createDefenseAssignment(maxChangedLines = expectedDivergence)
+        startDefenseFor(STUDENT_1)
 
         val submissionId = submissionFixtures.uploadProject("projectCheckstyleErrors", defenseAssignmentId, STUDENT_1)
 
@@ -167,8 +180,8 @@ class UploadDefenseAssignmentTests : UploadTestBase() {
         val maxChangedLines = expectedDivergence - 1
 
         submissionFixtures.uploadProject("projectOK", projectAssignmentId, STUDENT_1)
-        assignmentFixtures.createDefenseAssignment(maxChangedLines = maxChangedLines,
-            defenseInstructionsReleased = true)
+        assignmentFixtures.createDefenseAssignment(maxChangedLines = maxChangedLines)
+        startDefenseFor(STUDENT_1)
 
         val error = submissionFixtures.uploadProject("projectCheckstyleErrors", defenseAssignmentId, STUDENT_1,
             expectedResultMatcher = status().isInternalServerError())
@@ -176,7 +189,8 @@ class UploadDefenseAssignmentTests : UploadTestBase() {
         // the budget itself is deliberately kept out of the message
         assertEquals("This submission changes too much of the code you submitted to the project assignment. " +
                 "Undo the changes that were not requested and submit again.", error)
-        assertTrue(submissionsTo(defenseAssignmentId).isEmpty(), "no submission should have been created")
+        assertEquals(1, submissionsTo(defenseAssignmentId).size,
+            "only the checkpoint should have been created")
     }
 
     @Test
@@ -185,7 +199,8 @@ class UploadDefenseAssignmentTests : UploadTestBase() {
         val expectedDivergence = divergenceBetween("projectOK", "projectCheckstyleErrors")
 
         submissionFixtures.uploadProject("projectOK", projectAssignmentId, STUDENT_1)
-        assignmentFixtures.createDefenseAssignment(maxChangedLines = null, defenseInstructionsReleased = true)
+        assignmentFixtures.createDefenseAssignment(maxChangedLines = null)
+        startDefenseFor(STUDENT_1)
 
         val submissionId = submissionFixtures.uploadProject("projectCheckstyleErrors", defenseAssignmentId, STUDENT_1)
 
@@ -213,6 +228,8 @@ class UploadDefenseAssignmentTests : UploadTestBase() {
             .andExpect(status().isFound)
 
         assignmentFixtures.createDefenseAssignment()
+        // the reference is the submission marked as final, so that's the code that passes the first phase
+        startDefenseFor(STUDENT_1, checkpointProject = "projectOK")
 
         val submissionId = submissionFixtures.uploadProject("projectCheckstyleErrors", defenseAssignmentId, STUDENT_1)
 
@@ -281,7 +298,8 @@ class UploadDefenseAssignmentTests : UploadTestBase() {
     fun `a submission on the second phase goes to the build report as usual`() {
 
         submissionFixtures.uploadProject("projectOK", projectAssignmentId, STUDENT_1)
-        assignmentFixtures.createDefenseAssignment(defenseInstructionsReleased = true)
+        assignmentFixtures.createDefenseAssignment()
+        startDefenseFor(STUDENT_1)
 
         val response = submissionFixtures.uploadProjectRaw("projectOK", defenseAssignmentId, STUDENT_1)
 
@@ -333,7 +351,8 @@ class UploadDefenseAssignmentTests : UploadTestBase() {
     fun `a submission made on the second phase is not the original code`() {
 
         submissionFixtures.uploadProject("projectOK", projectAssignmentId, STUDENT_1)
-        assignmentFixtures.createDefenseAssignment(defenseInstructionsReleased = true)
+        assignmentFixtures.createDefenseAssignment()
+        startDefenseFor(STUDENT_1)
 
         val submissionId = submissionFixtures.uploadProject("projectOK", defenseAssignmentId, STUDENT_1)
 
@@ -526,7 +545,7 @@ class UploadDefenseAssignmentTests : UploadTestBase() {
             .andExpect(status().isOk)
             .andExpect(model().attribute("instructionsFragment", nullValue()))
 
-        releaseDefenseInstructions()
+        startDefenseFor(STUDENT_1)
 
         this.mvc.perform(get("/upload/${defenseAssignmentId}").with(user(STUDENT_1)))
             .andExpect(status().isOk)
@@ -563,14 +582,260 @@ class UploadDefenseAssignmentTests : UploadTestBase() {
     fun `on the second phase, the submission is evaluated with the tests of the defense assignment`() {
 
         submissionFixtures.uploadProject("projectOK", projectAssignmentId, STUDENT_1)
-        assignmentFixtures.createDefenseAssignment(gitRepositoryFolder = "testJavaProj2",
-            defenseInstructionsReleased = true)
+        assignmentFixtures.createDefenseAssignment(gitRepositoryFolder = "testJavaProj2")
+        startDefenseFor(STUDENT_1)
 
         val submissionId = submissionFixtures.uploadProject("projectOK", defenseAssignmentId, STUDENT_1)
 
         val teacherTests = teacherTestFilesOf(submissionId)
         assertTrue(teacherTests.contains("TestProject1.java"),
             "the defense should be evaluated with its own tests, but got ${teacherTests}")
+    }
+
+    /**
+     * Takes [student] through the whole first phase - they submit the code they had submitted to the project
+     * assignment and it passes the project's tests - and only then does the teacher release the instructions,
+     * which is what puts the student on the second phase.
+     */
+    private fun startDefenseFor(student: User, checkpointProject: String = "projectOK") {
+        submissionFixtures.uploadProject(checkpointProject, defenseAssignmentId, student)
+        releaseDefenseInstructions()
+    }
+
+
+    @Test
+    fun `a student who has not submitted the original code stays on the first phase`() {
+
+        submissionFixtures.uploadProject("projectOK", projectAssignmentId, STUDENT_1)
+        assignmentFixtures.createDefenseAssignment(gitRepositoryFolder = "testJavaProj2")
+        releaseDefenseInstructions()
+
+        this.mvc.perform(get("/upload/${defenseAssignmentId}").with(user(STUDENT_1)))
+            .andExpect(status().isOk)
+            .andExpect(model().attribute("defensePhase", equalTo(1)))
+            .andExpect(model().attribute("defenseCheckpointStatus", equalTo(DefenseCheckpointStatus.NONE)))
+            // the defense exercise is the instructions, so they can't be shown either
+            .andExpect(model().attribute("instructionsFragment", nullValue()))
+    }
+
+    @Test
+    fun `a student whose original code fails a test stays on the first phase`() {
+
+        submissionFixtures.uploadProject("projectOK", projectAssignmentId, STUDENT_1)
+        assignmentFixtures.createDefenseAssignment(gitRepositoryFolder = "testJavaProj2")
+
+        failTheNextBuild()
+        submissionFixtures.uploadProject("projectOK", defenseAssignmentId, STUDENT_1)
+        releaseDefenseInstructions()
+
+        this.mvc.perform(get("/upload/${defenseAssignmentId}").with(user(STUDENT_1)))
+            .andExpect(status().isOk)
+            .andExpect(model().attribute("defensePhase", equalTo(1)))
+            .andExpect(model().attribute("defenseCheckpointStatus", equalTo(DefenseCheckpointStatus.FAILED)))
+            .andExpect(model().attribute("instructionsFragment", nullValue()))
+    }
+
+    @Test
+    fun `the upload page tells the student that their original code doesn't pass the tests`() {
+
+        submissionFixtures.uploadProject("projectOK", projectAssignmentId, STUDENT_1)
+        assignmentFixtures.createDefenseAssignment()
+
+        failTheNextBuild()
+        val submissionId = submissionFixtures.uploadProject("projectOK", defenseAssignmentId, STUDENT_1)
+
+        val page = this.mvc.perform(get("/upload/${defenseAssignmentId}").with(user(STUDENT_1)))
+            .andExpect(status().isOk)
+            .andReturn().response.contentAsString
+
+        assertTrue(page.contains("does not pass all the tests of assignment ${projectAssignmentId}"),
+            "the student should be told why the first phase didn't pass, but the page was ${page}")
+        assertTrue(page.contains("buildReport/${submissionId}"),
+            "the student should be able to see what is failing")
+    }
+
+    @Test
+    fun `the upload page confirms an original submission that passed`() {
+
+        submissionFixtures.uploadProject("projectOK", projectAssignmentId, STUDENT_1)
+        assignmentFixtures.createDefenseAssignment()
+
+        val submissionId = submissionFixtures.uploadProject("projectOK", defenseAssignmentId, STUDENT_1)
+
+        val page = this.mvc.perform(get("/upload/${defenseAssignmentId}").with(user(STUDENT_1)))
+            .andExpect(status().isOk)
+            .andExpect(model().attribute("defenseCheckpointStatus", equalTo(DefenseCheckpointStatus.VALID)))
+            .andReturn().response.contentAsString
+
+        assertTrue(page.contains("Your original submission is done"),
+            "the student should be told that the first phase is done, but the page was ${page}")
+        assertFalse(page.contains("buildReport/${submissionId}"),
+            "a checkpoint that passed has nothing to tell the student")
+    }
+
+    @Test
+    fun `a submission of a student who is still on the first phase is another checkpoint`() {
+
+        submissionFixtures.uploadProject("projectOK", projectAssignmentId, STUDENT_1)
+        assignmentFixtures.createDefenseAssignment(gitRepositoryFolder = "testJavaProj2")
+        releaseDefenseInstructions()
+
+        val submissionId = submissionFixtures.uploadProject("projectOK", defenseAssignmentId, STUDENT_1)
+
+        assertTrue(savedSubmission(submissionId).defenseCheckpoint,
+            "the student still has to submit the original code, even though the defense has started")
+        assertTrue(teacherTestFilesOf(submissionId).contains("TestTeacherProject.java"),
+            "the checkpoint must still be evaluated with the tests of ${projectAssignmentId}")
+    }
+
+    @Test
+    fun `a student who is still on the first phase can't submit changed code`() {
+
+        submissionFixtures.uploadProject("projectOK", projectAssignmentId, STUDENT_1)
+        assignmentFixtures.createDefenseAssignment(maxChangedLines = 100)
+        releaseDefenseInstructions()
+
+        val error = submissionFixtures.uploadProject("projectCheckstyleErrors", defenseAssignmentId, STUDENT_1,
+            expectedResultMatcher = status().isInternalServerError())
+
+        assertEquals("Your submission was rejected: this is not the code you submitted to assignment " +
+                "${projectAssignmentId}. Download that submission and submit it without any change.", error)
+    }
+
+    @Test
+    fun `the student moves to the second phase once the original code passes`() {
+
+        submissionFixtures.uploadProject("projectOK", projectAssignmentId, STUDENT_1)
+        assignmentFixtures.createDefenseAssignment(gitRepositoryFolder = "testJavaProj2")
+        startDefenseFor(STUDENT_1)
+
+        this.mvc.perform(get("/upload/${defenseAssignmentId}").with(user(STUDENT_1)))
+            .andExpect(status().isOk)
+            .andExpect(model().attribute("defensePhase", equalTo(2)))
+            .andExpect(model().attribute("defenseCheckpointStatus", equalTo(DefenseCheckpointStatus.VALID)))
+            .andExpect(model().attribute("instructionsFragment", notNullValue()))
+    }
+
+    @Test
+    fun `the teacher can accept a checkpoint that failed, so that the student can defend it anyway`() {
+
+        submissionFixtures.uploadProject("projectOK", projectAssignmentId, STUDENT_1)
+        assignmentFixtures.createDefenseAssignment(gitRepositoryFolder = "testJavaProj2")
+
+        // the group's project submission was already failing a test, so their original code fails it again
+        failTheNextBuild()
+        val checkpointId = submissionFixtures.uploadProject("projectOK", defenseAssignmentId, STUDENT_1)
+        releaseDefenseInstructions()
+
+        this.mvc.perform(post("/acceptCheckpoint/${checkpointId}").with(user(TEACHER_1)))
+            .andExpect(status().isFound)
+            .andExpect(redirectedUrl("/buildReport/${checkpointId}"))
+
+        assertTrue(savedSubmission(checkpointId).defenseCheckpointAccepted)
+
+        this.mvc.perform(get("/upload/${defenseAssignmentId}").with(user(STUDENT_1)))
+            .andExpect(status().isOk)
+            .andExpect(model().attribute("defensePhase", equalTo(2)))
+            .andExpect(model().attribute("defenseCheckpointStatus", equalTo(DefenseCheckpointStatus.VALID)))
+            .andExpect(model().attribute("instructionsFragment", notNullValue()))
+    }
+
+    @Test
+    fun `the teacher can stop accepting a checkpoint`() {
+
+        submissionFixtures.uploadProject("projectOK", projectAssignmentId, STUDENT_1)
+        assignmentFixtures.createDefenseAssignment()
+
+        failTheNextBuild()
+        val checkpointId = submissionFixtures.uploadProject("projectOK", defenseAssignmentId, STUDENT_1)
+        releaseDefenseInstructions()
+
+        this.mvc.perform(post("/acceptCheckpoint/${checkpointId}").with(user(TEACHER_1)))
+            .andExpect(status().isFound)
+
+        this.mvc.perform(post("/acceptCheckpoint/${checkpointId}").with(user(TEACHER_1)))
+            .andExpect(status().isFound)
+
+        assertFalse(savedSubmission(checkpointId).defenseCheckpointAccepted)
+
+        this.mvc.perform(get("/upload/${defenseAssignmentId}").with(user(STUDENT_1)))
+            .andExpect(status().isOk)
+            .andExpect(model().attribute("defensePhase", equalTo(1)))
+            .andExpect(model().attribute("defenseCheckpointStatus", equalTo(DefenseCheckpointStatus.FAILED)))
+    }
+
+    @Test
+    fun `the build report of a checkpoint offers the teacher the accept button`() {
+
+        submissionFixtures.uploadProject("projectOK", projectAssignmentId, STUDENT_1)
+        assignmentFixtures.createDefenseAssignment()
+
+        failTheNextBuild()
+        val checkpointId = submissionFixtures.uploadProject("projectOK", defenseAssignmentId, STUDENT_1)
+
+        val page = this.mvc.perform(get("/buildReport/${checkpointId}").with(user(TEACHER_1)))
+            .andExpect(status().isOk)
+            .andReturn().response.contentAsString
+
+        assertTrue(page.contains("Accept as original code"),
+            "the teacher should be able to accept the checkpoint from its build report")
+
+        this.mvc.perform(post("/acceptCheckpoint/${checkpointId}").with(user(TEACHER_1)))
+            .andExpect(status().isFound)
+
+        val pageAfterAccepting = this.mvc.perform(get("/buildReport/${checkpointId}").with(user(TEACHER_1)))
+            .andExpect(status().isOk)
+            .andReturn().response.contentAsString
+
+        assertTrue(pageAfterAccepting.contains("Stop accepting as original code"),
+            "the teacher should be able to undo it")
+        assertTrue(pageAfterAccepting.contains(">Accepted<"), "the checkpoint should be labelled as accepted")
+    }
+
+    @Test
+    fun `a submission that is not a checkpoint can't be accepted`() {
+
+        submissionFixtures.uploadProject("projectOK", projectAssignmentId, STUDENT_1)
+        assignmentFixtures.createDefenseAssignment()
+        startDefenseFor(STUDENT_1)
+
+        val defenseSubmissionId = submissionFixtures.uploadProject("projectOK", defenseAssignmentId, STUDENT_1)
+
+        this.mvc.perform(post("/acceptCheckpoint/${defenseSubmissionId}").with(user(TEACHER_1)))
+            .andExpect(status().isBadRequest)
+
+        assertFalse(savedSubmission(defenseSubmissionId).defenseCheckpointAccepted)
+    }
+
+    @Test
+    fun `deleting the checkpoint puts the student back on the first phase`() {
+
+        submissionFixtures.uploadProject("projectOK", projectAssignmentId, STUDENT_1)
+        assignmentFixtures.createDefenseAssignment()
+        val checkpointId = submissionFixtures.uploadProject("projectOK", defenseAssignmentId, STUDENT_1)
+        releaseDefenseInstructions()
+
+        this.mvc.perform(post("/delete/${checkpointId}").with(user(TEACHER_1)))
+            .andExpect(status().isFound)
+
+        this.mvc.perform(get("/upload/${defenseAssignmentId}").with(user(STUDENT_1)))
+            .andExpect(status().isOk)
+            .andExpect(model().attribute("defensePhase", equalTo(1)))
+            .andExpect(model().attribute("defenseCheckpointStatus", equalTo(DefenseCheckpointStatus.NONE)))
+            // a deleted submission is not the student's last submission anymore
+            .andExpect(model().attribute("uploadSubmission", nullValue()))
+    }
+
+    @Test
+    fun `a teacher reaches the second phase without any checkpoint`() {
+
+        assignmentFixtures.createDefenseAssignment(gitRepositoryFolder = "testJavaProj2")
+        releaseDefenseInstructions()
+
+        this.mvc.perform(get("/upload/${defenseAssignmentId}").with(user(TEACHER_1)))
+            .andExpect(status().isOk)
+            .andExpect(model().attribute("defensePhase", equalTo(2)))
+            .andExpect(model().attribute("instructionsFragment", notNullValue()))
     }
 
     private fun releaseDefenseInstructions() {

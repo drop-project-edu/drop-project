@@ -23,6 +23,7 @@ import jakarta.persistence.EntityNotFoundException
 import org.apache.commons.io.FileUtils
 import org.dropproject.Constants
 import org.dropproject.controllers.BaseSubmissionNotFoundException
+import org.dropproject.controllers.DivergentCheckpointException
 import org.dropproject.controllers.InvalidProjectGroupException
 import org.dropproject.controllers.InvalidProjectStructureException
 import org.dropproject.controllers.MaxChangedLinesExceededException
@@ -90,7 +91,8 @@ class SubmissionService(
     val cooloffOverrideService: CooloffOverrideService,
     val pomValidator: PomValidator,
     val rebuildStatusRepository: RebuildStatusRepository,
-    val sourceDiffService: SourceDiffService
+    val sourceDiffService: SourceDiffService,
+    val defenseService: DefenseService
 ) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
@@ -297,10 +299,11 @@ class SubmissionService(
             }
 
             // on the first phase of a defense, the submission is only a checkpoint of the code the student had
-            // already submitted to the project assignment, and not yet the requested changes. Teachers are always on
-            // the second phase, so that they can try the defense out before releasing it
+            // already submitted to the project assignment, and not yet the requested changes. The phase is per
+            // student: a student who hasn't passed the first one stays there even after the instructions are released
             val isDefenseCheckpoint = assignment.baseAssignmentId != null &&
-                    !assignment.defenseInstructionsReleased && !request.isUserInRole("TEACHER")
+                    defenseService.defensePhaseFor(assignment, principal.realName(),
+                        request.isUserInRole("TEACHER")) == 1
 
             // a submission to a defense assignment is supposed to be a bounded set of changes on top of the group's
             // code for the linked project assignment, so measure how much it diverges from it
@@ -319,10 +322,19 @@ class SubmissionService(
                 null
             }
 
-            // divergences are only rejected on the second phase - before that, they are just recorded, so that the
-            // teacher can see that the checkpoint didn't match the original code
+            // on the first phase, the student is only proving that they can build and submit the code they had
+            // already submitted, so anything other than exactly that code is refused
+            if (isDefenseCheckpoint && baseDivergenceLines != null && baseDivergenceLines > 0) {
+                LOG.info("[${authors.joinToString(separator = "|")}] checkpoint diverges from the submission to " +
+                        "${assignment.baseAssignmentId} in ${baseDivergenceLines} line(s)")
+                throw DivergentCheckpointException(i18n.getMessage("student.submit.divergentCheckpoint",
+                    arrayOf(assignment.baseAssignmentId), currentLocale))
+            }
+
+            // the line budget only applies to the defense itself: on the first phase the submission has to be the
+            // original code anyway, which was just checked
             val maxChangedLines = assignment.maxChangedLines
-            if (assignment.defenseInstructionsReleased && maxChangedLines != null &&
+            if (!isDefenseCheckpoint && maxChangedLines != null &&
                 baseDivergenceLines != null && baseDivergenceLines > maxChangedLines) {
                 LOG.info("[${authors.joinToString(separator = "|")}] submission changes ${baseDivergenceLines} lines, " +
                         "but only ${maxChangedLines} are allowed")
@@ -837,7 +849,7 @@ class SubmissionService(
         val mavenizedProjectFolder = assignmentTeacherFiles.getProjectFolderAsFile(submission, teacherRebuild)
         mavenizedProjectFolder.deleteRecursively()
 
-        val teacherFilesFolder = evaluationTeacherFilesFolder(assignment)
+        val teacherFilesFolder = evaluationTeacherFilesFolder(assignment, submission)
 
         when (assignment.submissionStructure) {
             SubmissionStructure.COMPACT -> mavenizeCompactStructure(projectFolder, mavenizedProjectFolder, assignment, teacherFilesFolder)
@@ -855,17 +867,16 @@ class SubmissionService(
     }
 
     /**
-     * The folder holding the teacher files that a submission to [assignment] must be evaluated with, or null to
-     * use the assignment's own files.
+     * The folder holding the teacher files that [submission] must be evaluated with, or null to use the
+     * assignment's own files.
      *
-     * Only the first phase of a defense assignment gets an override. Until the instructions are released, a
-     * submission is just a checkpoint of the code the group sent to the linked project assignment, so it is
-     * evaluated with *that* assignment's tests: the defense's own tests would fail on unchanged code and, worse,
-     * would tell the students what the defense is about before it starts.
+     * Only the first phase of a defense assignment gets an override. A checkpoint is just the code the group sent
+     * to the linked project assignment, so it is evaluated with *that* assignment's tests: the defense's own tests
+     * would fail on unchanged code and, worse, would tell the students what the defense is about before it starts.
      */
-    private fun evaluationTeacherFilesFolder(assignment: Assignment): File? {
+    private fun evaluationTeacherFilesFolder(assignment: Assignment, submission: Submission): File? {
         val baseAssignmentId = assignment.baseAssignmentId
-        if (baseAssignmentId == null || assignment.defenseInstructionsReleased) {
+        if (baseAssignmentId == null || !submission.defenseCheckpoint) {
             return null
         }
 

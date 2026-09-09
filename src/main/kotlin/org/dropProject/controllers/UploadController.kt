@@ -88,7 +88,8 @@ class UploadController(
         val authorizationService: AuthorizationService,
         val dropProjectProperties: DropProjectProperties,
         val cooloffOverrideService: CooloffOverrideService,
-        val rebuildStatusRepository: RebuildStatusRepository
+        val rebuildStatusRepository: RebuildStatusRepository,
+        val defenseService: DefenseService
         ) {
 
     @Value("\${spring.web.locale}")
@@ -206,12 +207,14 @@ class UploadController(
         // shown to those teachers, otherwise the others would just get an access denied page
         model["isAuthorizedTeacher"] = isAuthorizedTeacher
         model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.realName(), assignment.id)
-        model["instructionsFragment"] = instructionsFor(assignment, isAuthorizedTeacher) //quick fix
-        if (assignment.baseAssignmentId != null) {
-            // teachers are on the second phase from the start, so that they can try the defense out, and see it as
-            // the students will, before releasing it to them
-            model["defensePhase"] = if (assignment.defenseInstructionsReleased || isAuthorizedTeacher) 2 else 1
+
+        val defensePhase = defensePhaseFor(assignment, principal, isAuthorizedTeacher)
+        if (defensePhase != null) {
+            model["defensePhase"] = defensePhase
+            model["defenseCheckpointStatus"] = defenseService.checkpointStatus(assignment, principal.realName())
         }
+
+        model["instructionsFragment"] = instructionsFor(assignment, defensePhase) //quick fix
         model["packageTree"] = assignmentTeacherFiles.buildPackageTree(
                 assignment.packageName, assignment.language,
                 assignment.submissionStructure, assignment.acceptsStudentTests)
@@ -230,7 +233,8 @@ class UploadController(
         if (assignment.submissionMethod == SubmissionMethod.UPLOAD) {
 
             val groups = projectGroupRepository.getGroupsForAuthor(principal.realName())
-            val submission = submissionRepository.findFirstByGroupInAndAssignmentIdOrderBySubmissionDateDesc(groups, assignmentId)
+            val submission = submissionRepository.findFirstByGroupInAndAssignmentIdAndStatusNotOrderBySubmissionDateDesc(
+                groups, assignmentId, SubmissionStatus.DELETED.code)
 
             model["uploadForm"] = UploadForm(assignment.id)
             model["uploadSubmission"] = submission
@@ -281,16 +285,31 @@ class UploadController(
     }
 
     /**
+     * The phase of the defense [assignment] that [principal] is on, or null if it is not a defense assignment.
+     *
+     * The teacher decides when the second phase may start (by releasing the instructions), but each student only
+     * gets there after submitting their original code and having it pass the project assignment's tests, so the
+     * phase is calculated per user.
+     */
+    private fun defensePhaseFor(assignment: Assignment, principal: Principal, isAuthorizedTeacher: Boolean): Int? {
+        if (assignment.baseAssignmentId == null) {
+            return null
+        }
+
+        return defenseService.defensePhaseFor(assignment, principal.realName(), isAuthorizedTeacher)
+    }
+
+    /**
      * The assignment instructions to show on the submission page, or null when they must still be kept from the
      * student.
      *
-     * On a defense assignment, the instructions *are* the defense exercise, so they are only revealed once the
-     * teacher releases them (see [Assignment.defenseInstructionsReleased]). Until then the page shows the generic
-     * first phase text, which is the same for every defense. Teachers always see them, so that they can review the
-     * exercise before releasing it.
+     * On a defense assignment, the instructions *are* the defense exercise, so they are only revealed to whoever
+     * has reached its second phase ([defensePhase], null on a regular assignment). Until then the page shows the
+     * generic first phase text, which is the same for every defense. Teachers always see them, so that they can
+     * review the exercise before releasing it.
      */
-    private fun instructionsFor(assignment: Assignment, isAuthorizedTeacher: Boolean): String? {
-        if (assignment.baseAssignmentId != null && !assignment.defenseInstructionsReleased && !isAuthorizedTeacher) {
+    private fun instructionsFor(assignment: Assignment, defensePhase: Int?): String? {
+        if (defensePhase == 1) {
             return null
         }
 
@@ -492,7 +511,8 @@ class UploadController(
         model["assignment"] = assignment
         model["isAuthorizedTeacher"] = isAuthorizedTeacher
         model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.realName(), assignment.id)
-        model["instructionsFragment"] = instructionsFor(assignment, isAuthorizedTeacher) //quick fix
+        model["instructionsFragment"] = instructionsFor(assignment,
+            defensePhaseFor(assignment, principal, isAuthorizedTeacher)) //quick fix
         model["packageTree"] = assignmentTeacherFiles.buildPackageTree(
                 assignment.packageName, assignment.language,
                 assignment.submissionStructure, assignment.acceptsStudentTests)
@@ -808,6 +828,49 @@ class UploadController(
     }
 
     /**
+     * Controller that handles requests for accepting a defense checkpoint that didn't pass, that is, the teacher's
+     * override for the first phase of a defense.
+     *
+     * A group only reaches the second phase after submitting the code they had submitted to the project assignment
+     * and having it pass that assignment's tests. A group whose project submission was already failing tests can
+     * never do that, since the checkpoint is the very same code, so the teacher can accept the checkpoint as the
+     * group's original code and let them defend it anyway.
+     *
+     * @param submissionId is a Long, identifying the checkpoint to accept (or to stop accepting, since it toggles)
+     * @param principal is a [Principal] representing the user making the request
+     *
+     * @return a String identifying the relevant View
+     */
+    @RequestMapping(value = ["/acceptCheckpoint/{submissionId}"], method = [(RequestMethod.POST)])
+    fun acceptCheckpoint(@PathVariable submissionId: Long,
+                         principal: Principal) : String {
+
+        val submission = submissionRepository.findById(submissionId)
+            .orElseThrow { SubmissionNotFoundException(submissionId) }
+        val assignment = assignmentRepository.findById(submission.assignmentId)
+            .orElseThrow { AssignmentNotFoundException(submission.assignmentId) }
+
+        val acl = assignmentACLRepository.findByAssignmentId(assignment.id)
+        if (principal.realName() != assignment.ownerUserId && acl.find { it.userId == principal.realName() } == null) {
+            throw IllegalAccessError("Checkpoints can only be accepted by the assignment owner or authorized teachers")
+        }
+
+        if (!submission.defenseCheckpoint) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST,
+                "Submission ${submissionId} was not made on the first phase of a defense")
+        }
+
+        submission.defenseCheckpointAccepted = !submission.defenseCheckpointAccepted
+        submissionRepository.save(submission)
+
+        LOG.info("[${principal.realName()}] ${if (submission.defenseCheckpointAccepted) "accepted" else "stopped accepting"} " +
+                "checkpoint ${submissionId}")
+
+        // the teacher decides this while looking at what failed, which is the build report
+        return "redirect:/buildReport/${submissionId}"
+    }
+
+    /**
      * Controller that handles requests for the deletion of a [Submission].
      *
      * @param submissionId is a Long, identifying the Submission to delete
@@ -905,6 +968,12 @@ class UploadController(
 
     @ExceptionHandler(BaseSubmissionNotFoundException::class)
     fun handleError(e: BaseSubmissionNotFoundException): ResponseEntity<String> {
+        LOG.warn(e.message)
+        return ResponseEntity("{\"error\": \"${e.message}\"}", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(DivergentCheckpointException::class)
+    fun handleError(e: DivergentCheckpointException): ResponseEntity<String> {
         LOG.warn(e.message)
         return ResponseEntity("{\"error\": \"${e.message}\"}", HttpStatus.INTERNAL_SERVER_ERROR);
     }

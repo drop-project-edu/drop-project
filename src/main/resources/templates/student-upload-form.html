@@ -37,8 +37,10 @@
     <p>
         <a class="btn btn-default" style="margin-right: 15px;" th:if="${isAuthorizedTeacher}" th:href="@{'/assignment/info/' + ${assignment.id}}">Show assignment info <small>(only
             visible for this assignment's teachers)</small></a>
-        <!-- on the first phase of a defense the checkpoint's report has nothing to tell the student, so it isn't offered -->
-        <a th:if="${uploadSubmission != null and (assignment.baseAssignmentId == null or defensePhase == 2)}"
+        <!-- on the first phase of a defense the checkpoint's report only has something to tell the student when
+             the checkpoint failed, so that's the only case where it is offered -->
+        <a th:if="${uploadSubmission != null and (assignment.baseAssignmentId == null or defensePhase == 2
+                    or defenseCheckpointStatus?.name() == 'FAILED')}"
            class="btn btn-default btn-md"
            th:href="@{'/buildReport/' + ${uploadSubmission.id}}"
            th:text="#{student.upload.form.visualize-report-btn}">Visualizar último relatório</a>
@@ -87,16 +89,28 @@
                 </p>
                 <p th:if="${baseSubmission == null and !isTeacher}" class="text-danger"
                    th:text="#{student.upload.form.defense.no-base-submission(${assignment.baseAssignmentId})}"></p>
-                <p th:if="${baseSubmission != null and defensePhase == 1 and uploadSubmission == null}"
+                <p th:if="${baseSubmission != null and defensePhase == 1 and defenseCheckpointStatus?.name() == 'NONE'}"
                    th:text="#{student.upload.form.defense.phase1}"></p>
-                <p th:if="${baseSubmission != null and defensePhase == 1 and uploadSubmission != null}"
+                <!-- the checkpoint is only validated when its build ends, so until then there is nothing to say -->
+                <p th:if="${defensePhase == 1 and defenseCheckpointStatus?.name() == 'PENDING'}"
+                   class="text-muted">
+                    <i class="fas fa-circle-notch fa-spin fa-lg" aria-hidden="true" style="margin-right: 6px"></i>
+                    <span th:text="#{student.upload.form.defense.phase1-checking}">Checking your original submission</span>
+                </p>
+                <!-- the student's own code doesn't work, so the defense can't start for them -->
+                <p th:if="${defensePhase == 1 and defenseCheckpointStatus?.name() == 'FAILED'}"
+                   class="text-danger">
+                    <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                    <span th:text="#{student.upload.form.defense.phase1-failed(${assignment.baseAssignmentId})}"></span>
+                </p>
+                <p th:if="${defensePhase == 1 and defenseCheckpointStatus?.name() == 'VALID'}"
                    class="text-success">
                     <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
                     <span th:text="#{student.upload.form.defense.phase1-done(${#dates.format(uploadSubmission.submissionDate, 'dd/MMM HH:mm')})}"></span>
                 </p>
                 <!-- nothing for the student to do until the teacher releases the instructions, so say so with a
                      spinner rather than with a page that just sits there -->
-                <p th:if="${baseSubmission != null and defensePhase == 1 and uploadSubmission != null}"
+                <p th:if="${defensePhase == 1 and defenseCheckpointStatus?.name() == 'VALID'}"
                    class="text-muted">
                     <i class="fas fa-circle-notch fa-spin fa-lg" aria-hidden="true" style="margin-right: 6px"></i>
                     <span th:text="#{student.upload.form.defense.phase1-waiting}">Waiting for the defense instructions</span>
@@ -142,6 +156,20 @@
 </script>
 <script th:src="@{/js/dropproject.js}"></script>
 <script th:src="@{/js/copyToClipboard.js}"></script>
+
+<!-- once the student has submitted on the first phase of a defense, what changes the page happens elsewhere: the
+     build of their checkpoint, the teacher accepting it, and the teacher releasing the instructions. The refresh is
+     skipped while an upload is in flight or while its error is on screen, so that the student can read it. -->
+<script th:if="${defensePhase == 1 and defenseCheckpointStatus != null and defenseCheckpointStatus?.name() != 'NONE'}">
+    setInterval(function () {
+        var dropzone = document.querySelector("#dpDropzone");
+        var busy = dropzone != null && (dropzone.querySelector(".dz-processing") != null ||
+                                        dropzone.querySelector(".dz-error") != null);
+        if (!document.hidden && !busy) {
+            window.location.reload();
+        }
+    }, 8000);
+</script>
 
 </body>
 </html>

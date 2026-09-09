@@ -80,6 +80,8 @@
                 <!-- made on the first phase of a defense, so it is supposed to be the student's original code -->
                 <span th:if="${submission.defenseCheckpoint}" class="label label-info"
                       title="Submitted on the first phase of the defense, as the original code">Original</span>
+                <span th:if="${submission.defenseCheckpointAccepted}" class="label label-warning"
+                      title="Accepted by the teacher as the group's original code, even though it doesn't pass every test">Accepted</span>
             </td>
             <td class="text-center">
                 <span th:each="report : ${submission.reportElements}">
