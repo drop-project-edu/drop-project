@@ -41,6 +41,7 @@ import org.junit.jupiter.api.Assertions
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.io.ResourceLoader
 import org.springframework.http.MediaType
+import org.springframework.http.HttpHeaders
 import org.springframework.mock.web.MockMultipartFile
 import org.springframework.security.core.userdetails.User
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
@@ -124,7 +125,8 @@ class SubmissionFixtures {
     fun uploadProjectByAPI(projectName: String, assignmentId: String, uploader: Pair<String,String>,
                       authors: List<Pair<String,String>>? = null,
                       submissionStructure: SubmissionStructure = SubmissionStructure.COMPACT,
-                      language: Language = Language.JAVA): Int {
+                      language: Language = Language.JAVA,
+                      userAgent: String? = null): Int {
 
         val multipartFile = prepareFile(projectName, submissionStructure, language, authors)
         val (username, token) = uploader
@@ -132,7 +134,8 @@ class SubmissionFixtures {
         val contentString = mvc.perform(MockMvcRequestBuilders.multipart("/api/student/submissions/new")
             .file(multipartFile)
             .param("assignmentId", assignmentId)
-            .header("authorization", basicAuthHeader(username, token)))
+            .header("authorization", basicAuthHeader(username, token))
+            .apply { if (userAgent != null) header(HttpHeaders.USER_AGENT, userAgent) })
             .andExpect(MockMvcResultMatchers.status().isOk)
             .andReturn().response.contentAsString
 

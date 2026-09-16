@@ -49,6 +49,19 @@ sealed class ApiClient {
     /** Anything else: curl, a script, a browser, ... Drop Project makes no version demands of those. */
     data object Other : ApiClient()
 
+    /**
+     * Whether this client can be served something that needs version [minimum] of the plugin.
+     *
+     * A client that is not the plugin is never refused: it is written against the API, not against the
+     * plugin, so whatever the plugin cannot do yet says nothing about what it can do. A plugin too old to
+     * report a version is older than any version that can, and is therefore refused.
+     */
+    fun meets(minimum: PluginVersion) = when (this) {
+        is Plugin -> version >= minimum
+        UnidentifiedPlugin -> false
+        Other -> true
+    }
+
     companion object {
 
         /**

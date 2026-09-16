@@ -35,7 +35,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPat
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 /**
- * The minimum version that these tests run against is the one in drop-project-test.properties (0.9.15).
+ * The minimum version that these tests run against is the one in drop-project-test.properties (0.9.0).
  */
 @DropProjectIntegrationTest
 @Tag("integration")
@@ -59,25 +59,25 @@ class PluginVersionInterceptorTests : ApiTestSupport {
 
     @Test
     fun `a plugin that is recent enough is served`() {
+        callApiAs("DropProjectPlugin/0.9.0 (IntelliJ IDEA 2024.3)").andExpect(status().isOk)
         callApiAs("DropProjectPlugin/0.9.15 (IntelliJ IDEA 2024.3)").andExpect(status().isOk)
-        callApiAs("DropProjectPlugin/0.9.16 (IntelliJ IDEA 2024.3)").andExpect(status().isOk)
         callApiAs("DropProjectPlugin/1.0.0 (IntelliJ IDEA 2024.3)").andExpect(status().isOk)
     }
 
     @Test
     fun `an outdated plugin is refused with an upgrade required`() {
-        callApiAs("DropProjectPlugin/0.9.14 (IntelliJ IDEA 2024.3)")
+        callApiAs("DropProjectPlugin/0.8.9 (IntelliJ IDEA 2024.3)")
             .andExpect(status().isUpgradeRequired)
             .andExpect(jsonPath("$.error").value("Plugin version not supported"))
             // the version it has to update to is reported as data, so that the plugin writes its own message
-            .andExpect(jsonPath("$.minimumVersion").value("0.9.15"))
-            .andExpect(jsonPath("$.message", containsString("0.9.14")))
-            .andExpect(jsonPath("$.message", containsString("0.9.15")))
+            .andExpect(jsonPath("$.minimumVersion").value("0.9.0"))
+            .andExpect(jsonPath("$.message", containsString("0.8.9")))
+            .andExpect(jsonPath("$.message", containsString("0.9.0")))
     }
 
     @Test
     fun `a beta is older than the version it leads to`() {
-        callApiAs("DropProjectPlugin/0.9.15-beta (IntelliJ IDEA 2024.3)")
+        callApiAs("DropProjectPlugin/0.9.0-beta (IntelliJ IDEA 2024.3)")
             .andExpect(status().isUpgradeRequired)
     }
 
@@ -88,9 +88,9 @@ class PluginVersionInterceptorTests : ApiTestSupport {
         callApiAs("okhttp/4.12.0")
             .andExpect(status().isUnauthorized)
             .andExpect(jsonPath("$.error").value("Plugin version not supported"))
-            .andExpect(jsonPath("$.minimumVersion").value("0.9.15"))
+            .andExpect(jsonPath("$.minimumVersion").value("0.9.0"))
             .andExpect(jsonPath("$.message", containsString("too old")))
-            .andExpect(jsonPath("$.message", containsString("0.9.15")))
+            .andExpect(jsonPath("$.message", containsString("0.9.0")))
     }
 
     @Test

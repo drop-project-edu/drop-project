@@ -29,6 +29,7 @@ import org.dropproject.controllers.InvalidProjectStructureException
 import org.dropproject.controllers.MaxChangedLinesExceededException
 import org.dropproject.controllers.UploadController
 import org.dropproject.dao.*
+import org.dropproject.data.ApiClient
 import org.dropproject.data.AuthorDetails
 import org.dropproject.data.SubmissionInfo
 import org.dropproject.data.SubmissionResult
@@ -202,9 +203,15 @@ class SubmissionService(
             throw IllegalArgumentException("this assignment doesnt accept upload submissions")
         }
 
-        // Block API submissions for Maven-structured assignments
-        if (submissionMode == SubmissionMode.API && assignment.submissionStructure == SubmissionStructure.MAVEN) {
-            throw IllegalArgumentException("API submissions are not supported for Maven-structured assignments. Please use the web interface.")
+        // A maven-structured submission has to carry the pom.xml of the project, and the plugin only started
+        // including it in MIN_PLUGIN_VERSION_FOR_MAVEN_SUBMISSIONS. An older one would always be refused by
+        // the structure validation, with an error about a pom.xml the student never had to write, so it is
+        // told what the real problem is instead. Scripts written against the API build their own zip, so
+        // they are left to it.
+        if (assignment.submissionStructure == SubmissionStructure.MAVEN &&
+            !ApiClient.of(request).meets(Constants.MIN_PLUGIN_VERSION_FOR_MAVEN_SUBMISSIONS)) {
+            throw IllegalArgumentException(i18n.getMessage("error.plugin.maven.unsupported",
+                arrayOf(Constants.MIN_PLUGIN_VERSION_FOR_MAVEN_SUBMISSIONS.toString()), currentLocale))
         }
 
         val isAuthorizedTeacher = request.isUserInRole("TEACHER") &&

@@ -67,12 +67,14 @@ class PluginVersionInterceptor(
 
         val minimum = minimumVersion ?: return true
 
-        when (val client = ApiClient.of(request)) {
+        val client = ApiClient.of(request)
+        if (client.meets(minimum)) {
+            return true
+        }
+
+        when (client) {
 
             is ApiClient.Plugin -> {
-                if (client.version >= minimum) {
-                    return true
-                }
                 LOG.warn("Refused ${request.requestURI} to plugin ${client.version} (minimum is $minimum)")
                 // a plugin that reports its version is recent enough to know this status
                 reject(response, HttpStatus.UPGRADE_REQUIRED, minimum,
@@ -91,6 +93,7 @@ class PluginVersionInterceptor(
                     i18n.getMessage("error.plugin.outdated", arrayOf(minimum.toString()), currentLocale))
             }
 
+            // a client that is not the plugin is never refused, so it never reaches this point
             ApiClient.Other -> return true
         }
 
