@@ -374,12 +374,16 @@ class SubmissionService(
     }
 
     /**
-     * Searches for the [Submission] that the submissions to [assignment] must be compared with, that is, the last
-     * version that the submitter's groups sent to the linked project assignment ([Assignment.baseAssignmentId]).
+     * Searches for the [Submission] that the submissions to [assignment] must be compared with, that is, the version
+     * that the submitter's groups sent to the linked project assignment ([Assignment.baseAssignmentId]) and that the
+     * defense is supposed to start from.
      *
      * The submission that was marked as final is the one that counts, since that's the version the teacher considers
-     * to be the group's work. If the group has none, the most recent validated submission is used instead. Deleted
-     * submissions are never used, since deletion only sets the status, leaving markedAsFinal untouched.
+     * to be the group's work. If the group has none, the last validated submission made before the project
+     * assignment's due date is used instead: the code that was submitted after the deadline is usually the group
+     * experimenting with a project that was already delivered, and it would be unfair to make them defend it (the
+     * more so because a checkpoint that doesn't pass the tests keeps them out of the defense). Deleted submissions
+     * are never used, since deletion only sets the status, leaving markedAsFinal untouched.
      *
      * All the groups that the submitter belongs to are searched, and not just the group of the submission being made,
      * because the group that did the project is frequently not the one that is defending it (e.g. a project made in
@@ -389,7 +393,7 @@ class SubmissionService(
      * @param submitterUserId is a String identifying the user that is submitting
      *
      * @return a Submission or null, either if [assignment] is not linked to another assignment or if the submitter
-     * never submitted to it
+     * has nothing that the defense can be based on
      */
     fun findBaseSubmission(assignment: Assignment, submitterUserId: String): Submission? {
         val baseAssignmentId = assignment.baseAssignmentId ?: return null
@@ -399,12 +403,21 @@ class SubmissionService(
             return null
         }
 
-        return submissionRepository
+        submissionRepository
             .findFirstByGroupInAndAssignmentIdAndMarkedAsFinalTrueAndStatusNotOrderBySubmissionDateDesc(groups,
                 baseAssignmentId, SubmissionStatus.DELETED.code)
-            ?: submissionRepository
-                .findFirstByGroupInAndAssignmentIdAndStatusInOrderBySubmissionDateDescStatusDateDesc(groups, baseAssignmentId,
-                    listOf(SubmissionStatus.VALIDATED.code, SubmissionStatus.VALIDATED_REBUILT.code))
+            ?.let { return it }
+
+        // the project assignment may have been deleted after the defense was created, in which case there is no
+        // deadline to respect and every submission that survived it is a candidate
+        val baseAssignment = assignmentRepository.findById(baseAssignmentId).orElse(null)
+
+        return submissionRepository
+            .findByGroupInAndAssignmentIdOrderBySubmissionDateDescStatusDateDesc(groups, baseAssignmentId)
+            .firstOrNull {
+                it.getStatus() in setOf(SubmissionStatus.VALIDATED, SubmissionStatus.VALIDATED_REBUILT) &&
+                        baseAssignment?.overdue(it) != true
+            }
     }
 
     /**

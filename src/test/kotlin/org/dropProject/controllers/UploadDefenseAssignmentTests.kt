@@ -43,6 +43,8 @@ import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequ
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import java.io.File
+import java.util.Date
+import java.util.concurrent.TimeUnit
 
 /**
  * Tests for the "defense" assignments, that is, assignments whose submissions are supposed to be a bounded set of
@@ -248,6 +250,63 @@ class UploadDefenseAssignmentTests : UploadTestBase() {
         val submissionId = submissionFixtures.uploadProject("projectCheckstyleErrors", defenseAssignmentId, STUDENT_1)
 
         assertEquals(0, savedSubmission(submissionId).baseDivergenceLines)
+    }
+
+    @Test
+    fun `a submission made after the due date is not used as the reference`() {
+
+        val expectedDivergence = divergenceBetween("projectOK", "projectCheckstyleErrors")
+
+        submissionFixtures.uploadProject("projectOK", projectAssignmentId, STUDENT_1)
+        // after delivering the project, the group went on experimenting with code that doesn't pass the tests
+        val overdueSubmissionId = submissionFixtures.uploadProject("projectCheckstyleErrors", projectAssignmentId, STUDENT_1)
+        makeOverdue(overdueSubmissionId)
+
+        assignmentFixtures.createDefenseAssignment()
+        // the reference is the last submission made in time, so that's the code that passes the first phase
+        startDefenseFor(STUDENT_1, checkpointProject = "projectOK")
+
+        val submissionId = submissionFixtures.uploadProject("projectCheckstyleErrors", defenseAssignmentId, STUDENT_1)
+
+        // if the overdue submission had been used as the reference, the divergence would be zero
+        assertEquals(expectedDivergence, savedSubmission(submissionId).baseDivergenceLines)
+    }
+
+    @Test
+    fun `a submission marked as final is used as the reference even when it is overdue`() {
+
+        val expectedDivergence = divergenceBetween("projectOK", "projectCheckstyleErrors")
+
+        submissionFixtures.uploadProject("projectOK", projectAssignmentId, STUDENT_1)
+        val overdueSubmissionId = submissionFixtures.uploadProject("projectCheckstyleErrors", projectAssignmentId, STUDENT_1)
+        makeOverdue(overdueSubmissionId)
+
+        // the teacher gave the group the deadline extension, so their late code is the work to be defended
+        this.mvc.perform(post("/markAsFinal/${overdueSubmissionId}").with(user(TEACHER_1)))
+            .andExpect(status().isFound)
+
+        assignmentFixtures.createDefenseAssignment()
+        startDefenseFor(STUDENT_1, checkpointProject = "projectCheckstyleErrors")
+
+        val submissionId = submissionFixtures.uploadProject("projectOK", defenseAssignmentId, STUDENT_1)
+
+        assertEquals(expectedDivergence, savedSubmission(submissionId).baseDivergenceLines)
+    }
+
+    @Test
+    fun `a submission is rejected when the group only submitted to the project assignment after the due date`() {
+
+        val overdueSubmissionId = submissionFixtures.uploadProject("projectOK", projectAssignmentId, STUDENT_1)
+        makeOverdue(overdueSubmissionId)
+
+        assignmentFixtures.createDefenseAssignment()
+
+        val error = submissionFixtures.uploadProject("projectOK", defenseAssignmentId, STUDENT_1,
+            expectedResultMatcher = status().isInternalServerError())
+
+        // the teacher can still let them in, by marking the late submission as final
+        assertEquals("Your submission was rejected: you did not submit assignment ${projectAssignmentId} before " +
+                "the due date, and that is the code that a defense must be based on.", error)
     }
 
     @Test
@@ -836,6 +895,20 @@ class UploadDefenseAssignmentTests : UploadTestBase() {
             .andExpect(status().isOk)
             .andExpect(model().attribute("defensePhase", equalTo(2)))
             .andExpect(model().attribute("instructionsFragment", notNullValue()))
+    }
+
+    /**
+     * Pushes [submissionId] two days into the future and closes the project assignment a day before that, so that
+     * it becomes the only overdue submission of the group.
+     */
+    private fun makeOverdue(submissionId: String) {
+        val submission = savedSubmission(submissionId)
+        submission.submissionDate = Date(submission.submissionDate.time + TimeUnit.DAYS.toMillis(2))
+        submissionRepository.save(submission)
+
+        val projectAssignment = assignmentRepository.findById(projectAssignmentId).get()
+        projectAssignment.dueDate = Date(submission.submissionDate.time - TimeUnit.DAYS.toMillis(1))
+        assignmentRepository.save(projectAssignment)
     }
 
     private fun releaseDefenseInstructions() {
