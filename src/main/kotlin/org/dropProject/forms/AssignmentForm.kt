@@ -75,6 +75,11 @@ data class AssignmentForm(
 
         var leaderboardType: LeaderboardType? = null,
 
+        var baseAssignmentId: String? = null,
+
+        @field:Min(value=1, message="Error: Max changed lines must be >= 1")
+        var maxChangedLines: Int? = null,
+
         var assignees: String? = null,
 
         var editMode: Boolean = false,

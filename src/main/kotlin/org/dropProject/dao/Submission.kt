@@ -88,6 +88,15 @@ enum class SubmissionMode {
  * @property coverage is an Int with the test coverage percentage calculated for the submission's own unit tests
  * @property testResults is a List of [JUnitMethodResult] containing the result for each evaluation JUnit Test
  * @property group is the [ProjectGrop] that performed the submission.
+ * @property baseDivergenceLines is an optional Int with the number of source lines that this submission changed
+ * relatively to the group's submission to the linked project assignment ([Assignment.baseAssignmentId]). It is null
+ * for submissions to assignments that are not linked to another one
+ * @property defenseCheckpoint is a Boolean, true when the submission was made on the first phase of a defense
+ * assignment, that is, when it is meant to be the student's original code and not yet the requested changes. It is
+ * recorded at submission time because the phase of the assignment moves on afterwards
+ * @property defenseCheckpointAccepted is a Boolean, true when the teacher accepted this checkpoint as the group's
+ * original code even though it doesn't pass every test of the project assignment, which is what lets a group whose
+ * project submission was already failing tests move on to the second phase of the defense
  */
 
 @Entity @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -163,7 +172,16 @@ data class Submission(
         @JsonView(JSONViews.StudentAPI::class)
         var overdue: Boolean? = null,
 
-        var submissionMode: SubmissionMode? = null
+        var submissionMode: SubmissionMode? = null,
+
+        @JsonView(JSONViews.TeacherAPI::class)
+        var baseDivergenceLines: Int? = null,
+
+        @JsonView(JSONViews.TeacherAPI::class)
+        var defenseCheckpoint: Boolean = false,
+
+        @JsonView(JSONViews.TeacherAPI::class)
+        var defenseCheckpointAccepted: Boolean = false
 ) {
     @ManyToOne
     @JsonView(JSONViews.TeacherAPI::class)

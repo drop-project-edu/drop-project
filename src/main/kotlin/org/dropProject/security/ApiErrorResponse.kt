@@ -33,10 +33,16 @@ private val errorMapper = ObjectMapper()
  * exception and can contain the characters that would otherwise break the response: a quote, a backslash or a
  * newline. It usually contains a user's name, so the response is also explicitly encoded in UTF-8 - the default
  * encoding of a servlet response is ISO-8859-1, which would mangle any name that is not plain ascii.
+ *
+ * [details] are written next to the error and the message, for the errors that carry something the caller is
+ * expected to act on rather than only show. The message stays there as well: whoever reads it has no way of
+ * knowing which client is at the other end, and a client that does not know about a particular error can still
+ * print the sentence that comes with it.
  */
-fun HttpServletResponse.writeApiError(status: Int, error: String, message: String?) {
+fun HttpServletResponse.writeApiError(status: Int, error: String, message: String?,
+                                      details: Map<String, Any?> = emptyMap()) {
     this.status = status
     this.contentType = MediaType.APPLICATION_JSON_VALUE
     this.characterEncoding = StandardCharsets.UTF_8.name()
-    errorMapper.writeValue(this.writer, mapOf("error" to error, "message" to message))
+    errorMapper.writeValue(this.writer, mapOf("error" to error, "message" to message) + details)
 }

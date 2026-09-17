@@ -41,6 +41,7 @@ sealed interface ToolCommand {
     companion object {
         private val commandFactories: Map<String, (Map<String, Any>) -> ToolCommand> = mapOf(
             "get_assignment_info" to GetAssignmentInfo::from,
+            "get_assignment_submissions" to GetAssignmentSubmissions::from,
             "search_assignments" to SearchAssignments::from,
             "search_student" to SearchStudent::from,
             "get_submission_code" to GetSubmissionCode::from,
@@ -75,6 +76,7 @@ sealed interface ToolCommand {
         fun getAllTools(): List<McpTool> {
             return listOf(
                 GetAssignmentInfo.toMcpTool(),
+                GetAssignmentSubmissions.toMcpTool(),
                 SearchAssignments.toMcpTool(),
                 SearchStudent.toMcpTool(),
                 GetSubmissionCode.toMcpTool(),

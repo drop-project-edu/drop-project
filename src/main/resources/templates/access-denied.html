@@ -10,14 +10,24 @@
 
 <div class="container" style="max-width: 760px; margin-bottom: 65px">
 
-    <h1 class="page-header">Access denied</h1>
+    <h1 class="page-header" th:if="${notActiveAssignmentId == null}">Access denied</h1>
+    <h1 class="page-header" th:if="${notActiveAssignmentId != null}">Assignment is closed</h1>
 
-    <div class="alert alert-danger">
+    <div class="alert alert-danger" th:if="${notActiveAssignmentId == null}">
         You do not have permission to view this page.
     </div>
 
-    <p>
+    <div class="alert alert-warning" th:if="${notActiveAssignmentId != null}">
+        The assignment <strong th:text="${notActiveAssignmentId}">assignmentId</strong> is not active, so it is not
+        accepting submissions.
+    </div>
+
+    <p th:if="${notActiveAssignmentId == null}">
         If you should have access to it, ask the assignment's teacher to grant it to you.
+    </p>
+
+    <p th:if="${notActiveAssignmentId != null}">
+        You do have access to it. The teacher opens it when submissions are due to start.
     </p>
 
     <p>

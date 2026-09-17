@@ -108,6 +108,40 @@
                     </div>
                 </div>
                 <div class="form-group">
+                    <label class="col-sm-3 control-label">Type:</label>
+                    <div class="col-sm-9 read-row">
+                        <span th:if="${assignment.baseAssignmentId == null}">Normal</span>
+                        <span th:if="${assignment.baseAssignmentId != null}">Defense</span>
+                    </div>
+                </div>
+                <div class="form-group" th:if="${assignment.baseAssignmentId != null}">
+                    <label class="col-sm-3 control-label">Defense of:</label>
+                    <div class="col-sm-9 read-row">
+                        <a th:href="@{'/assignment/info/' + ${assignment.baseAssignmentId}}"
+                           th:text="${assignment.baseAssignmentId}"></a>
+                    </div>
+                </div>
+                <div class="form-group" th:if="${assignment.baseAssignmentId != null}">
+                    <label class="col-sm-3 control-label">Max changed lines:</label>
+                    <div class="col-sm-9 read-row">
+                        <span th:if="${assignment.maxChangedLines != null}" th:text="${assignment.maxChangedLines}"></span>
+                        <span th:if="${assignment.maxChangedLines == null}">Not set (the divergence is recorded but never rejected)</span>
+                        <!-- how big the requested change actually is, to help choosing the budget above -->
+                        <span th:if="${referenceSolutionDivergence != null}" class="help-block" style="margin: 0">
+                            Your own solution of this defense changes
+                            <strong th:text="${referenceSolutionDivergence}"></strong> lines (under src/main)
+                            relatively to the one of <span th:text="${assignment.baseAssignmentId}"></span>.
+                        </span>
+                    </div>
+                </div>
+                <div class="form-group" th:if="${assignment.baseAssignmentId != null}">
+                    <label class="col-sm-3 control-label">Defense instructions:</label>
+                    <div class="col-sm-9 read-row">
+                        <span th:if="${assignment.defenseInstructionsReleased}" class="label label-success">Released</span>
+                        <span th:unless="${assignment.defenseInstructionsReleased}" class="label label-default">Not released</span>
+                    </div>
+                </div>
+                <div class="form-group">
                     <label class="col-sm-3 control-label">Package:</label>
                     <div class="col-sm-9 read-row" th:text="${assignment.packageName}"></div>
                 </div>

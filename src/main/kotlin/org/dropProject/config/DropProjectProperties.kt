@@ -21,6 +21,7 @@ package org.dropproject.config
 
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.Pattern
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.validation.annotation.Validated
 
@@ -72,6 +73,9 @@ data class DropProjectProperties(
     
     /** MCP configuration */
     val mcp: Mcp = Mcp(),
+
+    /** IntelliJ plugin configuration */
+    @field:Valid val plugin: Plugin = Plugin(),
 
     /** Actuator configuration */
     val actuator: Actuator = Actuator()
@@ -152,6 +156,24 @@ data class DropProjectProperties(
     data class Mcp(
         /** Enable or disable MCP endpoints */
         val enabled: Boolean = true
+    )
+
+    data class Plugin(
+        /**
+         * The oldest version of the IntelliJ plugin that this server serves the student API to, e.g. "0.9.15".
+         *
+         * An older plugin is refused, with a message telling the student to update it, and so is a plugin
+         * that is too old to report a version at all. Every other client of the API - curl, a script, a
+         * browser - is left alone, whatever this is set to.
+         *
+         * Empty, the default, disables the check. It has to be enabled deliberately, and only once the
+         * version it demands is published to the marketplace: from the moment it is set, every student
+         * running an older plugin has to update before they can submit again.
+         */
+        @field:Pattern(
+            regexp = "|\\d{1,9}\\.\\d{1,9}(\\.\\d{1,9})?(-.+)?",
+            message = "drop-project.plugin.minimum-version must be a version like 0.9.15, or empty to disable the check")
+        val minimumVersion: String = ""
     )
 
     data class Actuator(

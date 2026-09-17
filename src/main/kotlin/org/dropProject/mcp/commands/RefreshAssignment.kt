@@ -40,7 +40,7 @@ data class RefreshAssignment(val assignmentId: String) : ToolCommand {
 
         service.requireTeacher("refresh assignments from their git repository")
 
-        val assignment = service.getAssignmentToChange(assignmentId, principal)
+        val assignment = service.getAuthorizedAssignment(assignmentId, principal)
 
         val result = service.assignmentService.refreshAssignmentFromGitRepository(assignment, principal)
 

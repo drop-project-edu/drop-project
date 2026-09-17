@@ -62,6 +62,10 @@
             <th>Labels</th>
             <th class="text-center">Indicators</th>
             <th class="text-center"><span class="glyphicon glyphicon-time" aria-hidden="true" title="Time spent running tests"></span></th>
+            <th class="text-center" th:if="${isTeacher and assignment.baseAssignmentId != null}">
+                <span class="glyphicon glyphicon-transfer" aria-hidden="true"
+                      th:title="'Lines changed relatively to the submission to ' + ${assignment.baseAssignmentId}"></span>
+            </th>
             <th>Actions</th>
         </tr>
         </thead>
@@ -73,6 +77,11 @@
             <td>
                 <span th:if="${submission.overdue}" class="label label-danger">Overdue</span>
                 <span th:if="${submission.markedAsFinal}" class="label label-success">Final</span>
+                <!-- made on the first phase of a defense, so it is supposed to be the student's original code -->
+                <span th:if="${submission.defenseCheckpoint}" class="label label-info"
+                      title="Submitted on the first phase of the defense, as the original code">Original</span>
+                <span th:if="${submission.defenseCheckpointAccepted}" class="label label-warning"
+                      title="Accepted by the teacher as the group's original code, even though it doesn't pass every test">Accepted</span>
             </td>
             <td class="text-center">
                 <span th:each="report : ${submission.reportElements}">
@@ -89,6 +98,12 @@
             </td>
 
             <td th:text="${submission.ellapsed} ? ${#numbers.formatDecimal(submission.ellapsed, 0, 'DEFAULT', 2, 'DEFAULT')}"></td>
+            <td class="text-right" th:if="${isTeacher and assignment.baseAssignmentId != null}">
+                <span th:if="${submission.baseDivergenceLines != null}"
+                      class="label"
+                      th:classappend="${assignment.maxChangedLines != null and submission.baseDivergenceLines > assignment.maxChangedLines} ? 'label-warning' : 'label-default'"
+                      th:text="${submission.baseDivergenceLines}"></span>
+            </td>
             <td>
 
                 <form class="inline" method="post" th:action="@{'/markAsFinal/' + ${submission.id}}">

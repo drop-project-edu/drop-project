@@ -78,6 +78,7 @@ Some useful settings:
 | `drop-project.mcp.enabled`                  | Enable the MCP server (`true`/`false`)     |
 | `drop-project.github.token`                 | Personal access token for GitHub API calls |
 | `drop-project.footer.message`               | Custom message shown in the page footer    |
+| `drop-project.plugin.minimum-version`       | Oldest IntelliJ plugin version accepted    |
 
 ### 4. Start the services
 

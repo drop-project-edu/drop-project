@@ -19,6 +19,8 @@
  */
 package org.dropproject
 
+import org.dropproject.data.PluginVersion
+
 object Constants {
     const val TEST_NAME_PREFIX = "Test"
     const val TEACHER_TEST_NAME_PREFIX = "TestTeacher"
@@ -33,6 +35,13 @@ object Constants {
     const val CACHE_ARCHIVED_ASSIGNMENTS_KEY = "archivedAssignmentsCache"
 
     const val SIMILARITY_THRESHOLD = 0.5  // minimum similarity to consider as plagiarism (0.0 .. 1.0)
+
+    /**
+     * The first version of the IntelliJ plugin that can submit to a [org.dropproject.dao.SubmissionStructure.MAVEN]
+     * assignment, which needs the pom.xml of the project to be included in the zip. The versions before it
+     * only ever sent src, so their submissions could not be validated and were refused outright.
+     */
+    val MIN_PLUGIN_VERSION_FOR_MAVEN_SUBMISSIONS = PluginVersion(0, 9, 15)
 }
     
     

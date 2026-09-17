@@ -58,42 +58,56 @@ class FakeBuildRunner(dropProjectProperties: DropProjectProperties) : MavenInvok
 }
 
 /**
- * A successful java build where every registered test passes.
+ * A java build where every registered test runs, passing or failing as registered.
  *
  * @property passingTests maps a full test class name (e.g. com.acme.TestTeacherProject) to the names
- * of its (passing) test methods
+ * of its passing test methods
+ * @property failingTests maps a full test class name to the names of its failing test methods. A class
+ * can appear in both maps, since a test class usually fails only some of its tests
  */
-class FakeBuild(private val passingTests: Map<String, List<String>>) {
+class FakeBuild(private val passingTests: Map<String, List<String>>,
+                private val failingTests: Map<String, List<String>> = emptyMap()) {
 
     fun writeSurefireReports(mavenizedProjectFolder: File) {
         val reportsFolder = File(mavenizedProjectFolder, "target/surefire-reports")
         reportsFolder.mkdirs()
 
-        for ((fullClassName, methodNames) in passingTests) {
-            val testCases = methodNames.joinToString("\n") {
-                """  <testcase name="$it" classname="$fullClassName" time="0.01"/>"""
-            }
+        for (fullClassName in passingTests.keys + failingTests.keys) {
+            val passed = passingTests[fullClassName].orEmpty()
+            val failed = failingTests[fullClassName].orEmpty()
+
+            val testCases = (passed.map { """  <testcase name="$it" classname="$fullClassName" time="0.01"/>""" } +
+                    failed.map {
+                        """  <testcase name="$it" classname="$fullClassName" time="0.01">""" + "\n" +
+                        """    <failure message="expected:&lt;1&gt; but was:&lt;2&gt;" type="java.lang.AssertionError">""" +
+                        """java.lang.AssertionError: expected:&lt;1&gt; but was:&lt;2&gt;""" + "\n" +
+                        """	at $fullClassName.$it($fullClassName.java:1)""" + "\n" +
+                        """    </failure>""" + "\n" +
+                        """  </testcase>"""
+                    }).joinToString("\n")
+
             File(reportsFolder, "TEST-$fullClassName.xml").writeText(
                 """<?xml version="1.0" encoding="UTF-8"?>""" + "\n" +
-                """<testsuite name="$fullClassName" time="0.05" tests="${methodNames.size}" errors="0" skipped="0" failures="0">""" + "\n" +
+                """<testsuite name="$fullClassName" time="0.05" tests="${passed.size + failed.size}" errors="0" skipped="0" failures="${failed.size}">""" + "\n" +
                 testCases + "\n" +
                 "</testsuite>\n"
             )
         }
     }
 
-    // the minimal output that BuildReport recognizes as a successful build with an active
+    // the minimal output that BuildReport recognizes as a build that ran to the end, with an active
     // (and passing) checkstyle validation
     fun mavenOutputLines(): List<String> {
-        val numTests = passingTests.values.sumOf { it.size }
+        val numPassed = passingTests.values.sumOf { it.size }
+        val numFailed = failingTests.values.sumOf { it.size }
         return listOf(
             "[INFO] Scanning for projects...",
             "[INFO] --- maven-checkstyle-plugin:3.1.1:check (checkstyle-check) @ fake-project ---",
             "[INFO] Starting audit...",
             "Audit done.",
             "[INFO] --- maven-surefire-plugin:3.5.3:test (default-test) @ fake-project ---",
-            "[INFO] Tests run: $numTests, Failures: 0, Errors: 0, Skipped: 0",
-            "[INFO] BUILD SUCCESS"
+            "[INFO] Tests run: ${numPassed + numFailed}, Failures: $numFailed, Errors: 0, Skipped: 0",
+            if (numFailed == 0) "[INFO] BUILD SUCCESS" else "[INFO] BUILD FAILURE"
         )
     }
 }

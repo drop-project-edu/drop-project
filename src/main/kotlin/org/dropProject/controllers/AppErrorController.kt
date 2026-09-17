@@ -27,6 +27,8 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.security.web.WebAttributes
+import org.springframework.ui.ModelMap
 import org.springframework.web.bind.annotation.ResponseBody
 import org.springframework.web.context.request.WebRequest
 import org.springframework.web.servlet.ModelAndView
@@ -45,7 +47,14 @@ class AppErrorController(var errorAttributes: ErrorAttributes, val environment: 
      * forwarded here, and rendering a view does not change it.
      */
     @RequestMapping(value = [ACCESS_DENIED_PATH])
-    fun accessDenied(): String {
+    fun accessDenied(request: HttpServletRequest, model: ModelMap): String {
+        // the handler that forwarded here leaves the denial on the request, which is the only way to know that this
+        // user was refused just because the assignment is closed, and not because it isn't for them
+        val denial = request.getAttribute(WebAttributes.ACCESS_DENIED_403)
+        if (denial is AssignmentNotActiveException) {
+            model["notActiveAssignmentId"] = denial.assignmentId
+        }
+
         return "access-denied"
     }
 

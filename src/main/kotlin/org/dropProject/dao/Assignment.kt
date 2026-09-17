@@ -95,6 +95,12 @@ enum class AssignmentVisibility {
  * @property maxMemoryMb is an optional Integer, indicating the maximum number of Mb that the student's code can use
  * @property showLeaderBoard is a Boolean, indicating if the leaderboard page should be active for this Assignment
  * @property leaderboardType is a [LeaderboardType]
+ * @property baseAssignmentId is an optional String with the id of the "project" Assignment that this one is a
+ * defense of. If it is set, every submission is compared with the group's last submission to that Assignment
+ * @property maxChangedLines is an optional Integer with the maximum number of lines that a submission is allowed to
+ * change relatively to the linked project submission. It is only enforced after [defenseInstructionsReleased]
+ * @property defenseInstructionsReleased is a Boolean, indicating if the defense instructions (phase 2) have already
+ * been released to the students. It is toggled manually by the teacher, typically when the defense starts
  * @property gitRepositoryUrl is a String with the location of the git repository used to create the Assignment
  * @property gitRepositoryPubKey is a String with the Public Key of the git repository
  * @property gitRepositoryPrivKey is a String the Private Key of the git repository
@@ -150,6 +156,11 @@ data class Assignment(
     var maxMemoryMb: Int? = null,
     var showLeaderBoard: Boolean = false,
     var leaderboardType: LeaderboardType? = null,
+
+    @Column(length = 50)
+    var baseAssignmentId: String? = null,
+    var maxChangedLines: Int? = null,
+    var defenseInstructionsReleased: Boolean = false,
 
     @JsonView(JSONViews.TeacherAPI::class)
     val gitRepositoryUrl: String,

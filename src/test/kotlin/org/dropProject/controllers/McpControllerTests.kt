@@ -192,6 +192,20 @@ class McpControllerTests: ApiTestSupport {
                             }
                         },
                         {
+                            "name": "get_assignment_submissions",
+                            "description": "List the latest submission of every group that submitted to an assignment, with the date, the status, how many teacher tests it passes and, for defense assignments, how many lines it changed relative to the submission being defended. Also reports which of the assignment's assignees have not submitted at all. Useful to see how a whole class did on an assignment, a mini-test or a defense, without looking up each student one by one. Only available to the owner of the assignment and to the teachers it was shared with.",
+                            "inputSchema": {
+                                "type": "object",
+                                "properties": {
+                                    "assignmentId": {
+                                        "type": "string",
+                                        "description": "The ID of the assignment whose submissions are to be listed"
+                                    }
+                                },
+                                "required": ["assignmentId"]
+                            }
+                        },
+                        {
                             "name": "search_assignments",
                             "description": "Search Drop Project assignments by name, ID, or programming language tags. Returns matching assignments with basic metadata. Useful for finding relevant assignments or exploring available coursework.",
                             "inputSchema": {
@@ -378,6 +392,14 @@ class McpControllerTests: ApiTestSupport {
                                     ],
                                     "description": "PUBLIC (listed to every student), ONLY_BY_LINK (the default) or PRIVATE (only the authorized submitters, which then must be filled in)"
                                 },
+                                "baseAssignmentId": {
+                                    "type": "string",
+                                    "description": "Turns this into a defense of the assignment with this id: the students resubmit the code they had submitted there, changed as the defense asks, and every submission is compared with that base submission. The caller must be the owner or an authorized teacher of that assignment. A defense always uses its package and a group size of 1, so packageName, minGroupSize and maxGroupSize are overwritten with those values"
+                                },
+                                "maxChangedLines": {
+                                    "type": "number",
+                                    "description": "Maximum number of lines (under src) that a submission may change relatively to the base submission, only enforced after the defense instructions are released. Only valid together with baseAssignmentId. Without it, the difference is measured and shown to the teacher, but never rejected"
+                                },
                                 "assignees": {
                                     "type": "string",
                                     "description": "Comma separated user ids of the students who are allowed to submit. Without it, any student can submit"
@@ -506,6 +528,14 @@ class McpControllerTests: ApiTestSupport {
                                         "PRIVATE"
                                     ],
                                     "description": "PUBLIC (listed to every student), ONLY_BY_LINK or PRIVATE (only the authorized submitters, which then must be filled in)"
+                                },
+                                "baseAssignmentId": {
+                                    "type": "string",
+                                    "description": "Turns this into a defense of the assignment with this id: the students resubmit the code they had submitted there, changed as the defense asks, and every submission is compared with that base submission. The caller must be the owner or an authorized teacher of that assignment. A defense always uses its package and a group size of 1, so packageName, minGroupSize and maxGroupSize are overwritten with those values. Pass an empty string to stop this assignment from being a defense"
+                                },
+                                "maxChangedLines": {
+                                    "type": "number",
+                                    "description": "Maximum number of lines (under src) that a submission may change relatively to the base submission, only enforced after the defense instructions are released. Only valid together with baseAssignmentId. Pass an empty value to measure the difference without ever rejecting a submission"
                                 },
                                 "assignees": {
                                     "type": "string",
@@ -672,6 +702,7 @@ class McpControllerTests: ApiTestSupport {
                 "**minGroupSize:** 1",
                 "**maxGroupSize:** 3",
                 "**visibility:** PRIVATE",
+                "**baseAssignmentId:** not set",
                 "**assignees:** student1,student2",
                 "**acl:** teacher2",
                 "**tags:** project",
@@ -1176,7 +1207,7 @@ class McpControllerTests: ApiTestSupport {
         val response = callTool("connect_assignment", """{"assignmentId": "ownedByTeacher1"}""",
             getBearerToken("teacher2"))
 
-        assertThat(response, containsString("can only be changed by its owner"))
+        assertThat(response, containsString("is only available to its owner"))
     }
 
     @Test
@@ -1408,7 +1439,7 @@ class McpControllerTests: ApiTestSupport {
         val response = callTool("edit_assignment",
             """{"assignmentId": "testMcpAssignment", "assignmentName": "Stolen"}""", getBearerToken("teacher2"))
 
-        assertThat(response, containsString("can only be changed by its owner"))
+        assertThat(response, containsString("is only available to its owner"))
         assertEquals("Test MCP Assignment", assignmentRepository.findById("testMcpAssignment").get().name)
     }
 
@@ -1463,5 +1494,199 @@ class McpControllerTests: ApiTestSupport {
             // cleanup assignment files
             File(dropProjectProperties.assignments.rootLocation, "connectedAssignment").deleteRecursively()
         }
+    }
+
+    @Test
+    fun `mcp create a defense assignment`() {
+        val authHeader = getBearerToken("teacher1")
+
+        val response = callTool("create_assignment", """
+            {
+                "assignmentId": "mcpDefenseAssignment",
+                "assignmentName": "Defense created through MCP",
+                "gitRepositoryUrl": "git@github.com:drop-project-edu/sampleJavaAssignment.git",
+                "baseAssignmentId": "testMcpAssignment",
+                "maxChangedLines": 60,
+                "packageName": "org.dropproject.ignored",
+                "minGroupSize": 2,
+                "maxGroupSize": 4,
+                "visibility": "PRIVATE",
+                "assignees": "student1,student2"
+            }
+        """.trimIndent(), authHeader)
+
+        // the answer must say what a defense means, since the caller doesn't choose all of it
+        assertThat(response, containsString("Defense of 'testMcpAssignment'"))
+        assertThat(response, containsString("connect_assignment"))
+
+        val assignment = assignmentRepository.findById("mcpDefenseAssignment").get()
+        assertEquals("testMcpAssignment", assignment.baseAssignmentId)
+        assertEquals(60, assignment.maxChangedLines)
+
+        // the students submit the very code they had submitted to the project assignment, individually, so neither
+        // the package nor the group size are the defense's to choose
+        assertEquals("org.dropProject.samples.testAssignment", assignment.packageName)
+        assertEquals(1, assignment.projectGroupRestrictions!!.minGroupSize)
+        assertEquals(1, assignment.projectGroupRestrictions!!.maxGroupSize)
+
+        // the defense itself only starts when the teacher releases the instructions
+        assertFalse(assignment.defenseInstructionsReleased)
+    }
+
+    @Test
+    fun `try to create a defense of an assignment that belongs to another teacher`() {
+        val authHeader = getBearerToken("teacher2")
+
+        val response = callTool("create_assignment", """
+            {
+                "assignmentId": "mcpDefenseAssignment",
+                "assignmentName": "Defense of someone else's assignment",
+                "gitRepositoryUrl": "git@github.com:drop-project-edu/sampleJavaAssignment.git",
+                "baseAssignmentId": "testMcpAssignment"
+            }
+        """.trimIndent(), authHeader)
+
+        assertThat(response, containsString("\"isError\":true"))
+        assertThat(response, containsString("not authorized to manage the assignment testMcpAssignment"))
+        assertFalse(assignmentRepository.existsById("mcpDefenseAssignment"))
+    }
+
+    @Test
+    fun `try to create a defense of an assignment that doesn't exist`() {
+        val authHeader = getBearerToken("teacher1")
+
+        val response = callTool("create_assignment", """
+            {
+                "assignmentId": "mcpDefenseAssignment",
+                "assignmentName": "Defense of nothing",
+                "gitRepositoryUrl": "git@github.com:drop-project-edu/sampleJavaAssignment.git",
+                "baseAssignmentId": "inexistentAssignment"
+            }
+        """.trimIndent(), authHeader)
+
+        assertThat(response, containsString("The assignment inexistentAssignment doesn't exist"))
+        assertFalse(assignmentRepository.existsById("mcpDefenseAssignment"))
+    }
+
+    @Test
+    fun `try to limit the changed lines of an assignment that is not a defense`() {
+        val authHeader = getBearerToken("teacher1")
+
+        // without a base submission to compare with, there is nothing to count the changed lines against, so this
+        // has to fail instead of being silently dropped
+        val response = callTool("create_assignment", """
+            {
+                "assignmentId": "mcpDefenseAssignment",
+                "assignmentName": "Not a defense",
+                "gitRepositoryUrl": "git@github.com:drop-project-edu/sampleJavaAssignment.git",
+                "maxChangedLines": 60
+            }
+        """.trimIndent(), authHeader)
+
+        assertThat(response, containsString("maxChangedLines is only valid together with baseAssignmentId"))
+        assertFalse(assignmentRepository.existsById("mcpDefenseAssignment"))
+
+        val onEdit = callTool("edit_assignment",
+            """{"assignmentId": "testMcpAssignment", "maxChangedLines": 60}""", authHeader)
+
+        assertThat(onEdit, containsString("maxChangedLines is only valid together with baseAssignmentId"))
+        assertNull(assignmentRepository.findById("testMcpAssignment").get().maxChangedLines)
+    }
+
+    @Test
+    fun `mcp edit assignment keeps the defense settings that were not passed`() {
+        // the linked assignment is the default one, so that the package the defense inherits doesn't change
+        assignmentFixtures.createDefenseAssignment(maxChangedLines = 50)
+
+        val authHeader = getBearerToken("teacher1")
+
+        val response = callTool("edit_assignment", """
+            {
+                "assignmentId": "testJavaProjDefense",
+                "assignmentName": "Renamed defense",
+                "maxChangedLines": 80
+            }
+        """.trimIndent(), authHeader)
+
+        assertThat(response, containsString("maxChangedLines: 50 -> 80"))
+
+        val assignment = assignmentRepository.findById("testJavaProjDefense").get()
+        assertEquals("Renamed defense", assignment.name)
+        assertEquals(80, assignment.maxChangedLines)
+        // editing anything else must not silently unlink the defense
+        assertEquals("testJavaProj", assignment.baseAssignmentId)
+    }
+
+    @Test
+    fun `mcp edit assignment turns a defense back into a normal assignment`() {
+        assignmentFixtures.createDefenseAssignment(maxChangedLines = 50, defenseInstructionsReleased = true)
+
+        val authHeader = getBearerToken("teacher1")
+
+        val response = callTool("edit_assignment",
+            """{"assignmentId": "testJavaProjDefense", "baseAssignmentId": ""}""", authHeader)
+
+        assertThat(response, containsString("baseAssignmentId: testJavaProj -> not set"))
+        // the line budget and the released instructions are meaningless without a submission to compare with
+        assertThat(response, containsString("maxChangedLines: 50 -> not set"))
+
+        val assignment = assignmentRepository.findById("testJavaProjDefense").get()
+        assertNull(assignment.baseAssignmentId)
+        assertNull(assignment.maxChangedLines)
+        assertFalse(assignment.defenseInstructionsReleased)
+    }
+
+    @Test
+    fun `mcp get assignment info reports the defense settings`() {
+        assignmentFixtures.createDefenseAssignment(maxChangedLines = 50)
+
+        val authHeader = getBearerToken("teacher1")
+
+        val response = callTool("get_assignment_info", """{"assignmentId": "testJavaProjDefense"}""", authHeader)
+
+        assertThat(response, containsString("**baseAssignmentId:** testJavaProj"))
+        assertThat(response, containsString("**maxChangedLines:** 50"))
+    }
+
+    @Test
+    fun `mcp get assignment submissions`() {
+        val authHeader = getBearerToken("teacher1")
+
+        submissionFixtures.uploadProject("projectOK", "testJavaProj", STUDENT_1)
+
+        val response = callTool("get_assignment_submissions", """{"assignmentId": "testJavaProj"}""", authHeader)
+
+        assertThat(response, containsString("# Submissions for"))
+        assertThat(response, containsString("**Groups with submissions:** 1"))
+        assertThat(response, containsString("## Latest submission of each group"))
+        assertThat(response, containsString("student1"))
+        assertThat(response, containsString("**Status:** VALIDATED"))
+        assertThat(response, containsString("**Teacher tests:**"))
+    }
+
+    @Test
+    fun `mcp get assignment submissions of an assignment without submissions`() {
+        val authHeader = getBearerToken("teacher1")
+
+        val response = callTool("get_assignment_submissions", """{"assignmentId": "testJavaProj"}""", authHeader)
+
+        assertThat(response, containsString("**Groups with submissions:** 0"))
+        assertThat(response, containsString("No submissions yet."))
+    }
+
+    @Test
+    fun `try to get the submissions of an assignment of another teacher`() {
+        callTool("create_assignment", """
+            {
+                "assignmentId": "ownedByTeacher1",
+                "assignmentName": "Owned by teacher1",
+                "gitRepositoryUrl": "git@github.com:drop-project-edu/sampleJavaAssignment.git"
+            }
+        """.trimIndent(), getBearerToken("teacher1"))
+
+        val response = callTool("get_assignment_submissions", """{"assignmentId": "ownedByTeacher1"}""",
+            getBearerToken("teacher2"))
+
+        assertThat(response, containsString("is only available to its owner"))
     }
 }

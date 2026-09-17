@@ -48,6 +48,10 @@ data class CreateAssignment(val assignmentForm: AssignmentForm) : ToolCommand {
 
         service.requireTeacher("create assignments")
 
+        // a defense doesn't get to choose its group size nor its package, so they are overwritten before the form is
+        // validated and saved, exactly like the web form does
+        service.assignmentService.applyDefenseSettings(assignmentForm)
+
         val errors = service.assignmentService.validateAssignmentForm(assignmentForm, principal)
         if (errors.isNotEmpty()) {
             return McpToolCallResult(
@@ -73,6 +77,19 @@ data class CreateAssignment(val assignmentForm: AssignmentForm) : ToolCommand {
             appendLine()
             appendLine("It is inactive and not yet connected to ${assignment.gitRepositoryUrl}.")
             appendLine()
+            assignment.baseAssignmentId?.let {
+                appendLine("## Defense of '$it'")
+                appendLine()
+                appendLine("Every submission will be compared with the group's last submission to that assignment, ")
+                appendLine("so the group size was set to 1 and the package to the one of '$it'")
+                appendLine("(${assignment.packageName ?: "which has none"}), neither of which is the defense's to ")
+                appendLine("choose.")
+                appendLine()
+                appendLine("The defense instructions start out unreleased, i.e. the students only get to resubmit ")
+                appendLine("their own code from '$it'. Releasing them, which starts the defense itself, is done in ")
+                appendLine("the web interface, on the assignments list.")
+                appendLine()
+            }
             appendLine("## Next step: install the deploy key")
             appendLine()
             appendLine("Drop Project only reads the repository, so this key should be installed as a read-only ")
@@ -213,6 +230,23 @@ data class CreateAssignment(val assignmentForm: AssignmentForm) : ToolCommand {
                             "description" to "PUBLIC (listed to every student), ONLY_BY_LINK (the default) or " +
                                     "PRIVATE (only the authorized submitters, which then must be filled in)"
                         ),
+                        "baseAssignmentId" to mapOf(
+                            "type" to "string",
+                            "description" to "Turns this into a defense of the assignment with this id: the " +
+                                    "students resubmit the code they had submitted there, changed as the defense " +
+                                    "asks, and every submission is compared with that base submission. The caller " +
+                                    "must be the owner or an authorized teacher of that assignment. A defense " +
+                                    "always uses its package and a group size of 1, so packageName, minGroupSize " +
+                                    "and maxGroupSize are overwritten with those values"
+                        ),
+                        "maxChangedLines" to mapOf(
+                            "type" to "number",
+                            "description" to "Maximum number of lines (under src) that a submission may change " +
+                                    "relatively to the base submission, only enforced after the defense " +
+                                    "instructions are released. Only valid together with baseAssignmentId. " +
+                                    "Without it, the difference is measured and shown to the teacher, but never " +
+                                    "rejected"
+                        ),
                         "assignees" to mapOf(
                             "type" to "string",
                             "description" to "Comma separated user ids of the students who are allowed to submit. " +
@@ -258,6 +292,17 @@ data class CreateAssignment(val assignmentForm: AssignmentForm) : ToolCommand {
                 throw IllegalArgumentException("maxMemoryMb must be >= 32")
             }
 
+            val baseAssignmentId = settings.string("baseAssignmentId")
+
+            val maxChangedLines = settings.number("maxChangedLines")
+            if (maxChangedLines != null && maxChangedLines < 1) {
+                throw IllegalArgumentException("maxChangedLines must be >= 1")
+            }
+            if (maxChangedLines != null && baseAssignmentId == null) {
+                throw IllegalArgumentException("maxChangedLines is only valid together with baseAssignmentId, " +
+                        "since it limits how much a submission may diverge from the base submission")
+            }
+
             val form = AssignmentForm(
                 assignmentId = assignmentId,
                 assignmentName = settings.requiredString("assignmentName"),
@@ -283,6 +328,8 @@ data class CreateAssignment(val assignmentForm: AssignmentForm) : ToolCommand {
                 maxGroupSize = settings.number("maxGroupSize"),
                 visibility = settings.enum("visibility", AssignmentVisibility.entries)
                     ?: AssignmentVisibility.ONLY_BY_LINK,
+                baseAssignmentId = baseAssignmentId,
+                maxChangedLines = maxChangedLines,
                 assignees = settings.string("assignees"),
                 acl = settings.string("acl")
             )

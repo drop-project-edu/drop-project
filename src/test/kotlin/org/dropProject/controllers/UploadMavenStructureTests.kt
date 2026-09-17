@@ -31,6 +31,7 @@ import org.dropproject.repository.*
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.jupiter.api.Test
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
@@ -39,11 +40,47 @@ import java.util.*
 
 @DropProjectIntegrationTest
 @Tag("integration")
-class UploadMavenStructureTests : UploadTestBase() {
+class UploadMavenStructureTests : UploadTestBase(), ApiTestSupport {
 
     // ===================================
     // Maven Submission Tests
     // ===================================
+
+    /**
+     * The zip that the IntelliJ plugin builds for a maven assignment: AUTHORS.txt, the pom.xml and src, with
+     * no test-files folder, which is what a maven project keeps in src/main/resources instead. This is the
+     * shape the two projects have to agree on, so it is submitted here the way the plugin submits it, user
+     * agent included, and has to come out with a valid structure.
+     */
+    @Test
+    fun `upload a Maven project the way the plugin builds it`() {
+
+        val assignment = assignmentRepository.findById("testJavaProj").get()
+        assignment.submissionStructure = SubmissionStructure.MAVEN
+        assignmentRepository.save(assignment)
+
+        val token = generateToken(STUDENT_1.username, listOf(SimpleGrantedAuthority("ROLE_STUDENT")), mvc)
+
+        val submissionId = submissionFixtures.uploadProjectByAPI("projectOK-maven", "testJavaProj",
+            STUDENT_1.username to token,
+            submissionStructure = assignment.submissionStructure, language = assignment.language,
+            userAgent = "DropProjectPlugin/0.9.15 (IntelliJ IDEA 2024.3)")
+
+        val reportResult = this.mvc.perform(get("/buildReport/$submissionId").with(user(STUDENT_1)))
+            .andExpect(status().isOk())
+            .andReturn()
+
+        @Suppress("UNCHECKED_CAST")
+        val summary = reportResult.modelAndView!!.modelMap["summary"] as List<SubmissionReport>
+        assertEquals(Indicator.PROJECT_STRUCTURE, summary[0].indicator, "projectStructure should be OK (key)")
+        assertEquals("OK", summary[0].reportValue, "projectStructure should be OK (value)")
+        assertEquals(Indicator.COMPILATION, summary[1].indicator, "compilation should be OK (key)")
+        assertEquals("OK", summary[1].reportValue, "compilation should be OK (value)")
+
+        @Suppress("UNCHECKED_CAST")
+        val structureErrors = reportResult.modelAndView!!.modelMap["structureErrors"] as List<String>
+        assertTrue(structureErrors.isEmpty(), "Structure errors should be empty")
+    }
 
     @Test
     fun `upload Maven project with correct structure and pom`() {

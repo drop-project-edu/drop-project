@@ -21,7 +21,10 @@ $( document ).ready(function() {
                 this.on("success", function (file) {
                     gResponse = $.trim(file.xhr.response);
                     var jsonResponse = JSON.parse($.trim(file.xhr.response));
-                    window.location.replace(context + "buildReport/" + jsonResponse.submissionId);
+                    // the server decides where to go when the build report is not the right place, which is the
+                    // case of the checkpoint submission of a defense assignment
+                    window.location.replace(context +
+                        (jsonResponse.redirectTo || ("buildReport/" + jsonResponse.submissionId)));
                 });
                 this.on('error', function (file, errorMessage, xhr) {
                     if (xhr && (xhr.status === 401 || xhr.status === 403 || xhr.status === 405)) {  // session timeout

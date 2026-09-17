@@ -50,6 +50,9 @@ open class WebSecurityConfig {
                         "/", "/upload", "/upload/**", "/buildReport/**", "/student/**",
                         "/git-submission/refresh-git/*", "/git-submission/generate-report/*", "/mySubmissions",
                         "/leaderboard/*",
+                        // students download their own submissions from here, namely the one that a defense
+                        // assignment must start from. The controller checks that the submission is theirs
+                        "/downloadOriginalProject/*",
                         "/personalToken"
                     )
                     .hasAnyRole("STUDENT", "TEACHER", "DROP_PROJECT_ADMIN")

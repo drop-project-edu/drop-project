@@ -31,6 +31,10 @@
            th:href="@{'/submissions?assignmentId=' + ${assignment.id} + '&groupId=' + ${submission.group.id}}">(other submissions)</a>
         <span th:if="${submission.overdue}" class="label label-danger">Overdue</span>
         <span th:if="${submission.markedAsFinal}" class="label label-success">Final</span>
+        <span th:if="${submission.defenseCheckpoint}" class="label label-info"
+              title="Submitted on the first phase of the defense, as the original code">Original</span>
+        <span th:if="${submission.defenseCheckpointAccepted}" class="label label-warning"
+              title="Accepted by the teacher as the group's original code, even though it doesn't pass every test">Accepted</span>
     </h6>
 
     <h6 th:if="${gitSubmission} != null">
@@ -79,6 +83,16 @@
         <form class="inline btn-group" method="post" th:action="'../markAsFinal/' + ${submission.id}">
             <input type="submit" th:if="${!submission.markedAsFinal}" value="Mark as Final" class="btn btn-default"/>
             <input type="submit" th:if="${submission.markedAsFinal}" value="Unmark as Final" class="btn btn-default"/>
+        </form>
+    </div>
+
+    <!-- the teacher's override for the first phase of a defense: this is the group's code, whatever the tests say -->
+    <div class="btn-group" role="group" th:if="${isTeacher and submission.defenseCheckpoint}" th:unless="${autoRefresh}">
+        <form class="inline btn-group" method="post" th:action="'../acceptCheckpoint/' + ${submission.id}">
+            <input type="submit" th:if="${!submission.defenseCheckpointAccepted}" value="Accept as original code"
+                   class="btn btn-default" title="Let this group start the defense even though this submission doesn't pass every test"/>
+            <input type="submit" th:if="${submission.defenseCheckpointAccepted}" value="Stop accepting as original code"
+                   class="btn btn-default"/>
         </form>
     </div>
 
@@ -137,6 +151,22 @@
                 <h4 style="margin-top: 3px">
                     <span class="label" th:classappend="${summaryResult.cssLabel}"
                                         th:text="${summaryResult.progressSummary(isTeacher)}">14/14</span>
+                </h4>
+            </td>
+        </tr>
+        <!-- the divergence from the project submission is a teachers' indicator: students are not meant to work up
+             to it. An original submission is supposed to be the project code itself, so it has nothing to report -->
+        <tr th:if="${isTeacher and !submission.defenseCheckpoint and submission.baseDivergenceLines != null}">
+            <td>
+                <span>Lines changed</span>
+                <small class="text-muted">(relatively to the submission to
+                    <span th:text="${assignment.baseAssignmentId}"></span>)</small>
+            </td>
+            <td>
+                <h4 style="margin-top: 3px">
+                    <span class="label"
+                          th:classappend="${assignment.maxChangedLines != null and submission.baseDivergenceLines > assignment.maxChangedLines} ? 'label-warning' : 'label-default'"
+                          th:text="${submission.baseDivergenceLines}">0</span>
                 </h4>
             </td>
         </tr>

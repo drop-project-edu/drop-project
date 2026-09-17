@@ -37,10 +37,14 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.mock.web.MockMultipartFile
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 
 @DropProjectIntegrationTest
@@ -322,10 +326,12 @@ class StudentAPIControllerTests: ApiTestSupport {
 //         println(result.getResponse().getContentAsString());
     }
 
-    @Test
-    fun `try to upload to Maven assignment via API should fail`() {
-
-        // Create Maven assignment
+    /**
+     * A maven-structured submission carries the pom.xml of the project, which the plugin only started
+     * including in [org.dropproject.Constants.MIN_PLUGIN_VERSION_FOR_MAVEN_SUBMISSIONS]. Whoever cannot be
+     * shown to be older than that is served.
+     */
+    private fun uploadMavenProjectAs(userAgent: String?): ResultActions {
         val mavenAssignment = Assignment(
             id = "testMavenProjAPI",
             name = "Test Maven Project",
@@ -339,21 +345,52 @@ class StudentAPIControllerTests: ApiTestSupport {
         )
         assignmentRepository.save(mavenAssignment)
         assigneeRepository.save(Assignee(assignmentId = "testMavenProjAPI", authorUserId = "student1"))
+        // the AUTHORS.txt of the sample project names both students, and every author has to be an assignee
+        assigneeRepository.save(Assignee(assignmentId = "testMavenProjAPI", authorUserId = "student2"))
 
         val token = generateToken("student1", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")), mvc)
 
-        // Try to upload via API
         val projectFolder = submissionFixtures.resourceLoader.getResource("file:src/test/sampleProjects/maven/java/projectOK-maven").file
         val zipFile = submissionFixtures.zipService.createZipFromFolder("test", projectFolder)
         zipFile.deleteOnExit()
 
-        this.mvc.perform(
-            org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/api/student/submissions/new")
-                .file(org.springframework.mock.web.MockMultipartFile("file", zipFile.name, "application/zip", zipFile.readBytes()))
+        return this.mvc.perform(
+            multipart("/api/student/submissions/new")
+                .file(MockMultipartFile("file", zipFile.name, "application/zip", zipFile.readBytes()))
                 .param("assignmentId", "testMavenProjAPI")
-                .header("authorization", basicAuthHeader("student1", token)))
+                .header("authorization", basicAuthHeader("student1", token))
+                .apply { if (userAgent != null) header(HttpHeaders.USER_AGENT, userAgent) })
+    }
+
+    @Test
+    fun `upload to a Maven assignment from a plugin that knows how to build the zip`() {
+        uploadMavenProjectAs("DropProjectPlugin/0.9.15 (IntelliJ IDEA 2024.3)")
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.submissionId").isNumber)
+    }
+
+    @Test
+    fun `upload to a Maven assignment from a plugin too old to send the pom`() {
+        uploadMavenProjectAs("DropProjectPlugin/0.9.14 (IntelliJ IDEA 2024.3)")
             .andExpect(status().isInternalServerError)
-            .andExpect(jsonPath("$.error", containsString("API submissions are not supported for Maven-structured assignments")))
+            // the student is told that the plugin is the problem, and not that a pom.xml they never wrote is
+            // missing, which is what the structure validation would have reported
+            .andExpect(jsonPath("$.error", containsString("only knows how to submit from version 0.9.15")))
+    }
+
+    @Test
+    fun `upload to a Maven assignment from a client that does not identify itself`() {
+        // a script written against the api builds its own zip, so it is left to it
+        uploadMavenProjectAs(null)
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.submissionId").isNumber)
+    }
+
+    @Test
+    fun `upload to a Maven assignment from something that is not the plugin`() {
+        uploadMavenProjectAs("curl/8.7.1")
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.submissionId").isNumber)
     }
 
 }

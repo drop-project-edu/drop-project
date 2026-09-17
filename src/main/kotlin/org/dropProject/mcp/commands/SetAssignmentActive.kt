@@ -40,7 +40,7 @@ data class SetAssignmentActive(val assignmentId: String, val active: Boolean) : 
 
         service.requireTeacher("activate assignments")
 
-        val assignment = service.getAssignmentToChange(assignmentId, principal)
+        val assignment = service.getAuthorizedAssignment(assignmentId, principal)
 
         val reports = service.assignmentService.assignmentReportRepository.findByAssignmentId(assignment.id)
 
