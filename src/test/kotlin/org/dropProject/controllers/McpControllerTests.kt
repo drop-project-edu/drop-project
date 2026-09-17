@@ -192,6 +192,20 @@ class McpControllerTests: ApiTestSupport {
                             }
                         },
                         {
+                            "name": "get_assignment_submissions",
+                            "description": "List the latest submission of every group that submitted to an assignment, with the date, the status, how many teacher tests it passes and, for defense assignments, how many lines it changed relative to the submission being defended. Also reports which of the assignment's assignees have not submitted at all. Useful to see how a whole class did on an assignment, a mini-test or a defense, without looking up each student one by one. Only available to the owner of the assignment and to the teachers it was shared with.",
+                            "inputSchema": {
+                                "type": "object",
+                                "properties": {
+                                    "assignmentId": {
+                                        "type": "string",
+                                        "description": "The ID of the assignment whose submissions are to be listed"
+                                    }
+                                },
+                                "required": ["assignmentId"]
+                            }
+                        },
+                        {
                             "name": "search_assignments",
                             "description": "Search Drop Project assignments by name, ID, or programming language tags. Returns matching assignments with basic metadata. Useful for finding relevant assignments or exploring available coursework.",
                             "inputSchema": {
@@ -1193,7 +1207,7 @@ class McpControllerTests: ApiTestSupport {
         val response = callTool("connect_assignment", """{"assignmentId": "ownedByTeacher1"}""",
             getBearerToken("teacher2"))
 
-        assertThat(response, containsString("can only be changed by its owner"))
+        assertThat(response, containsString("is only available to its owner"))
     }
 
     @Test
@@ -1425,7 +1439,7 @@ class McpControllerTests: ApiTestSupport {
         val response = callTool("edit_assignment",
             """{"assignmentId": "testMcpAssignment", "assignmentName": "Stolen"}""", getBearerToken("teacher2"))
 
-        assertThat(response, containsString("can only be changed by its owner"))
+        assertThat(response, containsString("is only available to its owner"))
         assertEquals("Test MCP Assignment", assignmentRepository.findById("testMcpAssignment").get().name)
     }
 
@@ -1632,5 +1646,47 @@ class McpControllerTests: ApiTestSupport {
 
         assertThat(response, containsString("**baseAssignmentId:** testJavaProj"))
         assertThat(response, containsString("**maxChangedLines:** 50"))
+    }
+
+    @Test
+    fun `mcp get assignment submissions`() {
+        val authHeader = getBearerToken("teacher1")
+
+        submissionFixtures.uploadProject("projectOK", "testJavaProj", STUDENT_1)
+
+        val response = callTool("get_assignment_submissions", """{"assignmentId": "testJavaProj"}""", authHeader)
+
+        assertThat(response, containsString("# Submissions for"))
+        assertThat(response, containsString("**Groups with submissions:** 1"))
+        assertThat(response, containsString("## Latest submission of each group"))
+        assertThat(response, containsString("student1"))
+        assertThat(response, containsString("**Status:** VALIDATED"))
+        assertThat(response, containsString("**Teacher tests:**"))
+    }
+
+    @Test
+    fun `mcp get assignment submissions of an assignment without submissions`() {
+        val authHeader = getBearerToken("teacher1")
+
+        val response = callTool("get_assignment_submissions", """{"assignmentId": "testJavaProj"}""", authHeader)
+
+        assertThat(response, containsString("**Groups with submissions:** 0"))
+        assertThat(response, containsString("No submissions yet."))
+    }
+
+    @Test
+    fun `try to get the submissions of an assignment of another teacher`() {
+        callTool("create_assignment", """
+            {
+                "assignmentId": "ownedByTeacher1",
+                "assignmentName": "Owned by teacher1",
+                "gitRepositoryUrl": "git@github.com:drop-project-edu/sampleJavaAssignment.git"
+            }
+        """.trimIndent(), getBearerToken("teacher1"))
+
+        val response = callTool("get_assignment_submissions", """{"assignmentId": "ownedByTeacher1"}""",
+            getBearerToken("teacher2"))
+
+        assertThat(response, containsString("is only available to its owner"))
     }
 }

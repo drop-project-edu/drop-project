@@ -28,6 +28,7 @@ import org.dropproject.extensions.realName
 import org.dropproject.mcp.commands.ToolCommand
 import org.dropproject.mcp.data.*
 import org.dropproject.dao.Assignment
+import org.dropproject.repository.AssigneeRepository
 import org.dropproject.repository.AssignmentRepository
 import org.dropproject.repository.PersonalTokenRepository
 import org.dropproject.repository.SubmissionRepository
@@ -53,6 +54,7 @@ class McpService(
     val assignmentTeacherFiles: AssignmentTeacherFiles,
     val reportService: ReportService,
     val assignmentRepository: AssignmentRepository,
+    val assigneeRepository: AssigneeRepository,
     val request: HttpServletRequest,
     private val personalTokenRepository: PersonalTokenRepository
 ) {
@@ -108,20 +110,21 @@ class McpService(
     }
 
     /**
-     * Returns the [Assignment] with the given id, provided that the current user is allowed to change it, i.e.
-     * is a teacher and either owns it or was given access to it.
+     * Returns the [Assignment] with the given id, provided that the current user is a teacher that either owns it
+     * or was given access to it. This is the condition both to change an assignment and to see the work that was
+     * submitted to it.
      *
      * @param assignmentId identifies the assignment
      * @param principal is the authenticated principal making the request
-     * @throws AccessDeniedException if the user is not allowed to change the assignment
+     * @throws AccessDeniedException if the user is not authorized for the assignment
      */
-    fun getAssignmentToChange(assignmentId: String, principal: Principal): Assignment {
+    fun getAuthorizedAssignment(assignmentId: String, principal: Principal): Assignment {
         val assignment = assignmentRepository.findById(assignmentId)
             .orElseThrow { IllegalArgumentException("Assignment $assignmentId not found") }
 
         if (!assignmentService.isAuthorizedTeacher(assignment, principal.realName(), request)) {
-            throw AccessDeniedException("Assignment $assignmentId can only be changed by its owner " +
-                    "(${assignment.ownerUserId}) or by the teachers that were given access to it")
+            throw AccessDeniedException("Assignment $assignmentId is only available to its owner " +
+                    "(${assignment.ownerUserId}) and to the teachers that were given access to it")
         }
 
         return assignment

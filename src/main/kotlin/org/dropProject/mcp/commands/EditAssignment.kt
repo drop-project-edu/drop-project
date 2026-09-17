@@ -59,7 +59,7 @@ data class EditAssignment(val assignmentId: String, val changes: AssignmentArgum
         service.requireTeacher("edit assignments")
 
         val assignmentService = service.assignmentService
-        val assignment = service.getAssignmentToChange(assignmentId, principal)
+        val assignment = service.getAuthorizedAssignment(assignmentId, principal)
 
         val form = formFor(assignment, assignmentService.assigneeRepository
             .findByAssignmentIdOrderByAuthorUserId(assignment.id).map { it.authorUserId },

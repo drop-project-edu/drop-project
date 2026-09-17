@@ -40,7 +40,7 @@ data class ConnectAssignment(val assignmentId: String) : ToolCommand {
 
         service.requireTeacher("connect assignments to their git repository")
 
-        val assignment = service.getAssignmentToChange(assignmentId, principal)
+        val assignment = service.getAuthorizedAssignment(assignmentId, principal)
 
         if (assignment.gitRepositoryPubKey == null) {
             // an assignment that was created before the key pair existed, or one that was imported
