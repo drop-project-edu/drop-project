@@ -217,7 +217,8 @@ class UploadController(
         model["instructionsFragment"] = instructionsFor(assignment, defensePhase) //quick fix
         model["packageTree"] = assignmentTeacherFiles.buildPackageTree(
                 assignment.packageName, assignment.language,
-                assignment.submissionStructure, assignment.acceptsStudentTests)
+                assignment.submissionStructure, assignment.acceptsStudentTests,
+                springBoot = assignment.springBoot == true)
 
         if (assignment.cooloffPeriod != null && !isAuthorizedTeacher) {
             val lastSubmission = submissionService.getLastSubmission(principal, assignmentId)
@@ -515,7 +516,8 @@ class UploadController(
             defensePhaseFor(assignment, principal, isAuthorizedTeacher)) //quick fix
         model["packageTree"] = assignmentTeacherFiles.buildPackageTree(
                 assignment.packageName, assignment.language,
-                assignment.submissionStructure, assignment.acceptsStudentTests)
+                assignment.submissionStructure, assignment.acceptsStudentTests,
+                springBoot = assignment.springBoot == true)
         model["gitRepositoryUrl"] = gitRepositoryUrl  // so that the form keeps the url if the validation fails
 
         if (gitRepositoryUrl.isNullOrBlank()) {

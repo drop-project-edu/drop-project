@@ -56,16 +56,18 @@ class AssignmentTeacherFilesTests {
     }
 
     @Test
-    fun `buildPackageTree for a maven java project shows the maven layout`() {
+    fun `buildPackageTree for a maven java project shows the maven layout without a main class`() {
         val tree = assignmentTeacherFiles.buildPackageTree(
             "org.sample", Language.JAVA, SubmissionStructure.MAVEN)
 
         assertTrue(tree.contains("pom.xml"), "a maven project must mention pom.xml:\n$tree")
         assertTrue(tree.contains("|--- main"), "a maven project must show src/main:\n$tree")
         assertTrue(tree.contains("|------ java"), "a java maven project must show the java folder:\n$tree")
-        assertTrue(tree.contains("SomethingApplication.java"), "must show the spring boot application file:\n$tree")
-        assertTrue(tree.contains("application.properties"), "must show the resources:\n$tree")
-        assertTrue(tree.contains("|--- test"), "a maven project must show src/test:\n$tree")
+        assertTrue(tree.contains("|------------ sample"), "a maven project must show the package folders:\n$tree")
+        assertFalse(tree.contains("Main.java"), "a maven project doesn't have to include a Main class:\n$tree")
+        assertFalse(tree.contains("SpringBootApplication"), "a plain maven project isn't a spring boot one:\n$tree")
+        assertFalse(tree.contains("resources"), "a plain maven project doesn't need resources:\n$tree")
+        assertFalse(tree.contains("|--- test"), "src/test is only needed for student tests:\n$tree")
     }
 
     @Test
@@ -74,7 +76,28 @@ class AssignmentTeacherFilesTests {
             "org.sample", Language.KOTLIN, SubmissionStructure.MAVEN, hasStudentTests = true)
 
         assertTrue(tree.contains("|------ kotlin"), "a kotlin maven project must show the kotlin folder:\n$tree")
-        assertTrue(tree.contains("SomethingApplication.kt"), "must show the kotlin application file:\n$tree")
+        assertTrue(tree.contains("|--- test"), "a project with student tests must show src/test:\n$tree")
         assertTrue(tree.contains("(student tests)"), "must mention the student tests placeholder:\n$tree")
+        assertFalse(tree.contains("SomethingApplication.kt"), "a plain maven project isn't a spring boot one:\n$tree")
+    }
+
+    @Test
+    fun `buildPackageTree for a spring boot maven project shows the application class and the resources`() {
+        val tree = assignmentTeacherFiles.buildPackageTree(
+            "org.sample", Language.JAVA, SubmissionStructure.MAVEN, springBoot = true)
+
+        assertTrue(tree.contains("pom.xml"), "a maven project must mention pom.xml:\n$tree")
+        assertTrue(tree.contains("SomethingApplication.java"), "must show the spring boot application file:\n$tree")
+        assertTrue(tree.contains("application.properties"), "must show the resources:\n$tree")
+        assertTrue(tree.contains("|--- test"), "a spring boot project must show src/test:\n$tree")
+    }
+
+    @Test
+    fun `buildPackageTree ignores the spring boot flag for a compact project`() {
+        val tree = assignmentTeacherFiles.buildPackageTree(
+            "org.sample", Language.JAVA, SubmissionStructure.COMPACT, springBoot = true)
+
+        assertTrue(tree.contains("Main.java"), "a compact project must show Main.java:\n$tree")
+        assertFalse(tree.contains("SpringBootApplication"), "a compact project is never a spring boot one:\n$tree")
     }
 }

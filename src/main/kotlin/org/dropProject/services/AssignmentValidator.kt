@@ -47,6 +47,8 @@ import java.nio.file.Paths
  * @property report is a List of [Info], containing warnings about the problems that were identified during the validation
  * @property testMethods is a List of String, containing the names of the JUnit test methods that were found in the assignment's
  * test classes. Each String will contain the name of a test method, prefixed by the name of the class where it was declared.
+ * @property springBoot is a Boolean, indicating if the assignment's pom.xml builds a Spring Boot project. It is null if the
+ * assignment doesn't have a pom.xml
  */
 @Service
 @Scope("prototype")
@@ -69,6 +71,7 @@ class AssignmentValidator {
 
     val report = mutableListOf<Info>()
     val testMethods = mutableListOf<String>()
+    var springBoot: Boolean? = null
 
     /**
      * Validates the [Assignment].
@@ -90,6 +93,7 @@ class AssignmentValidator {
 
         val reader = MavenXpp3Reader()
         val model = reader.read(FileReader(pomFile))
+        springBoot = isSpringBoot(model)
 
         if (assignment.packageName == null) {
             report.add(Info(InfoType.WARNING, "Assignment without package.",
@@ -109,6 +113,17 @@ class AssignmentValidator {
         }
         validatePomPreparedForCoverage(model, assignment)
         validateCheckstyleVersion(model)
+    }
+
+    /**
+     * Checks if a pom.xml builds a Spring Boot project, that is, if it inherits from a Spring Boot parent, depends on
+     * a Spring Boot artifact or imports a Spring Boot bom.
+     */
+    private fun isSpringBoot(pomModel: Model): Boolean {
+        val springBootGroupId = "org.springframework.boot"
+        return pomModel.parent?.groupId == springBootGroupId ||
+                pomModel.dependencies.any { it.groupId == springBootGroupId } ||
+                pomModel.dependencyManagement?.dependencies.orEmpty().any { it.groupId == springBootGroupId }
     }
 
     // tests that the assignment is ready to use the system property "dropProject.currentUserId"

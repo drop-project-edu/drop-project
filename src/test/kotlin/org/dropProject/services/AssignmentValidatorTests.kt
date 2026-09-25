@@ -24,15 +24,19 @@ import org.dropproject.dao.Language
 import org.dropproject.dao.TestVisibility
 import org.dropproject.forms.SubmissionMethod
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.api.io.TempDir
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.io.ResourceLoader
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import java.io.File
 
 
 @ExtendWith(SpringExtension::class)
@@ -286,5 +290,116 @@ class AssignmentValidatorTests {
         assignment.name = "Another name"
         assignment.cooloffPeriod = 10
         assertEquals(validationInputs, AssignmentValidationInputs.from(assignment))
+    }
+
+    /**
+     * Writes a minimal pom.xml to [folder], with [content] inside its <project> element. It has an empty <build>,
+     * because the validation doesn't cope with a pom.xml without one.
+     */
+    private fun writePom(folder: File, content: String) {
+        File(folder, "pom.xml").writeText("""
+            <?xml version="1.0" encoding="UTF-8"?>
+            <project xmlns="http://maven.apache.org/POM/4.0.0">
+                <modelVersion>4.0.0</modelVersion>
+                <groupId>org.dropProject.samples</groupId>
+                <artifactId>sample</artifactId>
+                <version>1.0</version>
+                $content
+                <build>
+                    <plugins/>
+                </build>
+            </project>
+        """.trimIndent())
+    }
+
+    @Test
+    fun `Test that a pom with a spring boot parent is detected as spring boot`(@TempDir folder: File) {
+        writePom(folder, """
+            <parent>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-parent</artifactId>
+                <version>3.3.0</version>
+            </parent>
+        """)
+
+        assignmentValidator.validate(folder, dummyAssignment)
+
+        assertEquals(true, assignmentValidator.springBoot)
+    }
+
+    @Test
+    fun `Test that a pom with a spring boot dependency is detected as spring boot`(@TempDir folder: File) {
+        writePom(folder, """
+            <dependencies>
+                <dependency>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-web</artifactId>
+                    <version>3.3.0</version>
+                </dependency>
+            </dependencies>
+        """)
+
+        assignmentValidator.validate(folder, dummyAssignment)
+
+        assertEquals(true, assignmentValidator.springBoot)
+    }
+
+    @Test
+    fun `Test that a pom importing the spring boot bom is detected as spring boot`(@TempDir folder: File) {
+        writePom(folder, """
+            <dependencyManagement>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-dependencies</artifactId>
+                        <version>3.3.0</version>
+                        <type>pom</type>
+                        <scope>import</scope>
+                    </dependency>
+                </dependencies>
+            </dependencyManagement>
+        """)
+
+        assignmentValidator.validate(folder, dummyAssignment)
+
+        assertEquals(true, assignmentValidator.springBoot)
+    }
+
+    @Test
+    fun `Test that a pom without spring boot is not detected as spring boot`(@TempDir folder: File) {
+        writePom(folder, """
+            <parent>
+                <groupId>org.dropProject.samples</groupId>
+                <artifactId>parent</artifactId>
+                <version>1.0</version>
+            </parent>
+            <dependencies>
+                <dependency>
+                    <groupId>org.springframework</groupId>
+                    <artifactId>spring-core</artifactId>
+                    <version>6.1.0</version>
+                </dependency>
+            </dependencies>
+        """)
+
+        assignmentValidator.validate(folder, dummyAssignment)
+
+        assertEquals(false, assignmentValidator.springBoot)
+    }
+
+    @Test
+    fun `Test that the sample assignments are not detected as spring boot`() {
+        val assignmentFolder = resourceLoader.getResource("file:${sampleAssignmentsRootFolder}/testJavaProj").file
+
+        assignmentValidator.validate(assignmentFolder, dummyAssignment)
+
+        assertFalse(assignmentValidator.springBoot!!)
+    }
+
+    @Test
+    fun `Test that spring boot is unknown for an assignment without a pom`(@TempDir folder: File) {
+        assignmentValidator.validate(folder, dummyAssignment)
+
+        assertNull(assignmentValidator.springBoot)
     }
 }

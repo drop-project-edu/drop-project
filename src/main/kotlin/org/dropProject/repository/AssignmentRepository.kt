@@ -22,7 +22,11 @@ package org.dropproject.repository
 import org.dropproject.dao.*
 import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
+import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
+import org.springframework.transaction.annotation.Transactional
 import java.util.*
 
 /**
@@ -56,4 +60,13 @@ interface AssignmentRepository : JpaRepository<Assignment, String> {
 
     @EntityGraph(attributePaths = ["tags", "assignmentTestMethods"])
     fun findAllByArchivedFalseOrderById(): List<Assignment>
+
+    /**
+     * Updates only [Assignment.springBoot], so that it can be stored while the assignment's other associations (e.g.
+     * its test methods) are being replaced, which a save of the whole entity would try to merge.
+     */
+    @Transactional
+    @Modifying
+    @Query("update Assignment a set a.springBoot = :springBoot where a.id = :id")
+    fun updateSpringBoot(@Param("id") id: String, @Param("springBoot") springBoot: Boolean?)
 }

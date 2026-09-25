@@ -84,6 +84,8 @@ enum class AssignmentVisibility {
  * @property submissionMethod is a [SubmissionMethod]
  * @property language is the programming [Language] that the code should be written in
  * @property submissionStructure is a [SubmissionStructure], indicating the expected project structure for student submissions
+ * @property springBoot is a Boolean, indicating if the teacher's pom.xml builds a Spring Boot project. It is detected
+ * whenever the assignment is validated, and is null for an assignment that was never validated
  * @property acceptsStudentTests is a Boolean, indicating if the students are allowed to submit their own unit tests
  * @property minStudentTests is an optional Integer, indicating the minimum number of unit tests that students are
  * asked to implement
@@ -145,6 +147,8 @@ data class Assignment(
     @Column(nullable = false)
     @JsonView(JSONViews.StudentAPI::class)
     var submissionStructure: SubmissionStructure = SubmissionStructure.COMPACT,
+
+    var springBoot: Boolean? = null,
 
     var acceptsStudentTests: Boolean = false,
     var minStudentTests: Int? = null,

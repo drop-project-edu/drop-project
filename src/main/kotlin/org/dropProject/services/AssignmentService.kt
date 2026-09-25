@@ -309,7 +309,8 @@ class AssignmentService(
 
     /**
      * Validates the [Assignment]'s files, replacing the [AssignmentReport] that was previously stored in the DB
-     * with the result of this new validation.
+     * with the result of this new validation. It also stores the properties of the assignment that are derived from
+     * its files (e.g. [Assignment.springBoot]), since they may have changed with the files.
      *
      * @param assignment is the Assignment to validate
      * @param principal is a [Principal] representing the user making the request
@@ -324,6 +325,10 @@ class AssignmentService(
             assignmentReportRepository.save(AssignmentReport(assignmentId = assignment.id, type = it.type,
                 message = it.message, description = it.description))
         }
+
+        // only this property is updated, since the in-memory assignment still holds the test methods that the
+        // validation has just replaced, and saving it would try to merge them
+        assignmentRepository.updateSpringBoot(assignment.id, assignment.springBoot)
 
         return report.any { it.type == AssignmentValidator.InfoType.ERROR }
     }

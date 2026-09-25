@@ -138,13 +138,17 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
      *
      * @param packageName is a String with the Assignment's expected package name
      * @param language is a Language, identifying the programming language that is used in the [Assignment]
+     * @param submissionStructure is the [SubmissionStructure] that the students' submissions must follow
      * @param hasStudentTests is a Boolean indicating if the [Assignment] requires/allows student tests
+     * @param springBoot is a Boolean indicating if the [Assignment] is a Spring Boot project. Only relevant for a
+     * [SubmissionStructure.MAVEN] structure
      *
      * @return a String
      */
     fun buildPackageTree(packageName: String?, language: Language,
                          submissionStructure: SubmissionStructure,
-                         hasStudentTests: Boolean = false): String {
+                         hasStudentTests: Boolean = false,
+                         springBoot: Boolean = false): String {
 
         val packages = packageName.orEmpty().split(".")
         val mainFile = if (language == Language.JAVA) "Main.java" else "Main.kt"
@@ -174,16 +178,25 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
                     packagesTree += "|" + "-".repeat(indent) + " " + packagePart + System.lineSeparator()
                     indent += 3
                 }
-                packagesTree += "|" + "-".repeat(indent) + " ${applicationFile}   (@SpringBootApplication)" + System.lineSeparator()
-                packagesTree += "|" + "-".repeat(indent) + " ...   (${i18n.getMessage("student.upload.form.tree2", null, currentLocale)})" + System.lineSeparator()
-                packagesTree += "|------ resources" + System.lineSeparator()
-                packagesTree += "|--------- application.properties" + System.lineSeparator()
-                packagesTree += "|--- test" + System.lineSeparator()
-                packagesTree += "|------ ${folder}" + System.lineSeparator()
-                if (hasStudentTests) {
-                    packagesTree += "|--------- ...   (student tests)" + System.lineSeparator()
+                if (springBoot) {
+                    packagesTree += "|" + "-".repeat(indent) + " ${applicationFile}   (@SpringBootApplication)" + System.lineSeparator()
+                    packagesTree += "|" + "-".repeat(indent) + " ...   (${i18n.getMessage("student.upload.form.tree2", null, currentLocale)})" + System.lineSeparator()
+                    packagesTree += "|------ resources" + System.lineSeparator()
+                    packagesTree += "|--------- application.properties" + System.lineSeparator()
+                } else {
+                    // unlike the compact structure, a maven project doesn't have to include a Main class
+                    packagesTree += "|" + "-".repeat(indent) + " ...   (${i18n.getMessage("student.upload.form.tree4", null, currentLocale)})" + System.lineSeparator()
                 }
-                packagesTree += "|------ resources" + System.lineSeparator()
+                if (springBoot || hasStudentTests) {
+                    packagesTree += "|--- test" + System.lineSeparator()
+                    packagesTree += "|------ ${folder}" + System.lineSeparator()
+                    if (hasStudentTests) {
+                        packagesTree += "|--------- ...   (student tests)" + System.lineSeparator()
+                    }
+                    if (springBoot) {
+                        packagesTree += "|------ resources" + System.lineSeparator()
+                    }
+                }
             }
         }
 
@@ -205,6 +218,9 @@ class AssignmentTeacherFiles(val buildWorker: BuildWorker,
 
         assignmentValidator.validate(assignmentFolder, assignment)
         val report = assignmentValidator.report
+
+        // set even when the validation found errors, since it only depends on the pom.xml
+        assignment.springBoot = assignmentValidator.springBoot
 
         // it it has found errors, it doesn't even try to run the build
         if (report.any { it.type == AssignmentValidator.InfoType.ERROR }) {
