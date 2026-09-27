@@ -229,7 +229,8 @@ class AssignmentListingTests : AssignmentTestBase() {
 
             // archive assignment
             this.mvc.perform(
-                post("/assignment/archive/dummyAssignment4")
+                post("/assignment/archive")
+                    .param("ids", "dummyAssignment4")
                     .with(SecurityMockMvcRequestPostProcessors.user(user))
             )
                 .andExpect(status().isFound)

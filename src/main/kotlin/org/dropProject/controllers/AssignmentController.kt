@@ -909,31 +909,68 @@ class AssignmentController(
     }
 
     /**
-     * Controller that allows the archiving of an [Assignment].
-     * @param assignmentId is a String representing the relevant Assignment
+     * Controller to handle the archiving of one or more [Assignment]s. The assignments are either archived one at a
+     * time, from the assignments list, or several at a time, selecting them in that list.
+     *
+     * @param assignmentIds are the ids of the assignments to archive
      * @param redirectAttributes is a RedirectAttributes
      * @param principal is a [Principal] representing the user making the request
      * @return A String with the name of the relevant View
      */
-    @RequiresAssignmentOwnerOrACL
-    @RequestMapping(value = ["/archive/{assignmentId}"], method = [(RequestMethod.POST)])
-    fun archiveAssignment(@PathVariable assignmentId: String,
-                          redirectAttributes: RedirectAttributes,
-                          principal: Principal): String {
+    @RequestMapping(value = ["/archive"], method = [(RequestMethod.POST)])
+    fun archiveAssignments(@RequestParam(name = "ids", required = false) assignmentIds: List<String>?,
+                           redirectAttributes: RedirectAttributes,
+                           principal: Principal,
+                           request: HttpServletRequest): String {
 
-        // check that it exists
-        val assignment = assignmentRepository.findById(assignmentId)
-            .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
+        val isAdmin = request.isUserInRole("DROP_PROJECT_ADMIN")
 
-        assignment.archived = true
-        assignmentRepository.save(assignment)
+        // the same assignment may come twice, since the checkboxes of the pages that are not being shown are
+        // submitted as hidden inputs
+        val distinctAssignmentIds = assignmentIds.orEmpty().distinct()
+
+        if (distinctAssignmentIds.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Error: You didn't select any assignment to archive")
+            return "redirect:/assignment/my"
+        }
+
+        // all the assignments are checked before archiving any of them, so that one that is refused doesn't leave
+        // this half done
+        val assignments = mutableListOf<Assignment>()
+        for (assignmentId in distinctAssignmentIds) {
+
+            val assignment = assignmentRepository.findById(assignmentId).orElse(null)
+            if (assignment == null) {
+                // the page may have been open when someone else deleted the assignment
+                redirectAttributes.addFlashAttribute("error",
+                    "Error: The assignment ${assignmentId} no longer exists. Please refresh the page and try again")
+                return "redirect:/assignment/my"
+            }
+
+            if (!isAdmin && principal.realName() != assignment.ownerUserId &&
+                !assignmentACLRepository.existsByAssignmentIdAndUserId(assignment.id, principal.realName())) {
+                throw AccessDeniedException("Assignments can only be archived by their owner, the teachers in " +
+                        "their ACL or an admin")
+            }
+
+            assignments.add(assignment)
+        }
+
+        assignments.forEach {
+            it.archived = true
+            assignmentRepository.save(it)
+        }
 
         // evict the "archiveAssignmentsCache" cache
         cacheManager.getCache(CACHE_ARCHIVED_ASSIGNMENTS_KEY)?.clear()
 
-        redirectAttributes.addFlashAttribute("message", "Assignment was archived. You can now find it in the Archived assignments page")
+        redirectAttributes.addFlashAttribute("message",
+            if (assignments.size == 1) {
+                "Assignment was archived. You can now find it in the Archived assignments page"
+            } else {
+                "Archived ${assignments.size} assignments. You can now find them in the Archived assignments page"
+            })
         return "redirect:/assignment/my"
-
     }
 
     /**

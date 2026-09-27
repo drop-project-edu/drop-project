@@ -57,6 +57,11 @@
                                 <span class="glyphicon glyphicon-export"></span> Export with submissions
                             </button>
                         </li>
+                        <li th:if="${!archived}">
+                            <button type="button" data-toggle="modal" data-target="#bulkArchiveModal">
+                                <span class="glyphicon glyphicon-inbox"></span> Archive
+                            </button>
+                        </li>
                         <li th:if="${#authorization.expression('hasRole(''DROP_PROJECT_ADMIN'')')}"
                             class="divider" role="separator"></li>
                         <li th:if="${#authorization.expression('hasRole(''DROP_PROJECT_ADMIN'')')}">
@@ -150,7 +155,8 @@
                 <a th:href="@{'/assignment/info/' + ${assignment.id}}">
                     <span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span>
                 </a>
-                <form th:if="${!archived}" th:action="@{'/assignment/archive/' + ${assignment.id}}" method="post" style="display: inline;">
+                <form th:if="${!archived}" th:action="@{/assignment/archive}" method="post" style="display: inline;">
+                    <input type="hidden" name="ids" th:value="${assignment.id}"/>
                     <button class="glyphicon glyphicon-inbox" aria-hidden="true" type="submit"
                             style="border: 0;" data-toggle="confirmation" data-title="Archive assignment?" title="Archive assignment"></button>
                 </form>
@@ -167,6 +173,26 @@
         </tr>
         </tbody>
     </table>
+
+    <div id="bulkArchiveModal" class="modal fade" tabindex="-1" role="dialog" th:if="${!archived}">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Archive assignments</h5>
+                </div>
+                <div class="modal-body">
+                    <p>The <strong><span data-bulk-count>0</span></strong> selected assignment(s) will be archived.
+                        You can then find them in the Archived assignments page.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button form="bulkForm" th:formaction="@{/assignment/archive}" class="btn btn-primary">
+                        Yes, archive
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div id="bulkDeleteModal" class="modal fade" tabindex="-1" role="dialog"
          th:if="${#authorization.expression('hasRole(''DROP_PROJECT_ADMIN'')')}">
