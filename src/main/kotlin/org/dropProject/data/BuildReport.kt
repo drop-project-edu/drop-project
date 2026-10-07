@@ -57,9 +57,16 @@ private val detektWeightedIssuesRegex = """Analysis failed with (\d+) weighted i
 /**
  * Maven interleaves its own artifact resolution messages with the output of the plugin that is being executed, so
  * they may show up in the middle of a plugin's report (e.g., on a cold local repository, right after the goal's
- * header line). They must not be mistaken for the end of the plugin's output.
+ * header line). They must not be mistaken for the end of the plugin's output. Since Maven 3.10, resolving a
+ * plugin's dependencies also prints which artifact prefixes each remote repository serves.
  */
-private val mavenArtifactResolutionRegex = """\[INFO] (Downloading|Downloaded|Progress)\b.*""".toRegex()
+private val mavenArtifactResolutionRegex =
+        """\[INFO] ((Downloading|Downloaded|Progress)\b.*|Loaded \d+ auto-discovered prefixes for remote repository .*)""".toRegex()
+
+/**
+ * Maven reports a failed build as "[INFO] BUILD FAILURE" up to 3.9 and as "[ERROR] BUILD FAILURE" since 3.10
+ */
+private val buildFailureRegex = """\[(INFO|ERROR)] BUILD FAILURE.*""".toRegex()
 
 private fun isMavenArtifactResolutionLine(mavenOutputLine: String) =
         mavenArtifactResolutionRegex.matches(mavenOutputLine)
@@ -227,7 +234,7 @@ data class BuildReport(val mavenOutputLines: List<String>,
                     startIdx = idx + 1
                     LOG.trace("Found start of compilation output (line $idx)")
                 } else if (startIdx > 0) {
-                    if (mavenOutputLine.startsWith("[INFO] BUILD FAILURE") ||
+                    if (buildFailureRegex.matches(mavenOutputLine) ||
                             mavenOutputLine.startsWith("[INFO] --- ")) {    // no compilation errors on Kotlin
                         endIdx = idx
                         LOG.trace("Found end of compilation output (line $idx)")

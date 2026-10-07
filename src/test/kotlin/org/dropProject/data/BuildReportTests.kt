@@ -116,6 +116,21 @@ class BuildReportTests {
         assertEquals(0, buildReport.checkstyleErrors.size)
     }
 
+    // since maven 3.10, a failed build ends with "[ERROR] BUILD FAILURE" instead of "[INFO] BUILD FAILURE"
+    @Test
+    fun `compiler error 2 on maven 3_10`() {
+
+        val mavenOutputLines = resourceLoader.getResource("file:src/test/sampleMavenOutputs/compilerError2-maven3.10.txt").file.readLines()
+
+        val buildReport = buildReportBuilder.build(mavenOutputLines,
+                "/Users/pedroalves/projects/Lusofona/DropProject/DropProject/mavenized-projects-test/projectUnexpectedCharacter-mavenized",
+                dummyJavaAssignment)
+
+        assertTrue(!buildReport.mavenExecutionFailed())
+        assertEquals(2, buildReport.compilationErrors.size)
+        assertEquals(0, buildReport.checkstyleErrors.size)
+    }
+
     @Test
     fun `junit errors 1`() {
 
@@ -148,6 +163,22 @@ class BuildReportTests {
     fun `kotlin compiler error 1`() {
 
         val mavenOutputLines = resourceLoader.getResource("file:src/test/sampleMavenOutputs/kotlinCompilerError1.txt").file.readLines()
+
+        val buildReport = buildReportBuilder.build(mavenOutputLines,
+                "/srv/drop-project/mavenized-projects/1540829973889-test-mavenized",
+                dummyKotlinAssignment)
+
+        assertTrue(!buildReport.mavenExecutionFailed())
+        assertEquals(2, buildReport.compilationErrors.size)
+        assertEquals(0, buildReport.checkstyleErrors.size)
+        assertEquals("Main.kt: (2, 30) Expecting '\"'", buildReport.compilationErrors[0])
+        assertEquals("Main.kt: (2, 30) Expecting ')'", buildReport.compilationErrors[1])
+    }
+
+    @Test
+    fun `kotlin compiler error 1 on maven 3_10`() {
+
+        val mavenOutputLines = resourceLoader.getResource("file:src/test/sampleMavenOutputs/kotlinCompilerError1-maven3.10.txt").file.readLines()
 
         val buildReport = buildReportBuilder.build(mavenOutputLines,
                 "/srv/drop-project/mavenized-projects/1540829973889-test-mavenized",
@@ -249,6 +280,20 @@ class BuildReportTests {
             assertEquals(5, buildReport.checkstyleErrors.size, "$it")
         }
 
+    }
+
+    // since maven 3.10, resolving the detekt plugin's dependencies prints "[INFO] Loaded N auto-discovered prefixes
+    // for remote repository ..." right after the goal's header, in the middle of detekt's report
+    @Test
+    fun `kotlin detekt errors on maven 3_10`() {
+        val mavenOutputLines = resourceLoader.getResource("file:src/test/sampleMavenOutputs/kotlinDetektErrors-1.11.0-maven3.10.txt").file.readLines()
+        val buildReport = buildReportBuilder.build(mavenOutputLines,
+                "someMavenizedProj",
+                dummyKotlinAssignment)
+
+        assertTrue(!buildReport.mavenExecutionFailed())
+        assertEquals(0, buildReport.compilationErrors.size)
+        assertEquals(5, buildReport.checkstyleErrors.size)
     }
 
     @Test
