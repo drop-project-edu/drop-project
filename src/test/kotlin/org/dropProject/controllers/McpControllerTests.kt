@@ -1286,6 +1286,34 @@ class McpControllerTests: ApiTestSupport {
     }
 
     @Test
+    fun `mcp edit assignment sets and validates the allowed ips`() {
+        val authHeader = getBearerToken("teacher1")
+
+        val invalid = callTool("edit_assignment", """
+            {
+                "assignmentId": "testMcpAssignment",
+                "allowedIps": "10.12.33.*, 10.12.33"
+            }
+        """.trimIndent(), authHeader)
+        assertThat(invalid, containsString("\"isError\":true"))
+        assertThat(invalid, containsString("'10.12.33' is not an IPv4 address"))
+        assertNull(assignmentRepository.findById("testMcpAssignment").get().allowedIps)
+
+        // stored normalized
+        val response = callTool("edit_assignment", """
+            {
+                "assignmentId": "testMcpAssignment",
+                "allowedIps": " 10.12.33.* ,172.18.*"
+            }
+        """.trimIndent(), authHeader)
+        assertThat(response, containsString("allowedIps: not set -> 10.12.33.*, 172.18.*"))
+        assertEquals("10.12.33.*, 172.18.*", assignmentRepository.findById("testMcpAssignment").get().allowedIps)
+
+        callTool("edit_assignment", """{ "assignmentId": "testMcpAssignment", "allowedIps": "" }""", authHeader)
+        assertNull(assignmentRepository.findById("testMcpAssignment").get().allowedIps)
+    }
+
+    @Test
     fun `mcp edit assignment clears the settings that are passed empty`() {
         val authHeader = getBearerToken("teacher1")
 

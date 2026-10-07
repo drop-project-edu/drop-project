@@ -54,6 +54,10 @@ class AppErrorController(var errorAttributes: ErrorAttributes, val environment: 
         if (denial is AssignmentNotActiveException) {
             model["notActiveAssignmentId"] = denial.assignmentId
         }
+        if (denial is AssignmentNetworkNotAllowedException) {
+            model["networkNotAllowedAssignmentId"] = denial.assignmentId
+            model["clientIp"] = denial.clientIp
+        }
 
         return "access-denied"
     }

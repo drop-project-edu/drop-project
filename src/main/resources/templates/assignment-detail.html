@@ -182,6 +182,10 @@
                     <label class="col-sm-3 control-label">Hidden tests' results:</label>
                     <div class="col-sm-9 read-row" th:text="${assignment.hiddenTestsVisibility}"></div>
                 </div>
+                <div class="form-group" th:if="${assignment.allowedIps}">
+                    <label class="col-sm-3 control-label">Allowed IPs:</label>
+                    <div class="col-sm-9 read-row" th:text="${assignment.allowedIps}"></div>
+                </div>
                 <div class="form-group" th:if="${assignment.cooloffPeriod}">
                     <label class="col-sm-3 control-label">Cool-off period:</label>
                     <div class="col-sm-9 read-row">

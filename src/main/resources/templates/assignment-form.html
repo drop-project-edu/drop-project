@@ -271,6 +271,17 @@
         </div>
 
         <div class="form-group">
+            <label for="allowedIps" class="col-sm-3 control-label">Allowed IPs (optional)</label>
+            <div class="col-sm-9" th:classappend="${#fields.hasErrors('allowedIps')} ? 'has-error' : ''">
+                <input th:field="*{allowedIps}" type="text" class="form-control" id="allowedIps"
+                       placeholder="e.g. 10.12.33.*, 172.18.*" />
+                <p class="help-block" th:if="${#fields.hasErrors('allowedIps')}" th:errors="*{allowedIps}">Error</p>
+                <p class="help-block" th:if="${!#fields.hasErrors('allowedIps')}">Students can only open and submit to this
+                    assignment from these IPv4 addresses or prefixes (comma separated). Leave empty to allow any address</p>
+            </div>
+        </div>
+
+        <div class="form-group">
             <label for="minGroupSize" class="col-sm-3 control-label">Group size (optional)</label>
             <div class="col-sm-9" th:classappend="${#fields.hasErrors('minGroupSize')} ? 'has-error' : ''">
                 <div class="form-inline">

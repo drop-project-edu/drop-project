@@ -38,6 +38,9 @@ enum class AssignmentAccess {
     /** the user is one of the assignment's intended users, but it is not open to submissions */
     NOT_ACTIVE,
 
+    /** the user is one of the assignment's intended users, but is connecting from an address it doesn't allow */
+    NETWORK_NOT_ALLOWED,
+
     /** the assignment is not for this user */
     DENIED
 }
@@ -64,10 +67,14 @@ class AuthorizationService(
      * @param assignmentId is a String identifying the Assignment
      * @param userId is a String identifying the user trying to access it
      * @param isTeacher is a Boolean, true if the user has the teacher role
-     * @return [AssignmentAccess.GRANTED], [AssignmentAccess.NOT_ACTIVE] if the user would otherwise be allowed but
-     * the assignment is closed to submissions, or [AssignmentAccess.DENIED] if the assignment is not for this user
+     * @param clientIp is the address the user is connecting from, checked against the assignment's allowed IPs
+     * @return [AssignmentAccess.GRANTED], [AssignmentAccess.NETWORK_NOT_ALLOWED] if the user would otherwise be
+     * allowed but is connecting from an address the assignment doesn't allow, [AssignmentAccess.NOT_ACTIVE] if the
+     * user would otherwise be allowed but the assignment is closed to submissions, or [AssignmentAccess.DENIED] if
+     * the assignment is not for this user
      */
-    fun checkAssignmentAccess(assignmentId: String, userId: String, isTeacher: Boolean): AssignmentAccess {
+    fun checkAssignmentAccess(assignmentId: String, userId: String, isTeacher: Boolean,
+                              clientIp: String?): AssignmentAccess {
         val assignment = assignmentRepository.findById(assignmentId)
             .orElseThrow { throw ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found") }
 
@@ -82,23 +89,32 @@ class AuthorizationService(
             return AssignmentAccess.DENIED
         }
 
+        // the teachers that manage it are restricted by neither the network nor the state of the assignment, since
+        // they are the ones who open it and check it before the students arrive
+        val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
+        if (isTeacher && (userId == assignment.ownerUserId || acl.any { it.userId == userId })) {
+            return AssignmentAccess.GRANTED
+        }
+
+        if (!assignment.acceptsClientIp(clientIp)) {
+            return AssignmentAccess.NETWORK_NOT_ALLOWED
+        }
+
         if (!assignment.active) {
-            // the teachers that manage it can still see it while it is closed, since they are the ones who open it
-            val acl = assignmentACLRepository.findByAssignmentId(assignmentId)
-            val managesIt = isTeacher && (userId == assignment.ownerUserId || acl.any { it.userId == userId })
-            return if (managesIt) AssignmentAccess.GRANTED else AssignmentAccess.NOT_ACTIVE
+            return AssignmentAccess.NOT_ACTIVE
         }
 
         return AssignmentAccess.GRANTED
     }
 
-    fun canAccessAssignment(assignmentId: String, userId: String, isTeacher: Boolean): Boolean =
-        checkAssignmentAccess(assignmentId, userId, isTeacher) == AssignmentAccess.GRANTED
+    fun canAccessAssignment(assignmentId: String, userId: String, isTeacher: Boolean, clientIp: String?): Boolean =
+        checkAssignmentAccess(assignmentId, userId, isTeacher, clientIp) == AssignmentAccess.GRANTED
 
-    fun canAccessAssignmentByGitSubmissionId(gitSubmissionId: String, userId: String, isTeacher: Boolean): Boolean {
+    fun canAccessAssignmentByGitSubmissionId(gitSubmissionId: String, userId: String, isTeacher: Boolean,
+                                             clientIp: String?): Boolean {
 
         val gitSubmission = gitSubmissionRepository.findById(gitSubmissionId.toLong())
             .orElseThrow { throw ResponseStatusException(HttpStatus.NOT_FOUND, "Git Submission ${gitSubmissionId} not found") }
-        return canAccessAssignment(gitSubmission.assignmentId, userId, isTeacher)
+        return canAccessAssignment(gitSubmission.assignmentId, userId, isTeacher, clientIp)
     }
 }

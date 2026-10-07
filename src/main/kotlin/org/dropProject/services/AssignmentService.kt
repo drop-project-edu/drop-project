@@ -351,6 +351,7 @@ class AssignmentService(
         existingAssignment.coverageVisibleToStudents = assignmentForm.coverageVisibleToStudents
         existingAssignment.mandatoryTestsSuffix = assignmentForm.mandatoryTestsSuffix
         existingAssignment.cooloffPeriod = assignmentForm.cooloffPeriod
+        existingAssignment.allowedIps = normalizedAllowedIps(assignmentForm)
         existingAssignment.maxMemoryMb = assignmentForm.maxMemoryMb
         existingAssignment.showLeaderBoard = assignmentForm.leaderboardType != null
         existingAssignment.hiddenTestsVisibility = assignmentForm.hiddenTestsVisibility
@@ -475,6 +476,14 @@ class AssignmentService(
                 "Error: Exceptions to group size should only be filled in when you set the min group size"))
         }
 
+        if (!assignmentForm.allowedIps.isNullOrBlank()) {
+            try {
+                AllowedIps.parse(assignmentForm.allowedIps!!)
+            } catch (e: IllegalArgumentException) {
+                errors.add(AssignmentFormError("allowedIps", "allowedIps.invalid", "Error: ${e.message}"))
+            }
+        }
+
         if (assignmentForm.visibility == AssignmentVisibility.PRIVATE && assignmentForm.assignees.isNullOrEmpty()) {
             errors.add(AssignmentFormError("assignees", "assignees.mustBeFilled",
                 "Error: For PRIVATE assignments, you have to fill in the authorized submitters"))
@@ -506,6 +515,10 @@ class AssignmentService(
 
         return errors
     }
+
+    // the form was already validated, so the list parses
+    private fun normalizedAllowedIps(assignmentForm: AssignmentForm): String? =
+        assignmentForm.allowedIps?.takeIf { it.isNotBlank() }?.let { AllowedIps.parse(it).toString() }
 
     /**
      * Validates the rules that only apply to the creation of a new [Assignment], returning the first problem that
@@ -568,6 +581,7 @@ class AssignmentService(
             coverageVisibleToStudents = assignmentForm.coverageVisibleToStudents,
             mandatoryTestsSuffix = assignmentForm.mandatoryTestsSuffix,
             cooloffPeriod = assignmentForm.cooloffPeriod,
+            allowedIps = normalizedAllowedIps(assignmentForm),
             maxMemoryMb = assignmentForm.maxMemoryMb, submissionMethod = assignmentForm.submissionMethod!!,
             gitRepositoryUrl = assignmentForm.gitRepositoryUrl!!, ownerUserId = principal.realName(),
             gitRepositoryFolder = assignmentForm.assignmentId!!, showLeaderBoard = assignmentForm.leaderboardType != null,

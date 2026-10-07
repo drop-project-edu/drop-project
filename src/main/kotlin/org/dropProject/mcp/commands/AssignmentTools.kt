@@ -75,6 +75,7 @@ object AssignmentTools {
         setting("mandatoryTestsSuffix", assignment.mandatoryTestsSuffix)
         setting("leaderboardType", assignment.leaderboardType)
         setting("cooloffPeriod", assignment.cooloffPeriod)
+        setting("allowedIps", assignment.allowedIps)
         setting("maxMemoryMb", assignment.maxMemoryMb)
         setting("minGroupSize", assignment.projectGroupRestrictions?.minGroupSize)
         setting("maxGroupSize", assignment.projectGroupRestrictions?.maxGroupSize)

@@ -238,6 +238,7 @@ data class EditAssignment(val assignmentId: String, val changes: AssignmentArgum
                 enum(it, LeaderboardType.entries)
             },
             cooloffPeriod = changes.orCurrent("cooloffPeriod", assignment.cooloffPeriod) { number(it) },
+            allowedIps = changes.orCurrent("allowedIps", assignment.allowedIps) { string(it) },
             maxMemoryMb = maxMemoryMb,
             minGroupSize = changes.orCurrent("minGroupSize", restrictions?.minGroupSize) { number(it) },
             maxGroupSize = changes.orCurrent("maxGroupSize", restrictions?.maxGroupSize) { number(it) },
@@ -360,6 +361,12 @@ data class EditAssignment(val assignmentId: String, val changes: AssignmentArgum
                         "cooloffPeriod" to mapOf(
                             "type" to "number",
                             "description" to "Minutes that students must wait between submissions"
+                        ),
+                        "allowedIps" to mapOf(
+                            "type" to "string",
+                            "description" to "Comma separated IPv4 addresses and wildcard prefixes, e.g. " +
+                                    "'10.12.33.*, 172.18.*', that students must be connecting from to open or " +
+                                    "submit to the assignment. Pass an empty string to accept any address"
                         ),
                         "maxMemoryMb" to mapOf(
                             "type" to "number",

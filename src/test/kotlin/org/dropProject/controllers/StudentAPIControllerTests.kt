@@ -124,6 +124,36 @@ class StudentAPIControllerTests: ApiTestSupport {
     }
 
     @Test
+    fun `current assignments leave out the ones that don't allow the student's ip`() {
+
+        val assignment = assignmentRepository.findById("testJavaProj").get()
+        assignment.allowedIps = "10.12.33.*"
+        assignmentRepository.save(assignment)
+
+        val token = generateToken("student1", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")), mvc)
+
+        // mock requests come from 127.0.0.1 unless told otherwise
+        this.mvc.perform(
+            get("/api/student/assignments/current")
+                .header("authorization", basicAuthHeader("student1", token)))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$[*].id", not(hasItem("testJavaProj"))))
+
+        this.mvc.perform(
+            get("/api/student/assignments/testJavaProj")
+                .header("authorization", basicAuthHeader("student1", token)))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.errorCode", equalTo(403)))
+
+        this.mvc.perform(
+            get("/api/student/assignments/current")
+                .header("authorization", basicAuthHeader("student1", token))
+                .with { it.remoteAddr = "10.12.33.105"; it })
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$[*].id", hasItem("testJavaProj")))
+    }
+
+    @Test
     fun `try to get current assignments with student1`() {
 
         val token = generateToken("student1", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")), mvc)

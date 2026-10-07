@@ -73,7 +73,7 @@ class StudentAPIController(
     fun getCurrentAssignments(principal: Principal, request: HttpServletRequest): ResponseEntity<List<Assignment>> {
 
         val assignments = assignmentService.getMyAssignments(principal, archived = false)
-            .filter { if (request.isUserInRole("TEACHER")) true else it.active }
+            .filter { if (request.isUserInRole("TEACHER")) true else it.active && it.acceptsClientIp(request.remoteAddr) }
             .map {
                 val instructions = assignmentTeacherFiles.getInstructions(it)
                 if (instructions.format == AssignmentInstructionsFormat.MD) {
@@ -155,7 +155,8 @@ class StudentAPIController(
     @RequestMapping(value = ["/assignments/{assignmentID}"], method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_JSON_VALUE])
     @JsonView(JSONViews.StudentAPI::class)  // to publish only certain fields of the Assignment
     @Operation(summary = "Get specific assignment information")
-    fun getAssignmentInfo(principal: Principal, @PathVariable assignmentID: String) : ResponseEntity<AssignmentInfoResponse> {
+    fun getAssignmentInfo(principal: Principal, @PathVariable assignmentID: String,
+                          request: HttpServletRequest) : ResponseEntity<AssignmentInfoResponse> {
 
         //control access on w-list
         assignmentService.checkAssignees(assignmentID, principal.realName())
@@ -168,7 +169,9 @@ class StudentAPIController(
 
         if (assignment == null) {
             assignmentInfoResponse.errorCode = 404
-        } else if (!assignment.active) {
+        } else if (!assignment.active ||
+            (!assignment.acceptsClientIp(request.remoteAddr) &&
+                !assignmentService.isAuthorizedTeacher(assignment, principal.realName(), request))) {
             assignment=null
             assignmentInfoResponse.errorCode = 403
         }

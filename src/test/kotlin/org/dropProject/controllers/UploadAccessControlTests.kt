@@ -78,6 +78,59 @@ class UploadAccessControlTests : UploadTestBase() {
                 .andExpect(redirectedUrl("/upload/testJavaProj"))
     }
 
+    private fun allowOnly(allowedIps: String) {
+        val assignment = assignmentRepository.findById("testJavaProj").get()
+        assignment.allowedIps = allowedIps
+        assignmentRepository.save(assignment)
+    }
+
+    @Test
+    fun `students can only open an assignment from its allowed ips`() {
+
+        allowOnly("10.12.33.*")
+
+        // mock requests come from 127.0.0.1 unless told otherwise
+        this.mvc.perform(get("/upload/testJavaProj").with(user(STUDENT_1)))
+                .andExpect(status().isForbidden())
+                .andExpect(forwardedUrl("/access-denied"))
+
+        this.mvc.perform(get("/upload/testJavaProj").with(user(STUDENT_1)).with { it.remoteAddr = "10.12.33.105"; it })
+                .andExpect(status().isOk())
+
+        // the teacher that owns it is not restricted
+        this.mvc.perform(get("/upload/testJavaProj").with(user(TEACHER_1)))
+                .andExpect(status().isOk())
+    }
+
+    @Test
+    fun `the access denied page tells the student that the network is not allowed`() {
+
+        allowOnly("10.12.33.*")
+
+        this.mvc.perform(get("/access-denied").with(user(STUDENT_1))
+                .requestAttr(org.springframework.security.web.WebAttributes.ACCESS_DENIED_403,
+                    AssignmentNetworkNotAllowedException("testJavaProj", "87.196.72.232")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Network not allowed")))
+                .andExpect(content().string(containsString("87.196.72.232")))
+    }
+
+    @Test
+    fun `students can only submit to an assignment from its allowed ips`() {
+
+        allowOnly("10.12.33.*")
+        // the address is checked before the file is even looked at
+        this.mvc.perform(multipart("/upload")
+                .file(MockMultipartFile("file", "project.zip", "application/zip", ByteArray(0)))
+                .param("assignmentId", "testJavaProj")
+                .with(user(STUDENT_1)))
+                .andExpect(status().isForbidden())
+
+        allowOnly("10.12.33.*, 127.0.0.*")
+        submissionFixtures.uploadProject("projectOK", "testJavaProj", STUDENT_1,
+            expectedResultMatcher = status().isOk())
+    }
+
     @Test
     fun `access assignment with whitelist`() {
 

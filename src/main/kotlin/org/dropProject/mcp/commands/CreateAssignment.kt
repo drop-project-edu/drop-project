@@ -209,6 +209,12 @@ data class CreateAssignment(val assignmentForm: AssignmentForm) : ToolCommand {
                             "type" to "number",
                             "description" to "Minutes that students must wait between submissions. Optional"
                         ),
+                        "allowedIps" to mapOf(
+                            "type" to "string",
+                            "description" to "Comma separated IPv4 addresses and wildcard prefixes, e.g. " +
+                                    "'10.12.33.*, 172.18.*', that students must be connecting from to open or " +
+                                    "submit to the assignment. Without it, any address is accepted"
+                        ),
                         "maxMemoryMb" to mapOf(
                             "type" to "number",
                             "description" to "Memory limit, in MB, of the evaluation of each submission. Must be " +
@@ -323,6 +329,7 @@ data class CreateAssignment(val assignmentForm: AssignmentForm) : ToolCommand {
                 mandatoryTestsSuffix = settings.string("mandatoryTestsSuffix"),
                 leaderboardType = settings.enum("leaderboardType", LeaderboardType.entries),
                 cooloffPeriod = settings.number("cooloffPeriod"),
+                allowedIps = settings.string("allowedIps"),
                 maxMemoryMb = maxMemoryMb,
                 minGroupSize = settings.number("minGroupSize"),
                 maxGroupSize = settings.number("maxGroupSize"),

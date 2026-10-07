@@ -57,3 +57,14 @@ class DivergentCheckpointException(message: String?, cause: Throwable? = null) :
  */
 class AssignmentNotActiveException(val assignmentId: String) :
     AccessDeniedException("Assignment ${assignmentId} is not active")
+
+/**
+ * Thrown when a user that may access an Assignment is connecting from an address that the assignment doesn't allow
+ * (see [org.dropproject.dao.Assignment.allowedIps]). Like [AssignmentNotActiveException], it is reported as any other
+ * denial, but the access denied page recognizes it, so that it can tell the student what the problem is.
+ *
+ * @property assignmentId is a String identifying the Assignment
+ * @property clientIp is the address the user is connecting from
+ */
+class AssignmentNetworkNotAllowedException(val assignmentId: String, val clientIp: String?) :
+    AccessDeniedException("Assignment ${assignmentId} can't be accessed from ${clientIp}")

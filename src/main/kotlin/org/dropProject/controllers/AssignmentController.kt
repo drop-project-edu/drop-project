@@ -509,6 +509,7 @@ class AssignmentController(
             coverageVisibleToStudents = assignment.coverageVisibleToStudents,
             mandatoryTestsSuffix = assignment.mandatoryTestsSuffix,
             cooloffPeriod = assignment.cooloffPeriod,
+            allowedIps = assignment.allowedIps,
             hiddenTestsVisibility = assignment.hiddenTestsVisibility,
             maxMemoryMb = assignment.maxMemoryMb,
             leaderboardType = assignment.leaderboardType,

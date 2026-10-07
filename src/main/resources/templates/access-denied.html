@@ -10,11 +10,18 @@
 
 <div class="container" style="max-width: 760px; margin-bottom: 65px">
 
-    <h1 class="page-header" th:if="${notActiveAssignmentId == null}">Access denied</h1>
+    <h1 class="page-header" th:if="${notActiveAssignmentId == null and networkNotAllowedAssignmentId == null}">Access denied</h1>
     <h1 class="page-header" th:if="${notActiveAssignmentId != null}">Assignment is closed</h1>
+    <h1 class="page-header" th:if="${networkNotAllowedAssignmentId != null}">Network not allowed</h1>
 
-    <div class="alert alert-danger" th:if="${notActiveAssignmentId == null}">
+    <div class="alert alert-danger" th:if="${notActiveAssignmentId == null and networkNotAllowedAssignmentId == null}">
         You do not have permission to view this page.
+    </div>
+
+    <div class="alert alert-warning" th:if="${networkNotAllowedAssignmentId != null}">
+        The assignment <strong th:text="${networkNotAllowedAssignmentId}">assignmentId</strong> can't be accessed from
+        your current address (<span th:text="${clientIp}">0.0.0.0</span>). Connect from the network the teacher
+        indicated.
     </div>
 
     <div class="alert alert-warning" th:if="${notActiveAssignmentId != null}">
@@ -22,7 +29,7 @@
         accepting submissions.
     </div>
 
-    <p th:if="${notActiveAssignmentId == null}">
+    <p th:if="${notActiveAssignmentId == null and networkNotAllowedAssignmentId == null}">
         If you should have access to it, ask the assignment's teacher to grant it to you.
     </p>
 

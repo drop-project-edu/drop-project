@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonView
+import org.dropproject.data.AllowedIps
 import org.dropproject.data.JSONViews
 import org.dropproject.extensions.format
 import org.dropproject.forms.SubmissionMethod
@@ -94,6 +95,8 @@ enum class AssignmentVisibility {
  * @property coverageVisibleToStudents is an optional Boolean, indicating if the coverage results should be visible to students
  * @property cooloffPeriod is an optional Integer with the number of minutes that students must wait between consecutive
  * submissions
+ * @property allowedIps is an optional String with the only IPv4 addresses and wildcard prefixes (e.g. "10.12.33.*")
+ * that students may access the assignment from (see [org.dropproject.data.AllowedIps])
  * @property maxMemoryMb is an optional Integer, indicating the maximum number of Mb that the student's code can use
  * @property showLeaderBoard is a Boolean, indicating if the leaderboard page should be active for this Assignment
  * @property leaderboardType is a [LeaderboardType]
@@ -157,6 +160,7 @@ data class Assignment(
     var hiddenTestsVisibility: TestVisibility? = null,
     var mandatoryTestsSuffix: String? = null,
     var cooloffPeriod: Int? = null, // minutes
+    var allowedIps: String? = null,
     var maxMemoryMb: Int? = null,
     var showLeaderBoard: Boolean = false,
     var leaderboardType: LeaderboardType? = null,
@@ -239,6 +243,12 @@ data class Assignment(
 
         return false
     }
+
+    /**
+     * Whether students may access this assignment from [clientIp]. Without [allowedIps], every address is accepted.
+     */
+    fun acceptsClientIp(clientIp: String?): Boolean =
+        allowedIps.isNullOrBlank() || AllowedIps.parse(allowedIps!!).allows(clientIp)
 
     override fun toString(): String {
         return "$id - $name"

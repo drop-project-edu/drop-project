@@ -22,6 +22,7 @@ package org.dropproject.services
 import jakarta.persistence.EntityNotFoundException
 import org.apache.commons.io.FileUtils
 import org.dropproject.Constants
+import org.dropproject.controllers.AssignmentNetworkNotAllowedException
 import org.dropproject.controllers.BaseSubmissionNotFoundException
 import org.dropproject.controllers.DivergentCheckpointException
 import org.dropproject.controllers.InvalidProjectGroupException
@@ -226,6 +227,10 @@ class SubmissionService(
             }
 
             assignmentService.checkAssignees(uploadForm.assignmentId!!, principal.realName())
+
+            if (!assignment.acceptsClientIp(request.remoteAddr)) {
+                throw AssignmentNetworkNotAllowedException(assignment.id, request.remoteAddr)
+            }
         }
 
         if (assignment.cooloffPeriod != null && !isAuthorizedTeacher) {

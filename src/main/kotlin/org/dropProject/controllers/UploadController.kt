@@ -200,7 +200,7 @@ class UploadController(
         val isAuthorizedTeacher = request.isUserInRole("TEACHER") &&
                 assignmentService.isAuthorizedTeacher(assignment, principal.realName(), request)
         // Check authorization (403 if unauthorized)
-        checkAssignmentAccess(assignmentId, principal, isAuthorizedTeacher)
+        checkAssignmentAccess(assignmentId, principal, isAuthorizedTeacher, request)
 
         model["assignment"] = assignment
         // the assignment info page is restricted to the owner and the ACL, so the link to it must only be
@@ -270,15 +270,22 @@ class UploadController(
     /**
      * Refuses the request when [principal] may not open the assignment identified by [assignmentId].
      *
-     * An assignment that is closed to submissions is refused with an [AssignmentNotActiveException], so that the
-     * access denied page can say so, instead of telling a student to ask for a permission that they already have.
+     * An assignment that is closed to submissions, or that doesn't accept the address the request comes from, is
+     * refused with its own exception, so that the access denied page can say so, instead of telling a student to ask
+     * for a permission that they already have.
      *
+     * @throws AssignmentNetworkNotAllowedException if the user is one of the assignment's intended users, but is
+     * connecting from an address that it doesn't allow
      * @throws AssignmentNotActiveException if the user is one of the assignment's intended users, but it is not active
      * @throws AccessDeniedException if the assignment is not for this user
      */
-    private fun checkAssignmentAccess(assignmentId: String, principal: Principal, isTeacher: Boolean) {
-        when (authorizationService.checkAssignmentAccess(assignmentId, principal.realName(), isTeacher)) {
+    private fun checkAssignmentAccess(assignmentId: String, principal: Principal, isTeacher: Boolean,
+                                      request: HttpServletRequest) {
+        when (authorizationService.checkAssignmentAccess(assignmentId, principal.realName(), isTeacher,
+                request.remoteAddr)) {
             AssignmentAccess.GRANTED -> {}
+            AssignmentAccess.NETWORK_NOT_ALLOWED -> throw AssignmentNetworkNotAllowedException(assignmentId,
+                request.remoteAddr)
             AssignmentAccess.NOT_ACTIVE -> throw AssignmentNotActiveException(assignmentId)
             AssignmentAccess.DENIED -> throw AccessDeniedException(
                 "User ${principal.realName()} is not authorized to access assignment $assignmentId")
@@ -505,7 +512,7 @@ class UploadController(
         val assignment = assignmentRepository.findById(assignmentId).orElse(null) ?: throw AssignmentNotFoundException(assignmentId)
         
         // Check authorization (403 if unauthorized)
-        checkAssignmentAccess(assignmentId, principal, request.isUserInRole("TEACHER"))
+        checkAssignmentAccess(assignmentId, principal, request.isUserInRole("TEACHER"), request)
 
         val isAuthorizedTeacher = assignmentService.isAuthorizedTeacher(assignment, principal.realName(), request)
 
@@ -736,7 +743,8 @@ class UploadController(
                 assignmentService.isAuthorizedTeacher(assignment, principal.realName(), request)
 
         // Check authorization (403 if unauthorized)
-        if (!authorizationService.canAccessAssignmentByGitSubmissionId(gitSubmissionId, principal.realName(), isAuthorizedTeacher)) {
+        if (!authorizationService.canAccessAssignmentByGitSubmissionId(gitSubmissionId, principal.realName(),
+                isAuthorizedTeacher, request.remoteAddr)) {
             throw AccessDeniedException("User ${principal.realName()} is not authorized to access git submission $gitSubmissionId")
         }
 
