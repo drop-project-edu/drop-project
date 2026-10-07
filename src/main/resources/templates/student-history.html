@@ -13,7 +13,13 @@
     </div>
 
     <h1 class="page-header" th:text="#{history.title}">Student History</h1>
-    <h6><span th:text="${studentHistory.author.userId}"></span> | <span th:text="${studentHistory.author.name}"></span></h6>
+    <h6><span th:text="${studentHistory.author.userId}"></span> | <span th:text="${studentHistory.author.name}"></span>
+        <th:block th:unless="${studentHistory.githubUsernames.isEmpty()}"> | GitHub:
+            <th:block th:each="githubUsername, iter : ${studentHistory.githubUsernames}"><a
+                    th:href="'https://github.com/' + ${githubUsername}" th:text="${githubUsername}" target="_blank"
+                    rel="noopener">username</a><span th:unless="${iter.last}">, </span></th:block>
+        </th:block>
+    </h6>
 
     <table>
         <tr th:each="assignment: ${studentHistory.getHistorySortedByDateDesc()}">

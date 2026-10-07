@@ -935,9 +935,9 @@ class ReportController(
         method = [(RequestMethod.GET)],
         produces = [MediaType.APPLICATION_JSON_VALUE]
     )
-    fun getStudentList(@RequestParam("q") q: String): ResponseEntity<List<StudentListResponse>> {
+    fun getStudentList(@RequestParam("q") q: String, principal: Principal): ResponseEntity<List<StudentListResponse>> {
 
-        return ResponseEntity(studentService.getStudentList(q), HttpStatus.OK)
+        return ResponseEntity(studentService.getStudentList(q, principal), HttpStatus.OK)
     }
 
     @RequestMapping(value = ["/studentHistory"], method = [(RequestMethod.GET)])

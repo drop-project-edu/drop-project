@@ -20,7 +20,9 @@
 package org.dropproject.controllers
 
 import org.dropproject.TestUsers.STUDENT_1
+import org.dropproject.TestUsers.STUDENT_2
 import org.dropproject.TestUsers.TEACHER_1
+import org.dropproject.TestUsers.TEACHER_2
 import org.junit.jupiter.api.Tag
 import org.dropproject.DropProjectIntegrationTest
 import org.junit.jupiter.api.Assertions.*
@@ -126,5 +128,60 @@ class StudentHistoryTests : ReportTestBase() {
 
         assertEquals("sampleJavaProject", studentHistory.history[1].assignment.id)
         assertEquals("Student B", studentHistory.history[1].submissions[0].submitterName)
+    }
+
+    // connects, to testJavaProj, a repository owned by githubUsername, on behalf of the group of studentId's last submission
+    private fun connectGitRepository(studentId: String, githubUsername: String) {
+        val group = submissionRepository.findAll().filter { it.submitterUserId == studentId }.maxByOrNull { it.id }!!.group
+        gitSubmissionRepository.save(GitSubmission(assignmentId = "testJavaProj", submitterUserId = studentId,
+            gitRepositoryUrl = "git@github.com:$githubUsername/lp2-ficha.git", group = group))
+    }
+
+    @Test
+    fun `student history shows the github usernames of the repositories the student connected`() {
+
+        submissionFixtures.uploadProject("projectOK", "testJavaProj", STUDENT_1, listOf(Pair("student1", "Student 1")))
+        connectGitRepository("student1", "JoaoSilva")
+
+        val reportResult = this.mvc.perform(
+            get("/studentHistory?id=${STUDENT_1.username}").with(user(TEACHER_1))
+        )
+            .andExpect(status().isOk)
+            .andExpect(content().string(containsString("https://github.com/JoaoSilva")))
+            .andReturn()
+
+        val studentHistory = reportResult.modelAndView!!.modelMap["studentHistory"] as StudentHistory
+        assertEquals(listOf("JoaoSilva"), studentHistory.githubUsernames)
+    }
+
+    @Test
+    fun `student list matches github usernames`() {
+
+        submissionFixtures.uploadProject("projectOK", "testJavaProj", STUDENT_1, listOf(Pair("student1", "Student 1")))
+        submissionFixtures.uploadProject("projectOK", "testJavaProj", STUDENT_2, listOf(Pair("student2", "Student 2")))
+        connectGitRepository("student1", "JoaoSilva")
+        connectGitRepository("student2", "MariaSilva")
+
+        // partial and case insensitive, and the matching username is shown next to the name
+        this.mvc.perform(get("/studentList?q=silva").with(user(TEACHER_1)))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$[*].value", contains("student1", "student2")))
+            .andExpect(jsonPath("$[*].text", contains("Student 1 (GitHub: JoaoSilva)", "Student 2 (GitHub: MariaSilva)")))
+
+        // matching by name keeps working, without a username that didn't match
+        this.mvc.perform(get("/studentList").param("q", "student 1").with(user(TEACHER_1)))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$[*].value", contains("student1")))
+            .andExpect(jsonPath("$[*].text", contains("Student 1")))
+
+        // the repository name is not the username
+        this.mvc.perform(get("/studentList?q=lp2-ficha").with(user(TEACHER_1)))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$", hasSize<Any>(0)))
+
+        // a teacher without access to the assignment doesn't get to find the student through it
+        this.mvc.perform(get("/studentList?q=joaosilva").with(user(TEACHER_2)))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$", hasSize<Any>(0)))
     }
 }

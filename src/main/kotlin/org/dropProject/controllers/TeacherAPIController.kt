@@ -177,10 +177,10 @@ class TeacherAPIController(
 
     @GetMapping(value = ["/studentSearch/{query}"], produces = [MediaType.APPLICATION_JSON_VALUE])
     @JsonView(JSONViews.TeacherAPI::class)
-    @Operation(summary = "Get all students that match the query value")
-    fun searchStudents(@PathVariable("query") query: String): ResponseEntity<List<StudentListResponse>> {
+    @Operation(summary = "Get all students whose id, name or GitHub username match the query value")
+    fun searchStudents(@PathVariable("query") query: String, principal: Principal): ResponseEntity<List<StudentListResponse>> {
 
-        return ResponseEntity(studentService.getStudentList(query), HttpStatus.OK)
+        return ResponseEntity(studentService.getStudentList(query, principal), HttpStatus.OK)
     }
 
     @GetMapping(value = ["/submissions/{submissionId}/markAsFinal"])

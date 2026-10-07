@@ -32,6 +32,8 @@ interface GitSubmissionRepository : JpaRepository<GitSubmission, Long> {
     fun findByAssignmentIdAndConnected(assignmentId: String, connected: Boolean) : List<GitSubmission>
     fun findBySubmitterUserIdAndAssignmentId(submitterUserId: String, assignmentId: String) : GitSubmission?
     fun findByGroupInAndAssignmentId(groups: List<ProjectGroup>, assignmentId: String) : GitSubmission?
+    fun findBySubmitterUserId(submitterUserId: String) : List<GitSubmission>
+    fun findByGitRepositoryUrlContainingIgnoreCase(text: String) : List<GitSubmission>
 
     fun countByGroup(group: ProjectGroup) : Long
     fun countBySubmitterUserIdAndAssignmentId(submitterUserId: String, assignmentId: String) : Long

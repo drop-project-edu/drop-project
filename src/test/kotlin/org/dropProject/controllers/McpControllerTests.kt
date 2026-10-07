@@ -221,13 +221,13 @@ class McpControllerTests: ApiTestSupport {
                         },
                         {
                             "name": "search_student",
-                            "description": "Search for students by student ID or name (partial matching) and retrieve their complete submission history. Returns student information along with assignment IDs and submission IDs for detailed lookup. Useful for tracking student progress, identifying submission patterns, or providing academic support.",
+                            "description": "Search for students by student ID, name or GitHub username (partial matching) and retrieve their complete submission history. Returns student information along with assignment IDs and submission IDs for detailed lookup. Useful for tracking student progress, identifying submission patterns, or providing academic support.",
                             "inputSchema": {
                                 "type": "object",
                                 "properties": {
                                     "query": {
                                         "type": "string",
-                                        "description": "Search query to match student IDs or names (case-insensitive partial matching)"
+                                        "description": "Search query to match student IDs, names or GitHub usernames (case-insensitive partial matching)"
                                     }
                                 },
                                 "required": ["query"]

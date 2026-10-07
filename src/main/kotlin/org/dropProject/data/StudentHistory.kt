@@ -59,6 +59,8 @@ class StudentHistory(val author : Author) {
     var groupByAssignment = HashMap<Long?, ArrayList<Assignment>>()
     @JsonView(JSONViews.TeacherAPI::class)
     var history = ArrayList<StudentHistoryEntry>()
+    // owners of the repositories the student connected to git assignments
+    var githubUsernames: List<String> = emptyList()
 
     fun addGroupAndAssignment(group: ProjectGroup, assignment: Assignment) {
         /*

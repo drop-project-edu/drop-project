@@ -49,7 +49,9 @@ class StudentService(
     val assignmentRepository: AssignmentRepository,
     val assignmentTeacherFiles: AssignmentTeacherFiles,
     val assignmentACLRepository: AssignmentACLRepository,
-    val submissionService: SubmissionService
+    val submissionService: SubmissionService,
+    val gitSubmissionRepository: GitSubmissionRepository,
+    val gitClient: GitClient
 ) {
     /**
      * @param teacherPrincipal if the request is made by a student, this parameter is null. otherwise, it
@@ -87,11 +89,8 @@ class StudentService(
 
             if (!assignmentsMap.containsKey(assignmentAndGroup)) {
 
-                if (teacherPrincipal != null) {
-                    val acl = assignmentACLRepository.findByAssignmentId(submission.assignmentId)
-                    if (teacherPrincipal.realName() != assignment.ownerUserId && acl.find { it.userId == teacherPrincipal.realName() } == null) {
-                        continue
-                    }
+                if (!canAccess(assignment, teacherPrincipal)) {
+                    continue
                 }
 
                 assignmentsMap[assignmentAndGroup] = assignment
@@ -102,13 +101,76 @@ class StudentService(
         }
 
         studentHistory.ensureSubmissionsAreSorted()
+        studentHistory.githubUsernames = getGithubUsernames(studentId, teacherPrincipal)
 
         return studentHistory
     }
 
-    fun getStudentList(query: String): List<StudentListResponse> =
+    /**
+     * Returns the GitHub usernames that own the repositories [studentId] connected to git assignments, i.e. the
+     * owner part of each repository url. Only the assignments that [teacherPrincipal] has access to are considered.
+     */
+    fun getGithubUsernames(studentId: String, teacherPrincipal: Principal? = null): List<String> =
+        gitSubmissionRepository.findBySubmitterUserId(studentId)
+            .filter { gitClient.checkValidSSHGithubURL(it.gitRepositoryUrl) }
+            .filter { canAccess(it.assignmentId, teacherPrincipal) }
+            .map { gitClient.getGitRepoInfo(it.gitRepositoryUrl).first }
+            .distinctBy { it.lowercase() }
+            .sortedBy { it.lowercase() }
+
+    private fun canAccess(assignmentId: String, teacherPrincipal: Principal?): Boolean {
+        val assignment = assignmentRepository.findById(assignmentId).orElse(null) ?: return false
+        return canAccess(assignment, teacherPrincipal)
+    }
+
+    /**
+     * A student (null [teacherPrincipal]) is only ever asking about themselves, so there's nothing to filter.
+     * A teacher only gets to see the assignments they own or were given access to.
+     */
+    private fun canAccess(assignment: Assignment, teacherPrincipal: Principal?): Boolean {
+        if (teacherPrincipal == null || teacherPrincipal.realName() == assignment.ownerUserId) {
+            return true
+        }
+        val acl = assignmentACLRepository.findByAssignmentId(assignment.id)
+        return acl.any { it.userId == teacherPrincipal.realName() }
+    }
+
+    /**
+     * Returns the students whose id or name contains [query], plus the ones who connected, to a git assignment,
+     * a repository whose owner (GitHub username) contains it. GitHub usernames are only searched in the
+     * assignments that [teacherPrincipal] has access to, and the matching ones are added to the student's name.
+     */
+    fun getStudentList(query: String, teacherPrincipal: Principal): List<StudentListResponse> {
+        val q = query.trim().lowercase()
+
+        val namesById = LinkedHashMap<String, String>()
         authorRepository.findAll()
-            .filter { it.name.lowercase().contains(query.lowercase()) || it.userId.lowercase().contains(query.lowercase())}
-            .distinctBy { it.userId }
-            .map { StudentListResponse(it.userId, it.name) }
+            .filter { it.name.lowercase().contains(q) || it.userId.lowercase().contains(q) }
+            .forEach { namesById.putIfAbsent(it.userId, it.name) }
+
+        val githubUsernamesById = LinkedHashMap<String, MutableSet<String>>()
+        // an empty query would otherwise go through every git submission
+        if (q.isNotEmpty()) {
+            gitSubmissionRepository.findByGitRepositoryUrlContainingIgnoreCase(q)
+                .filter { gitClient.checkValidSSHGithubURL(it.gitRepositoryUrl) }
+                .filter { canAccess(it.assignmentId, teacherPrincipal) }
+                .forEach { gitSubmission ->
+                    val githubUsername = gitClient.getGitRepoInfo(gitSubmission.gitRepositoryUrl).first
+                    if (githubUsername.lowercase().contains(q)) {
+                        githubUsernamesById.getOrPut(gitSubmission.submitterUserId) { sortedSetOf(String.CASE_INSENSITIVE_ORDER) }
+                            .add(githubUsername)
+                    }
+                }
+        }
+
+        return (namesById.keys + githubUsernamesById.keys).map { studentId ->
+            val name = namesById[studentId] ?: authorRepository.findByUserId(studentId)?.firstOrNull()?.name.orEmpty()
+            val githubUsernames = githubUsernamesById[studentId]
+            if (githubUsernames == null) {
+                StudentListResponse(studentId, name)
+            } else {
+                StudentListResponse(studentId, "$name (GitHub: ${githubUsernames.joinToString(", ")})")
+            }
+        }
+    }
 }

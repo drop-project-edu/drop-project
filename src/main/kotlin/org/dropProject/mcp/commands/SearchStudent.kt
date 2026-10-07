@@ -28,12 +28,12 @@ import java.security.Principal
 /**
  * Command to search for students and retrieve their submission history.
  *
- * @property query Search query to match student IDs or names (case-insensitive partial matching)
+ * @property query Search query to match student IDs, names or GitHub usernames (case-insensitive partial matching)
  */
 data class SearchStudent(val query: String) : ToolCommand {
 
     override fun handle(service: McpService, principal: Principal): McpToolCallResult {
-        val matchingStudents = service.studentService.getStudentList(query)
+        val matchingStudents = service.studentService.getStudentList(query, principal)
 
         if (matchingStudents.isEmpty()) {
             return McpToolCallResult(
@@ -121,7 +121,7 @@ data class SearchStudent(val query: String) : ToolCommand {
         fun toMcpTool(): McpTool {
             return McpTool(
                 name = "search_student",
-                description = "Search for students by student ID or name (partial matching) and retrieve their complete submission history. " +
+                description = "Search for students by student ID, name or GitHub username (partial matching) and retrieve their complete submission history. " +
                         "Returns student information along with assignment IDs and submission IDs for detailed lookup. " +
                         "Useful for tracking student progress, identifying submission patterns, or providing academic support.",
                 inputSchema = mapOf(
@@ -129,7 +129,7 @@ data class SearchStudent(val query: String) : ToolCommand {
                     "properties" to mapOf(
                         "query" to mapOf(
                             "type" to "string",
-                            "description" to "Search query to match student IDs or names (case-insensitive partial matching)"
+                            "description" to "Search query to match student IDs, names or GitHub usernames (case-insensitive partial matching)"
                         )
                     ),
                     "required" to listOf("query")
