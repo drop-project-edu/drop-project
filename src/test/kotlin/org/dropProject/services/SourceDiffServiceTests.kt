@@ -203,6 +203,56 @@ class SourceDiffServiceTests {
     }
 
     @Test
+    fun `lines that only differ in their indentation are not counted`() {
+
+        val reference = projectFolder("reference")
+        writeFile(reference, sourcePath, linesOf("void f() {", "return;", "}"))
+
+        val new = projectFolder("new")
+        writeFile(new, sourcePath, linesOf("    void f() {", "\t\treturn;", "    }"))
+
+        assertEquals(0, sourceDiffService.countChangedLines(reference, new))
+    }
+
+    @Test
+    fun `lines that only differ in the spacing between their tokens are not counted`() {
+
+        val reference = projectFolder("reference")
+        writeFile(reference, sourcePath, linesOf("if (x==3){", "x=0;", "}"))
+
+        val new = projectFolder("new")
+        writeFile(new, sourcePath, linesOf("if (x == 3) {", "x = 0;", "}"))
+
+        assertEquals(0, sourceDiffService.countChangedLines(reference, new))
+    }
+
+    @Test
+    fun `lines that only differ in their terminator or trailing whitespace are not counted`() {
+
+        val reference = projectFolder("reference")
+        writeFile(reference, sourcePath, linesOf("line 1", "line 2", "line 3"))
+
+        val new = projectFolder("new")
+        writeFile(new, sourcePath, "line 1\r\nline 2   \r\nline 3\t\r\n")
+
+        assertEquals(0, sourceDiffService.countChangedLines(reference, new))
+    }
+
+    @Test
+    fun `only the real changes are counted in a reformatted file`() {
+
+        val reference = projectFolder("reference")
+        writeFile(reference, sourcePath, linesOf("if (user.bloqueado){", "user.bloqueado=false;", "}"))
+
+        val new = projectFolder("new")
+        writeFile(new, sourcePath, linesOf("    if (user.bloqueado && user.vezes < 2) {",
+            "        user.bloqueado = false;", "        user.vezes++;", "    }"))
+
+        // the condition was changed and a line was added, the rest was only reindented and respaced
+        assertEquals(2, sourceDiffService.countChangedLines(reference, new))
+    }
+
+    @Test
     fun `the folder that is compared can be narrowed`() {
 
         val reference = projectFolder("reference")

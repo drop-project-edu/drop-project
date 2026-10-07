@@ -33,13 +33,15 @@ import java.io.File
  * another assignment (see [org.dropproject.dao.Assignment.baseAssignmentId]). The comparison is done directly on the
  * files, using JGit's diff algorithm, without needing a git repository.
  *
- * Blank lines never count, wherever they are added, removed or moved to: reformatting is not the kind of change that
- * this is meant to measure.
+ * Reformatting is not the kind of change that this is meant to measure, so blank lines never count, wherever they are
+ * added, removed or moved to, and neither does a line that only differs in its whitespace (indentation, spacing
+ * around operators, trailing whitespace or its terminator). A student that runs the IDE's "Reformat Code", or that
+ * unzips or edits the code on Windows, would otherwise see every line of every file flagged as modified.
  *
  * Known limitations: renames are not detected (a file that was moved and edited counts as a full deletion plus a full
- * addition) and binary files weigh a single line, since JGit collapses content with NUL bytes into one line. Also,
- * differences that are only in the line terminators or in trailing whitespace are not counted as changes, otherwise
- * every line of every file would be flagged as modified for a student that unzips or edits the code on Windows.
+ * addition) and binary files weigh a single line, since JGit collapses content with NUL bytes into one line. Lines
+ * are compared one by one, so a reformat that splits or joins lines (e.g. moving a `{` to its own line) still counts.
+ * On the other hand, whitespace is ignored even inside string literals, so changing `"a b"` into `"ab"` goes unnoticed.
  */
 @Service
 class SourceDiffService {
@@ -110,9 +112,9 @@ class SourceDiffService {
         val referenceText = RawText(referenceBytes)
         val newText = RawText(newBytes)
 
-        // WS_IGNORE_TRAILING makes a line that only differs in its terminator (LF vs CRLF) or in trailing
-        // whitespace compare as unchanged
-        return HistogramDiff().diff(RawTextComparator.WS_IGNORE_TRAILING, referenceText, newText)
+        // WS_IGNORE_ALL makes a line that only differs in its whitespace (indentation, spacing around operators,
+        // trailing whitespace or its terminator, LF vs CRLF) compare as unchanged
+        return HistogramDiff().diff(RawTextComparator.WS_IGNORE_ALL, referenceText, newText)
             .sumOf {
                 maxOf(countNonBlankLines(referenceText, it.beginA, it.endA),
                       countNonBlankLines(newText, it.beginB, it.endB))
