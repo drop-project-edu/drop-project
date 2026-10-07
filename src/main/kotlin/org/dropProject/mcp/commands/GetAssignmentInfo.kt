@@ -33,7 +33,10 @@ import java.security.Principal
 data class GetAssignmentInfo(val assignmentId: String) : ToolCommand {
 
     override fun handle(service: McpService, principal: Principal): McpToolCallResult {
-        // Use AssignmentService to get detailed assignment information
+        // the instructions, the tests and the assignees of an assignment that is not open yet must not reach students
+        service.requireTeacher("see the details of an assignment")
+        service.getAuthorizedAssignment(assignmentId, principal)
+
         val assignmentDetail = service.assignmentService.getAssignmentDetailData(
             assignmentId, principal, isAdmin = true // MCP users are treated as admins
         )
@@ -109,8 +112,8 @@ data class GetAssignmentInfo(val assignmentId: String) : ToolCommand {
                 name = "get_assignment_info",
                 description = "Get comprehensive information about a programming assignment in Drop Project, " +
                         "including instructions, requirements, due dates, submission methods, and grading criteria. " +
-                        "Useful when a student or teacher needs detailed assignment context. The assignment's " +
-                        "settings are listed with the names of the create_assignment arguments that set them, so " +
+                        "Only available to the owner of the assignment and to the teachers it was shared with. " +
+                        "The assignment's settings are listed with the names of the create_assignment arguments that set them, so " +
                         "that an assignment can be recreated from them, e.g. for a new edition of the same course.",
                 inputSchema = mapOf(
                     "type" to "object",

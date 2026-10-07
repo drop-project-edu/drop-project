@@ -33,6 +33,8 @@ import java.security.Principal
 data class SearchAssignments(val query: String) : ToolCommand {
 
     override fun handle(service: McpService, principal: Principal): McpToolCallResult {
+        service.requireTeacher("search assignments")
+
         val response = service.teacherAPIController.searchAssignments(query, principal)
         val assignments = response.body ?: throw RuntimeException("Failed to search assignments")
 
@@ -59,7 +61,8 @@ data class SearchAssignments(val query: String) : ToolCommand {
                 name = "search_assignments",
                 description = "Search Drop Project assignments by name, ID, or programming language tags. " +
                         "Returns matching assignments with basic metadata. " +
-                        "Useful for finding relevant assignments or exploring available coursework.",
+                        "Useful for finding relevant assignments or exploring available coursework. " +
+                        "Only lists the assignments the teacher owns or that were shared with them.",
                 inputSchema = mapOf(
                     "type" to "object",
                     "properties" to mapOf(

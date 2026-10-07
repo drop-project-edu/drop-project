@@ -179,7 +179,7 @@ class McpControllerTests: ApiTestSupport {
                     "tools": [
                         {
                             "name": "get_assignment_info",
-                            "description": "Get comprehensive information about a programming assignment in Drop Project, including instructions, requirements, due dates, submission methods, and grading criteria. Useful when a student or teacher needs detailed assignment context. The assignment's settings are listed with the names of the create_assignment arguments that set them, so that an assignment can be recreated from them, e.g. for a new edition of the same course.",
+                            "description": "Get comprehensive information about a programming assignment in Drop Project, including instructions, requirements, due dates, submission methods, and grading criteria. Only available to the owner of the assignment and to the teachers it was shared with. The assignment's settings are listed with the names of the create_assignment arguments that set them, so that an assignment can be recreated from them, e.g. for a new edition of the same course.",
                             "inputSchema": {
                                 "type": "object",
                                 "properties": {
@@ -207,7 +207,7 @@ class McpControllerTests: ApiTestSupport {
                         },
                         {
                             "name": "search_assignments",
-                            "description": "Search Drop Project assignments by name, ID, or programming language tags. Returns matching assignments with basic metadata. Useful for finding relevant assignments or exploring available coursework.",
+                            "description": "Search Drop Project assignments by name, ID, or programming language tags. Returns matching assignments with basic metadata. Useful for finding relevant assignments or exploring available coursework. Only lists the assignments the teacher owns or that were shared with them.",
                             "inputSchema": {
                                 "type": "object",
                                 "properties": {
@@ -221,7 +221,7 @@ class McpControllerTests: ApiTestSupport {
                         },
                         {
                             "name": "search_student",
-                            "description": "Search for students by student ID, name or GitHub username (partial matching) and retrieve their complete submission history. Returns student information along with assignment IDs and submission IDs for detailed lookup. Useful for tracking student progress, identifying submission patterns, or providing academic support.",
+                            "description": "Search for students by student ID, name or GitHub username (partial matching) and retrieve their complete submission history. Returns student information along with assignment IDs and submission IDs for detailed lookup. Useful for tracking student progress, identifying submission patterns, or providing academic support. Only teachers can use this tool.",
                             "inputSchema": {
                                 "type": "object",
                                 "properties": {
@@ -1167,6 +1167,48 @@ class McpControllerTests: ApiTestSupport {
 
         assertThat(response, containsString("Only teachers can create assignments"))
         assertFalse(assignmentRepository.existsById("studentCreatedAssignment"))
+    }
+
+    @Test
+    fun `try to get the info of an assignment with a student token`() {
+        val response = callTool("get_assignment_info", """{"assignmentId": "testMcpAssignment"}""",
+            getBearerToken("student1", "ROLE_STUDENT"))
+
+        assertThat(response, containsString("Only teachers can see the details of an assignment"))
+        assertThat(response, not(containsString("Test MCP Assignment")))
+    }
+
+    @Test
+    fun `try to get the info of an assignment of another teacher`() {
+        val response = callTool("get_assignment_info", """{"assignmentId": "testMcpAssignment"}""",
+            getBearerToken("teacher2"))
+
+        assertThat(response, containsString("is only available to its owner"))
+        assertThat(response, not(containsString("Test MCP Assignment")))
+    }
+
+    @Test
+    fun `try to search assignments with a student token`() {
+        val response = callTool("search_assignments", """{"query": "test"}""",
+            getBearerToken("student1", "ROLE_STUDENT"))
+
+        assertThat(response, containsString("Only teachers can search assignments"))
+        assertThat(response, not(containsString("testMcpAssignment")))
+    }
+
+    @Test
+    fun `try to search students with a student token`() {
+        val group = ProjectGroup()
+        projectGroupRepository.save(group)
+        val author = Author(name = "Gandalf Grey", userId = "gandalf")
+        author.group = group
+        authorRepository.save(author)
+
+        val response = callTool("search_student", """{"query": "gandalf"}""",
+            getBearerToken("student1", "ROLE_STUDENT"))
+
+        assertThat(response, containsString("Only teachers can search students"))
+        assertThat(response, not(containsString("Gandalf Grey")))
     }
 
     @Test

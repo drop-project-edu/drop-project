@@ -33,6 +33,8 @@ import java.security.Principal
 data class SearchStudent(val query: String) : ToolCommand {
 
     override fun handle(service: McpService, principal: Principal): McpToolCallResult {
+        service.requireTeacher("search students")
+
         val matchingStudents = service.studentService.getStudentList(query, principal)
 
         if (matchingStudents.isEmpty()) {
@@ -123,7 +125,8 @@ data class SearchStudent(val query: String) : ToolCommand {
                 name = "search_student",
                 description = "Search for students by student ID, name or GitHub username (partial matching) and retrieve their complete submission history. " +
                         "Returns student information along with assignment IDs and submission IDs for detailed lookup. " +
-                        "Useful for tracking student progress, identifying submission patterns, or providing academic support.",
+                        "Useful for tracking student progress, identifying submission patterns, or providing academic support. " +
+                        "Only teachers can use this tool.",
                 inputSchema = mapOf(
                     "type" to "object",
                     "properties" to mapOf(
