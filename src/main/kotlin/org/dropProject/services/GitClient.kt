@@ -226,12 +226,12 @@ class GitClient {
     }
 
     /**
-     * Generates a pair of public/private keys.
+     * Generates a pair of public/private RSA keys. GitHub rejects new RSA keys smaller than 3072 bits.
      *
      * @return a Pair with two ByteArray
      */
     fun generateKeyPair() : Pair<ByteArray,ByteArray> {
-        val kpair = KeyPair.genKeyPair(JSch(), KeyPair.RSA, 2048)
+        val kpair = KeyPair.genKeyPair(JSch(), KeyPair.RSA, 4096)
         val privKeyOutputStream = ByteArrayOutputStream()
         val publicKeyOutputStream = ByteArrayOutputStream()
         kpair.writePrivateKey(privKeyOutputStream)
