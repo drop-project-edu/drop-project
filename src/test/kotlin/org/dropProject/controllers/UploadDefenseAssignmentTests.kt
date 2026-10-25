@@ -732,6 +732,79 @@ class UploadDefenseAssignmentTests : UploadTestBase() {
             "a checkpoint that passed has nothing to tell the student")
     }
 
+    /**
+     * Makes the project assignment require the tests ending with "_OBG", and the next build pass or fail those
+     * tests as requested. Every test that isn't mandatory, public or hidden, fails.
+     */
+    private fun withMandatoryTests(passMandatoryTests: Boolean, mandatoryTestsSuffix: String = "_OBG") {
+        val projectAssignment = assignmentRepository.findById(projectAssignmentId).get()
+        projectAssignment.mandatoryTestsSuffix = mandatoryTestsSuffix
+        assignmentRepository.save(projectAssignment)
+
+        val mandatoryTests = mapOf("org.dropProject.sampleAssignments.testProj.TestTeacherProject" to
+                listOf("testFuncaoParaTestar_OBG"))
+        fakeBuildRunner.fakeNextBuilds(FakeBuild(
+            passingTests = if (passMandatoryTests) mandatoryTests else emptyMap(),
+            failingTests = mapOf(
+                "org.dropProject.sampleAssignments.testProj.TestTeacherProject" to
+                        listOfNotNull("testFuncaoLentaParaTestar",
+                            "testFuncaoParaTestar_OBG".takeIf { !passMandatoryTests }),
+                "org.dropProject.sampleAssignments.testProj.TestTeacherHiddenProject" to
+                        listOf("testFuncaoParaTestarQueNaoApareceAosAlunos"))))
+    }
+
+    @Test
+    fun `when the project assignment has mandatory tests, the original code only has to pass those`() {
+
+        submissionFixtures.uploadProject("projectOK", projectAssignmentId, STUDENT_1)
+        assignmentFixtures.createDefenseAssignment(gitRepositoryFolder = "testJavaProj2")
+
+        withMandatoryTests(passMandatoryTests = true)
+        submissionFixtures.uploadProject("projectOK", defenseAssignmentId, STUDENT_1)
+        releaseDefenseInstructions()
+
+        this.mvc.perform(get("/upload/${defenseAssignmentId}").with(user(STUDENT_1)))
+            .andExpect(status().isOk)
+            .andExpect(model().attribute("defensePhase", equalTo(2)))
+            .andExpect(model().attribute("defenseCheckpointStatus", equalTo(DefenseCheckpointStatus.VALID)))
+    }
+
+    @Test
+    fun `when the project assignment has mandatory tests, original code failing one of them stays on the first phase`() {
+
+        submissionFixtures.uploadProject("projectOK", projectAssignmentId, STUDENT_1)
+        assignmentFixtures.createDefenseAssignment()
+
+        withMandatoryTests(passMandatoryTests = false)
+        submissionFixtures.uploadProject("projectOK", defenseAssignmentId, STUDENT_1)
+        releaseDefenseInstructions()
+
+        val page = this.mvc.perform(get("/upload/${defenseAssignmentId}").with(user(STUDENT_1)))
+            .andExpect(status().isOk)
+            .andExpect(model().attribute("defensePhase", equalTo(1)))
+            .andExpect(model().attribute("defenseCheckpointStatus", equalTo(DefenseCheckpointStatus.FAILED)))
+            .andReturn().response.contentAsString
+
+        assertTrue(page.contains("does not pass all the mandatory tests of assignment ${projectAssignmentId}"),
+            "the student should be told that only the mandatory tests are required, but the page was ${page}")
+    }
+
+    @Test
+    fun `a mandatory tests suffix that matches no test still requires the original code to pass every test`() {
+
+        submissionFixtures.uploadProject("projectOK", projectAssignmentId, STUDENT_1)
+        assignmentFixtures.createDefenseAssignment()
+
+        withMandatoryTests(passMandatoryTests = true, mandatoryTestsSuffix = "_MANDATORY")
+        submissionFixtures.uploadProject("projectOK", defenseAssignmentId, STUDENT_1)
+        releaseDefenseInstructions()
+
+        this.mvc.perform(get("/upload/${defenseAssignmentId}").with(user(STUDENT_1)))
+            .andExpect(status().isOk)
+            .andExpect(model().attribute("defensePhase", equalTo(1)))
+            .andExpect(model().attribute("defenseCheckpointStatus", equalTo(DefenseCheckpointStatus.FAILED)))
+    }
+
     @Test
     fun `a submission of a student who is still on the first phase is another checkpoint`() {
 

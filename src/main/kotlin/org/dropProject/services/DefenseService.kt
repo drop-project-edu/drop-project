@@ -23,6 +23,8 @@ import org.dropproject.dao.Assignment
 import org.dropproject.dao.Indicator
 import org.dropproject.dao.Submission
 import org.dropproject.dao.SubmissionStatus
+import org.dropproject.repository.AssignmentRepository
+import org.dropproject.repository.JUnitReportRepository
 import org.dropproject.repository.ProjectGroupRepository
 import org.dropproject.repository.SubmissionReportRepository
 import org.dropproject.repository.SubmissionRepository
@@ -40,9 +42,9 @@ enum class DefenseCheckpointStatus {
     NONE,
     /** the checkpoint was submitted and is still being built */
     PENDING,
-    /** the checkpoint doesn't pass every test of the project assignment, or its build didn't complete */
+    /** the checkpoint doesn't pass the required tests of the project assignment, or its build didn't complete */
     FAILED,
-    /** the checkpoint is the original code and passes every test, so the student can start the defense */
+    /** the checkpoint is the original code and passes the required tests, so the student can start the defense */
     VALID
 }
 
@@ -58,7 +60,10 @@ enum class DefenseCheckpointStatus {
 class DefenseService(
     val submissionRepository: SubmissionRepository,
     val submissionReportRepository: SubmissionReportRepository,
-    val projectGroupRepository: ProjectGroupRepository
+    val projectGroupRepository: ProjectGroupRepository,
+    val assignmentRepository: AssignmentRepository,
+    val jUnitReportRepository: JUnitReportRepository,
+    val junitResultsParser: JunitResultsParser
 ) {
 
     companion object {
@@ -114,7 +119,8 @@ class DefenseService(
 
             SubmissionStatus.VALIDATED,
             SubmissionStatus.VALIDATED_REBUILT ->
-                if (isTheOriginalCode(checkpoint) && passesEveryTest(checkpoint)) DefenseCheckpointStatus.VALID
+                if (isTheOriginalCode(checkpoint) && passesTheRequiredTests(assignment, checkpoint))
+                    DefenseCheckpointStatus.VALID
                 else DefenseCheckpointStatus.FAILED
 
             // a build that failed, timed out or produced too much output doesn't prove that the code works
@@ -144,9 +150,21 @@ class DefenseService(
     private fun isTheOriginalCode(checkpoint: Submission) = checkpoint.baseDivergenceLines == 0
 
     /**
-     * Checks that every test of the project assignment passed on [checkpoint].
+     * The suffix of the mandatory tests of the project assignment that [assignment] is a defense of, or null if that
+     * assignment doesn't define one. When it does, a checkpoint only has to pass those tests, since they are the ones
+     * that the project assignment itself required.
      */
-    private fun passesEveryTest(checkpoint: Submission): Boolean {
+    fun baseMandatoryTestsSuffix(assignment: Assignment): String? {
+        val baseAssignmentId = assignment.baseAssignmentId ?: return null
+        return assignmentRepository.findById(baseAssignmentId).orElse(null)
+            ?.mandatoryTestsSuffix?.takeIf { it.isNotEmpty() }
+    }
+
+    /**
+     * Checks that [checkpoint] passed the tests of the project assignment that the defense [assignment] requires:
+     * its mandatory tests, if it defines them, or every one of its tests otherwise.
+     */
+    private fun passesTheRequiredTests(assignment: Assignment, checkpoint: Submission): Boolean {
         val reportElements = submissionReportRepository.findBySubmissionId(checkpoint.id)
 
         // a build that produced no teacher tests result (an assignment without tests, or a build that stopped
@@ -155,8 +173,33 @@ class DefenseService(
             return false
         }
 
-        return reportElements
-            .filter { it.indicator in REQUIRED_INDICATORS }
+        val mandatoryTests = baseMandatoryTestsSuffix(assignment)?.let { mandatoryTestResults(assignment, checkpoint, it) }
+
+        // without mandatory tests, every test counts. That includes a suffix that matches no test, which is a
+        // misconfiguration of the project assignment and not a reason to let any code in
+        if (mandatoryTests.isNullOrEmpty()) {
+            return reportElements
+                .filter { it.indicator in REQUIRED_INDICATORS }
+                .all { it.reportValue == "OK" }
+        }
+
+        // the code still has to build, but the other tests (public or hidden) are allowed to fail, as they were
+        // allowed to fail on the project assignment
+        val builds = reportElements
+            .filter { it.indicator == Indicator.PROJECT_STRUCTURE || it.indicator == Indicator.COMPILATION }
             .all { it.reportValue == "OK" }
+        return builds && mandatoryTests.all { it.type == JUnitMethodResultType.SUCCESS }
+    }
+
+    /**
+     * The results, on [checkpoint], of the public teacher tests whose name ends with [mandatoryTestsSuffix].
+     */
+    private fun mandatoryTestResults(assignment: Assignment, checkpoint: Submission,
+                                     mandatoryTestsSuffix: String): List<JUnitMethodResult> {
+        return jUnitReportRepository.findBySubmissionId(checkpoint.id).orEmpty()
+            .map { junitResultsParser.parseXml(it.xmlReport) }
+            .filter { it.isTeacherPublic(assignment) }
+            .flatMap { it.junitMethodResults }
+            .filter { it.fullMethodName.endsWith(mandatoryTestsSuffix) }
     }
 }

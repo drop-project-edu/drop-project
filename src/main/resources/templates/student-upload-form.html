@@ -101,7 +101,10 @@
                 <p th:if="${defensePhase == 1 and defenseCheckpointStatus?.name() == 'FAILED'}"
                    class="text-danger">
                     <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
-                    <span th:text="#{student.upload.form.defense.phase1-failed(${assignment.baseAssignmentId})}"></span>
+                    <span th:if="${defenseBaseMandatoryTestsSuffix == null}"
+                          th:text="#{student.upload.form.defense.phase1-failed(${assignment.baseAssignmentId})}"></span>
+                    <span th:if="${defenseBaseMandatoryTestsSuffix != null}"
+                          th:text="#{student.upload.form.defense.phase1-failed-mandatory(${assignment.baseAssignmentId})}"></span>
                 </p>
                 <p th:if="${defensePhase == 1 and defenseCheckpointStatus?.name() == 'VALID'}"
                    class="text-success">

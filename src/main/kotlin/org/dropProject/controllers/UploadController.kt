@@ -212,6 +212,8 @@ class UploadController(
         if (defensePhase != null) {
             model["defensePhase"] = defensePhase
             model["defenseCheckpointStatus"] = defenseService.checkpointStatus(assignment, principal.realName())
+            // tells the student which tests their original code has to pass: only the mandatory ones, if there are any
+            model["defenseBaseMandatoryTestsSuffix"] = defenseService.baseMandatoryTestsSuffix(assignment)
         }
 
         model["instructionsFragment"] = instructionsFor(assignment, defensePhase) //quick fix
