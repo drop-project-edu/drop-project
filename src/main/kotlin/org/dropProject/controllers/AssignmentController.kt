@@ -116,7 +116,7 @@ class AssignmentController(
      * repositories hasn't been cloned yet
      */
     private fun referenceSolutionDivergence(assignment: Assignment): Int? =
-        referenceSolutionDivergence(assignment, assignment.baseAssignmentId)
+        if (assignment.isDefense()) referenceSolutionDivergence(assignment, assignment.baseAssignmentId) else null
 
     /**
      * The same as [referenceSolutionDivergence], for a project assignment that [assignment] is not (yet) linked to.
@@ -139,21 +139,31 @@ class AssignmentController(
     }
 
     /**
-     * Renders the fields of the assignment form that are derived from the project assignment that a defense is a
-     * defense of: the package, which has to be the same one, and the size of the change that the teacher's own
-     * solution makes, which is the reference for choosing the line budget.
+     * Renders the fields of the assignment form that are derived from the assignment that a defense or a
+     * continuation is linked to (its base assignment):
      *
-     * Called by htmx whenever the teacher picks a project assignment, and answered with a fragment that is applied
-     * with out-of-band swaps, so that the form needs no javascript of its own to keep those fields right.
+     * - the package, which has to be the same one;
+     * - for a defense, the size of the change that the teacher's own solution makes, which is the reference for
+     *   choosing the line budget;
+     * - for a continuation, the teachers, the group size and the group exceptions of the base assignment, which are
+     *   filled in as a starting point that the teacher may change (see [AssignmentService.settingsInheritedFrom]).
      *
-     * @param baseAssignmentId identifies the project assignment that was picked
+     * Called by htmx whenever the teacher picks a base assignment (or changes the kind of the link), and answered
+     * with a fragment that is applied with out-of-band swaps, so that the form needs no javascript of its own to keep
+     * those fields right.
+     *
+     * @param baseAssignmentId identifies the base assignment that was picked
+     * @param baseAssignmentKind is the kind of the link; without it, it is a defense
      * @param assignmentId identifies the assignment being edited, empty while it is being created
      * @param principal is a [Principal] representing the user making the request
      */
-    @RequestMapping(value = ["/defense-derived-fields"], method = [(RequestMethod.GET)])
-    fun getDefenseDerivedFields(@RequestParam(name = "baseAssignmentId", required = false) baseAssignmentId: String?,
-                                @RequestParam(name = "assignmentId", required = false) assignmentId: String?,
-                                model: ModelMap, principal: Principal): String {
+    @RequestMapping(value = ["/base-assignment-derived-fields"], method = [(RequestMethod.GET)])
+    fun getBaseAssignmentDerivedFields(
+        @RequestParam(name = "baseAssignmentId", required = false) baseAssignmentId: String?,
+        @RequestParam(name = "baseAssignmentKind", required = false) baseAssignmentKind: BaseAssignmentKind?,
+        @RequestParam(name = "assignmentId", required = false) assignmentId: String?,
+        model: ModelMap, principal: Principal
+    ): String {
 
         val baseAssignment = baseAssignmentId?.takeIf { it.isNotBlank() }
             ?.let { assignmentRepository.findById(it).orElse(null) }
@@ -164,9 +174,19 @@ class AssignmentController(
             }
 
         model["derivedPackageName"] = baseAssignment?.packageName.orEmpty()
-        model["divergenceHint"] = divergenceHint(assignmentId, baseAssignment)
 
-        return "assignment-form-defense-fields :: defenseDerivedFields"
+        if (baseAssignmentKind == BaseAssignmentKind.CONTINUATION) {
+            if (baseAssignment != null) {
+                // the owner of an assignment being edited is the one who keeps owning it, not who is editing it
+                val ownerUserId = assignmentId?.takeIf { it.isNotBlank() }
+                    ?.let { assignmentRepository.findById(it).orElse(null) }?.ownerUserId ?: principal.realName()
+                model["inheritedSettings"] = assignmentService.settingsInheritedFrom(baseAssignment, ownerUserId)
+            }
+        } else {
+            model["divergenceHint"] = divergenceHint(assignmentId, baseAssignment)
+        }
+
+        return "assignment-form-base-assignment-fields :: baseAssignmentDerivedFields"
     }
 
     /**
@@ -250,9 +270,9 @@ class AssignmentController(
         model["candidateBaseAssignments"] = candidateBaseAssignments(principal, assignmentForm.assignmentId,
             assignmentForm.baseAssignmentId)
 
-        // a defense doesn't get to choose its group size nor its package, so they are overwritten before the form is
-        // validated and saved
-        assignmentService.applyDefenseSettings(assignmentForm)
+        // a defense or a continuation doesn't get to choose some of its settings (e.g. the package), so they are
+        // overwritten before the form is validated and saved
+        assignmentService.applyBaseAssignmentSettings(assignmentForm)
 
         assignmentService.validateAssignmentForm(assignmentForm, principal).forEach {
             bindingResult.rejectValue(it.field, it.code, it.message)
@@ -483,8 +503,10 @@ class AssignmentController(
             .map { "'" + it.name + "'" }
             .joinToString(separator = ",", prefix = "[", postfix = "]")
         model["candidateBaseAssignments"] = candidateBaseAssignments(principal, assignmentId, assignment.baseAssignmentId)
-        model["divergenceHint"] = divergenceHint(assignmentId,
-            assignment.baseAssignmentId?.let { assignmentRepository.findById(it).orElse(null) })
+        if (assignment.isDefense()) {
+            model["divergenceHint"] = divergenceHint(assignmentId,
+                assignment.baseAssignmentId?.let { assignmentRepository.findById(it).orElse(null) })
+        }
 
         return "assignment-form";
     }
@@ -517,6 +539,12 @@ class AssignmentController(
             maxMemoryMb = assignment.maxMemoryMb,
             leaderboardType = assignment.leaderboardType,
             baseAssignmentId = assignment.baseAssignmentId,
+            // the assignments that were linked before there were continuations are defenses
+            baseAssignmentKind = when {
+                assignment.isContinuation() -> BaseAssignmentKind.CONTINUATION
+                assignment.isDefense() -> BaseAssignmentKind.DEFENSE
+                else -> null
+            },
             maxChangedLines = assignment.maxChangedLines,
             minGroupSize = assignment.projectGroupRestrictions?.minGroupSize,
             maxGroupSize = assignment.projectGroupRestrictions?.maxGroupSize,
@@ -880,9 +908,10 @@ class AssignmentController(
         val assignment = assignmentRepository.findById(assignmentId)
             .orElseThrow { EntityNotFoundException("Assignment $assignmentId not found") }
 
-        if (assignment.baseAssignmentId == null) {
+        if (!assignment.isDefense()) {
             redirectAttributes.addFlashAttribute("error", "Can't release the defense instructions of assignment " +
-                    "${assignmentId} since it is not linked to a project assignment. Set that link in the assignment form.")
+                    "${assignmentId} since it is not a defense of another assignment. Make it one in the " +
+                    "assignment form.")
             return redirectUrl
         }
 

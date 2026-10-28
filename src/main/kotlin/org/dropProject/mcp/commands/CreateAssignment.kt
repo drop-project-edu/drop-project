@@ -19,6 +19,8 @@
  */
 package org.dropproject.mcp.commands
 
+import org.dropproject.extensions.realName
+import org.dropproject.dao.BaseAssignmentKind
 import org.dropproject.dao.AssignmentVisibility
 import org.dropproject.dao.Language
 import org.dropproject.dao.LeaderboardType
@@ -48,9 +50,11 @@ data class CreateAssignment(val assignmentForm: AssignmentForm) : ToolCommand {
 
         service.requireTeacher("create assignments")
 
-        // a defense doesn't get to choose its group size nor its package, so they are overwritten before the form is
-        // validated and saved, exactly like the web form does
-        service.assignmentService.applyDefenseSettings(assignmentForm)
+        // a defense or a continuation doesn't get to choose some of its settings (e.g. the package), so they are
+        // overwritten before the form is validated and saved, exactly like the web form does. A continuation also
+        // inherits the settings of its base assignment that the call leaves out, which the web form fills in instead
+        service.assignmentService.applyBaseAssignmentSettings(assignmentForm)
+        service.assignmentService.inheritBaseAssignmentSettings(assignmentForm, principal.realName())
 
         val errors = service.assignmentService.validateAssignmentForm(assignmentForm, principal)
         if (errors.isNotEmpty()) {
@@ -77,7 +81,18 @@ data class CreateAssignment(val assignmentForm: AssignmentForm) : ToolCommand {
             appendLine()
             appendLine("It is inactive and not yet connected to ${assignment.gitRepositoryUrl}.")
             appendLine()
-            assignment.baseAssignmentId?.let {
+            if (assignment.isContinuation()) {
+                appendLine("## Continuation of '${assignment.baseAssignmentId}'")
+                appendLine()
+                appendLine("Until they submit, the students can download the code their group submitted to ")
+                appendLine("'${assignment.baseAssignmentId}' or, if they have none, its reference solution (its ")
+                appendLine("src/main). Each group must remain the same as there, unless the student is in the ")
+                appendLine("group exceptions. The package was set to the one of '${assignment.baseAssignmentId}' ")
+                appendLine("(${assignment.packageName ?: "which has none"}), and the acl, group size and group ")
+                appendLine("exceptions that the call didn't pass were copied from it.")
+                appendLine()
+            }
+            assignment.baseAssignmentId?.takeIf { assignment.isDefense() }?.let {
                 appendLine("## Defense of '$it'")
                 appendLine()
                 appendLine("Every submission will be compared with the group's last submission to that assignment, ")
@@ -247,18 +262,31 @@ data class CreateAssignment(val assignmentForm: AssignmentForm) : ToolCommand {
                         ),
                         "baseAssignmentId" to mapOf(
                             "type" to "string",
-                            "description" to "Turns this into a defense of the assignment with this id: the " +
-                                    "students resubmit the code they had submitted there, changed as the defense " +
-                                    "asks, and every submission is compared with that base submission. The caller " +
-                                    "must be the owner or an authorized teacher of that assignment. A defense " +
-                                    "always uses its package and a group size of 1, so packageName, minGroupSize " +
-                                    "and maxGroupSize are overwritten with those values"
+                            "description" to "Links this assignment to the one with this id, as a defense or as a " +
+                                    "continuation of it (see baseAssignmentKind). The caller must be the owner or " +
+                                    "an authorized teacher of that assignment. In a defense, the students resubmit " +
+                                    "the code they had submitted there, changed as the defense asks, and every " +
+                                    "submission is compared with that base submission. A defense always uses its " +
+                                    "package and a group size of 1, so packageName, minGroupSize and maxGroupSize " +
+                                    "are overwritten with those values"
+                        ),
+                        "baseAssignmentKind" to mapOf(
+                            "type" to "string",
+                            "enum" to BaseAssignmentKind.entries.map { it.name },
+                            "description" to "What this assignment is to the one in baseAssignmentId. DEFENSE (the " +
+                                    "default) is described in baseAssignmentId. CONTINUATION is the next part of a " +
+                                    "multi-part project: until they submit, students can download the code their " +
+                                    "group submitted to the base assignment (or its reference solution, i.e. its " +
+                                    "src/main, if they have none), and a group must remain the same as there unless " +
+                                    "the student is in the group exceptions. A continuation uses the package of the " +
+                                    "base assignment and inherits its acl, group size and group exceptions, unless " +
+                                    "acl or the group size are passed. Only valid together with baseAssignmentId"
                         ),
                         "maxChangedLines" to mapOf(
                             "type" to "number",
                             "description" to "Maximum number of lines (under src) that a submission may change " +
                                     "relatively to the base submission, only enforced after the defense " +
-                                    "instructions are released. Only valid together with baseAssignmentId. " +
+                                    "instructions are released. Only valid for a defense. " +
                                     "Without it, the difference is measured and shown to the teacher, but never " +
                                     "rejected"
                         ),
@@ -318,6 +346,11 @@ data class CreateAssignment(val assignmentForm: AssignmentForm) : ToolCommand {
                         "since it limits how much a submission may diverge from the base submission")
             }
 
+            val baseAssignmentKind = settings.enum("baseAssignmentKind", BaseAssignmentKind.entries)
+            if (maxChangedLines != null && baseAssignmentKind == BaseAssignmentKind.CONTINUATION) {
+                throw IllegalArgumentException("maxChangedLines is only valid for a defense, not for a continuation")
+            }
+
             val form = AssignmentForm(
                 assignmentId = assignmentId,
                 assignmentName = settings.requiredString("assignmentName"),
@@ -346,6 +379,7 @@ data class CreateAssignment(val assignmentForm: AssignmentForm) : ToolCommand {
                 visibility = settings.enum("visibility", AssignmentVisibility.entries)
                     ?: AssignmentVisibility.ONLY_BY_LINK,
                 baseAssignmentId = baseAssignmentId,
+                baseAssignmentKind = baseAssignmentKind,
                 maxChangedLines = maxChangedLines,
                 assignees = settings.string("assignees"),
                 acl = settings.string("acl")

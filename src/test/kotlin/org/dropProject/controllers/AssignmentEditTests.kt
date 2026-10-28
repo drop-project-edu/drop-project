@@ -312,6 +312,85 @@ class AssignmentEditTests : AssignmentTestBase() {
                 hasItem<Assignment>(hasProperty("id", equalTo("archivedProj")))))
     }
 
+    @Test
+    @WithMockUser("teacher1", roles = ["TEACHER"])
+    fun `an assignment can be made a continuation of another one in the form`() {
+
+        val assignmentId = "continuationFormTest"
+        val assignmentFolder = File(dropProjectProperties.assignments.rootLocation, assignmentId)
+        try {
+            val (assignment, _, _) = assignmentFixtures.createHistoricalAssignment(assignmentId)
+            assignmentFixtures.createDefaultAssignment(id = "previousPart", packageName = "org.previous")
+
+            mvc.perform(
+                post("/assignment/new")
+                    .param("assignmentId", assignmentId)
+                    .param("assignmentName", assignment.name)
+                    .param("assignmentPackage", "org.ignored")
+                    .param("submissionMethod", "GIT")
+                    .param("language", "JAVA")
+                    .param("gitRepositoryUrl", assignment.gitRepositoryUrl)
+                    .param("editMode", "true")
+                    .param("baseAssignmentKind", "CONTINUATION")
+                    .param("baseAssignmentId", "previousPart")
+                    .param("maxChangedLines", "50")
+                    .param("minGroupSize", "2")
+                    .param("maxGroupSize", "2")
+            )
+                .andExpect(status().isFound)
+                .andExpect(header().string("Location", "/assignment/info/${assignmentId}"))
+
+            val updatedAssignment = assignmentRepository.findById(assignmentId).get()
+            assertTrue(updatedAssignment.isContinuation())
+            // the package is the previous part's, the line budget is only for defenses, and, unlike a defense, the
+            // group size is the teacher's to choose
+            assertEquals("org.previous", updatedAssignment.packageName)
+            assertNull(updatedAssignment.maxChangedLines)
+            assertEquals(2, updatedAssignment.projectGroupRestrictions!!.minGroupSize)
+
+            this.mvc.perform(get("/assignment/edit/${assignmentId}"))
+                .andExpect(status().isOk)
+                .andExpect(model().attribute("assignmentForm",
+                    hasProperty<Any>("baseAssignmentKind", equalTo(BaseAssignmentKind.CONTINUATION))))
+                .andExpect(content().string(containsString("id=\"assignmentTypeContinuation\" value=\"CONTINUATION\" checked")))
+
+        } finally {
+            assignmentFolder.deleteRecursively()
+        }
+    }
+
+    @Test
+    @WithMockUser("teacher1", roles = ["TEACHER"])
+    fun `a continuation must say which assignment it continues`() {
+
+        val assignmentId = "continuationFormTest2"
+        val assignmentFolder = File(dropProjectProperties.assignments.rootLocation, assignmentId)
+        try {
+            val (assignment, _, _) = assignmentFixtures.createHistoricalAssignment(assignmentId)
+
+            mvc.perform(
+                post("/assignment/new")
+                    .param("assignmentId", assignmentId)
+                    .param("assignmentName", assignment.name)
+                    .param("assignmentPackage", assignment.packageName)
+                    .param("submissionMethod", "GIT")
+                    .param("language", "JAVA")
+                    .param("gitRepositoryUrl", assignment.gitRepositoryUrl)
+                    .param("editMode", "true")
+                    .param("baseAssignmentKind", "CONTINUATION")
+                    .param("baseAssignmentId", "")
+            )
+                .andExpect(status().isOk)
+                .andExpect(view().name("assignment-form"))
+                .andExpect(model().attributeHasFieldErrors("assignmentForm", "baseAssignmentId"))
+
+            assertNull(assignmentRepository.findById(assignmentId).get().baseAssignmentId)
+
+        } finally {
+            assignmentFolder.deleteRecursively()
+        }
+    }
+
     private fun archive(assignment: Assignment) {
         assignment.archived = true
         assignmentRepository.save(assignment)

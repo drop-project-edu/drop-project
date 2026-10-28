@@ -30,7 +30,7 @@
         <span class="label label-warning col-sm-1" th:if="${!assignment.active}">Inactive</span>
     </div>
 
-    <h4 th:if="${assignment.baseAssignmentId != null}"
+    <h4 th:if="${assignment.isDefense()}"
         th:text="${defensePhase == 2} ? #{student.upload.form.defense.phase2-title}
                  : #{student.upload.form.defense.phase1-title}">Phase 1 - download and check the original submission</h4>
 
@@ -39,7 +39,7 @@
             visible for this assignment's teachers)</small></a>
         <!-- on the first phase of a defense the checkpoint's report only has something to tell the student when
              the checkpoint failed, so that's the only case where it is offered -->
-        <a th:if="${uploadSubmission != null and (assignment.baseAssignmentId == null or defensePhase == 2
+        <a th:if="${uploadSubmission != null and (!assignment.isDefense() or defensePhase == 2
                     or defenseCheckpointStatus?.name() == 'FAILED')}"
            class="btn btn-default btn-md"
            th:href="@{'/buildReport/' + ${uploadSubmission.id}}"
@@ -92,7 +92,35 @@
             </div>
         </div>
 
-        <div class="panel panel-info" th:if="${assignment.baseAssignmentId != null}">
+        <!-- a student who hasn't started a continuation yet starts from their group's submission to the previous part
+             or, if they have none, from its reference solution -->
+        <div class="panel panel-info" th:if="${continuationStart != null}">
+            <div class="panel-body">
+                <p th:if="${continuationStart.baseSubmission != null}">
+                    <span th:text="#{student.upload.form.continuation.base-submission(${assignment.baseAssignmentId})}"></span>
+                    <br/>
+                    <a th:href="@{'/downloadOriginalProject/' + ${continuationStart.baseSubmission.id}}">
+                        <span class="glyphicon glyphicon-save" aria-hidden="true"></span>
+                        <span th:text="#{student.upload.form.continuation.download}">Download your submission (.zip)</span>
+                    </a>
+                    <small th:text="#{student.upload.form.defense.download-info(${assignment.baseAssignmentId},${#dates.format(continuationStart.baseSubmission.submissionDate, 'dd/MMM HH:mm')})}"></small>
+                </p>
+                <p th:if="${continuationStart.baseSubmission == null}">
+                    <span th:if="${!isAuthorizedTeacher}"
+                          th:text="#{student.upload.form.continuation.reference-solution(${assignment.baseAssignmentId})}"></span>
+                    <span th:if="${isAuthorizedTeacher}">Students without a submission to
+                        <span th:text="${assignment.baseAssignmentId}"></span> start from its reference solution
+                        <small>(only visible to students until they submit)</small>:</span>
+                    <br/>
+                    <a th:href="@{'/upload/' + ${assignment.id} + '/reference-solution'}">
+                        <span class="glyphicon glyphicon-save" aria-hidden="true"></span>
+                        <span th:text="#{student.upload.form.continuation.download-reference-solution}">Download the reference solution (.zip)</span>
+                    </a>
+                </p>
+            </div>
+        </div>
+
+        <div class="panel panel-info" th:if="${assignment.isDefense()}">
             <div class="panel-body">
                 <p th:if="${baseSubmission != null}">
                     <a th:href="@{'/downloadOriginalProject/' + ${baseSubmission.id}}">
@@ -139,9 +167,9 @@
         </div>
 
         <div class="panel" th:if="${instructionsFragment != null}"
-             th:classappend="${assignment.baseAssignmentId != null} ? 'panel-warning' : 'panel-default'">
+             th:classappend="${assignment.isDefense()} ? 'panel-warning' : 'panel-default'">
             <!-- before they are released, only the teacher gets this panel, so the title says so -->
-            <div class="panel-heading" th:if="${assignment.baseAssignmentId != null}"
+            <div class="panel-heading" th:if="${assignment.isDefense()}"
                  th:text="${assignment.defenseInstructionsReleased} ? #{student.upload.form.defense.instructions}
                           : #{student.upload.form.defense.instructions.teacherOnly}">Defense instructions</div>
             <div class="panel-body" th:utext="${instructionsFragment}"></div>

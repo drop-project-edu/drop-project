@@ -19,6 +19,7 @@
  */
 package org.dropproject.mcp.commands
 
+import org.dropproject.dao.BaseAssignmentKind
 import org.dropproject.dao.Assignment
 import org.dropproject.dao.AssignmentVisibility
 import org.dropproject.dao.Language
@@ -65,9 +66,13 @@ data class EditAssignment(val assignmentId: String, val changes: AssignmentArgum
             .findByAssignmentIdOrderByAuthorUserId(assignment.id).map { it.authorUserId },
             assignmentService.assignmentACLRepository.findByAssignmentId(assignment.id).map { it.userId })
 
-        // a defense doesn't get to choose its group size nor its package, so they are overwritten before the form is
-        // validated and saved, exactly like the web form does
-        assignmentService.applyDefenseSettings(form)
+        // a defense or a continuation doesn't get to choose some of its settings (e.g. the package), so they are
+        // overwritten before the form is validated and saved, exactly like the web form does. A call that links the
+        // assignment as a continuation also has it inherit the settings of the base assignment that it leaves empty
+        assignmentService.applyBaseAssignmentSettings(form)
+        if (changes.isPresent("baseAssignmentId") || changes.isPresent("baseAssignmentKind")) {
+            assignmentService.inheritBaseAssignmentSettings(form, assignment.ownerUserId)
+        }
 
         val errors = assignmentService.validateAssignmentForm(form, principal).toMutableList()
 
@@ -203,6 +208,20 @@ data class EditAssignment(val assignmentId: String, val changes: AssignmentArgum
                     "since it limits how much a submission may diverge from the base submission")
         }
 
+        // the assignments that were linked before there were continuations are defenses
+        val currentKind = when {
+            assignment.isContinuation() -> BaseAssignmentKind.CONTINUATION
+            assignment.isDefense() -> BaseAssignmentKind.DEFENSE
+            else -> null
+        }
+        // unlinking the assignment also drops the kind of the link, unless the call asks for one
+        val baseAssignmentKind = changes.orCurrent("baseAssignmentKind",
+            if (baseAssignmentId == null) null else currentKind) { enum(it, BaseAssignmentKind.entries) }
+        if (maxChangedLines != null && baseAssignmentKind == BaseAssignmentKind.CONTINUATION &&
+            changes.isPresent("maxChangedLines")) {
+            throw IllegalArgumentException("maxChangedLines is only valid for a defense, not for a continuation")
+        }
+
         return AssignmentForm(
             editMode = true,
             assignmentId = assignment.id,
@@ -249,6 +268,7 @@ data class EditAssignment(val assignmentId: String, val changes: AssignmentArgum
                 requiredEnum(it, AssignmentVisibility.entries)
             },
             baseAssignmentId = baseAssignmentId,
+            baseAssignmentKind = baseAssignmentKind,
             maxChangedLines = maxChangedLines,
             assignees = changes.orCurrent("assignees", assignees.joinToString(",").ifBlank { null }) { string(it) },
             acl = changes.orCurrent("acl", acl.joinToString(",").ifBlank { null }) { string(it) }
@@ -400,19 +420,31 @@ data class EditAssignment(val assignmentId: String, val changes: AssignmentArgum
                         ),
                         "baseAssignmentId" to mapOf(
                             "type" to "string",
-                            "description" to "Turns this into a defense of the assignment with this id: the " +
-                                    "students resubmit the code they had submitted there, changed as the defense " +
-                                    "asks, and every submission is compared with that base submission. The caller " +
-                                    "must be the owner or an authorized teacher of that assignment. A defense " +
-                                    "always uses its package and a group size of 1, so packageName, minGroupSize " +
-                                    "and maxGroupSize are overwritten with those values. Pass an empty string to " +
-                                    "stop this assignment from being a defense"
+                            "description" to "Links this assignment to the one with this id, as a defense or as a " +
+                                    "continuation of it (see baseAssignmentKind). The caller must be the owner or " +
+                                    "an authorized teacher of that assignment. In a defense, the students resubmit " +
+                                    "the code they had submitted there, changed as the defense asks, and every " +
+                                    "submission is compared with that base submission. A defense always uses its " +
+                                    "package and a group size of 1, so packageName, minGroupSize and maxGroupSize " +
+                                    "are overwritten with those values. Pass an empty string to unlink it"
+                        ),
+                        "baseAssignmentKind" to mapOf(
+                            "type" to "string",
+                            "enum" to BaseAssignmentKind.entries.map { it.name },
+                            "description" to "What this assignment is to the one in baseAssignmentId. DEFENSE (the " +
+                                    "default) is described in baseAssignmentId. CONTINUATION is the next part of a " +
+                                    "multi-part project: until they submit, students can download the code their " +
+                                    "group submitted to the base assignment (or its reference solution, i.e. its " +
+                                    "src/main, if they have none), and a group must remain the same as there unless " +
+                                    "the student is in the group exceptions. A continuation uses the package of the " +
+                                    "base assignment and inherits its acl, group size and group exceptions, unless " +
+                                    "acl or the group size are passed. Changing the link copies them again"
                         ),
                         "maxChangedLines" to mapOf(
                             "type" to "number",
                             "description" to "Maximum number of lines (under src) that a submission may change " +
                                     "relatively to the base submission, only enforced after the defense " +
-                                    "instructions are released. Only valid together with baseAssignmentId. Pass an " +
+                                    "instructions are released. Only valid for a defense. Pass an " +
                                     "empty value to measure the difference without ever rejecting a submission"
                         ),
                         "assignees" to mapOf(

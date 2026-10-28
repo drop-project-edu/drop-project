@@ -300,6 +300,11 @@ class SubmissionService(
             // check if all group members are in the assignment's whitelist
             assignmentService.checkGroupMembersInWhitelist(assignment.id, authors.map { it.number }, i18n, currentLocale, isAuthorizedTeacher)
 
+            // a continuation is the same project, so it has to be done by the same groups
+            if (assignment.isContinuation() && !isAuthorizedTeacher) {
+                checkContinuationGroup(assignment, authors.map { it.number })
+            }
+
             val group = projectGroupService.getOrCreateProjectGroup(authors)
 
             // verify that there is not another submission with the Submitted status
@@ -317,13 +322,13 @@ class SubmissionService(
             // on the first phase of a defense, the submission is only a checkpoint of the code the student had
             // already submitted to the project assignment, and not yet the requested changes. The phase is per
             // student: a student who hasn't passed the first one stays there even after the instructions are released
-            val isDefenseCheckpoint = assignment.baseAssignmentId != null &&
+            val isDefenseCheckpoint = assignment.isDefense() &&
                     defenseService.defensePhaseFor(assignment, principal.realName(),
                         request.isUserInRole("TEACHER")) == 1
 
             // a submission to a defense assignment is supposed to be a bounded set of changes on top of the group's
             // code for the linked project assignment, so measure how much it diverges from it
-            val baseDivergenceLines = if (assignment.baseAssignmentId != null) {
+            val baseDivergenceLines = if (assignment.isDefense()) {
                 val baseSubmission = findBaseSubmission(assignment, principal.realName())
                 if (baseSubmission == null && !request.isUserInRole("TEACHER")) {
                     throw BaseSubmissionNotFoundException(i18n.getMessage("student.submit.noBaseSubmission",
@@ -407,11 +412,13 @@ class SubmissionService(
      * because the group that did the project is frequently not the one that is defending it (e.g. a project made in
      * pairs that is defended individually).
      *
-     * @param assignment is the defense [Assignment] that is being submitted to
+     * A continuation starts from the same submission, chosen in the same way: it is the code the group delivered.
+     *
+     * @param assignment is the defense or continuation [Assignment] that is being submitted to
      * @param submitterUserId is a String identifying the user that is submitting
      *
      * @return a Submission or null, either if [assignment] is not linked to another assignment or if the submitter
-     * has nothing that the defense can be based on
+     * has nothing that the defense (or continuation) can be based on
      */
     fun findBaseSubmission(assignment: Assignment, submitterUserId: String): Submission? {
         val baseAssignmentId = assignment.baseAssignmentId ?: return null
@@ -436,6 +443,53 @@ class SubmissionService(
                 it.getStatus() in setOf(SubmissionStatus.VALIDATED, SubmissionStatus.VALIDATED_REBUILT) &&
                         baseAssignment?.overdue(it) != true
             }
+    }
+
+    /**
+     * What a student starts from on the continuation [assignment]: the [baseSubmission] of their group to the
+     * assignment it continues or, when they have none, its reference solution (see [ReferenceSolutionService]).
+     */
+    data class ContinuationStart(val baseSubmission: Submission?)
+
+    /**
+     * What [userId] starts from on the continuation [assignment], or null once they have started, i.e. once one of
+     * their groups has submitted to it: from then on, they continue from their own submissions.
+     */
+    fun continuationStart(assignment: Assignment, userId: String): ContinuationStart? {
+        val groups = projectGroupRepository.getGroupsForAuthor(userId)
+        val hasStarted = groups.isNotEmpty() && submissionRepository
+            .findFirstByGroupInAndAssignmentIdAndStatusNotOrderBySubmissionDateDesc(groups, assignment.id,
+                SubmissionStatus.DELETED.code) != null
+        if (hasStarted) {
+            return null
+        }
+
+        return ContinuationStart(findBaseSubmission(assignment, userId))
+    }
+
+    /**
+     * Checks that the group of a submission to the continuation [assignment], made by [authorIds], is the same group
+     * that each of them was in when submitting to the assignment it continues. A student who has nothing there to
+     * continue (and so starts from the reference solution) doesn't constrain the group, and neither does one that the
+     * teacher listed in the exceptions of the group restrictions.
+     *
+     * @throws InvalidProjectGroupException naming the first student whose group changed
+     */
+    private fun checkContinuationGroup(assignment: Assignment, authorIds: List<String>) {
+        val exceptions = assignment.projectGroupRestrictions?.exceptionsAsList().orEmpty()
+        val group = authorIds.toSet()
+
+        for (authorId in authorIds.filter { it !in exceptions }) {
+            val baseSubmission = findBaseSubmission(assignment, authorId) ?: continue
+            val previousGroup = baseSubmission.group.authors.map { it.userId }.toSet()
+            if (previousGroup != group) {
+                LOG.info("[${authorIds.joinToString("|")}] ${authorId} submitted to ${assignment.baseAssignmentId} " +
+                        "in another group (${previousGroup.sorted().joinToString("|")})")
+                throw InvalidProjectGroupException(i18n.getMessage("student.submit.continuationGroupChanged",
+                    arrayOf(authorId, assignment.baseAssignmentId, previousGroup.sorted().joinToString(", ")),
+                    currentLocale))
+            }
+        }
     }
 
     /**

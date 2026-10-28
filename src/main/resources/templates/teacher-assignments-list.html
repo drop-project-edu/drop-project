@@ -126,7 +126,7 @@
                 <i th:if="${closedWindowStatus.containsKey(assignment.id)}" class="far fa-clock text-warning"
                    aria-hidden="true" th:title="${'Active, but students cannot submit right now. '
                                                   + closedWindowStatus.get(assignment.id).description}"></i>
-                <form th:if="${assignment.baseAssignmentId != null}"
+                <form th:if="${assignment.isDefense()}"
                       th:action="@{'/assignment/toggle-defense-instructions/' + ${assignment.id}}" method="post">
                     <input type="hidden" name="tags" th:value="${currentTags}"/>
                     <!-- the instructions can only be released after the students were able to submit their original

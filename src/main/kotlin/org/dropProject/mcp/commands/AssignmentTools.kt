@@ -19,6 +19,7 @@
  */
 package org.dropproject.mcp.commands
 
+import org.dropproject.dao.BaseAssignmentKind
 import org.dropproject.dao.Assignment
 import org.dropproject.dao.AssignmentReport
 import org.dropproject.services.AssignmentValidator
@@ -82,6 +83,11 @@ object AssignmentTools {
         setting("maxGroupSize", assignment.projectGroupRestrictions?.maxGroupSize)
         setting("visibility", assignment.visibility)
         setting("baseAssignmentId", assignment.baseAssignmentId)
+        setting("baseAssignmentKind", when {
+            assignment.isContinuation() -> BaseAssignmentKind.CONTINUATION
+            assignment.isDefense() -> BaseAssignmentKind.DEFENSE
+            else -> null
+        })
         setting("maxChangedLines", assignment.maxChangedLines)
         setting("assignees", assignees.joinToString(","))
         setting("acl", acl.joinToString(","))

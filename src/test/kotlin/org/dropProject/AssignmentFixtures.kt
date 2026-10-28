@@ -23,9 +23,13 @@ import org.apache.commons.io.FileUtils
 import org.dropproject.config.DropProjectProperties
 import org.dropproject.dao.Assignment
 import org.dropproject.dao.AssignmentTestMethod
+import org.dropproject.dao.BaseAssignmentKind
+import org.dropproject.dao.ProjectGroupRestrictions
+import org.dropproject.dao.SubmissionStructure
 import org.dropproject.forms.SubmissionMethod
 import org.dropproject.repository.AssignmentRepository
 import org.dropproject.repository.AssignmentTestMethodRepository
+import org.dropproject.repository.ProjectGroupRestrictionsRepository
 import org.eclipse.jgit.api.Git
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.authority.SimpleGrantedAuthority
@@ -52,6 +56,9 @@ class AssignmentFixtures {
 
     @Autowired
     lateinit var assignmentTestMethodRepository: AssignmentTestMethodRepository
+
+    @Autowired
+    lateinit var projectGroupRestrictionsRepository: ProjectGroupRestrictionsRepository
 
     @Autowired
     lateinit var dropProjectProperties: DropProjectProperties
@@ -113,6 +120,31 @@ class AssignmentFixtures {
             assignmentTestMethodRepository.save(AssignmentTestMethod(assignment = assignment,
                 testClass = "TestTeacherHiddenProject", testMethod = "testFuncaoParaTestarQueNaoApareceAosAlunos"))
         }
+
+        return assignment
+    }
+
+    /**
+     * Creates a continuation of [baseAssignmentId], i.e. the next part of the project, which students start from the
+     * code their group submitted there (or from its reference solution).
+     */
+    fun createContinuationAssignment(id: String = "testJavaProjPart2",
+                                     baseAssignmentId: String = "testJavaProj",
+                                     submissionStructure: SubmissionStructure = SubmissionStructure.COMPACT,
+                                     exceptions: String? = null): Assignment {
+        val assignment = Assignment(id = id, name = "Part 2 of the Test Project (for automatic tests)",
+            packageName = "org.dropProject.sampleAssignments.testProj", ownerUserId = "teacher1",
+            submissionMethod = SubmissionMethod.UPLOAD, submissionStructure = submissionStructure, active = true,
+            gitRepositoryUrl = "git://dummy", gitRepositoryFolder = "testJavaProj", gitCurrentHash = "somehash",
+            baseAssignmentId = baseAssignmentId, baseAssignmentKind = BaseAssignmentKind.CONTINUATION)
+        if (exceptions != null) {
+            assignment.projectGroupRestrictions = projectGroupRestrictionsRepository.save(
+                ProjectGroupRestrictions(minGroupSize = 1, maxGroupSize = 2, exceptions = exceptions))
+        }
+        assignmentRepository.save(assignment)
+
+        assignmentTestMethodRepository.save(AssignmentTestMethod(assignment = assignment,
+            testClass = "TestTeacherProject", testMethod = "testFuncaoParaTestar"))
 
         return assignment
     }

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+  The fields of the assignment form that are derived from the assignment that a defense or a continuation is linked
+  to (its base assignment). Returned to htmx when the teacher picks one, and applied with out-of-band swaps, since the
+  fields are in different places of the form.
+-->
+<th:block th:fragment="baseAssignmentDerivedFields">
+
+    <!-- the package is the base assignment's, because the students submit (or continue) the code they sent there -->
+    <input hx-swap-oob="true"
+           type="text" class="form-control" id="assignmentPackage" name="assignmentPackage"
+           maxlength="60" readonly="readonly" th:value="${derivedPackageName}"/>
+
+    <!-- defense: how big the requested change actually is, to help choosing the line budget -->
+    <p hx-swap-oob="true" class="help-block" id="referenceSolutionDivergence"
+       th:style="${divergenceHint == null} ? 'display: none' : ''"
+       th:text="${divergenceHint}"></p>
+
+    <!-- continuation: the same teachers, group size and exceptions as the base assignment, as a starting point -->
+    <th:block th:if="${inheritedSettings != null}">
+        <input hx-swap-oob="true"
+               type="text" class="form-control" id="acl" name="acl"
+               placeholder="teacherId1,teacherId2,..." maxlength="60" th:value="${inheritedSettings.acl}"/>
+        <input hx-swap-oob="true"
+               type="number" class="form-control" id="minGroupSize" name="minGroupSize" min="1" max="10"
+               th:value="${inheritedSettings.minGroupSize}"/>
+        <input hx-swap-oob="true"
+               type="number" class="form-control" id="maxGroupSize" name="maxGroupSize" min="1" max="10"
+               th:value="${inheritedSettings.maxGroupSize}"/>
+        <textarea hx-swap-oob="true"
+                  class="form-control" id="exceptions" name="exceptions" rows="3" placeholder="a21701234,a21705678"
+                  th:text="${inheritedSettings.exceptions}"></textarea>
+    </th:block>
+
+</th:block>
+
+</body>
+</html>

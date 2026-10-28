@@ -35,50 +35,66 @@
         <div class="form-group">
             <label class="col-sm-3 control-label">Assignment type</label>
             <div class="col-sm-9">
+                <!-- the kind of the link to another assignment: none (normal), a defense or a continuation of it -->
                 <label class="radio-inline">
-                    <input type="radio" name="assignmentType" id="assignmentTypeNormal" value="NORMAL"
-                           th:checked="${#strings.isEmpty(assignmentForm.baseAssignmentId)}" /> Normal
+                    <input type="radio" name="baseAssignmentKind" id="assignmentTypeNormal" value=""
+                           th:checked="${assignmentForm.baseAssignmentKind == null}" /> Normal
                 </label>
                 <label class="radio-inline">
-                    <input type="radio" name="assignmentType" id="assignmentTypeDefense" value="DEFENSE"
-                           th:checked="${!#strings.isEmpty(assignmentForm.baseAssignmentId)}" /> Defense
+                    <input type="radio" name="baseAssignmentKind" id="assignmentTypeDefense" value="DEFENSE"
+                           th:checked="${assignmentForm.baseAssignmentKind?.name() == 'DEFENSE'}" /> Defense
+                </label>
+                <label class="radio-inline">
+                    <input type="radio" name="baseAssignmentKind" id="assignmentTypeContinuation" value="CONTINUATION"
+                           th:checked="${assignmentForm.baseAssignmentKind?.name() == 'CONTINUATION'}" /> Continuation
                 </label>
                 <p class="help-block">A defense assignment is built on top of the code that each group already submitted
-                    to another assignment</p>
+                    to another assignment. A continuation is the next part of a multi-part project: each group continues
+                    the code they submitted to the previous part</p>
             </div>
         </div>
 
         <div id="defenseFieldsDiv" class="form-group"
-             th:style="${!#strings.isEmpty(assignmentForm.baseAssignmentId)} ? '' : 'display:none'">
+             th:style="${assignmentForm.baseAssignmentKind != null} ? '' : 'display:none'">
             <div class="col-sm-offset-3 col-sm-9">
                 <div class="panel panel-default" style="margin-bottom: 0">
-                    <div class="panel-heading">Defense settings</div>
+                    <div class="panel-heading">
+                        <span class="defense-only">Defense settings</span>
+                        <span class="continuation-only">Continuation settings</span>
+                    </div>
                     <div class="panel-body">
 
                         <div class="form-group" th:classappend="${#fields.hasErrors('baseAssignmentId')} ? 'has-error' : ''">
-                            <label for="baseAssignmentId" class="col-sm-4 control-label">Defense of</label>
+                            <label for="baseAssignmentId" class="col-sm-4 control-label">
+                                <span class="defense-only">Defense of</span>
+                                <span class="continuation-only">Continuation of</span>
+                            </label>
                             <div class="col-sm-8">
-                                <!-- picking a project assignment fills in the package and the size of the change,
+                                <!-- picking an assignment fills in the fields derived from it (e.g. the package),
                                      with out-of-band swaps, so no javascript is needed to keep them right -->
                                 <select th:field="*{baseAssignmentId}" class="form-control" id="baseAssignmentId"
-                                        th:hx-get="@{/assignment/defense-derived-fields}"
+                                        th:hx-get="@{/assignment/base-assignment-derived-fields}"
                                         hx-trigger="change"
-                                        hx-include="#assignmentId"
+                                        hx-include="#assignmentId, [name='baseAssignmentKind']:checked"
                                         hx-swap="none">
-                                    <option value="">-- choose the project assignment --</option>
+                                    <option value="">-- choose the assignment --</option>
                                     <option th:each="baseAssignment : ${candidateBaseAssignments}"
                                             th:value="${baseAssignment.id}"
                                             th:text="${baseAssignment.id}">
                                     </option>
                                 </select>
                                 <p class="help-block" th:if="${#fields.hasErrors('baseAssignmentId')}" th:errors="*{baseAssignmentId}">Error</p>
-                                <p class="help-block" th:if="${!#fields.hasErrors('baseAssignmentId')}">The project assignment that this one
-                                    is a defense of. Students will be able to download the code they submitted there and every submission
-                                    made here will be compared with it</p>
+                                <p class="help-block defense-only" th:if="${!#fields.hasErrors('baseAssignmentId')}">The project
+                                    assignment that this one is a defense of. Students will be able to download the code they submitted
+                                    there and every submission made here will be compared with it</p>
+                                <p class="help-block continuation-only" th:if="${!#fields.hasErrors('baseAssignmentId')}">The previous
+                                    part of the project. Until they submit here, students can download the code their group submitted
+                                    there (or the reference solution, if they have none), and the group must remain the same unless
+                                    the student is in the exceptions. Picking it fills in its teachers, group size and exceptions</p>
                             </div>
                         </div>
 
-                        <div class="form-group" style="margin-bottom: 0">
+                        <div class="form-group defense-only" id="maxChangedLinesRow" style="margin-bottom: 0">
                             <label for="maxChangedLines" class="col-sm-4 control-label">Max changed lines (optional)</label>
                             <div class="col-sm-8" th:classappend="${#fields.hasErrors('maxChangedLines')} ? 'has-error' : ''">
                                 <input th:field="*{maxChangedLines}" type="number" class="form-control" id="maxChangedLines"
@@ -313,7 +329,8 @@
                 <p class="help-block" th:if="${#fields.hasErrors('exceptions')}" th:errors="*{exceptions}">Error</p>
                 <p class="help-block" th:if="${!#fields.hasErrors('exceptions')}">Comma separated list of student id's that are exempt from the
                 group size restrictions. These students are automatically allowed to access and submit this assignment, even if it has
-                an "Authorized submitters" list (below) that they are not part of</p>
+                an "Authorized submitters" list (below) that they are not part of. On a continuation, they may also submit in a
+                different group from the one of the previous part</p>
             </div>
         </div>
 
@@ -407,51 +424,76 @@
         }
     });
 
-    // most assignments are not defenses, so their fields are only shown when the type says so. Hiding them also
-    // clears them, otherwise an assignment that stopped being a defense would silently keep its old link
-    // what the teacher had typed before switching to Defense, so that switching back doesn't lose it
+    // most assignments are not linked to another one, so the fields of the link are only shown when the type says so.
+    // Hiding them also clears them, otherwise an assignment that stopped being linked would silently keep its old link
+    function selectedBaseAssignmentKind() {
+        return $('input[name="baseAssignmentKind"]:checked').val();
+    }
+
+    // what the teacher had typed before switching to Defense or Continuation, so that switching back doesn't lose it
     var savedNormalSettings = null;
 
-    // a defense is done individually and its submissions are the students' own code from the project assignment, so
-    // the group size and the package are not the teacher's to choose. The server enforces this anyway
-    // (AssignmentService.applyDefenseSettings); the package itself is filled in by htmx, from the project assignment
-    function applyDefenseSettings() {
-        var isDefense = $('#assignmentTypeDefense').is(':checked');
+    // the package is the linked assignment's, and a defense is done individually, so those are not the teacher's to
+    // choose. The server enforces this anyway (AssignmentService.applyBaseAssignmentSettings); the package itself is
+    // filled in by htmx, from the linked assignment, as are the settings a continuation inherits from it
+    function applyBaseAssignmentSettings() {
+        var kind = selectedBaseAssignmentKind();
+        var isDefense = kind === 'DEFENSE';
+        var isLinked = isDefense || kind === 'CONTINUATION';
+
+        if (isLinked && savedNormalSettings === null) {
+            savedNormalSettings = {
+                minGroupSize: $('#minGroupSize').val(),
+                maxGroupSize: $('#maxGroupSize').val(),
+                assignmentPackage: $('#assignmentPackage').val(),
+                acl: $('#acl').val(),
+                exceptions: $('#exceptions').val()
+            };
+        }
 
         if (isDefense) {
-            if (savedNormalSettings === null) {
-                savedNormalSettings = {
-                    minGroupSize: $('#minGroupSize').val(),
-                    maxGroupSize: $('#maxGroupSize').val(),
-                    assignmentPackage: $('#assignmentPackage').val()
-                };
-            }
             $('#minGroupSize').val('1');
             $('#maxGroupSize').val('1');
         } else if (savedNormalSettings !== null) {
             $('#minGroupSize').val(savedNormalSettings.minGroupSize);
             $('#maxGroupSize').val(savedNormalSettings.maxGroupSize);
-            $('#assignmentPackage').val(savedNormalSettings.assignmentPackage);
-            savedNormalSettings = null;
+            if (!isLinked) {
+                $('#assignmentPackage').val(savedNormalSettings.assignmentPackage);
+                $('#acl').val(savedNormalSettings.acl);
+                $('#exceptions').val(savedNormalSettings.exceptions);
+                savedNormalSettings = null;
+            }
         }
 
-        $('#minGroupSize, #maxGroupSize, #assignmentPackage').prop('readonly', isDefense);
+        $('#minGroupSize, #maxGroupSize').prop('readonly', isDefense);
+        $('#assignmentPackage').prop('readonly', isLinked);
+
+        $('.defense-only').toggle(isDefense);
+        $('.continuation-only').toggle(!isDefense);
     }
 
-    $('input[name="assignmentType"]').change(function() {
-        if ($('#assignmentTypeDefense').is(':checked')) {
+    $('input[name="baseAssignmentKind"]').change(function() {
+        var kind = selectedBaseAssignmentKind();
+        if (kind === 'DEFENSE' || kind === 'CONTINUATION') {
             $('#defenseFieldsDiv').show();
         } else {
             $('#defenseFieldsDiv').hide();
             $('#baseAssignmentId').val('');
-            $('#maxChangedLines').val('');
             $('#referenceSolutionDivergence').hide();
         }
-        applyDefenseSettings();
+        if (kind !== 'DEFENSE') {
+            $('#maxChangedLines').val('');
+        }
+        applyBaseAssignmentSettings();
+
+        // the fields derived from the linked assignment depend on the kind of the link, so they are fetched again
+        if ($('#baseAssignmentId').val()) {
+            htmx.trigger('#baseAssignmentId', 'change');
+        }
     });
 
-    // an assignment that is already a defense opens with the fields locked
-    applyDefenseSettings();
+    // an assignment that is already linked opens with the fields locked
+    applyBaseAssignmentSettings();
     /*]]>*/
 </script>
 

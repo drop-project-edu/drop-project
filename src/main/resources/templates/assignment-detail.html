@@ -111,17 +111,19 @@
                     <label class="col-sm-3 control-label">Type:</label>
                     <div class="col-sm-9 read-row">
                         <span th:if="${assignment.baseAssignmentId == null}">Normal</span>
-                        <span th:if="${assignment.baseAssignmentId != null}">Defense</span>
+                        <span th:if="${assignment.isDefense()}">Defense</span>
+                        <span th:if="${assignment.isContinuation()}">Continuation</span>
                     </div>
                 </div>
                 <div class="form-group" th:if="${assignment.baseAssignmentId != null}">
-                    <label class="col-sm-3 control-label">Defense of:</label>
+                    <label class="col-sm-3 control-label"
+                           th:text="${assignment.isDefense()} ? 'Defense of:' : 'Continuation of:'">Defense of:</label>
                     <div class="col-sm-9 read-row">
                         <a th:href="@{'/assignment/info/' + ${assignment.baseAssignmentId}}"
                            th:text="${assignment.baseAssignmentId}"></a>
                     </div>
                 </div>
-                <div class="form-group" th:if="${assignment.baseAssignmentId != null}">
+                <div class="form-group" th:if="${assignment.isDefense()}">
                     <label class="col-sm-3 control-label">Max changed lines:</label>
                     <div class="col-sm-9 read-row">
                         <span th:if="${assignment.maxChangedLines != null}" th:text="${assignment.maxChangedLines}"></span>
@@ -134,7 +136,7 @@
                         </span>
                     </div>
                 </div>
-                <div class="form-group" th:if="${assignment.baseAssignmentId != null}">
+                <div class="form-group" th:if="${assignment.isDefense()}">
                     <label class="col-sm-3 control-label">Defense instructions:</label>
                     <div class="col-sm-9 read-row">
                         <span th:if="${assignment.defenseInstructionsReleased}" class="label label-success">Released</span>

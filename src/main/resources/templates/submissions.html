@@ -62,7 +62,7 @@
             <th>Labels</th>
             <th class="text-center">Indicators</th>
             <th class="text-center"><span class="glyphicon glyphicon-time" aria-hidden="true" title="Time spent running tests"></span></th>
-            <th class="text-center" th:if="${isTeacher and assignment.baseAssignmentId != null}">
+            <th class="text-center" th:if="${isTeacher and assignment.isDefense()}">
                 <span class="glyphicon glyphicon-transfer" aria-hidden="true"
                       th:title="'Lines changed relatively to the submission to ' + ${assignment.baseAssignmentId}"></span>
             </th>
@@ -98,7 +98,7 @@
             </td>
 
             <td th:text="${submission.ellapsed} ? ${#numbers.formatDecimal(submission.ellapsed, 0, 'DEFAULT', 2, 'DEFAULT')}"></td>
-            <td class="text-right" th:if="${isTeacher and assignment.baseAssignmentId != null}">
+            <td class="text-right" th:if="${isTeacher and assignment.isDefense()}">
                 <span th:if="${submission.baseDivergenceLines != null}"
                       class="label"
                       th:classappend="${assignment.maxChangedLines != null and submission.baseDivergenceLines > assignment.maxChangedLines} ? 'label-warning' : 'label-default'"

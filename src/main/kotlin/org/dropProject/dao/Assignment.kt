@@ -71,6 +71,19 @@ enum class LeaderboardType {
 }
 
 /**
+ * Enum representing what an assignment that is linked to another one (its base assignment) is:
+ *  - DEFENSE - a proctored assessment in which each student changes the code they submitted to the base assignment,
+ *    to prove that they wrote it. It has two phases (resubmitting that code and then changing it) and may limit how
+ *    many lines a submission changes;
+ *  - CONTINUATION - the next part of a multi-part project: the group continues from the code they submitted to the
+ *    base assignment (or from its reference solution, if they have none) and must remain the same group.
+ */
+enum class BaseAssignmentKind {
+    DEFENSE,
+    CONTINUATION
+}
+
+/**
  * Enum representing the types of visibility of each assignment.
  *  - PUBLIC - everyone sees this assignment;
  *  - ONLY_BY_LINK - everyone that has the link sees this assignment;
@@ -110,8 +123,10 @@ enum class AssignmentVisibility {
  * @property maxMemoryMb is an optional Integer, indicating the maximum number of Mb that the student's code can use
  * @property showLeaderBoard is a Boolean, indicating if the leaderboard page should be active for this Assignment
  * @property leaderboardType is a [LeaderboardType]
- * @property baseAssignmentId is an optional String with the id of the "project" Assignment that this one is a
- * defense of. If it is set, every submission is compared with the group's last submission to that Assignment
+ * @property baseAssignmentId is an optional String with the id of the Assignment that this one is linked to, either as
+ * a defense or as a continuation of it (see [baseAssignmentKind])
+ * @property baseAssignmentKind is the [BaseAssignmentKind] of the link to [baseAssignmentId]. It is only meaningful
+ * when that is set, and null on the assignments that were linked before there were continuations, which are defenses
  * @property maxChangedLines is an optional Integer with the maximum number of lines that a submission is allowed to
  * change relatively to the linked project submission. It is only enforced after [defenseInstructionsReleased]
  * @property defenseInstructionsReleased is a Boolean, indicating if the defense instructions (phase 2) have already
@@ -177,6 +192,8 @@ data class Assignment(
 
     @Column(length = 50)
     var baseAssignmentId: String? = null,
+    @Enumerated(EnumType.STRING)
+    var baseAssignmentKind: BaseAssignmentKind? = null,
     var maxChangedLines: Int? = null,
     var defenseInstructionsReleased: Boolean = false,
 
@@ -264,6 +281,16 @@ data class Assignment(
 
         return false
     }
+
+    /**
+     * Whether this assignment is a defense of the one identified by [baseAssignmentId].
+     */
+    fun isDefense(): Boolean = baseAssignmentId != null && baseAssignmentKind != BaseAssignmentKind.CONTINUATION
+
+    /**
+     * Whether this assignment is a continuation of the one identified by [baseAssignmentId].
+     */
+    fun isContinuation(): Boolean = baseAssignmentId != null && baseAssignmentKind == BaseAssignmentKind.CONTINUATION
 
     /**
      * Whether students may access this assignment from [clientIp]. Without [allowedIps], every address is accepted.

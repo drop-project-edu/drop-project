@@ -450,7 +450,7 @@ class UploadDefenseAssignmentTests : UploadTestBase() {
         // the fixture points the defense at the same repository as the project assignment, so nothing differs
         assignmentFixtures.createDefenseAssignment()
 
-        val fragment = this.mvc.perform(get("/assignment/defense-derived-fields")
+        val fragment = this.mvc.perform(get("/assignment/base-assignment-derived-fields")
             .param("baseAssignmentId", projectAssignmentId)
             .param("assignmentId", defenseAssignmentId)
             .with(user(TEACHER_1)))
@@ -467,7 +467,7 @@ class UploadDefenseAssignmentTests : UploadTestBase() {
     @Test
     fun `while the assignment is being created the size of the change is not known yet`() {
 
-        val fragment = this.mvc.perform(get("/assignment/defense-derived-fields")
+        val fragment = this.mvc.perform(get("/assignment/base-assignment-derived-fields")
             .param("baseAssignmentId", projectAssignmentId)
             .param("assignmentId", "")
             .with(user(TEACHER_1)))
@@ -488,7 +488,7 @@ class UploadDefenseAssignmentTests : UploadTestBase() {
             assignmentRepository.save(it)
         }
 
-        val fragment = this.mvc.perform(get("/assignment/defense-derived-fields")
+        val fragment = this.mvc.perform(get("/assignment/base-assignment-derived-fields")
             .param("baseAssignmentId", "someoneElsesProj")
             .with(user(TEACHER_1)))
             .andExpect(status().isOk)

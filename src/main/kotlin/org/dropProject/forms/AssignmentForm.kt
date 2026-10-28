@@ -20,6 +20,7 @@
 package org.dropproject.forms
 
 import org.dropproject.dao.AssignmentVisibility
+import org.dropproject.dao.BaseAssignmentKind
 import org.dropproject.dao.Language
 import org.dropproject.dao.LeaderboardType
 import org.dropproject.dao.SubmissionStructure
@@ -78,6 +79,7 @@ data class AssignmentForm(
         var leaderboardType: LeaderboardType? = null,
 
         var baseAssignmentId: String? = null,
+        var baseAssignmentKind: BaseAssignmentKind? = null,
 
         @field:Min(value=1, message="Error: Max changed lines must be >= 1")
         var maxChangedLines: Int? = null,

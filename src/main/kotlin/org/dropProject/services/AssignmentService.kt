@@ -100,7 +100,8 @@ class AssignmentService(
     val dropProjectProperties: DropProjectProperties,
     val cooloffOverrideService: CooloffOverrideService,
     val plagiarismService: PlagiarismService,
-    val submissionWindowService: SubmissionWindowService
+    val submissionWindowService: SubmissionWindowService,
+    val referenceSolutionService: ReferenceSolutionService
 ) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
@@ -360,10 +361,12 @@ class AssignmentService(
         existingAssignment.leaderboardType = assignmentForm.leaderboardType
         existingAssignment.visibility = assignmentForm.visibility
         existingAssignment.baseAssignmentId = assignmentForm.baseAssignmentId?.takeIf { it.isNotBlank() }
+        existingAssignment.baseAssignmentKind =
+            if (existingAssignment.baseAssignmentId != null) assignmentForm.baseAssignmentKind else null
         existingAssignment.maxChangedLines = assignmentForm.maxChangedLines
 
         // an assignment that is no longer a defense of another one has no instructions to release
-        if (existingAssignment.baseAssignmentId == null) {
+        if (!existingAssignment.isDefense()) {
             existingAssignment.defenseInstructionsReleased = false
         }
 
@@ -397,31 +400,96 @@ class AssignmentService(
     }
 
     /**
-     * Forces on [assignmentForm] the settings that a defense assignment doesn't get to choose:
+     * Forces on [assignmentForm] the settings that an assignment linked to another one (its base assignment) doesn't
+     * get to choose:
      *
-     * - a group size of exactly 1, since a defense is done individually, even when the project it is a defense of
-     *   was done in group;
-     * - the package of the linked assignment, since the students submit the very code they had already submitted
-     *   there, and a different package would make every submission fail the structure check.
+     * - the package of the base assignment, since the students submit (or continue) the very code they had already
+     *   submitted there, and a different package would make every submission fail the structure check;
+     * - for a defense, a group size of exactly 1, since a defense is done individually, even when the project it is
+     *   a defense of was done in group;
+     * - for a continuation, no line budget, which only makes sense for a defense.
+     *
+     * A link without a kind is a defense, which is what every link was before there were continuations.
      *
      * Meant to be called before [validateAssignmentForm], so that these are the values that get validated and saved.
-     * A form that is not a defense only loses the line budget, which is meaningless without a submission to compare
+     * A form that is not linked only loses the line budget, which is meaningless without a submission to compare
      * with.
      *
      * @param assignmentForm is the [AssignmentForm] to normalize
      */
-    fun applyDefenseSettings(assignmentForm: AssignmentForm) {
+    fun applyBaseAssignmentSettings(assignmentForm: AssignmentForm) {
         val baseAssignmentId = assignmentForm.baseAssignmentId?.takeIf { it.isNotBlank() }
         if (baseAssignmentId == null) {
+            // the kind is left as it is, so that the validation can tell the teacher that the link is missing
             assignmentForm.maxChangedLines = null
             return
         }
 
-        assignmentForm.minGroupSize = 1
-        assignmentForm.maxGroupSize = 1
+        val kind = assignmentForm.baseAssignmentKind ?: BaseAssignmentKind.DEFENSE
+        assignmentForm.baseAssignmentKind = kind
+
+        if (kind == BaseAssignmentKind.DEFENSE) {
+            assignmentForm.minGroupSize = 1
+            assignmentForm.maxGroupSize = 1
+        } else {
+            assignmentForm.maxChangedLines = null
+        }
 
         assignmentRepository.findById(baseAssignmentId).ifPresent {
             assignmentForm.assignmentPackage = it.packageName
+        }
+    }
+
+    /**
+     * The settings that a continuation of [baseAssignment] inherits from it, as the starting point that the teacher
+     * may change: the same teachers, the same group size and the same exceptions, since it is the same project, done
+     * by the same groups.
+     *
+     * The teachers are the ones on the ACL of [baseAssignment] and its owner, except [ownerUserId], the owner of the
+     * continuation, who manages it anyway and can't be on its ACL.
+     */
+    fun settingsInheritedFrom(baseAssignment: Assignment, ownerUserId: String): InheritedSettings {
+        val acl = (listOf(baseAssignment.ownerUserId) +
+                assignmentACLRepository.findByAssignmentId(baseAssignment.id).map { it.userId })
+            .filter { it != ownerUserId }
+            .distinct()
+
+        val restrictions = baseAssignment.projectGroupRestrictions
+        return InheritedSettings(
+            acl = acl.joinToString(",").ifBlank { null },
+            minGroupSize = restrictions?.minGroupSize,
+            maxGroupSize = restrictions?.maxGroupSize,
+            exceptions = restrictions?.exceptions?.ifBlank { null }
+        )
+    }
+
+    data class InheritedSettings(val acl: String?, val minGroupSize: Int?, val maxGroupSize: Int?,
+                                 val exceptions: String?)
+
+    /**
+     * Fills in, on the [assignmentForm] of a continuation, the settings inherited from its base assignment (see
+     * [settingsInheritedFrom]) that the form leaves empty. Used where the teacher has no form to review them in
+     * (i.e. over MCP); the web form shows them, filled in, as soon as the base assignment is picked.
+     *
+     * @param ownerUserId identifies the owner of the continuation
+     */
+    fun inheritBaseAssignmentSettings(assignmentForm: AssignmentForm, ownerUserId: String) {
+        if (assignmentForm.baseAssignmentKind != BaseAssignmentKind.CONTINUATION) {
+            return
+        }
+        val baseAssignment = assignmentForm.baseAssignmentId?.takeIf { it.isNotBlank() }
+            ?.let { assignmentRepository.findById(it).orElse(null) } ?: return
+
+        val inherited = settingsInheritedFrom(baseAssignment, ownerUserId)
+        if (assignmentForm.acl.isNullOrBlank()) {
+            assignmentForm.acl = inherited.acl
+        }
+        if (assignmentForm.minGroupSize == null) {
+            assignmentForm.minGroupSize = inherited.minGroupSize
+            assignmentForm.maxGroupSize = inherited.maxGroupSize
+        }
+        if (assignmentForm.exceptions.isNullOrBlank()) {
+            assignmentForm.exceptions = inherited.exceptions
         }
     }
 
@@ -502,11 +570,17 @@ class AssignmentService(
         // the form only offers the assignments the teacher has access to, but the value comes from the request, so it
         // has to be checked here as well
         val baseAssignmentId = assignmentForm.baseAssignmentId?.takeIf { it.isNotBlank() }
+        if (baseAssignmentId == null && assignmentForm.baseAssignmentKind != null) {
+            val kind =
+                if (assignmentForm.baseAssignmentKind == BaseAssignmentKind.DEFENSE) "a defense" else "a continuation"
+            errors.add(AssignmentFormError("baseAssignmentId", "baseAssignmentId.missing",
+                "Error: Choose the assignment that this one is ${kind} of"))
+        }
         if (baseAssignmentId != null) {
             val baseAssignment = assignmentRepository.findById(baseAssignmentId).orElse(null)
             if (baseAssignmentId == assignmentForm.assignmentId) {
                 errors.add(AssignmentFormError("baseAssignmentId", "baseAssignmentId.itself",
-                    "Error: An assignment can't be a defense of itself"))
+                    "Error: An assignment can't be linked to itself"))
             } else if (baseAssignment == null) {
                 errors.add(AssignmentFormError("baseAssignmentId", "baseAssignmentId.inexistent",
                     "Error: The assignment ${baseAssignmentId} doesn't exist"))
@@ -602,6 +676,8 @@ class AssignmentService(
             hiddenTestsVisibility = assignmentForm.hiddenTestsVisibility,
             leaderboardType = assignmentForm.leaderboardType,
             baseAssignmentId = assignmentForm.baseAssignmentId?.takeIf { it.isNotBlank() },
+            baseAssignmentKind = assignmentForm.baseAssignmentKind
+                ?.takeIf { !assignmentForm.baseAssignmentId.isNullOrBlank() },
             maxChangedLines = assignmentForm.maxChangedLines,
             visibility = assignmentForm.visibility)
 
@@ -837,6 +913,7 @@ class AssignmentService(
         assignmentACLRepository.deleteByAssignmentId(assignmentId)
         assignmentReportRepository.deleteByAssignmentId(assignmentId)
         plagiarismService.deleteChecks(assignmentId)
+        referenceSolutionService.deleteCached(assignmentId)
         assignmentRepository.deleteById(assignmentId)
         assigneeRepository.deleteByAssignmentId(assignmentId)
     }

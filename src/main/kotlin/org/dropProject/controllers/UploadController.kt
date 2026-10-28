@@ -92,7 +92,8 @@ class UploadController(
         val rebuildStatusRepository: RebuildStatusRepository,
         val defenseService: DefenseService,
         val submissionWindowService: SubmissionWindowService,
-        val clock: Clock
+        val clock: Clock,
+        val referenceSolutionService: ReferenceSolutionService
         ) {
 
     @Value("\${spring.web.locale}")
@@ -236,6 +237,18 @@ class UploadController(
             }
         }
 
+        // on a continuation, a student who hasn't started yet is offered the code to start from. Teachers are always
+        // offered the reference solution, so that they can check what the students without a submission get
+        if (assignment.isContinuation()) {
+            if (isAuthorizedTeacher) {
+                model["continuationStart"] = SubmissionService.ContinuationStart(baseSubmission = null)
+            } else {
+                submissionService.continuationStart(assignment, principal.realName())?.let {
+                    model["continuationStart"] = it
+                }
+            }
+        }
+
         // teachers are not restricted by the submission windows, since they test the assignment outside of the
         // classes, but they are told what the students are seeing
         val submissionWindowStatus = submissionWindowService.status(assignment)
@@ -288,6 +301,46 @@ class UploadController(
     }
 
     /**
+     * Downloads the reference solution of the assignment that the continuation identified by [assignmentId]
+     * continues, i.e. the code that a student who has no submission of their own to that assignment starts from.
+     *
+     * It is only served to the students who have nothing else to start from and haven't started yet, since it is the
+     * solution of the previous part, and to the teachers of the continuation.
+     */
+    @RequestMapping(value = ["/upload/{assignmentId}/reference-solution"], method = [(RequestMethod.GET)],
+        produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
+    @ResponseBody
+    fun downloadReferenceSolution(@PathVariable("assignmentId") assignmentId: String, principal: Principal,
+                                  request: HttpServletRequest, response: HttpServletResponse): FileSystemResource {
+
+        val assignment = assignmentRepository.findById(assignmentId)
+            .orElseThrow { throw ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found") }
+
+        val isAuthorizedTeacher = request.isUserInRole("TEACHER") &&
+                assignmentService.isAuthorizedTeacher(assignment, principal.realName(), request)
+        checkAssignmentAccess(assignmentId, principal, isAuthorizedTeacher, request)
+
+        if (!assignment.isContinuation()) {
+            throw ResourceNotFoundException()
+        }
+
+        if (!isAuthorizedTeacher) {
+            val start = submissionService.continuationStart(assignment, principal.realName())
+            if (start == null || start.baseSubmission != null) {
+                throw AccessDeniedException("${principal.realName()} has their own code to continue on ${assignmentId}")
+            }
+        }
+
+        val baseAssignment = assignmentRepository.findById(assignment.baseAssignmentId!!).orElse(null)
+            ?: throw ResourceNotFoundException()
+        val zipFile = referenceSolutionService.referenceSolutionZip(assignment, baseAssignment)
+
+        LOG.info("[${principal.realName()}] downloaded the reference solution of ${baseAssignment.id}")
+        response.setHeader("Content-Disposition", "attachment; filename=${baseAssignment.id}-reference-solution.zip")
+        return FileSystemResource(zipFile)
+    }
+
+    /**
      * Refuses the request when [principal] may not open the assignment identified by [assignmentId].
      *
      * An assignment that is closed to submissions, or that doesn't accept the address the request comes from, is
@@ -320,7 +373,7 @@ class UploadController(
      * phase is calculated per user.
      */
     private fun defensePhaseFor(assignment: Assignment, principal: Principal, isAuthorizedTeacher: Boolean): Int? {
-        if (assignment.baseAssignmentId == null) {
+        if (!assignment.isDefense()) {
             return null
         }
 

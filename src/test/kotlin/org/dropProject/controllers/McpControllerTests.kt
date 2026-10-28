@@ -27,6 +27,9 @@ import org.junit.jupiter.api.Tag
 import org.dropproject.DropProjectIntegrationTest
 import org.dropproject.config.DropProjectProperties
 import org.dropproject.dao.Assignment
+import org.dropproject.dao.AssignmentACL
+import org.dropproject.dao.BaseAssignmentKind
+import org.dropproject.dao.ProjectGroupRestrictions
 import org.dropproject.dao.Author
 import org.dropproject.dao.ProjectGroup
 import org.dropproject.dao.Submission
@@ -38,12 +41,14 @@ import org.dropproject.repository.AssignmentACLRepository
 import org.dropproject.repository.AssignmentRepository
 import org.dropproject.repository.AuthorRepository
 import org.dropproject.repository.ProjectGroupRepository
+import org.dropproject.repository.ProjectGroupRestrictionsRepository
 import org.dropproject.repository.SubmissionRepository
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.containsString
 import org.hamcrest.Matchers.not
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
@@ -95,6 +100,9 @@ class McpControllerTests: ApiTestSupport {
 
     @Autowired
     lateinit var fakeClock: FakeClock
+
+    @Autowired
+    lateinit var projectGroupRestrictionsRepository: ProjectGroupRestrictionsRepository
 
     private fun getBearerToken(username: String, role: String = "ROLE_TEACHER"): String {
         // Generate personal token for user and use it directly as Bearer token
@@ -399,11 +407,11 @@ class McpControllerTests: ApiTestSupport {
                                 },
                                 "baseAssignmentId": {
                                     "type": "string",
-                                    "description": "Turns this into a defense of the assignment with this id: the students resubmit the code they had submitted there, changed as the defense asks, and every submission is compared with that base submission. The caller must be the owner or an authorized teacher of that assignment. A defense always uses its package and a group size of 1, so packageName, minGroupSize and maxGroupSize are overwritten with those values"
+                                    "description": "Links this assignment to the one with this id, as a defense or as a continuation of it (see baseAssignmentKind). The caller must be the owner or an authorized teacher of that assignment. In a defense, the students resubmit the code they had submitted there, changed as the defense asks, and every submission is compared with that base submission. A defense always uses its package and a group size of 1, so packageName, minGroupSize and maxGroupSize are overwritten with those values"
                                 },
                                 "maxChangedLines": {
                                     "type": "number",
-                                    "description": "Maximum number of lines (under src) that a submission may change relatively to the base submission, only enforced after the defense instructions are released. Only valid together with baseAssignmentId. Without it, the difference is measured and shown to the teacher, but never rejected"
+                                    "description": "Maximum number of lines (under src) that a submission may change relatively to the base submission, only enforced after the defense instructions are released. Only valid for a defense. Without it, the difference is measured and shown to the teacher, but never rejected"
                                 },
                                 "assignees": {
                                     "type": "string",
@@ -536,11 +544,11 @@ class McpControllerTests: ApiTestSupport {
                                 },
                                 "baseAssignmentId": {
                                     "type": "string",
-                                    "description": "Turns this into a defense of the assignment with this id: the students resubmit the code they had submitted there, changed as the defense asks, and every submission is compared with that base submission. The caller must be the owner or an authorized teacher of that assignment. A defense always uses its package and a group size of 1, so packageName, minGroupSize and maxGroupSize are overwritten with those values. Pass an empty string to stop this assignment from being a defense"
+                                    "description": "Links this assignment to the one with this id, as a defense or as a continuation of it (see baseAssignmentKind). The caller must be the owner or an authorized teacher of that assignment. In a defense, the students resubmit the code they had submitted there, changed as the defense asks, and every submission is compared with that base submission. A defense always uses its package and a group size of 1, so packageName, minGroupSize and maxGroupSize are overwritten with those values. Pass an empty string to unlink it"
                                 },
                                 "maxChangedLines": {
                                     "type": "number",
-                                    "description": "Maximum number of lines (under src) that a submission may change relatively to the base submission, only enforced after the defense instructions are released. Only valid together with baseAssignmentId. Pass an empty value to measure the difference without ever rejecting a submission"
+                                    "description": "Maximum number of lines (under src) that a submission may change relatively to the base submission, only enforced after the defense instructions are released. Only valid for a defense. Pass an empty value to measure the difference without ever rejecting a submission"
                                 },
                                 "assignees": {
                                     "type": "string",
@@ -1659,6 +1667,108 @@ class McpControllerTests: ApiTestSupport {
 
         // the defense itself only starts when the teacher releases the instructions
         assertFalse(assignment.defenseInstructionsReleased)
+
+        // without a kind, a link is a defense, which is what every link was before there were continuations
+        assertEquals(BaseAssignmentKind.DEFENSE, assignment.baseAssignmentKind)
+    }
+
+    @Test
+    fun `mcp create a continuation assignment`() {
+        // the previous part, whose teachers, group size and exceptions the continuation inherits
+        val base = assignmentRepository.findById("testMcpAssignment").get()
+        base.projectGroupRestrictions = projectGroupRestrictionsRepository.save(
+            ProjectGroupRestrictions(minGroupSize = 2, maxGroupSize = 2, exceptions = "student9"))
+        assignmentRepository.save(base)
+        assignmentACLRepository.save(AssignmentACL(assignmentId = "testMcpAssignment", userId = "teacher2"))
+
+        val authHeader = getBearerToken("teacher1")
+
+        val response = callTool("create_assignment", """
+            {
+                "assignmentId": "mcpContinuationAssignment",
+                "assignmentName": "Continuation created through MCP",
+                "gitRepositoryUrl": "git@github.com:drop-project-edu/sampleJavaAssignment.git",
+                "baseAssignmentId": "testMcpAssignment",
+                "baseAssignmentKind": "CONTINUATION",
+                "packageName": "org.dropproject.ignored"
+            }
+        """.trimIndent(), authHeader)
+
+        assertThat(response, containsString("Continuation of 'testMcpAssignment'"))
+        assertThat(response, not(containsString("Defense of")))
+
+        val assignment = assignmentRepository.findById("mcpContinuationAssignment").get()
+        assertEquals(BaseAssignmentKind.CONTINUATION, assignment.baseAssignmentKind)
+        assertTrue(assignment.isContinuation())
+        assertFalse(assignment.isDefense())
+        assertEquals("org.dropProject.samples.testAssignment", assignment.packageName)
+        assertEquals(2, assignment.projectGroupRestrictions!!.minGroupSize)
+        assertEquals(2, assignment.projectGroupRestrictions!!.maxGroupSize)
+        assertEquals("student9", assignment.projectGroupRestrictions!!.exceptions)
+        assertEquals(listOf("teacher2"),
+            assignmentACLRepository.findByAssignmentId("mcpContinuationAssignment").map { it.userId })
+
+        val info = callTool("get_assignment_info", """{"assignmentId": "mcpContinuationAssignment"}""", authHeader)
+        assertThat(info, containsString("**baseAssignmentKind:** CONTINUATION"))
+    }
+
+    @Test
+    fun `a continuation keeps the group size and teachers that the call passes`() {
+        val base = assignmentRepository.findById("testMcpAssignment").get()
+        base.projectGroupRestrictions = projectGroupRestrictionsRepository.save(
+            ProjectGroupRestrictions(minGroupSize = 2, maxGroupSize = 2))
+        assignmentRepository.save(base)
+        assignmentACLRepository.save(AssignmentACL(assignmentId = "testMcpAssignment", userId = "teacher2"))
+
+        val authHeader = getBearerToken("teacher1")
+
+        callTool("create_assignment", """
+            {
+                "assignmentId": "mcpContinuationAssignment",
+                "assignmentName": "Continuation created through MCP",
+                "gitRepositoryUrl": "git@github.com:drop-project-edu/sampleJavaAssignment.git",
+                "baseAssignmentId": "testMcpAssignment",
+                "baseAssignmentKind": "CONTINUATION",
+                "minGroupSize": 1,
+                "maxGroupSize": 3,
+                "acl": "teacher3"
+            }
+        """.trimIndent(), authHeader)
+
+        val assignment = assignmentRepository.findById("mcpContinuationAssignment").get()
+        assertEquals(1, assignment.projectGroupRestrictions!!.minGroupSize)
+        assertEquals(3, assignment.projectGroupRestrictions!!.maxGroupSize)
+        assertEquals(listOf("teacher3"),
+            assignmentACLRepository.findByAssignmentId("mcpContinuationAssignment").map { it.userId })
+    }
+
+    @Test
+    fun `try to create a continuation with a line budget or without the assignment it continues`() {
+        val authHeader = getBearerToken("teacher1")
+
+        val withBudget = callTool("create_assignment", """
+            {
+                "assignmentId": "mcpContinuationAssignment",
+                "assignmentName": "Continuation created through MCP",
+                "gitRepositoryUrl": "git@github.com:drop-project-edu/sampleJavaAssignment.git",
+                "baseAssignmentId": "testMcpAssignment",
+                "baseAssignmentKind": "CONTINUATION",
+                "maxChangedLines": 60
+            }
+        """.trimIndent(), authHeader)
+        assertThat(withBudget, containsString("maxChangedLines is only valid for a defense"))
+
+        val withoutBase = callTool("create_assignment", """
+            {
+                "assignmentId": "mcpContinuationAssignment",
+                "assignmentName": "Continuation created through MCP",
+                "gitRepositoryUrl": "git@github.com:drop-project-edu/sampleJavaAssignment.git",
+                "baseAssignmentKind": "CONTINUATION"
+            }
+        """.trimIndent(), authHeader)
+        assertThat(withoutBase, containsString("Choose the assignment that this one is a continuation of"))
+
+        assertFalse(assignmentRepository.findById("mcpContinuationAssignment").isPresent)
     }
 
     @Test
