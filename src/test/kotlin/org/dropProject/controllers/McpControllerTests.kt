@@ -20,6 +20,7 @@
 package org.dropproject.controllers
 
 import org.dropproject.AssignmentFixtures
+import org.dropproject.FakeClock
 import org.dropproject.SubmissionFixtures
 import org.dropproject.TestUsers.STUDENT_1
 import org.junit.jupiter.api.Tag
@@ -54,6 +55,7 @@ import org.springframework.security.core.userdetails.User
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
+import java.time.LocalDateTime
 import java.io.File
 import java.util.Date
 
@@ -90,6 +92,9 @@ class McpControllerTests: ApiTestSupport {
 
     @Autowired
     lateinit var dropProjectProperties: DropProjectProperties
+
+    @Autowired
+    lateinit var fakeClock: FakeClock
 
     private fun getBearerToken(username: String, role: String = "ROLE_TEACHER"): String {
         // Generate personal token for user and use it directly as Bearer token
@@ -706,6 +711,7 @@ class McpControllerTests: ApiTestSupport {
                 "**assignees:** student1,student2",
                 "**acl:** teacher2",
                 "**tags:** project",
+                "**submissionWindows:** not set",
                 "**cooloffPeriod:** not set"  // settings the assignment doesn't use are reported as unset, not omitted
             ).forEach { assertThat(response, containsString(it)) }
 
@@ -1075,7 +1081,8 @@ class McpControllerTests: ApiTestSupport {
                 "language": "KOTLIN",
                 "tags": "mcp,sample",
                 "acl": "teacher2",
-                "assignees": "student1,student2"
+                "assignees": "student1,student2",
+                "submissionWindows": "2026-11-03 14:00-16:00, 2026-11-03 9:00 - 11:00"
             }
         """.trimIndent(), authHeader)
 
@@ -1090,6 +1097,7 @@ class McpControllerTests: ApiTestSupport {
         assertEquals("Assignment created through MCP", assignment.name)
         assertEquals("teacher1", assignment.ownerUserId)
         assertEquals(Language.KOTLIN, assignment.language)
+        assertEquals("2026-11-03 09:00-11:00, 2026-11-03 14:00-16:00", assignment.submissionWindowsText)
         assertNotNull(assignment.gitRepositoryPubKey)
         assertNotNull(assignment.gitRepositoryPrivKey)
 
@@ -1353,6 +1361,56 @@ class McpControllerTests: ApiTestSupport {
 
         callTool("edit_assignment", """{ "assignmentId": "testMcpAssignment", "allowedIps": "" }""", authHeader)
         assertNull(assignmentRepository.findById("testMcpAssignment").get().allowedIps)
+    }
+
+    @Test
+    fun `mcp edit assignment sets and validates the submission windows`() {
+        val authHeader = getBearerToken("teacher1")
+
+        val invalid = callTool("edit_assignment", """
+            {
+                "assignmentId": "testMcpAssignment",
+                "submissionWindows": "2026-11-03 09:00-11:00, 2026-11-03 16:00-14:00"
+            }
+        """.trimIndent(), authHeader)
+        assertThat(invalid, containsString("\"isError\":true"))
+        assertThat(invalid, containsString("'2026-11-03 16:00-14:00' closes before it opens"))
+        assertNull(assignmentRepository.findById("testMcpAssignment").get().submissionWindowsText)
+
+        // stored normalized
+        val response = callTool("edit_assignment", """
+            {
+                "assignmentId": "testMcpAssignment",
+                "submissionWindows": "2026-11-03 14:00 - 16:00, 2026-11-03 9:00-11:00"
+            }
+        """.trimIndent(), authHeader)
+        assertThat(response, containsString(
+            "submissionWindows: not set -> 2026-11-03 09:00-11:00, 2026-11-03 14:00-16:00"))
+        assertEquals("2026-11-03 09:00-11:00, 2026-11-03 14:00-16:00",
+            assignmentRepository.findById("testMcpAssignment").get().submissionWindowsText)
+
+        callTool("edit_assignment", """{ "assignmentId": "testMcpAssignment", "submissionWindows": "" }""", authHeader)
+        assertNull(assignmentRepository.findById("testMcpAssignment").get().submissionWindowsText)
+    }
+
+    @Test
+    fun `mcp get assignment info tells whether the submission windows are open right now`() {
+        val authHeader = getBearerToken("teacher1")
+
+        val withoutWindows = callTool("get_assignment_info", """{ "assignmentId": "testMcpAssignment" }""", authHeader)
+        assertThat(withoutWindows, not(containsString("Submission windows status")))
+
+        callTool("edit_assignment", """
+            { "assignmentId": "testMcpAssignment", "submissionWindows": "2026-11-03 09:00-11:00" }
+        """.trimIndent(), authHeader)
+
+        fakeClock.setNow(LocalDateTime.parse("2026-11-03T10:00:00"))
+        assertThat(callTool("get_assignment_info", """{ "assignmentId": "testMcpAssignment" }""", authHeader),
+            containsString("**Submission windows status:** Open now, until 11:00"))
+
+        fakeClock.setNow(LocalDateTime.parse("2026-11-03T12:00:00"))
+        assertThat(callTool("get_assignment_info", """{ "assignmentId": "testMcpAssignment" }""", authHeader),
+            containsString("**Submission windows status:** Closed. There are no more windows"))
     }
 
     @Test

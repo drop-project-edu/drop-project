@@ -22,6 +22,7 @@ package org.dropproject.controllers
 import org.dropproject.DropProjectIntegrationTest
 import org.dropproject.FakeBuild
 import org.dropproject.FakeBuildRunner
+import org.dropproject.FakeClock
 import org.dropproject.FakeGitClient
 import org.dropproject.GitFixtures
 import org.dropproject.TestUsers.STUDENT_1
@@ -51,6 +52,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.view
 import java.io.File
 import java.nio.file.Files
+import java.time.LocalDateTime
 
 /**
  * Experiment: the git submission flow running completely offline and without real Maven builds,
@@ -79,6 +81,9 @@ class GitSubmissionFastTests {
 
     @Autowired
     lateinit var fakeBuildRunner: FakeBuildRunner
+
+    @Autowired
+    lateinit var fakeClock: FakeClock
 
     val defaultAssignmentId = "sampleJavaProject"
     val studentRepositoryUrl = "git@github.com:drop-project-edu/sampleJavaSubmission.git"
@@ -150,6 +155,25 @@ class GitSubmissionFastTests {
         if (submissionsFolder.exists()) {
             submissionsFolder.deleteRecursively()
         }
+    }
+
+    @Test
+    fun `students can only generate a report during the submission windows`() {
+
+        val assignment = assignmentRepository.findById(defaultAssignmentId).get()
+        assignment.submissionWindowsText = "2026-11-03 09:00-11:00"
+        assignmentRepository.save(assignment)
+
+        fakeClock.setNow(LocalDateTime.parse("2026-11-03T10:00:00"))
+        gitFixtures.connectToGitRepositoryAndBuildReport(defaultAssignmentId, studentRepositoryUrl, "student1")
+
+        fakeClock.setNow(LocalDateTime.parse("2026-11-03T11:30:00"))
+        this.mvc.perform(get("/upload/${defaultAssignmentId}").with(user(STUDENT_1)))
+            .andExpect(status().isOk())
+            .andExpect(model().attributeExists("submissionWindowClosedMessage"))
+
+        this.mvc.perform(post("/git-submission/generate-report/1").with(user(STUDENT_1)))
+            .andExpect(status().isConflict())
     }
 
     @Test

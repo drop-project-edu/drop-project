@@ -282,6 +282,20 @@
         </div>
 
         <div class="form-group">
+            <label for="submissionWindows" class="col-sm-3 control-label">Submission windows (optional)</label>
+            <div class="col-sm-9" th:classappend="${#fields.hasErrors('submissionWindows')} ? 'has-error' : ''">
+                <textarea th:field="*{submissionWindows}" class="form-control" id="submissionWindows" rows="3"
+                          placeholder="e.g. 2026-11-03 09:00-11:00, 2026-11-03 14:00-16:00"></textarea>
+                <p class="help-block" th:if="${#fields.hasErrors('submissionWindows')}" th:errors="*{submissionWindows}">Error</p>
+                <p class="help-block" th:if="${!#fields.hasErrors('submissionWindows')}">Students can only submit during
+                    these windows, each one a day with an opening and a closing time (separated by commas or line
+                    breaks). Submissions are still accepted for 10 minutes after a window closes, but students are
+                    only told the time it closes. Useful when classes with different schedules solve the assignment
+                    during class. Leave empty to allow submissions at any time</p>
+            </div>
+        </div>
+
+        <div class="form-group">
             <label for="minGroupSize" class="col-sm-3 control-label">Group size (optional)</label>
             <div class="col-sm-9" th:classappend="${#fields.hasErrors('minGroupSize')} ? 'has-error' : ''">
                 <div class="form-inline">

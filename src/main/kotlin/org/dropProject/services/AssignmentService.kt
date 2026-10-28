@@ -99,7 +99,8 @@ class AssignmentService(
     val assignmentTeacherFiles: AssignmentTeacherFiles,
     val dropProjectProperties: DropProjectProperties,
     val cooloffOverrideService: CooloffOverrideService,
-    val plagiarismService: PlagiarismService
+    val plagiarismService: PlagiarismService,
+    val submissionWindowService: SubmissionWindowService
 ) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
@@ -352,6 +353,7 @@ class AssignmentService(
         existingAssignment.mandatoryTestsSuffix = assignmentForm.mandatoryTestsSuffix
         existingAssignment.cooloffPeriod = assignmentForm.cooloffPeriod
         existingAssignment.allowedIps = normalizedAllowedIps(assignmentForm)
+        existingAssignment.replaceSubmissionWindows(parsedSubmissionWindows(assignmentForm))
         existingAssignment.maxMemoryMb = assignmentForm.maxMemoryMb
         existingAssignment.showLeaderBoard = assignmentForm.leaderboardType != null
         existingAssignment.hiddenTestsVisibility = assignmentForm.hiddenTestsVisibility
@@ -484,6 +486,14 @@ class AssignmentService(
             }
         }
 
+        if (!assignmentForm.submissionWindows.isNullOrBlank()) {
+            try {
+                SubmissionWindows.parse(assignmentForm.submissionWindows!!)
+            } catch (e: IllegalArgumentException) {
+                errors.add(AssignmentFormError("submissionWindows", "submissionWindows.invalid", "Error: ${e.message}"))
+            }
+        }
+
         if (assignmentForm.visibility == AssignmentVisibility.PRIVATE && assignmentForm.assignees.isNullOrEmpty()) {
             errors.add(AssignmentFormError("assignees", "assignees.mustBeFilled",
                 "Error: For PRIVATE assignments, you have to fill in the authorized submitters"))
@@ -519,6 +529,10 @@ class AssignmentService(
     // the form was already validated, so the list parses
     private fun normalizedAllowedIps(assignmentForm: AssignmentForm): String? =
         assignmentForm.allowedIps?.takeIf { it.isNotBlank() }?.let { AllowedIps.parse(it).toString() }
+
+    // the form was already validated, so the windows parse
+    private fun parsedSubmissionWindows(assignmentForm: AssignmentForm): SubmissionWindows? =
+        assignmentForm.submissionWindows?.takeIf { it.isNotBlank() }?.let { SubmissionWindows.parse(it) }
 
     /**
      * Validates the rules that only apply to the creation of a new [Assignment], returning the first problem that
@@ -590,6 +604,8 @@ class AssignmentService(
             baseAssignmentId = assignmentForm.baseAssignmentId?.takeIf { it.isNotBlank() },
             maxChangedLines = assignmentForm.maxChangedLines,
             visibility = assignmentForm.visibility)
+
+        newAssignment.replaceSubmissionWindows(parsedSubmissionWindows(assignmentForm))
 
         // we only need to check minGroupSize since maxGroupSize and exceptions depend on this field
         if (assignmentForm.minGroupSize != null) {
@@ -1504,7 +1520,8 @@ class AssignmentService(
             lastCommitInfo = lastCommitInfo,
             sshKeyFingerprint = sshKeyFingerprint,
             isAdmin = isAdmin,
-            cooloffOverride = cooloffOverride
+            cooloffOverride = cooloffOverride,
+            submissionWindowStatus = submissionWindowService.status(assignment)
         )
     }
 }

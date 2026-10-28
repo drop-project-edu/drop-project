@@ -19,8 +19,6 @@
  */
 package org.dropproject.controllers
 
-import org.springframework.security.access.AccessDeniedException
-
 /**
  * The exceptions raised by the "defense" assignments, that is, the assignments whose submissions are a bounded set
  * of changes on top of the code that the group had already submitted to another assignment.
@@ -44,27 +42,3 @@ class MaxChangedLinesExceededException(message: String?, cause: Throwable? = nul
  * prove that they can build and submit their own code, so anything else is refused.
  */
 class DivergentCheckpointException(message: String?, cause: Throwable? = null) : RuntimeException(message, cause)
-
-/**
- * Thrown when a user who is one of an assignment's intended users tries to open it while it is not active.
- *
- * It is an [AccessDeniedException] so that it is reported exactly like any other denial, through the security chain
- * of the request (see [org.dropproject.controllers.GlobalExceptionHandler]). The difference is that the access denied
- * page recognizes it and explains that the assignment is closed, instead of suggesting that the user asks the teacher
- * for permission that they already have.
- *
- * @property assignmentId is a String identifying the Assignment that is not active
- */
-class AssignmentNotActiveException(val assignmentId: String) :
-    AccessDeniedException("Assignment ${assignmentId} is not active")
-
-/**
- * Thrown when a user that may access an Assignment is connecting from an address that the assignment doesn't allow
- * (see [org.dropproject.dao.Assignment.allowedIps]). Like [AssignmentNotActiveException], it is reported as any other
- * denial, but the access denied page recognizes it, so that it can tell the student what the problem is.
- *
- * @property assignmentId is a String identifying the Assignment
- * @property clientIp is the address the user is connecting from
- */
-class AssignmentNetworkNotAllowedException(val assignmentId: String, val clientIp: String?) :
-    AccessDeniedException("Assignment ${assignmentId} can't be accessed from ${clientIp}")

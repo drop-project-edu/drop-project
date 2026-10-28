@@ -186,6 +186,16 @@
                     <label class="col-sm-3 control-label">Allowed IPs:</label>
                     <div class="col-sm-9 read-row" th:text="${assignment.allowedIps}"></div>
                 </div>
+                <div class="form-group" th:if="${!assignment.submissionWindows.isEmpty()}">
+                    <label class="col-sm-3 control-label">Submission windows:</label>
+                    <div class="col-sm-9 read-row">
+                        <span th:text="${assignment.submissionWindowsText}"></span>
+                        <br/>
+                        <span th:if="${submissionWindowStatus != null}" class="label"
+                              th:classappend="${submissionWindowStatus.open} ? 'label-success' : 'label-warning'"
+                              th:text="${submissionWindowStatus.description}">Open now, until 11:00</span>
+                    </div>
+                </div>
                 <div class="form-group" th:if="${assignment.cooloffPeriod}">
                     <label class="col-sm-3 control-label">Cool-off period:</label>
                     <div class="col-sm-9 read-row">

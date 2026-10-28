@@ -19,6 +19,7 @@
  */
 package org.dropproject.controllers
 
+import org.dropproject.dao.Assignment
 import org.apache.tomcat.util.http.fileupload.impl.FileSizeLimitExceededException
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -66,6 +67,21 @@ class GlobalExceptionHandler {
     fun responseStatusException(exception: ResponseStatusException): ResponseEntity<String> {
         LOG.warn("ResponseStatusException: ${exception.reason}")
         return ResponseEntity(exception.reason ?: exception.message, exception.statusCode)
+    }
+
+    /**
+     * A submission outside of the assignment's submission windows is answered with a json body carrying the message,
+     * which is the format that both the upload page and the API read their errors from. The status is not 403, since
+     * the upload page takes a 403 as an expired session and sends the student to the login page.
+     */
+    @ExceptionHandler(Assignment.SubmissionWindowClosedException::class)
+    fun submissionWindowClosedException(
+        exception: Assignment.SubmissionWindowClosedException
+    ): ResponseEntity<Map<String, String?>> {
+        LOG.info("Submission window closed: ${exception.message}")
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(mapOf("error" to exception.message))
     }
 
     /**

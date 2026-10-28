@@ -19,6 +19,7 @@
  */
 package org.dropproject.controllers
 
+import org.dropproject.dao.Assignment
 import org.springframework.boot.web.error.ErrorAttributeOptions
 import org.springframework.boot.web.servlet.error.ErrorAttributes
 import org.springframework.boot.web.servlet.error.ErrorController
@@ -51,10 +52,10 @@ class AppErrorController(var errorAttributes: ErrorAttributes, val environment: 
         // the handler that forwarded here leaves the denial on the request, which is the only way to know that this
         // user was refused just because the assignment is closed, and not because it isn't for them
         val denial = request.getAttribute(WebAttributes.ACCESS_DENIED_403)
-        if (denial is AssignmentNotActiveException) {
+        if (denial is Assignment.NotActiveException) {
             model["notActiveAssignmentId"] = denial.assignmentId
         }
-        if (denial is AssignmentNetworkNotAllowedException) {
+        if (denial is Assignment.NetworkNotAllowedException) {
             model["networkNotAllowedAssignmentId"] = denial.assignmentId
             model["clientIp"] = denial.clientIp
         }

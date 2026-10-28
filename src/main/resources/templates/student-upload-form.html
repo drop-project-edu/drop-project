@@ -48,6 +48,8 @@
 
     <small th:if="${assignment?.dueDate != null}">Deadline: <span
             th:text="${assignment.dueDateFormatted()}"></span></small>
+    <small th:if="${submissionWindowCloses != null}"
+           th:text="#{student.upload.form.window-closes(${submissionWindowCloses})}">Submissions close at 11:00</small>
 
     <div th:if="${error}">
         <div class="alert alert-danger" th:text="${error}"/>
@@ -55,7 +57,8 @@
 
     <div th:if="${uploadForm}">
         <form th:object="${uploadForm}" enctype="multipart/form-data" method="post"
-              class="dropzone" id="dpDropzone" th:action="@{/upload}" th:if="${coolOffEnd == null}">
+              class="dropzone" id="dpDropzone" th:action="@{/upload}"
+              th:if="${coolOffEnd == null and submissionWindowClosedMessage == null}">
             <input type="hidden" th:field="*{assignmentId}"/>
         </form>
         <div class="panel" th:if="${coolOffEnd != null}">
@@ -64,8 +67,11 @@
             <span class="lead" th:text="#{student.upload.form.cool-off1}">Relaxa. Estás em período cool-off...</span>
             <span th:text="#{student.upload.form.cool-off2(${coolOffEnd})}"></span>
         </div>
+        <div class="alert alert-warning" th:if="${submissionWindowClosedMessage != null}"
+             th:text="${submissionWindowClosedMessage}">Submissions are closed now.</div>
 
-        <p class="text-right small" style="padding-top: 4px" th:if="${coolOffEnd == null}">
+        <p class="text-right small" style="padding-top: 4px"
+           th:if="${coolOffEnd == null and submissionWindowClosedMessage == null}">
             <span th:text="#{student.upload.form.intellij-plugin}">Também pode submeter diretamente a partir do IntelliJ</span> <strong> <a href="https://www.youtube.com/watch?v=fkqXJ04pUjs&t=4s">[+info]</a></strong>
         </p>
 
@@ -75,6 +81,14 @@
             <div class="panel-body">
                 <img width="16" th:src="@{/img/info.png}"/> Cool-off turned on for students. Teachers are not affected
                 by this.
+            </div>
+        </div>
+
+        <div class="panel panel-default mb-3" th:if="${submissionWindowStatus != null}">
+            <div class="panel-body">
+                <img width="16" th:src="@{/img/info.png}"/> Students can only submit during the submission windows:
+                <strong th:text="${submissionWindowStatus.description}">Open now, until 11:00</strong>.
+                Teachers are not affected by this.
             </div>
         </div>
 

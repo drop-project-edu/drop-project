@@ -76,6 +76,7 @@ object AssignmentTools {
         setting("leaderboardType", assignment.leaderboardType)
         setting("cooloffPeriod", assignment.cooloffPeriod)
         setting("allowedIps", assignment.allowedIps)
+        setting("submissionWindows", assignment.submissionWindowsText)
         setting("maxMemoryMb", assignment.maxMemoryMb)
         setting("minGroupSize", assignment.projectGroupRestrictions?.minGroupSize)
         setting("maxGroupSize", assignment.projectGroupRestrictions?.maxGroupSize)

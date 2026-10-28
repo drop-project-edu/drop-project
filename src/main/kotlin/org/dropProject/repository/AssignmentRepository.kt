@@ -21,6 +21,7 @@ package org.dropproject.repository
 
 import org.dropproject.dao.*
 import org.springframework.data.jpa.repository.EntityGraph
+import org.springframework.data.jpa.repository.EntityGraph.EntityGraphType
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
@@ -32,33 +33,37 @@ import java.util.*
 /**
  * Provides functions to query [Assignment]s that have been persisted in the database.
  * It also loads the tags of the assignments (eager loading)
+ *
+ * The entity graphs are LOAD graphs, so that the attributes that they don't list are loaded as they are mapped (e.g.
+ * the eager [Assignment.submissionWindows], with a separate select), instead of being made lazy, which is what a
+ * FETCH graph (the default) does to them.
  */
 interface AssignmentRepository : JpaRepository<Assignment, String> {
 
-    @EntityGraph(attributePaths = ["tags", "assignmentTestMethods"])
+    @EntityGraph(attributePaths = ["tags", "assignmentTestMethods"], type = EntityGraphType.LOAD)
     override fun findById(id: String): Optional<Assignment>
 
-    @EntityGraph(attributePaths = ["tags", "assignmentTestMethods"])
+    @EntityGraph(attributePaths = ["tags", "assignmentTestMethods"], type = EntityGraphType.LOAD)
     override fun findAllById(ids: Iterable<String>): MutableList<Assignment>
 
-    @EntityGraph(attributePaths = ["tags", "assignmentTestMethods"])
+    @EntityGraph(attributePaths = ["tags", "assignmentTestMethods"], type = EntityGraphType.LOAD)
     fun findAllByOwnerUserId(ownerUserId: String): List<Assignment>
 
-    @EntityGraph(attributePaths = ["tags", "assignmentTestMethods"])
+    @EntityGraph(attributePaths = ["tags", "assignmentTestMethods"], type = EntityGraphType.LOAD)
     fun findByGitRepositoryFolder(gitRepositoryFolder: String): Assignment?
 
-    @EntityGraph(attributePaths = ["tags", "assignmentTestMethods"])
+    @EntityGraph(attributePaths = ["tags", "assignmentTestMethods"], type = EntityGraphType.LOAD)
     fun findAllByVisibilityAndActiveTrue(visibility: AssignmentVisibility): List<Assignment>
 
-    @EntityGraph(attributePaths = ["tags", "assignmentTestMethods"])
+    @EntityGraph(attributePaths = ["tags", "assignmentTestMethods"], type = EntityGraphType.LOAD)
     fun findAllByVisibility(visibility: AssignmentVisibility): List<Assignment>
 
-    @EntityGraph(attributePaths = ["tags", "assignmentTestMethods"])
+    @EntityGraph(attributePaths = ["tags", "assignmentTestMethods"], type = EntityGraphType.LOAD)
     fun findAllByNumSubmissions(numSubmissions: Int): List<Assignment>
 
     fun countByTags_Id(tagId: Long): Long
 
-    @EntityGraph(attributePaths = ["tags", "assignmentTestMethods"])
+    @EntityGraph(attributePaths = ["tags", "assignmentTestMethods"], type = EntityGraphType.LOAD)
     fun findAllByArchivedFalseOrderById(): List<Assignment>
 
     /**

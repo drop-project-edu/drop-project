@@ -89,7 +89,8 @@ class UploadController(
         val dropProjectProperties: DropProjectProperties,
         val cooloffOverrideService: CooloffOverrideService,
         val rebuildStatusRepository: RebuildStatusRepository,
-        val defenseService: DefenseService
+        val defenseService: DefenseService,
+        val submissionWindowService: SubmissionWindowService
         ) {
 
     @Value("\${spring.web.locale}")
@@ -233,6 +234,21 @@ class UploadController(
             }
         }
 
+        // teachers are not restricted by the submission windows, since they test the assignment outside of the
+        // classes, but they are told what the students are seeing
+        val submissionWindowStatus = submissionWindowService.status(assignment)
+        if (isAuthorizedTeacher) {
+            model["submissionWindowStatus"] = submissionWindowStatus
+        } else if (submissionWindowStatus != null) {
+            val windowClosedMessage = submissionWindowService.closedMessage(assignment)
+            if (windowClosedMessage != null) {
+                model["submissionWindowClosedMessage"] = windowClosedMessage
+            } else {
+                model["submissionWindowCloses"] =
+                    submissionWindowStatus.current!!.closes.format(DateTimeFormatter.ofPattern("HH:mm"))
+            }
+        }
+
         if (assignment.submissionMethod == SubmissionMethod.UPLOAD) {
 
             val groups = projectGroupRepository.getGroupsForAuthor(principal.realName())
@@ -276,9 +292,9 @@ class UploadController(
      * refused with its own exception, so that the access denied page can say so, instead of telling a student to ask
      * for a permission that they already have.
      *
-     * @throws AssignmentNetworkNotAllowedException if the user is one of the assignment's intended users, but is
+     * @throws Assignment.NetworkNotAllowedException if the user is one of the assignment's intended users, but is
      * connecting from an address that it doesn't allow
-     * @throws AssignmentNotActiveException if the user is one of the assignment's intended users, but it is not active
+     * @throws Assignment.NotActiveException if the user is one of the assignment's intended users, but it is not active
      * @throws AccessDeniedException if the assignment is not for this user
      */
     private fun checkAssignmentAccess(assignmentId: String, principal: Principal, isTeacher: Boolean,
@@ -286,9 +302,9 @@ class UploadController(
         when (authorizationService.checkAssignmentAccess(assignmentId, principal.realName(), isTeacher,
                 request.remoteAddr)) {
             AssignmentAccess.GRANTED -> {}
-            AssignmentAccess.NETWORK_NOT_ALLOWED -> throw AssignmentNetworkNotAllowedException(assignmentId,
+            AssignmentAccess.NETWORK_NOT_ALLOWED -> throw Assignment.NetworkNotAllowedException(assignmentId,
                 request.remoteAddr)
-            AssignmentAccess.NOT_ACTIVE -> throw AssignmentNotActiveException(assignmentId)
+            AssignmentAccess.NOT_ACTIVE -> throw Assignment.NotActiveException(assignmentId)
             AssignmentAccess.DENIED -> throw AccessDeniedException(
                 "User ${principal.realName()} is not authorized to access assignment $assignmentId")
         }
@@ -511,7 +527,7 @@ class UploadController(
                                                  request: HttpServletRequest): String {
 
         // Check if assignment exists first (404 if not)
-        val assignment = assignmentRepository.findById(assignmentId).orElse(null) ?: throw AssignmentNotFoundException(assignmentId)
+        val assignment = assignmentRepository.findById(assignmentId).orElse(null) ?: throw Assignment.NotFoundException(assignmentId)
         
         // Check authorization (403 if unauthorized)
         checkAssignmentAccess(assignmentId, principal, request.isUserInRole("TEACHER"), request)
@@ -750,6 +766,10 @@ class UploadController(
             throw AccessDeniedException("User ${principal.realName()} is not authorized to access git submission $gitSubmissionId")
         }
 
+        if (!isAuthorizedTeacher) {
+            submissionWindowService.check(assignment)
+        }
+
         if (assignment.cooloffPeriod != null && !isAuthorizedTeacher) {
             val lastSubmission = submissionService.getLastSubmission(principal, assignment.id)
             if (lastSubmission != null) {
@@ -860,7 +880,7 @@ class UploadController(
         val submission = submissionRepository.findById(submissionId)
             .orElseThrow { SubmissionNotFoundException(submissionId) }
         val assignment = assignmentRepository.findById(submission.assignmentId)
-            .orElseThrow { AssignmentNotFoundException(submission.assignmentId) }
+            .orElseThrow { Assignment.NotFoundException(submission.assignmentId) }
 
         val acl = assignmentACLRepository.findByAssignmentId(assignment.id)
         if (principal.realName() != assignment.ownerUserId && acl.find { it.userId == principal.realName() } == null) {
@@ -994,15 +1014,6 @@ class UploadController(
     fun handleError(e: ResourceNotFoundException): ResponseEntity<String> {
         LOG.error(e.message)
         return ResponseEntity("Asset not found", HttpStatus.NOT_FOUND);
-    }
-
-    @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Inexistent assignment")
-    class AssignmentNotFoundException(assignmentId: String) : Exception("Inexistent assignment ${assignmentId}") {
-        val LOG = LoggerFactory.getLogger(this.javaClass.name)
-
-        init {
-            LOG.warn("Inexistent assignment ${assignmentId}")
-        }
     }
 
     @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Inexistent submission")

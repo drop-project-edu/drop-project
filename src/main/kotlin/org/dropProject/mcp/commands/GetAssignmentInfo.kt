@@ -50,6 +50,10 @@ data class GetAssignmentInfo(val assignmentId: String) : ToolCommand {
             appendLine("**Owner:** ${assignment.ownerUserId}")
             appendLine("**Active:** ${assignment.active}")
             appendLine("**Archived:** ${assignment.archived}")
+            // an active assignment with submission windows only accepts submissions during them
+            assignmentDetail.submissionWindowStatus?.let {
+                appendLine("**Submission windows status:** ${it.description}")
+            }
 
             // the whole configuration is listed with the names of the create_assignment arguments that set it, so
             // that an assignment can be recreated from this listing (e.g. for a new edition of the same course)

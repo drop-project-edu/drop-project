@@ -85,7 +85,8 @@ class AssignmentController(
     val pendingTasks: PendingTasks,
     val dropProjectProperties: DropProjectProperties,
     val sourceDiffService: SourceDiffService,
-    val cooloffOverrideService: CooloffOverrideService) {
+    val cooloffOverrideService: CooloffOverrideService,
+    val submissionWindowService: SubmissionWindowService) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
@@ -439,6 +440,7 @@ class AssignmentController(
         model["reportMsg"] = assignmentDetail.reportMessage
         model["isAdmin"] = assignmentDetail.isAdmin
         model["cooloffOverride"] = assignmentDetail.cooloffOverride
+        model["submissionWindowStatus"] = assignmentDetail.submissionWindowStatus
 
         // Add git-related information if available
         if (assignmentDetail.lastCommitInfo != null) {
@@ -510,6 +512,7 @@ class AssignmentController(
             mandatoryTestsSuffix = assignment.mandatoryTestsSuffix,
             cooloffPeriod = assignment.cooloffPeriod,
             allowedIps = assignment.allowedIps,
+            submissionWindows = assignment.submissionWindowsText,
             hiddenTestsVisibility = assignment.hiddenTestsVisibility,
             maxMemoryMb = assignment.maxMemoryMb,
             leaderboardType = assignment.leaderboardType,
@@ -1354,6 +1357,14 @@ class AssignmentController(
         }
 
         model["assignments"] = assignments // ordered client-side
+        // the active assignments that students can't submit to right now, because they are outside of all their
+        // submission windows, so that the teacher doesn't take "active" for "open"
+        model["closedWindowStatus"] = assignments
+            .filter { it.active }
+            .mapNotNull { assignment ->
+                submissionWindowService.status(assignment)?.takeIf { !it.open }?.let { assignment.id to it }
+            }
+            .toMap()
         model["archived"] = archived
         model["allTags"] = assignmentTagRepository.findAll()
             .map { it.selected = tagsParam.contains(it.name); it }

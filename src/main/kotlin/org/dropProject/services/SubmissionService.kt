@@ -22,7 +22,6 @@ package org.dropproject.services
 import jakarta.persistence.EntityNotFoundException
 import org.apache.commons.io.FileUtils
 import org.dropproject.Constants
-import org.dropproject.controllers.AssignmentNetworkNotAllowedException
 import org.dropproject.controllers.BaseSubmissionNotFoundException
 import org.dropproject.controllers.DivergentCheckpointException
 import org.dropproject.controllers.InvalidProjectGroupException
@@ -94,7 +93,8 @@ class SubmissionService(
     val pomValidator: PomValidator,
     val rebuildStatusRepository: RebuildStatusRepository,
     val sourceDiffService: SourceDiffService,
-    val defenseService: DefenseService
+    val defenseService: DefenseService,
+    val submissionWindowService: SubmissionWindowService
 ) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
@@ -229,8 +229,10 @@ class SubmissionService(
             assignmentService.checkAssignees(uploadForm.assignmentId!!, principal.realName())
 
             if (!assignment.acceptsClientIp(request.remoteAddr)) {
-                throw AssignmentNetworkNotAllowedException(assignment.id, request.remoteAddr)
+                throw Assignment.NetworkNotAllowedException(assignment.id, request.remoteAddr)
             }
+
+            submissionWindowService.check(assignment)
         }
 
         if (assignment.cooloffPeriod != null && !isAuthorizedTeacher) {

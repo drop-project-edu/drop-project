@@ -70,6 +70,7 @@ data class AssignmentForm(
         var mandatoryTestsSuffix: String? = null,
         var cooloffPeriod: Int? = null,
         var allowedIps: String? = null,
+        var submissionWindows: String? = null,
 
         @field:Min(value=32, message="Error: Max memory must be >= 32")
         var maxMemoryMb: Int? = null,

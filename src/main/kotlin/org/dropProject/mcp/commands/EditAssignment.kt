@@ -239,6 +239,7 @@ data class EditAssignment(val assignmentId: String, val changes: AssignmentArgum
             },
             cooloffPeriod = changes.orCurrent("cooloffPeriod", assignment.cooloffPeriod) { number(it) },
             allowedIps = changes.orCurrent("allowedIps", assignment.allowedIps) { string(it) },
+            submissionWindows = changes.orCurrent("submissionWindows", assignment.submissionWindowsText) { string(it) },
             maxMemoryMb = maxMemoryMb,
             minGroupSize = changes.orCurrent("minGroupSize", restrictions?.minGroupSize) { number(it) },
             maxGroupSize = changes.orCurrent("maxGroupSize", restrictions?.maxGroupSize) { number(it) },
@@ -367,6 +368,15 @@ data class EditAssignment(val assignmentId: String, val changes: AssignmentArgum
                             "description" to "Comma separated IPv4 addresses and wildcard prefixes, e.g. " +
                                     "'10.12.33.*, 172.18.*', that students must be connecting from to open or " +
                                     "submit to the assignment. Pass an empty string to accept any address"
+                        ),
+                        "submissionWindows" to mapOf(
+                            "type" to "string",
+                            "description" to "Windows, separated by commas, in which students may submit to the " +
+                                    "assignment, each one a day with an opening and a closing time in the server's " +
+                                    "time zone, e.g. '2026-11-03 09:00-11:00, 2026-11-03 14:00-16:00'. Submissions " +
+                                    "are still accepted for 10 minutes after a window closes. Useful when " +
+                                    "the assignment is solved during class by classes with different schedules. " +
+                                    "Pass an empty string to let students submit at any time"
                         ),
                         "maxMemoryMb" to mapOf(
                             "type" to "number",

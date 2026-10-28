@@ -70,5 +70,6 @@ class ResetStateExtension : AfterEachCallback {
         // restore the real git and maven behavior for tests that don't use the fakes
         appContext.getBean(FakeGitClient::class.java).clearRemotes()
         appContext.getBean(FakeBuildRunner::class.java).reset()
+        appContext.getBean(FakeClock::class.java).reset()
     }
 }

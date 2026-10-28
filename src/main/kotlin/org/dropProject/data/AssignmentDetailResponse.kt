@@ -19,6 +19,7 @@
  */
 package org.dropproject.data
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonView
 import org.dropproject.dao.*
 import java.time.LocalDateTime
@@ -61,8 +62,16 @@ data class AssignmentDetailResponse(
     val isAdmin: Boolean,
 
     @JsonView(JSONViews.TeacherAPI::class)
-    val cooloffOverride: CooloffOverrideDisplay?
-)
+    val cooloffOverride: CooloffOverrideDisplay?,
+
+    // whether students may submit right now, or null if the assignment has no submission windows
+    @JsonIgnore
+    val submissionWindowStatus: SubmissionWindows.Status? = null
+) {
+    // the json gets the summary of the status, instead of the windows that it was computed from
+    @get:JsonView(JSONViews.TeacherAPI::class)
+    val submissionWindowStatusDescription: String? get() = submissionWindowStatus?.description
+}
 
 /**
  * Data class representing the cooloff override status for an assignment.

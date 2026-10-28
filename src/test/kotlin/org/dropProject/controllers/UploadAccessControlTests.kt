@@ -26,6 +26,7 @@ import org.dropproject.TestUsers.TEACHER_1
 import org.dropproject.TestUsers.TEACHER_2
 import org.junit.jupiter.api.Tag
 import org.dropproject.DropProjectIntegrationTest
+import org.dropproject.FakeClock
 import org.junit.jupiter.api.Assertions.*
 import org.dropproject.dao.*
 import org.dropproject.repository.*
@@ -41,12 +42,17 @@ import org.springframework.security.core.userdetails.User
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
+import org.springframework.beans.factory.annotation.Autowired
 import java.io.File
+import java.time.LocalDateTime
 import java.util.*
 
 @DropProjectIntegrationTest
 @Tag("integration")
 class UploadAccessControlTests : UploadTestBase() {
+
+    @Autowired
+    lateinit var fakeClock: FakeClock
 
     @Test
     fun `get upload page`() {
@@ -109,7 +115,7 @@ class UploadAccessControlTests : UploadTestBase() {
 
         this.mvc.perform(get("/access-denied").with(user(STUDENT_1))
                 .requestAttr(org.springframework.security.web.WebAttributes.ACCESS_DENIED_403,
-                    AssignmentNetworkNotAllowedException("testJavaProj", "87.196.72.232")))
+                    Assignment.NetworkNotAllowedException("testJavaProj", "87.196.72.232")))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Network not allowed")))
                 .andExpect(content().string(containsString("87.196.72.232")))
@@ -129,6 +135,116 @@ class UploadAccessControlTests : UploadTestBase() {
         allowOnly("10.12.33.*, 127.0.0.*")
         submissionFixtures.uploadProject("projectOK", "testJavaProj", STUDENT_1,
             expectedResultMatcher = status().isOk())
+    }
+
+    private fun openOnlyDuring(submissionWindows: String) {
+        val assignment = assignmentRepository.findById("testJavaProj").get()
+        assignment.submissionWindowsText = submissionWindows
+        assignmentRepository.save(assignment)
+    }
+
+    @Test
+    fun `students can only submit to an assignment during its submission windows`() {
+
+        openOnlyDuring("2026-11-03 09:00-11:00, 2026-11-03 14:00-16:00")
+
+        // the window is checked before the file is even looked at
+        fakeClock.setNow(LocalDateTime.parse("2026-11-03T11:10:00"))
+        this.mvc.perform(multipart("/upload")
+                .file(MockMultipartFile("file", "project.zip", "application/zip", ByteArray(0)))
+                .param("assignmentId", "testJavaProj")
+                .with(user(STUDENT_1)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error", containsString("2026-11-03 14:00-16:00")))
+
+        // the teacher that owns it is not restricted
+        submissionFixtures.uploadProject("projectOK", "testJavaProj", TEACHER_1,
+            authors = listOf("teacher1" to "Teacher 1"), expectedResultMatcher = status().isOk())
+
+        fakeClock.setNow(LocalDateTime.parse("2026-11-03T14:30:00"))
+        submissionFixtures.uploadProject("projectOK", "testJavaProj", STUDENT_1,
+            expectedResultMatcher = status().isOk())
+    }
+
+    @Test
+    fun `the assignment detail page shows the submission windows only when there are any`() {
+
+        this.mvc.perform(get("/assignment/info/testJavaProj").with(user(TEACHER_1)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(not(containsString("Submission windows:"))))
+
+        openOnlyDuring("2026-11-03 09:00-11:00, 2026-11-03 14:00-16:00")
+
+        fakeClock.setNow(LocalDateTime.parse("2026-11-03T12:00:00"))
+        this.mvc.perform(get("/assignment/info/testJavaProj").with(user(TEACHER_1)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Submission windows:")))
+                .andExpect(content().string(containsString("2026-11-03 09:00-11:00, 2026-11-03 14:00-16:00")))
+                .andExpect(content().string(containsString("Closed now. Next window: 2026-11-03 14:00-16:00")))
+
+        fakeClock.setNow(LocalDateTime.parse("2026-11-03T14:30:00"))
+        this.mvc.perform(get("/assignment/info/testJavaProj").with(user(TEACHER_1)))
+                .andExpect(content().string(containsString("Open now, until 16:00")))
+    }
+
+    @Test
+    fun `the assignments list warns about the active assignments that are outside of their submission windows`() {
+
+        openOnlyDuring("2026-11-03 09:00-11:00, 2026-11-03 14:00-16:00")
+
+        fakeClock.setNow(LocalDateTime.parse("2026-11-03T14:30:00"))
+        this.mvc.perform(get("/assignment/my").with(user(TEACHER_1)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(not(containsString("students cannot submit right now"))))
+
+        fakeClock.setNow(LocalDateTime.parse("2026-11-03T12:00:00"))
+        this.mvc.perform(get("/assignment/my").with(user(TEACHER_1)))
+                .andExpect(content().string(containsString(
+                    "Active, but students cannot submit right now. Closed now. Next window: 2026-11-03 14:00-16:00")))
+
+        // an inactive assignment doesn't accept submissions anyway, so there is nothing to warn about
+        val assignment = assignmentRepository.findById("testJavaProj").get()
+        assignment.active = false
+        assignmentRepository.save(assignment)
+        this.mvc.perform(get("/assignment/my").with(user(TEACHER_1)))
+                .andExpect(content().string(not(containsString("students cannot submit right now"))))
+    }
+
+    @Test
+    fun `the upload page tells the student when the submission window closes or when the next one opens`() {
+
+        openOnlyDuring("2026-11-03 09:00-11:00, 2026-11-03 14:00-16:00")
+
+        fakeClock.setNow(LocalDateTime.parse("2026-11-03T10:00:00"))
+        this.mvc.perform(get("/upload/testJavaProj").with(user(STUDENT_1)))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("submissionWindowCloses", "11:00"))
+                .andExpect(model().attributeDoesNotExist("submissionWindowClosedMessage"))
+                .andExpect(content().string(containsString("dpDropzone")))
+
+        // during the tolerance, submissions are accepted, but the student is still told the time it closes
+        fakeClock.setNow(LocalDateTime.parse("2026-11-03T11:05:00"))
+        this.mvc.perform(get("/upload/testJavaProj").with(user(STUDENT_1)))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("submissionWindowCloses", "11:00"))
+                .andExpect(content().string(containsString("dpDropzone")))
+
+        fakeClock.setNow(LocalDateTime.parse("2026-11-03T12:00:00"))
+        this.mvc.perform(get("/upload/testJavaProj").with(user(STUDENT_1)))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("submissionWindowClosedMessage", containsString("2026-11-03 14:00-16:00")))
+                .andExpect(content().string(not(containsString("dpDropzone"))))
+
+        // after the last window there is no next one
+        fakeClock.setNow(LocalDateTime.parse("2026-11-03T16:10:00"))
+        this.mvc.perform(get("/upload/testJavaProj").with(user(STUDENT_1)))
+                .andExpect(model().attribute("submissionWindowClosedMessage", not(containsString("2026-11-03"))))
+
+        // teachers can always submit, so they see the dropzone, but they are told what the students are seeing
+        this.mvc.perform(get("/upload/testJavaProj").with(user(TEACHER_1)))
+                .andExpect(model().attributeDoesNotExist("submissionWindowClosedMessage"))
+                .andExpect(content().string(containsString("dpDropzone")))
+                .andExpect(content().string(containsString("Closed. There are no more windows")))
     }
 
     @Test

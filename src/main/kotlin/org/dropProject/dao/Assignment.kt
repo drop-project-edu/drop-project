@@ -26,11 +26,19 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonView
 import org.dropproject.data.AllowedIps
 import org.dropproject.data.JSONViews
+import org.dropproject.data.SubmissionWindows
 import org.dropproject.extensions.format
 import org.dropproject.forms.SubmissionMethod
 import org.dropproject.services.AssignmentInstructions
 import java.util.*
 import jakarta.persistence.*
+import org.hibernate.annotations.BatchSize
+import org.hibernate.annotations.Fetch
+import org.hibernate.annotations.FetchMode
+import org.slf4j.LoggerFactory
+import org.springframework.http.HttpStatus
+import org.springframework.security.access.AccessDeniedException
+import org.springframework.web.bind.annotation.ResponseStatus
 
 val formatter = "dd MMM HH:mm"
 
@@ -97,6 +105,8 @@ enum class AssignmentVisibility {
  * submissions
  * @property allowedIps is an optional String with the only IPv4 addresses and wildcard prefixes (e.g. "10.12.33.*")
  * that students may access the assignment from (see [org.dropproject.data.AllowedIps])
+ * @property submissionWindows is a List of [SubmissionWindow]s with the only periods of time in which students may
+ * submit to the assignment. Without any, students may submit at any time
  * @property maxMemoryMb is an optional Integer, indicating the maximum number of Mb that the student's code can use
  * @property showLeaderBoard is a Boolean, indicating if the leaderboard page should be active for this Assignment
  * @property leaderboardType is a [LeaderboardType]
@@ -197,6 +207,17 @@ data class Assignment(
     @JsonIgnore
     var assignmentTestMethods: MutableList<AssignmentTestMethod> = mutableListOf(),
 
+    // eager, since they are needed whenever a student opens or submits to the assignment, and fetched with separate
+    // selects (in batches, when several assignments are loaded), instead of being joined with the other collections,
+    // which would multiply the rows of the query. They are exported and imported as text, through submissionWindowsText
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "submission_window", joinColumns = [JoinColumn(name = "assignment_id")])
+    @Fetch(FetchMode.SELECT)
+    @BatchSize(size = 100)
+    @OrderBy("opensAt ASC, closesAt ASC")
+    @JsonIgnore
+    var submissionWindows: MutableList<SubmissionWindow> = mutableListOf(),
+
     @JsonView(JSONViews.TeacherAPI::class)
     var numSubmissions: Int = 0,
 
@@ -250,6 +271,31 @@ data class Assignment(
     fun acceptsClientIp(clientIp: String?): Boolean =
         allowedIps.isNullOrBlank() || AllowedIps.parse(allowedIps!!).allows(clientIp)
 
+    /**
+     * The windows in which students may submit to this assignment, or null if they may submit at any time.
+     */
+    fun submissionWindowSchedule(): SubmissionWindows? = SubmissionWindows.of(submissionWindows.map { it.toWindow() })
+
+    /**
+     * Replaces the windows in which students may submit to this assignment. With null, they may submit at any time.
+     */
+    fun replaceSubmissionWindows(windows: SubmissionWindows?) {
+        // the list is changed in place, so that hibernate knows that it has to replace the stored windows
+        submissionWindows.clear()
+        windows?.windows?.forEach { submissionWindows.add(SubmissionWindow(opensAt = it.start, closesAt = it.end)) }
+    }
+
+    /**
+     * The submission windows written as text (see [SubmissionWindows]), e.g.
+     * "2026-11-03 09:00-11:00, 2026-11-03 14:00-16:00", or null if there are none. This is how they are shown to the
+     * teachers and how they are exported and imported, as the "submissionWindows" property of the assignment's json.
+     */
+    @get:JsonProperty("submissionWindows")
+    @set:JsonProperty("submissionWindows")
+    var submissionWindowsText: String?
+        get() = submissionWindowSchedule()?.toString()
+        set(value) = replaceSubmissionWindows(value?.takeIf { it.isNotBlank() }?.let { SubmissionWindows.parse(it) })
+
     override fun toString(): String {
         return "$id - $name"
     }
@@ -284,4 +330,49 @@ data class Assignment(
     override fun hashCode(): Int {
         return id.hashCode()
     }
+
+    /**
+     * Thrown when an assignment that was asked for doesn't exist.
+     */
+    @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Inexistent assignment")
+    class NotFoundException(assignmentId: String) : Exception("Inexistent assignment ${assignmentId}") {
+        val LOG = LoggerFactory.getLogger(this.javaClass.name)
+
+        init {
+            LOG.warn("Inexistent assignment ${assignmentId}")
+        }
+    }
+
+    /**
+     * Thrown when a user who is one of an assignment's intended users tries to open it while it is not active.
+     *
+     * It is an [AccessDeniedException] so that it is reported exactly like any other denial, through the security
+     * chain of the request (see [org.dropproject.controllers.GlobalExceptionHandler]). The difference is that the
+     * access denied page recognizes it and explains that the assignment is closed, instead of suggesting that the user
+     * asks the teacher for permission that they already have.
+     *
+     * @property assignmentId is a String identifying the Assignment that is not active
+     */
+    class NotActiveException(val assignmentId: String) :
+        AccessDeniedException("Assignment ${assignmentId} is not active")
+
+    /**
+     * Thrown when a user that may access an Assignment is connecting from an address that the assignment doesn't
+     * allow (see [allowedIps]). Like [NotActiveException], it is reported as any other denial, but the access denied
+     * page recognizes it, so that it can tell the student what the problem is.
+     *
+     * @property assignmentId is a String identifying the Assignment
+     * @property clientIp is the address the user is connecting from
+     */
+    class NetworkNotAllowedException(val assignmentId: String, val clientIp: String?) :
+        AccessDeniedException("Assignment ${assignmentId} can't be accessed from ${clientIp}")
+
+    /**
+     * Thrown when a student submits to an assignment outside of its submission windows (see [submissionWindows]).
+     *
+     * It is not an access denial: the student may use the assignment, just not right now. It is reported by
+     * [org.dropproject.controllers.GlobalExceptionHandler] with its message, which is written to be read by the
+     * student.
+     */
+    class SubmissionWindowClosedException(message: String) : RuntimeException(message)
 }

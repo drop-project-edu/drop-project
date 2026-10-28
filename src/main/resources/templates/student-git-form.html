@@ -63,6 +63,13 @@
                 <span class="lead" th:text="#{student.git.form.cool-off1}">Relaxa. Estás em período cool-off...</span>
                 <span th:text="#{student.git.form.cool-off2(${coolOffEnd})}"></span>
             </div>
+            <div class="alert alert-warning" th:if="${submissionWindowClosedMessage != null}"
+                 th:text="${submissionWindowClosedMessage}">Submissions are closed now.</div>
+            <div class="alert alert-info" th:if="${submissionWindowStatus != null}">
+                Students can only submit during the submission windows:
+                <strong th:text="${submissionWindowStatus.description}">Open now, until 11:00</strong>.
+                Teachers are not affected by this.
+            </div>
             <div class="alert alert-info col-md-12">
                 <div class="col-md-9" th:classappend="${coolOffEnd != null} ? 'text-disabled' : ''">
                     Ligado a <strong><span th:text="${gitSubmission.gitRepositoryUrl}"></span></strong>
@@ -93,7 +100,7 @@
                 <span th:text="#{student.git.form.update-btn}">Atualizar</span>
             </button>
             <button th:if="${gitSubmission.lastSubmissionId == null}" type="button" id="generateReportBtn"
-                    class="btn btn-primary" th:disabled="${coolOffEnd != null}"
+                    class="btn btn-primary" th:disabled="${coolOffEnd != null or submissionWindowClosedMessage != null}"
                     th:text="#{student.git.form.generate-report-btn}">Gerar relatório</button>
             <a th:if="${gitSubmission.lastSubmissionId != null}" class="btn btn-primary"
                th:href="@{'/buildReport/' + ${gitSubmission.lastSubmissionId}}"
