@@ -61,6 +61,7 @@ import java.nio.charset.UnsupportedCharsetException
 import java.nio.file.Paths
 import java.security.Principal
 import java.sql.Timestamp
+import java.time.Clock
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -94,7 +95,8 @@ class SubmissionService(
     val rebuildStatusRepository: RebuildStatusRepository,
     val sourceDiffService: SourceDiffService,
     val defenseService: DefenseService,
-    val submissionWindowService: SubmissionWindowService
+    val submissionWindowService: SubmissionWindowService,
+    val clock: Clock
 ) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
@@ -357,9 +359,11 @@ class SubmissionService(
                     null, currentLocale))
             }
 
+            // the cool-off period is measured from the submission date, so it comes from the same clock
+            val now = Date.from(clock.instant())
             val submission = Submission(
-                submissionId = projectFolder.name, submissionDate = Date(),
-                status = SubmissionStatus.SUBMITTED.code, statusDate = Date(), assignmentId = assignment.id,
+                submissionId = projectFolder.name, submissionDate = now,
+                status = SubmissionStatus.SUBMITTED.code, statusDate = now, assignmentId = assignment.id,
                 assignmentGitHash = assignment.gitCurrentHash, submitterUserId = principal.realName(),
                 submissionFolder = projectFolder.relativeTo(storageService.rootFolder()).path,
                 submissionMode = submissionMode
@@ -467,7 +471,7 @@ class SubmissionService(
         }
 
         val lastSubmissionDate = Timestamp(lastSubmission.submissionDate.time).toLocalDateTime()
-        val now = LocalDateTime.now()
+        val now = LocalDateTime.now(clock)
         val delta = ChronoUnit.MINUTES.between(lastSubmissionDate, now)
 
         val reportElements = submissionReportRepository.findBySubmissionId(lastSubmission.id)

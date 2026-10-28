@@ -21,6 +21,7 @@ package org.dropproject.services
 
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import java.time.Clock
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.ConcurrentHashMap
@@ -31,14 +32,14 @@ import java.util.concurrent.ConcurrentHashMap
  * All data is stored in-memory and will be lost on server restart.
  */
 @Service
-class CooloffOverrideService {
+class CooloffOverrideService(val clock: Clock) {
 
     private val overrides = ConcurrentHashMap<String, CooloffOverrideInfo>()
 
     data class CooloffOverrideInfo(
         val teacherId: String,
         val expiryTime: LocalDateTime,
-        val createdAt: LocalDateTime = LocalDateTime.now()
+        val createdAt: LocalDateTime
     )
 
     /**
@@ -50,9 +51,11 @@ class CooloffOverrideService {
      * @return The created override information
      */
     fun disableCooloff(assignmentId: String, teacherId: String, durationMinutes: Int): CooloffOverrideInfo {
+        val now = LocalDateTime.now(clock)
         val info = CooloffOverrideInfo(
             teacherId = teacherId,
-            expiryTime = LocalDateTime.now().plusMinutes(durationMinutes.toLong())
+            expiryTime = now.plusMinutes(durationMinutes.toLong()),
+            createdAt = now
         )
         overrides[assignmentId] = info
         return info
@@ -75,7 +78,7 @@ class CooloffOverrideService {
      */
     fun isDisabled(assignmentId: String): Boolean {
         val info = overrides[assignmentId] ?: return false
-        return LocalDateTime.now().isBefore(info.expiryTime)
+        return LocalDateTime.now(clock).isBefore(info.expiryTime)
     }
 
     /**
@@ -86,7 +89,7 @@ class CooloffOverrideService {
      */
     fun getOverrideInfo(assignmentId: String): CooloffOverrideInfo? {
         val info = overrides[assignmentId] ?: return null
-        return if (LocalDateTime.now().isBefore(info.expiryTime)) info else null
+        return if (LocalDateTime.now(clock).isBefore(info.expiryTime)) info else null
     }
 
     /**
@@ -97,7 +100,7 @@ class CooloffOverrideService {
      */
     fun getRemainingMinutes(assignmentId: String): Long? {
         val info = getOverrideInfo(assignmentId) ?: return null
-        return ChronoUnit.MINUTES.between(LocalDateTime.now(), info.expiryTime)
+        return ChronoUnit.MINUTES.between(LocalDateTime.now(clock), info.expiryTime)
     }
 
     /**
@@ -106,7 +109,7 @@ class CooloffOverrideService {
      */
     @Scheduled(fixedRate = 60_000)
     fun cleanExpiredOverrides() {
-        val now = LocalDateTime.now()
+        val now = LocalDateTime.now(clock)
         overrides.entries.removeIf { it.value.expiryTime.isBefore(now) }
     }
 

@@ -54,6 +54,7 @@ import org.springframework.context.MessageSource
 import org.springframework.core.io.FileSystemResource
 import org.springframework.http.MediaType
 import org.springframework.security.core.Authentication
+import java.time.Clock
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.Executor
 import jakarta.servlet.http.HttpServletRequest
@@ -90,7 +91,8 @@ class UploadController(
         val cooloffOverrideService: CooloffOverrideService,
         val rebuildStatusRepository: RebuildStatusRepository,
         val defenseService: DefenseService,
-        val submissionWindowService: SubmissionWindowService
+        val submissionWindowService: SubmissionWindowService,
+        val clock: Clock
         ) {
 
     @Value("\${spring.web.locale}")
@@ -793,8 +795,10 @@ class UploadController(
             }
         }
 
-        val submission = Submission(gitSubmissionId = gitSubmission.id, submissionDate = Date(),
-                status = SubmissionStatus.SUBMITTED.code, statusDate = Date(), assignmentId = assignment.id,
+        // the cool-off period is measured from the submission date, so it comes from the same clock
+        val now = Date.from(clock.instant())
+        val submission = Submission(gitSubmissionId = gitSubmission.id, submissionDate = now,
+                status = SubmissionStatus.SUBMITTED.code, statusDate = now, assignmentId = assignment.id,
                 assignmentGitHash = assignment.gitCurrentHash, submitterUserId = principal.realName())
         submission.group = gitSubmission.group
         submissionService.saveSubmissionAndUpdateAssignmentMetrics(submission)
