@@ -239,6 +239,11 @@ data class CreateAssignment(val assignmentForm: AssignmentForm) : ToolCommand {
                                     "the assignment is solved during class by classes with different schedules. " +
                                     "Without it, students may submit at any time"
                         ),
+                        "studentsCanDownloadLastSubmission" to mapOf(
+                            "type" to "boolean",
+                            "description" to "Whether the students may download the original (not mavenized) files " +
+                                    "of their group's last submission"
+                        ),
                         "maxMemoryMb" to mapOf(
                             "type" to "number",
                             "description" to "Memory limit, in MB, of the evaluation of each submission. Must be " +
@@ -373,6 +378,7 @@ data class CreateAssignment(val assignmentForm: AssignmentForm) : ToolCommand {
                 cooloffPeriod = settings.number("cooloffPeriod"),
                 allowedIps = settings.string("allowedIps"),
                 submissionWindows = settings.string("submissionWindows"),
+                studentsCanDownloadLastSubmission = settings.boolean("studentsCanDownloadLastSubmission") ?: false,
                 maxMemoryMb = maxMemoryMb,
                 minGroupSize = settings.number("minGroupSize"),
                 maxGroupSize = settings.number("maxGroupSize"),

@@ -446,6 +446,28 @@ class SubmissionService(
     }
 
     /**
+     * Whether the student [userId] may download the original (not mavenized) files of [submission], which must have
+     * been made by one of their groups. They may if it is their last submission to an assignment that lets students
+     * download it, or if it is the submission that they start from on an active defense or continuation of its
+     * assignment (see [findBaseSubmission]).
+     */
+    fun studentMayDownloadOriginal(submission: Submission, userId: String): Boolean {
+        val assignment = assignmentRepository.findById(submission.assignmentId).orElse(null)
+        if (assignment?.studentsCanDownloadLastSubmission == true) {
+            val groups = projectGroupRepository.getGroupsForAuthor(userId)
+            val lastSubmission = submissionRepository.findFirstByGroupInAndAssignmentIdAndStatusNotOrderBySubmissionDateDesc(
+                groups, submission.assignmentId, SubmissionStatus.DELETED.code)
+            if (lastSubmission?.id == submission.id) {
+                return true
+            }
+        }
+
+        return assignmentRepository.findAllByBaseAssignmentId(submission.assignmentId)
+            .filter { it.active && !it.archived }
+            .any { findBaseSubmission(it, userId)?.id == submission.id }
+    }
+
+    /**
      * What a student starts from on the continuation [assignment]: the [baseSubmission] of their group to the
      * assignment it continues or, when they have none, its reference solution (see [ReferenceSolutionService]).
      */

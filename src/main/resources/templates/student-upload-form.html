@@ -44,6 +44,12 @@
            class="btn btn-default btn-md"
            th:href="@{'/buildReport/' + ${uploadSubmission.id}}"
            th:text="#{student.upload.form.visualize-report-btn}">Visualizar último relatório</a>
+        <a th:if="${uploadSubmission != null and assignment.studentsCanDownloadLastSubmission}"
+           class="btn btn-default btn-md"
+           th:href="@{'/submissions/' + ${uploadSubmission.id} + '/original'}">
+            <span class="glyphicon glyphicon-save" aria-hidden="true"></span>
+            <span th:text="#{student.upload.form.download-last-submission-btn}">Download last submission (.zip)</span>
+        </a>
     </p>
 
     <small th:if="${assignment?.dueDate != null}">Deadline: <span
@@ -99,7 +105,7 @@
                 <p th:if="${continuationStart.baseSubmission != null}">
                     <span th:text="#{student.upload.form.continuation.base-submission(${assignment.baseAssignmentId})}"></span>
                     <br/>
-                    <a th:href="@{'/downloadOriginalProject/' + ${continuationStart.baseSubmission.id}}">
+                    <a th:href="@{'/submissions/' + ${continuationStart.baseSubmission.id} + '/original'}">
                         <span class="glyphicon glyphicon-save" aria-hidden="true"></span>
                         <span th:text="#{student.upload.form.continuation.download}">Download your submission (.zip)</span>
                     </a>
@@ -123,7 +129,7 @@
         <div class="panel panel-info" th:if="${assignment.isDefense()}">
             <div class="panel-body">
                 <p th:if="${baseSubmission != null}">
-                    <a th:href="@{'/downloadOriginalProject/' + ${baseSubmission.id}}">
+                    <a th:href="@{'/submissions/' + ${baseSubmission.id} + '/original'}">
                         <span class="glyphicon glyphicon-save" aria-hidden="true"></span>
                         <span th:text="#{student.upload.form.defense.download}">Download original submission (.zip)</span>
                     </a>

@@ -328,8 +328,20 @@ class UploadDefenseAssignmentTests : UploadTestBase() {
         assignmentFixtures.createDefenseAssignment()
 
         // the link is on the page, so the url has to be reachable by a student and not only by a teacher
-        this.mvc.perform(get("/downloadOriginalProject/${baseSubmissionId}").with(user(STUDENT_1)))
+        this.mvc.perform(get("/submissions/${baseSubmissionId}/original").with(user(STUDENT_1)))
             .andExpect(status().isOk)
+    }
+
+    @Test
+    fun `a student cannot download the submission that an inactive defense starts from`() {
+
+        val baseSubmissionId = submissionFixtures.uploadProject("projectOK", projectAssignmentId, STUDENT_1)
+        val defense = assignmentFixtures.createDefenseAssignment()
+        defense.active = false
+        assignmentRepository.save(defense)
+
+        this.mvc.perform(get("/submissions/${baseSubmissionId}/original").with(user(STUDENT_1)))
+            .andExpect(status().isForbidden)
     }
 
     @Test
@@ -337,7 +349,7 @@ class UploadDefenseAssignmentTests : UploadTestBase() {
 
         val baseSubmissionId = submissionFixtures.uploadProject("projectOK", projectAssignmentId, STUDENT_1)
 
-        this.mvc.perform(get("/downloadOriginalProject/${baseSubmissionId}").with(user(STUDENT_3)))
+        this.mvc.perform(get("/submissions/${baseSubmissionId}/original").with(user(STUDENT_3)))
             .andExpect(status().isForbidden)
     }
 

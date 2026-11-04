@@ -55,7 +55,7 @@ class ReportDownloadTests : ReportTestBase() {
             .andExpect(status().isOk())
 
         this.mvc.perform(
-            get("/downloadMavenProject/$submissionId").contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE)
+            get("/submissions/$submissionId/mavenized").contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE)
                 .with(user(TEACHER_1))
         )
             .andExpect(header().string("Content-Disposition", "attachment; filename=student1_student2_mavenized.zip"))
@@ -78,7 +78,7 @@ class ReportDownloadTests : ReportTestBase() {
         )
             .andExpect(status().isOk())
 
-        val result = this.mvc.perform(get("/downloadOriginalProject/$submissionId").contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE)
+        val result = this.mvc.perform(get("/submissions/$submissionId/original").contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE)
             .with(user(TEACHER_1)))
             .andExpect(header().string("Content-Disposition", "attachment; filename=student1_student2.zip"))
             .andExpect(status().isOk)
@@ -87,6 +87,64 @@ class ReportDownloadTests : ReportTestBase() {
         val downloadedFileContent = result.response.contentAsByteArray
         assertArrayEquals(Files.readAllBytes(originalZipFile.toPath()), downloadedFileContent)
 
+    }
+
+    @Test
+    fun `a student can download their last submission when the assignment lets them`() {
+
+        val assignment = assignmentRepository.findById(defaultAssignmentId).get()
+        assignment.studentsCanDownloadLastSubmission = true
+        assignmentRepository.save(assignment)
+
+        val originalZipFile =
+            zipService.createZipFromFolder("original", resourceLoader.getResource("file:src/test/sampleProjects/compact/java/projectCompilationErrors").file)
+        originalZipFile.deleteOnExit()
+
+        val submissionId = submissionFixtures.uploadProject("projectCompilationErrors", defaultAssignmentId, STUDENT_1)
+
+        this.mvc.perform(get("/upload/$defaultAssignmentId").with(user(STUDENT_1)))
+            .andExpect(status().isOk)
+            .andExpect(content().string(containsString("/submissions/$submissionId/original")))
+
+        val result = this.mvc.perform(get("/submissions/$submissionId/original").with(user(STUDENT_1)))
+            .andExpect(header().string("Content-Disposition", "attachment; filename=student1_student2.zip"))
+            .andExpect(status().isOk)
+            .andReturn()
+
+        assertArrayEquals(Files.readAllBytes(originalZipFile.toPath()), result.response.contentAsByteArray)
+
+        // the other elements of the group can download it too
+        this.mvc.perform(get("/submissions/$submissionId/original").with(user(STUDENT_2)))
+            .andExpect(status().isOk)
+    }
+
+    @Test
+    fun `a student cannot download their submissions when the assignment doesn't let them`() {
+
+        val submissionId = submissionFixtures.uploadProject("projectCompilationErrors", defaultAssignmentId, STUDENT_1)
+
+        this.mvc.perform(get("/upload/$defaultAssignmentId").with(user(STUDENT_1)))
+            .andExpect(status().isOk)
+            .andExpect(content().string(not(containsString("/submissions/$submissionId/original"))))
+
+        this.mvc.perform(get("/submissions/$submissionId/original").with(user(STUDENT_1)))
+            .andExpect(status().isForbidden)
+    }
+
+    @Test
+    fun `a student can only download their last submission`() {
+
+        val assignment = assignmentRepository.findById(defaultAssignmentId).get()
+        assignment.studentsCanDownloadLastSubmission = true
+        assignmentRepository.save(assignment)
+
+        val firstSubmissionId = submissionFixtures.uploadProject("projectCompilationErrors", defaultAssignmentId, STUDENT_1)
+        val lastSubmissionId = submissionFixtures.uploadProject("projectJUnitErrors", defaultAssignmentId, STUDENT_1)
+
+        this.mvc.perform(get("/submissions/$firstSubmissionId/original").with(user(STUDENT_1)))
+            .andExpect(status().isForbidden)
+        this.mvc.perform(get("/submissions/$lastSubmissionId/original").with(user(STUDENT_1)))
+            .andExpect(status().isOk)
     }
 
     @Test
@@ -151,7 +209,7 @@ class ReportDownloadTests : ReportTestBase() {
             "git@github.com:drop-project-edu/sampleJavaSubmission.git", "student1"
         )
 
-        val result = this.mvc.perform(get("/downloadOriginalProject/1").contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE)
+        val result = this.mvc.perform(get("/submissions/1/original").contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE)
             .with(user(TEACHER_1)))
             .andExpect(header().string("Content-Disposition", "attachment; filename=student1_student2.zip"))
             .andExpect(status().isOk)
@@ -172,7 +230,7 @@ class ReportDownloadTests : ReportTestBase() {
         )
 
         val result = this.mvc.perform(
-            get("/downloadMavenProject/1").contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE)
+            get("/submissions/1/mavenized").contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE)
                 .with(user(TEACHER_1))
         )
             .andExpect(header().string("Content-Disposition", "attachment; filename=student1_student2_mavenized.zip"))

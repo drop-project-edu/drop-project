@@ -312,6 +312,17 @@
         </div>
 
         <div class="form-group">
+            <div class="col-sm-offset-3 col-sm-9">
+                <label>
+                    <input th:field="*{studentsCanDownloadLastSubmission}" type="checkbox" id="studentsCanDownloadLastSubmission" />
+                    <strong>Students can download their last submission?</strong>
+                </label>
+                <p class="help-block">Students get a link to download the original files (not mavenized) of their
+                    group's last submission</p>
+            </div>
+        </div>
+
+        <div class="form-group">
             <label for="minGroupSize" class="col-sm-3 control-label">Group size (optional)</label>
             <div class="col-sm-9" th:classappend="${#fields.hasErrors('minGroupSize')} ? 'has-error' : ''">
                 <div class="form-inline">

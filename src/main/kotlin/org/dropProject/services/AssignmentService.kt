@@ -355,6 +355,7 @@ class AssignmentService(
         existingAssignment.cooloffPeriod = assignmentForm.cooloffPeriod
         existingAssignment.allowedIps = normalizedAllowedIps(assignmentForm)
         existingAssignment.replaceSubmissionWindows(parsedSubmissionWindows(assignmentForm))
+        existingAssignment.studentsCanDownloadLastSubmission = assignmentForm.studentsCanDownloadLastSubmission
         existingAssignment.maxMemoryMb = assignmentForm.maxMemoryMb
         existingAssignment.showLeaderBoard = assignmentForm.leaderboardType != null
         existingAssignment.hiddenTestsVisibility = assignmentForm.hiddenTestsVisibility
@@ -670,6 +671,7 @@ class AssignmentService(
             mandatoryTestsSuffix = assignmentForm.mandatoryTestsSuffix,
             cooloffPeriod = assignmentForm.cooloffPeriod,
             allowedIps = normalizedAllowedIps(assignmentForm),
+            studentsCanDownloadLastSubmission = assignmentForm.studentsCanDownloadLastSubmission,
             maxMemoryMb = assignmentForm.maxMemoryMb, submissionMethod = assignmentForm.submissionMethod!!,
             gitRepositoryUrl = assignmentForm.gitRepositoryUrl!!, ownerUserId = principal.realName(),
             gitRepositoryFolder = assignmentForm.assignmentId!!, showLeaderBoard = assignmentForm.leaderboardType != null,

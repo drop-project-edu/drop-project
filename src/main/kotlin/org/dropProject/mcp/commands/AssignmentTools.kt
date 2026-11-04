@@ -78,6 +78,7 @@ object AssignmentTools {
         setting("cooloffPeriod", assignment.cooloffPeriod)
         setting("allowedIps", assignment.allowedIps)
         setting("submissionWindows", assignment.submissionWindowsText)
+        setting("studentsCanDownloadLastSubmission", assignment.studentsCanDownloadLastSubmission)
         setting("maxMemoryMb", assignment.maxMemoryMb)
         setting("minGroupSize", assignment.projectGroupRestrictions?.minGroupSize)
         setting("maxGroupSize", assignment.projectGroupRestrictions?.maxGroupSize)

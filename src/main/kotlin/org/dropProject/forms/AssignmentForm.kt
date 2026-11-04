@@ -72,6 +72,7 @@ data class AssignmentForm(
         var cooloffPeriod: Int? = null,
         var allowedIps: String? = null,
         var submissionWindows: String? = null,
+        var studentsCanDownloadLastSubmission: Boolean = false,
 
         @field:Min(value=32, message="Error: Max memory must be >= 32")
         var maxMemoryMb: Int? = null,

@@ -202,8 +202,11 @@ class ReportController(
     }
 
     /**
-     * Controller that handles the download of a specific submission's code. The submission is downloaded in
-     * a format compatible with Maven.
+     * Controller that handles the download of a specific submission's code, mavenized, i.e. in the structure of a
+     * Maven project, together with the assignment's (teacher) files. Only teachers may download it.
+     *
+     * `GET /submissions/{submissionId}/mavenized`
+     *
      * @param submissionId is a Long, representing the [Submission] to download
      * @param principal is a [Principal] representing the user making the request
      * @param request is a [HttpServletRequest]
@@ -211,7 +214,7 @@ class ReportController(
      * @return A [FileSystemResource] containing a [ZipFile]
      */
     @RequestMapping(
-        value = ["/downloadMavenProject/{submissionId}"],
+        value = ["/submissions/{submissionId}/mavenized"],
         method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE]
     )
     @ResponseBody
@@ -291,8 +294,13 @@ class ReportController(
     }
 
     /**
-     * Controller that handles the download of a specific submission's code. The submission is downloaded in
-     * it's original format.
+     * Controller that handles the download of a specific submission's code, in its original format, i.e. the zip file
+     * that was uploaded or, for git submissions, the repository at the submitted commit. Teachers may download any
+     * submission, while students may only download the ones that
+     * [SubmissionService.studentMayDownloadOriginal] allows.
+     *
+     * `GET /submissions/{submissionId}/original`
+     *
      * @param submissionId is a Long, representing the Submission to download
      * @param principal is a [Principal] representing the user making the request
      * @param request is an [HttpServletRequest]
@@ -300,7 +308,7 @@ class ReportController(
      * @return A [FileSystemResource] containing a [ZipFile]
      */
     @RequestMapping(
-        value = ["/downloadOriginalProject/{submissionId}"],
+        value = ["/submissions/{submissionId}/original"],
         method = [(RequestMethod.GET)], produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE]
     )
     @ResponseBody
@@ -312,11 +320,12 @@ class ReportController(
         val submission = submissionRepository.findById(submissionId).orElse(null)
         if (submission != null) {
 
-            // check that principal belongs to the group that made this submission
+            // check that principal belongs to the group that made this submission, and that students may download it
             if (!request.isUserInRole("TEACHER")) {
                 val groupElements = submission.group.authors
-                if (groupElements.filter { it -> it.userId == principal.realName() }.isEmpty()) {
-                    throw AccessDeniedException("${principal.realName()} is not allowed to view this report")
+                if (groupElements.filter { it -> it.userId == principal.realName() }.isEmpty() ||
+                    !submissionService.studentMayDownloadOriginal(submission, principal.realName())) {
+                    throw AccessDeniedException("${principal.realName()} is not allowed to download this submission")
                 }
             }
 

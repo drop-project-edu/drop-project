@@ -49,7 +49,7 @@ data class GetSubmissionCode(val submissionId: Long) : ToolCommand {
             IllegalArgumentException("Submission with ID $submissionId not found")
         }
 
-        // Get the mavenized project folder (same as downloadMavenProject)
+        // Get the mavenized project folder (same as /submissions/{submissionId}/mavenized)
         val projectFolder = service.assignmentTeacherFiles.getProjectFolderAsFile(
             submission,
             wasRebuilt = submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT

@@ -257,7 +257,7 @@ class SubmissionFixtures {
 
     fun downloadMavenProjectZip(submissionId: Long, teacher: User = TEACHER_1): ByteArray {
         return mvc.perform(
-            MockMvcRequestBuilders.get("/downloadMavenProject/$submissionId")
+            MockMvcRequestBuilders.get("/submissions/$submissionId/mavenized")
                 .contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE)
                 .with(user(teacher))
         )

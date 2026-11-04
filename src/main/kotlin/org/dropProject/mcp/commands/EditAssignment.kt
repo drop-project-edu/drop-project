@@ -259,6 +259,8 @@ data class EditAssignment(val assignmentId: String, val changes: AssignmentArgum
             cooloffPeriod = changes.orCurrent("cooloffPeriod", assignment.cooloffPeriod) { number(it) },
             allowedIps = changes.orCurrent("allowedIps", assignment.allowedIps) { string(it) },
             submissionWindows = changes.orCurrent("submissionWindows", assignment.submissionWindowsText) { string(it) },
+            studentsCanDownloadLastSubmission = changes.orCurrent("studentsCanDownloadLastSubmission",
+                assignment.studentsCanDownloadLastSubmission) { boolean(it) ?: false },
             maxMemoryMb = maxMemoryMb,
             minGroupSize = changes.orCurrent("minGroupSize", restrictions?.minGroupSize) { number(it) },
             maxGroupSize = changes.orCurrent("maxGroupSize", restrictions?.maxGroupSize) { number(it) },
@@ -397,6 +399,11 @@ data class EditAssignment(val assignmentId: String, val changes: AssignmentArgum
                                     "are still accepted for 10 minutes after a window closes. Useful when " +
                                     "the assignment is solved during class by classes with different schedules. " +
                                     "Pass an empty string to let students submit at any time"
+                        ),
+                        "studentsCanDownloadLastSubmission" to mapOf(
+                            "type" to "boolean",
+                            "description" to "Whether the students may download the original (not mavenized) files " +
+                                    "of their group's last submission"
                         ),
                         "maxMemoryMb" to mapOf(
                             "type" to "number",

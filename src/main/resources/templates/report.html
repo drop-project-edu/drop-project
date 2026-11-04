@@ -159,10 +159,10 @@
                             <span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span>
                         </a>
                         &nbsp;
-                        <a th:href="'../downloadOriginalProject/' + ${submissionInfo.lastSubmission.id}" title="Download original project">
+                        <a th:href="@{'/submissions/' + ${submissionInfo.lastSubmission.id} + '/original'}" title="Download original project">
                             <span class="glyphicon glyphicon-save" aria-hidden="true"></span>
                         </a>
-                        <a th:href="'../downloadMavenProject/' + ${submissionInfo.lastSubmission.id}" title="Download mavenized project">
+                        <a th:href="@{'/submissions/' + ${submissionInfo.lastSubmission.id} + '/mavenized'}" title="Download mavenized project">
                             <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span>
                         </a>
                     </td>

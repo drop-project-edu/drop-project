@@ -112,7 +112,9 @@ class UploadContinuationAssignmentTests : UploadTestBase() {
         uploadPage(STUDENT_1)
             .andExpect(model().attribute("continuationStart", hasProperty<Any>("baseSubmission",
                 hasProperty<Any>("id", equalTo(baseSubmissionId.toLong())))))
-            .andExpect(content().string(containsString("/downloadOriginalProject/${baseSubmissionId}")))
+            .andExpect(content().string(containsString("/submissions/${baseSubmissionId}/original")))
+        this.mvc.perform(get("/submissions/${baseSubmissionId}/original").with(user(STUDENT_1)))
+            .andExpect(status().isOk)
 
         // a submission to the continuation is a regular submission: no checkpoint, no divergence measured
         val submissionId = submissionFixtures.uploadProject("projectOK", continuationId, STUDENT_1)

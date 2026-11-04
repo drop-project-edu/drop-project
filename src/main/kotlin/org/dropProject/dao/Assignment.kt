@@ -120,6 +120,8 @@ enum class AssignmentVisibility {
  * that students may access the assignment from (see [org.dropproject.data.AllowedIps])
  * @property submissionWindows is a List of [SubmissionWindow]s with the only periods of time in which students may
  * submit to the assignment. Without any, students may submit at any time
+ * @property studentsCanDownloadLastSubmission is a Boolean, indicating if the students may download the original
+ * (not mavenized) files of their group's last submission to this Assignment
  * @property maxMemoryMb is an optional Integer, indicating the maximum number of Mb that the student's code can use
  * @property showLeaderBoard is a Boolean, indicating if the leaderboard page should be active for this Assignment
  * @property leaderboardType is a [LeaderboardType]
@@ -187,6 +189,7 @@ data class Assignment(
     var cooloffPeriod: Int? = null, // minutes
     var allowedIps: String? = null,
     var maxMemoryMb: Int? = null,
+    var studentsCanDownloadLastSubmission: Boolean = false,
     var showLeaderBoard: Boolean = false,
     var leaderboardType: LeaderboardType? = null,
 

@@ -71,10 +71,10 @@
         </button>
         <ul class="dropdown-menu">
             <li>
-                <a th:href="'../downloadOriginalProject/' + ${submission.id}">Original submission (.zip)</a>
+                <a th:href="@{'/submissions/' + ${submission.id} + '/original'}">Original submission (.zip)</a>
             </li>
             <li>
-                <a th:href="'../downloadMavenProject/' + ${submission.id}">Mavenized submission (.zip)</a>
+                <a th:href="@{'/submissions/' + ${submission.id} + '/mavenized'}">Mavenized submission (.zip)</a>
             </li>
         </ul>
     </div>

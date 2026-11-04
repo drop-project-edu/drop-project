@@ -720,6 +720,7 @@ class McpControllerTests: ApiTestSupport {
                 "**acl:** teacher2",
                 "**tags:** project",
                 "**submissionWindows:** not set",
+                "**studentsCanDownloadLastSubmission:** false",
                 "**cooloffPeriod:** not set"  // settings the assignment doesn't use are reported as unset, not omitted
             ).forEach { assertThat(response, containsString(it)) }
 
@@ -1399,6 +1400,16 @@ class McpControllerTests: ApiTestSupport {
 
         callTool("edit_assignment", """{ "assignmentId": "testMcpAssignment", "submissionWindows": "" }""", authHeader)
         assertNull(assignmentRepository.findById("testMcpAssignment").get().submissionWindowsText)
+    }
+
+    @Test
+    fun `mcp edit assignment lets students download their last submission`() {
+        val authHeader = getBearerToken("teacher1")
+
+        val response = callTool("edit_assignment",
+            """{ "assignmentId": "testMcpAssignment", "studentsCanDownloadLastSubmission": true }""", authHeader)
+        assertThat(response, containsString("studentsCanDownloadLastSubmission: false -> true"))
+        assertTrue(assignmentRepository.findById("testMcpAssignment").get().studentsCanDownloadLastSubmission)
     }
 
     @Test

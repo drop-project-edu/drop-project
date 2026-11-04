@@ -535,6 +535,7 @@ class AssignmentController(
             cooloffPeriod = assignment.cooloffPeriod,
             allowedIps = assignment.allowedIps,
             submissionWindows = assignment.submissionWindowsText,
+            studentsCanDownloadLastSubmission = assignment.studentsCanDownloadLastSubmission,
             hiddenTestsVisibility = assignment.hiddenTestsVisibility,
             maxMemoryMb = assignment.maxMemoryMb,
             leaderboardType = assignment.leaderboardType,
