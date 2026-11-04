@@ -312,10 +312,11 @@
         </div>
 
         <div class="form-group">
-            <div class="col-sm-offset-3 col-sm-9">
-                <label>
+            <label for="studentsCanDownloadLastSubmission" class="col-sm-3 control-label">Download</label>
+            <div class="col-sm-9">
+                <label class="checkbox-inline">
                     <input th:field="*{studentsCanDownloadLastSubmission}" type="checkbox" id="studentsCanDownloadLastSubmission" />
-                    <strong>Students can download their last submission?</strong>
+                    Students can download their last submission?
                 </label>
                 <p class="help-block">Students get a link to download the original files (not mavenized) of their
                     group's last submission</p>
