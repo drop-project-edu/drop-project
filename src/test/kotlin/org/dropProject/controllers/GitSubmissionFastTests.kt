@@ -25,20 +25,26 @@ import org.dropproject.FakeBuildRunner
 import org.dropproject.FakeClock
 import org.dropproject.FakeGitClient
 import org.dropproject.GitFixtures
+import org.dropproject.TestKeys
 import org.dropproject.TestUsers.STUDENT_1
 import org.dropproject.TestUsers.STUDENT_2
 import org.dropproject.TestUsers.TEACHER_1
 import org.dropproject.config.DropProjectProperties
 import org.dropproject.dao.Assignment
 import org.dropproject.dao.Indicator
+import org.dropproject.dao.ProjectGroupRestrictions
 import org.dropproject.dao.SubmissionReport
 import org.dropproject.forms.SubmissionMethod
 import org.dropproject.repository.AssignmentRepository
+import org.dropproject.repository.GitSubmissionRepository
+import org.dropproject.repository.ProjectGroupRestrictionsRepository
 import org.eclipse.jgit.api.Git
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -46,6 +52,7 @@ import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequ
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.header
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.model
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
@@ -84,6 +91,12 @@ class GitSubmissionFastTests {
 
     @Autowired
     lateinit var fakeClock: FakeClock
+
+    @Autowired
+    lateinit var gitSubmissionRepository: GitSubmissionRepository
+
+    @Autowired
+    lateinit var projectGroupRestrictionsRepository: ProjectGroupRestrictionsRepository
 
     val defaultAssignmentId = "sampleJavaProject"
     val studentRepositoryUrl = "git@github.com:drop-project-edu/sampleJavaSubmission.git"
@@ -228,5 +241,102 @@ class GitSubmissionFastTests {
             .andExpect(view().name("student-git-form"))
             .andReturn()
         assertNotNull(result2.modelAndView!!.modelMap["gitSubmission"])
+    }
+
+    private fun restrictGroupSize(minGroupSize: Int, maxGroupSize: Int, exceptions: String? = null) {
+        val restrictions = ProjectGroupRestrictions(minGroupSize = minGroupSize, maxGroupSize = maxGroupSize,
+            exceptions = exceptions)
+        projectGroupRestrictionsRepository.save(restrictions)
+        val assignment = assignmentRepository.findById(defaultAssignmentId).get()
+        assignment.projectGroupRestrictions = restrictions
+        assignmentRepository.save(assignment)
+    }
+
+    private fun commitAuthors(authors: String) {
+        Git.open(studentRepoFolder).use { git ->
+            File(studentRepoFolder, "AUTHORS.txt").writeText(authors)
+            git.add().addFilepattern("AUTHORS.txt").call()
+            git.commit()
+                .setAuthor("Student 1", "student1@dropproject.org")
+                .setCommitter("Student 1", "student1@dropproject.org")
+                .setMessage("change authors").call()
+        }
+    }
+
+    // goes through the first step of the git setup and returns the id of the (still unconnected) git submission
+    private fun setupGit(): Long {
+        this.mvc.perform(post("/student/setup-git")
+            .param("assignmentId", defaultAssignmentId)
+            .param("gitRepositoryUrl", studentRepositoryUrl)
+            .with(user(STUDENT_1)))
+            .andExpect(status().isOk())
+            .andExpect(view().name("student-setup-git"))
+
+        val gitSubmission = gitSubmissionRepository.findAll().last()
+        gitSubmission.gitRepositoryPrivKey = TestKeys.sampleJavaSubmissionPrivateKey
+        gitSubmission.gitRepositoryPubKey = TestKeys.sampleJavaSubmissionPublicKey
+        gitSubmissionRepository.save(gitSubmission)
+        return gitSubmission.id
+    }
+
+    @Test
+    fun `students can't connect a repository whose group violates the group restrictions`() {
+
+        restrictGroupSize(1, 1)
+        val gitSubmissionId = setupGit()
+
+        // the repository's AUTHORS.txt has two students
+        this.mvc.perform(post("/student/setup-git-2/${gitSubmissionId}").with(user(STUDENT_1)))
+            .andExpect(status().isOk())
+            .andExpect(view().name("student-setup-git"))
+            .andExpect(model().attribute("error",
+                "This assignment only accepts submissions from groups with 1..1 elements."))
+        assertFalse(gitSubmissionRepository.findById(gitSubmissionId).get().connected)
+
+        // after fixing AUTHORS.txt, connecting again works
+        commitAuthors("student1;Student 1")
+        this.mvc.perform(post("/student/setup-git-2/${gitSubmissionId}").with(user(STUDENT_1)))
+            .andExpect(status().isFound())
+            .andExpect(header().string("Location", "/upload/${defaultAssignmentId}"))
+        val gitSubmission = gitSubmissionRepository.findById(gitSubmissionId).get()
+        assertTrue(gitSubmission.connected)
+        assertEquals(listOf("student1"), gitSubmission.group.authors.map { it.userId })
+    }
+
+    @Test
+    fun `students can connect a repository that violates the group restrictions if they are an exception`() {
+
+        restrictGroupSize(1, 1, exceptions = "student1")
+        val gitSubmissionId = setupGit()
+
+        this.mvc.perform(post("/student/setup-git-2/${gitSubmissionId}").with(user(STUDENT_1)))
+            .andExpect(status().isFound())
+        assertTrue(gitSubmissionRepository.findById(gitSubmissionId).get().connected)
+    }
+
+    @Test
+    fun `students can't generate a report if the group restrictions changed after connecting`() {
+
+        val gitSubmissionId = gitFixtures.connectToGitRepositoryAndBuildReport(defaultAssignmentId,
+            studentRepositoryUrl, "student1")
+
+        // the group (with two students) was connected before the teacher restricted the assignment to individuals
+        restrictGroupSize(1, 1)
+
+        this.mvc.perform(post("/git-submission/generate-report/${gitSubmissionId}").with(user(STUDENT_1)))
+            .andExpect(status().isInternalServerError())
+            .andExpect(content().json("""{"error": "This assignment only accepts submissions from groups with 1..1 elements. """ +
+                    """To change the group, fix AUTHORS.txt and connect the repository again."}"""))
+
+        // changing AUTHORS.txt without connecting again has no effect, since the group was fixed when connecting
+        commitAuthors("student1;Student 1")
+        this.mvc.perform(post("/git-submission/refresh-git/${gitSubmissionId}").with(user(STUDENT_1)))
+            .andExpect(status().isOk())
+        this.mvc.perform(post("/git-submission/generate-report/${gitSubmissionId}").with(user(STUDENT_1)))
+            .andExpect(status().isInternalServerError())
+
+        // the assignment's teachers are not restricted
+        this.mvc.perform(post("/git-submission/generate-report/${gitSubmissionId}").with(user(TEACHER_1)))
+            .andExpect(status().isOk())
     }
 }

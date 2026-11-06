@@ -1490,36 +1490,6 @@ class AssignmentService(
         }
     }
 
-    /**
-     * Checks if all members of a group are in the assignment's whitelist.
-     * @param assignmentId is a String identifying the assignment
-     * @param groupMembers is a List of author IDs (student numbers) representing the group members
-     * @param i18n is the MessageSource for internationalization
-     * @param currentLocale is the current Locale for message formatting
-     * @param isTeacher is a Boolean indicating if the submitter is a teacher
-     * @throws InvalidProjectGroupException if any group member is not in the whitelist
-     */
-    fun checkGroupMembersInWhitelist(assignmentId: String, groupMembers: List<String>,
-                                     i18n: org.springframework.context.MessageSource,
-                                     currentLocale: java.util.Locale,
-                                     isTeacher: Boolean = false) {
-        if (isTeacher) {
-            return
-        }
-
-        if (assigneeRepository.existsByAssignmentId(assignmentId)) {
-            // if it enters here, it means this assignment has a white list
-            // let's check if all group members belong to the white list or are exempt from group size
-            // restriction, in which is case is also automatically allowed
-            for (memberId in groupMembers) {
-                if (!isAssigneeOrException(assignmentId, memberId)) {
-                    throw InvalidProjectGroupException(i18n.getMessage("student.submit.groupMemberNotInWhitelist",
-                        arrayOf(memberId), currentLocale))
-                }
-            }
-        }
-    }
-
     private fun isAssigneeOrException(assignmentId: String, userId: String): Boolean {
         if (assigneeRepository.existsByAssignmentIdAndAuthorUserId(assignmentId, userId)) {
             return true

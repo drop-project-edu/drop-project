@@ -661,7 +661,7 @@ class UploadController(
      */
     @RequestMapping(value = ["/student/setup-git-2/{gitSubmissionId}"], method = [(RequestMethod.POST)])
     fun connectSubmissionToGitRepository(@PathVariable gitSubmissionId: String, redirectAttributes: RedirectAttributes,
-                                         model: ModelMap, principal: Principal): String {
+                                         model: ModelMap, principal: Principal, request: HttpServletRequest): String {
 
         val gitSubmission = gitSubmissionRepository.findById(gitSubmissionId.toLong())
             .orElseThrow { EntityNotFoundException("GitSubmission ${gitSubmissionId} not found") }
@@ -701,6 +701,10 @@ class UploadController(
                     throw InvalidProjectStructureException("O utilizador que está a submeter tem que ser um dos elementos do grupo.")
                 }
 
+                // the group can't change after connecting (AUTHORS.txt is only read here), so this is where it's checked
+                submissionService.checkGroup(assignment, authors.map { it.number }, principal.realName(),
+                    assignmentService.isAuthorizedTeacher(assignment, principal.realName(), request))
+
                 val group = projectGroupService.getOrCreateProjectGroup(authors)
                 gitSubmission.group = group
 
@@ -729,6 +733,11 @@ class UploadController(
             } catch (ipse: InvalidProjectStructureException) {
                 LOG.info("Invalid project structure: ${ipse.message}")
                 model["error"] = i18n.getMessage("student.git.setup.invalid-structure", arrayOf(gitRepository, ipse.message), currentLocale)
+                model["gitSubmission"] = gitSubmission
+                return "student-setup-git"
+            } catch (ipge: InvalidProjectGroupException) {
+                LOG.info("[gitSubmission:${gitSubmission.id}] Invalid group: ${ipge.message}")
+                model["error"] = ipge.message
                 model["gitSubmission"] = gitSubmission
                 return "student-setup-git"
             } catch (e: Exception) {
@@ -834,6 +843,16 @@ class UploadController(
                     throw org.springframework.security.access.AccessDeniedException("[${principal.realName()}] can't submit because he is in cool-off period")
                 }
             }
+        }
+
+        // the group was already checked when connecting, but the restrictions may have been set (or tightened) since
+        try {
+            submissionService.checkGroup(assignment, gitSubmission.group.authors.map { it.userId },
+                principal.realName(), isAuthorizedTeacher)
+        } catch (e: InvalidProjectGroupException) {
+            // the group comes from the AUTHORS.txt read when connecting, so changing it requires reconnecting
+            throw InvalidProjectGroupException(i18n.getMessage("student.git.invalidGroup.reconnect",
+                arrayOf(e.message), currentLocale), e)
         }
 
         val projectFolder = File(dropProjectProperties.storage.gitLocation, gitSubmission.getFolderRelativeToStorageRoot())

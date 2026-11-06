@@ -96,6 +96,7 @@ class SubmissionService(
     val sourceDiffService: SourceDiffService,
     val defenseService: DefenseService,
     val submissionWindowService: SubmissionWindowService,
+    val assigneeRepository: AssigneeRepository,
     val clock: Clock
 ) {
 
@@ -287,23 +288,7 @@ class SubmissionService(
                 )
             }
 
-            // check if the group complies with possible group restrictions
-            if (assignment.projectGroupRestrictions != null) {
-                val restrictions = assignment.projectGroupRestrictions!!
-                if (authors.size !in restrictions.minGroupSize .. (restrictions.maxGroupSize ?: 50) &&
-                    !restrictions.exceptionsAsList().contains(principal.realName()) && !request.isUserInRole("TEACHER")) {
-                    throw InvalidProjectGroupException(i18n.getMessage("student.submit.invalidGroup",
-                        arrayOf(restrictions.minGroupSize, restrictions.maxGroupSize ?: 50), currentLocale))
-                }
-            }
-
-            // check if all group members are in the assignment's whitelist
-            assignmentService.checkGroupMembersInWhitelist(assignment.id, authors.map { it.number }, i18n, currentLocale, isAuthorizedTeacher)
-
-            // a continuation is the same project, so it has to be done by the same groups
-            if (assignment.isContinuation() && !isAuthorizedTeacher) {
-                checkContinuationGroup(assignment, authors.map { it.number })
-            }
+            checkGroup(assignment, authors.map { it.number }, principal.realName(), isAuthorizedTeacher)
 
             val group = projectGroupService.getOrCreateProjectGroup(authors)
 
@@ -487,6 +472,51 @@ class SubmissionService(
         }
 
         return ContinuationStart(findBaseSubmission(assignment, userId))
+    }
+
+    /**
+     * Checks that a group, made of [authorIds], can submit to [assignment]: its size has to be within the assignment's
+     * group restrictions (unless [submitterId] is one of the exceptions), all of its members have to be in the
+     * assignment's whitelist, and, in a continuation, it has to be the same group as in the assignment it continues.
+     * None of this applies to the assignment's teachers.
+     *
+     * Used by every submission method: zip uploads check the group of each upload, while git submissions check it
+     * both when connecting the repository and when generating a report, since a repository connected before the
+     * restrictions were set (or tightened) would otherwise never be checked.
+     *
+     * @throws InvalidProjectGroupException with the reason why the group can't submit
+     */
+    fun checkGroup(assignment: Assignment, authorIds: List<String>, submitterId: String, isAuthorizedTeacher: Boolean) {
+        if (isAuthorizedTeacher) {
+            return
+        }
+
+        val restrictions = assignment.projectGroupRestrictions
+        if (restrictions != null) {
+            val maxGroupSize = restrictions.maxGroupSize ?: 50
+            if (authorIds.size !in restrictions.minGroupSize..maxGroupSize &&
+                submitterId !in restrictions.exceptionsAsList()) {
+                throw InvalidProjectGroupException(i18n.getMessage("student.submit.invalidGroup",
+                    arrayOf(restrictions.minGroupSize, maxGroupSize), currentLocale))
+            }
+        }
+
+        // with a whitelist, every member has to be in it, unless they are exempt from the group restrictions
+        if (assigneeRepository.existsByAssignmentId(assignment.id)) {
+            val exceptions = restrictions?.exceptionsAsList().orEmpty()
+            for (authorId in authorIds) {
+                if (authorId !in exceptions &&
+                    !assigneeRepository.existsByAssignmentIdAndAuthorUserId(assignment.id, authorId)) {
+                    throw InvalidProjectGroupException(i18n.getMessage("student.submit.groupMemberNotInWhitelist",
+                        arrayOf(authorId), currentLocale))
+                }
+            }
+        }
+
+        // a continuation is the same project, so it has to be done by the same groups
+        if (assignment.isContinuation()) {
+            checkContinuationGroup(assignment, authorIds)
+        }
     }
 
     /**
