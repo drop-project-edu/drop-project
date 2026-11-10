@@ -48,8 +48,8 @@ import java.util.zip.ZipInputStream
 
 /**
  * Tests for the "continuation" assignments, that is, the next part of a multi-part project, which each group starts
- * from the code they submitted to the previous part (or from its reference solution, if they have none) and which
- * must be done by the same groups.
+ * from the code they submitted to the previous part (or from its reference solution, if they have none that passes
+ * its required tests) and which must be done by the same groups.
  *
  * Like [UploadDefenseAssignmentTests], they replace the (slow) Maven build with [FakeBuildRunner], since nothing here
  * depends on the results of the build, so this class also runs with 'mvn test -Pfast'.
@@ -149,6 +149,92 @@ class UploadContinuationAssignmentTests : UploadTestBase() {
         submissionFixtures.uploadProject("projectOK", continuationId, STUDENT_1)
         uploadPage(STUDENT_1).andExpect(model().attributeDoesNotExist("continuationStart"))
         downloadReferenceSolution(STUDENT_1).andExpect(status().isForbidden)
+    }
+
+    /**
+     * Makes the next builds pass every teacher test except [failingTest] (when given).
+     */
+    private fun buildsFailing(failingTest: String?) {
+        val publicTests = listOf("testFuncaoParaTestar", "testFuncaoLentaParaTestar")
+        fakeBuildRunner.fakeNextBuilds(FakeBuild(
+            passingTests = mapOf(
+                "org.dropProject.sampleAssignments.testProj.TestTeacherProject" to publicTests.filter { it != failingTest },
+                "org.dropProject.sampleAssignments.testProj.TestTeacherHiddenProject" to
+                        listOf("testFuncaoParaTestarQueNaoApareceAosAlunos")),
+            failingTests = if (failingTest == null) emptyMap() else
+                mapOf("org.dropProject.sampleAssignments.testProj.TestTeacherProject" to listOf(failingTest))))
+    }
+
+    /**
+     * Makes the previous part require its tests whose name ends with "LentaParaTestar", i.e. testFuncaoLentaParaTestar.
+     */
+    private fun withMandatoryTests() {
+        val baseAssignment = assignmentRepository.findById(baseAssignmentId).get()
+        baseAssignment.mandatoryTestsSuffix = "LentaParaTestar"
+        assignmentRepository.save(baseAssignment)
+    }
+
+    @Test
+    fun `a student whose group's submission fails a test of the previous part starts from its reference solution`() {
+
+        buildsFailing("testFuncaoLentaParaTestar")
+        val baseSubmissionId = submissionFixtures.uploadProject("projectOK", baseAssignmentId, STUDENT_1)
+        assignmentFixtures.createContinuationAssignment()
+
+        uploadPage(STUDENT_1)
+            .andExpect(model().attribute("continuationStart", hasProperty<Any>("baseSubmission", nullValue())))
+            .andExpect(model().attribute("continuationStart", hasProperty<Any>("baseSubmissionFailsTests", equalTo(true))))
+            .andExpect(content().string(containsString("/upload/${continuationId}/reference-solution")))
+            .andExpect(content().string(containsString("does not pass all its tests")))
+        downloadReferenceSolution(STUDENT_1).andExpect(status().isOk)
+
+        // the failing code is not offered, so it can't be downloaded through the continuation either
+        this.mvc.perform(get("/submissions/${baseSubmissionId}/original").with(user(STUDENT_1)))
+            .andExpect(status().isForbidden)
+    }
+
+    @Test
+    fun `with mandatory tests, a submission that only fails the other tests is the one to continue from`() {
+
+        withMandatoryTests()
+        buildsFailing("testFuncaoParaTestar")
+        val baseSubmissionId = submissionFixtures.uploadProject("projectOK", baseAssignmentId, STUDENT_1)
+        assignmentFixtures.createContinuationAssignment()
+
+        uploadPage(STUDENT_1)
+            .andExpect(model().attribute("continuationStart", hasProperty<Any>("baseSubmission",
+                hasProperty<Any>("id", equalTo(baseSubmissionId.toLong())))))
+        downloadReferenceSolution(STUDENT_1).andExpect(status().isForbidden)
+    }
+
+    @Test
+    fun `with mandatory tests, a submission that fails one of them starts from the reference solution`() {
+
+        withMandatoryTests()
+        buildsFailing("testFuncaoLentaParaTestar")
+        submissionFixtures.uploadProject("projectOK", baseAssignmentId, STUDENT_1)
+        assignmentFixtures.createContinuationAssignment()
+
+        uploadPage(STUDENT_1)
+            .andExpect(model().attribute("continuationStart", hasProperty<Any>("baseSubmission", nullValue())))
+            .andExpect(content().string(containsString("does not pass all its mandatory tests")))
+        downloadReferenceSolution(STUDENT_1).andExpect(status().isOk)
+    }
+
+    @Test
+    fun `the group must remain the same even when it starts from the reference solution`() {
+
+        // student1 submitted with student2, and that code fails the tests
+        buildsFailing("testFuncaoLentaParaTestar")
+        submissionFixtures.uploadProject("projectOK", baseAssignmentId, STUDENT_1)
+        assignmentFixtures.createContinuationAssignment()
+
+        val error = submissionFixtures.uploadProject("projectOK", continuationId, STUDENT_1,
+            authors = listOf("student1" to "Student 1"),
+            expectedResultMatcher = status().isInternalServerError())
+
+        assertEquals("student1 submitted to ${baseAssignmentId} in the group student1, student2, which must " +
+                "remain the same. If the group changed, talk to your teacher.", error)
     }
 
     @Test

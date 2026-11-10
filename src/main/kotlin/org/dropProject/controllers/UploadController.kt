@@ -91,6 +91,7 @@ class UploadController(
         val cooloffOverrideService: CooloffOverrideService,
         val rebuildStatusRepository: RebuildStatusRepository,
         val defenseService: DefenseService,
+        val requiredTestsService: RequiredTestsService,
         val submissionWindowService: SubmissionWindowService,
         val clock: Clock,
         val referenceSolutionService: ReferenceSolutionService
@@ -238,13 +239,14 @@ class UploadController(
         }
 
         // on a continuation, a student who hasn't started yet is offered the code to start from. Teachers are always
-        // offered the reference solution, so that they can check what the students without a submission get
+        // offered the reference solution, so that they can check what the students without a passing submission get
         if (assignment.isContinuation()) {
             if (isAuthorizedTeacher) {
                 model["continuationStart"] = SubmissionService.ContinuationStart(baseSubmission = null)
             } else {
                 submissionService.continuationStart(assignment, principal.realName())?.let {
                     model["continuationStart"] = it
+                    model["continuationBaseMandatoryTestsSuffix"] = requiredTestsService.baseMandatoryTestsSuffix(assignment)
                 }
             }
         }
@@ -302,7 +304,8 @@ class UploadController(
 
     /**
      * Downloads the reference solution of the assignment that the continuation identified by [assignmentId]
-     * continues, i.e. the code that a student who has no submission of their own to that assignment starts from.
+     * continues, i.e. the code that a student starts from when they have no submission of their own to that assignment
+     * that passes its required tests (see [SubmissionService.continuationStart]).
      *
      * It is only served to the students who have nothing else to start from and haven't started yet, since it is the
      * solution of the previous part, and to the teachers of the continuation.

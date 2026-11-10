@@ -442,7 +442,8 @@ data class EditAssignment(val assignmentId: String, val changes: AssignmentArgum
                                     "default) is described in baseAssignmentId. CONTINUATION is the next part of a " +
                                     "multi-part project: until they submit, students can download the code their " +
                                     "group submitted to the base assignment (or its reference solution, i.e. its " +
-                                    "src/main, if they have none), and a group must remain the same as there unless " +
+                                    "src/main, if that code doesn't pass the base assignment's mandatory tests, or all of " +
+                                    "its tests when it has no mandatory ones), and a group must remain the same as there unless " +
                                     "the student is in the group exceptions. A continuation uses the package of the " +
                                     "base assignment and inherits its acl, group size and group exceptions, unless " +
                                     "acl or the group size are passed. Changing the link copies them again"

@@ -89,7 +89,8 @@
                                     there and every submission made here will be compared with it</p>
                                 <p class="help-block continuation-only" th:if="${!#fields.hasErrors('baseAssignmentId')}">The previous
                                     part of the project. Until they submit here, students can download the code their group submitted
-                                    there (or the reference solution, if they have none), and the group must remain the same unless
+                                    there, if it passes its mandatory tests (or all of them, when it has none), or the reference solution otherwise, and
+                                    the group must remain the same unless
                                     the student is in the exceptions. Picking it fills in its teachers, group size and exceptions</p>
                             </div>
                         </div>

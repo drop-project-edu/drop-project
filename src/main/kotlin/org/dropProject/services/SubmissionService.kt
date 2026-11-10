@@ -97,6 +97,7 @@ class SubmissionService(
     val rebuildStatusRepository: RebuildStatusRepository,
     val sourceDiffService: SourceDiffService,
     val defenseService: DefenseService,
+    val requiredTestsService: RequiredTestsService,
     val submissionWindowService: SubmissionWindowService,
     val assigneeRepository: AssigneeRepository,
     val clock: Clock
@@ -436,7 +437,7 @@ class SubmissionService(
      * Whether the student [userId] may download the original (not mavenized) files of [submission], which must have
      * been made by one of their groups. They may if it is their last submission to an assignment that lets students
      * download it, or if it is the submission that they start from on an active defense or continuation of its
-     * assignment (see [findBaseSubmission]).
+     * assignment (see [findBaseSubmission] and, for continuations, [ContinuationStart]).
      */
     fun studentMayDownloadOriginal(submission: Submission, userId: String): Boolean {
         val assignment = assignmentRepository.findById(submission.assignmentId).orElse(null)
@@ -451,14 +452,22 @@ class SubmissionService(
 
         return assignmentRepository.findAllByBaseAssignmentId(submission.assignmentId)
             .filter { it.active && !it.archived }
-            .any { findBaseSubmission(it, userId)?.id == submission.id }
+            .any { linkedAssignment ->
+                // a continuation only starts from a submission that passes the required tests (the others start
+                // from the reference solution), so that's the only one that it lets the student download
+                findBaseSubmission(linkedAssignment, userId)?.id == submission.id &&
+                        (!linkedAssignment.isContinuation() || passesTheRequiredTests(submission, linkedAssignment))
+            }
     }
 
     /**
      * What a student starts from on the continuation [assignment]: the [baseSubmission] of their group to the
-     * assignment it continues or, when they have none, its reference solution (see [ReferenceSolutionService]).
+     * assignment it continues, if it passes the tests that assignment required (see
+     * [RequiredTestsService.passesTheRequiredTests]), or its reference solution otherwise (see
+     * [ReferenceSolutionService]). [baseSubmissionFailsTests] tells apart a group whose submission fails those
+     * tests from one that has no submission at all, so that the student can be told why.
      */
-    data class ContinuationStart(val baseSubmission: Submission?)
+    data class ContinuationStart(val baseSubmission: Submission?, val baseSubmissionFailsTests: Boolean = false)
 
     /**
      * What [userId] starts from on the continuation [assignment], or null once they have started, i.e. once one of
@@ -473,7 +482,21 @@ class SubmissionService(
             return null
         }
 
-        return ContinuationStart(findBaseSubmission(assignment, userId))
+        val baseSubmission = findBaseSubmission(assignment, userId) ?: return ContinuationStart(baseSubmission = null)
+        return if (passesTheRequiredTests(baseSubmission, assignment)) {
+            ContinuationStart(baseSubmission)
+        } else {
+            ContinuationStart(baseSubmission = null, baseSubmissionFailsTests = true)
+        }
+    }
+
+    /**
+     * Checks that [baseSubmission], made to the assignment that the continuation [assignment] continues, is good
+     * enough to continue from, i.e. that it passes the tests that the previous assignment required.
+     */
+    private fun passesTheRequiredTests(baseSubmission: Submission, assignment: Assignment): Boolean {
+        val baseAssignment = assignmentRepository.findById(baseSubmission.assignmentId).orElse(null) ?: return false
+        return requiredTestsService.passesTheRequiredTests(baseSubmission, baseAssignment, assignment)
     }
 
     /**

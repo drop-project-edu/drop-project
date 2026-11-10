@@ -76,7 +76,8 @@ enum class LeaderboardType {
  *    to prove that they wrote it. It has two phases (resubmitting that code and then changing it) and may limit how
  *    many lines a submission changes;
  *  - CONTINUATION - the next part of a multi-part project: the group continues from the code they submitted to the
- *    base assignment (or from its reference solution, if they have none) and must remain the same group.
+ *    base assignment, if it passes its required tests (see [org.dropproject.services.RequiredTestsService]), or
+ *    from its reference solution otherwise, and must remain the same group.
  */
 enum class BaseAssignmentKind {
     DEFENSE,

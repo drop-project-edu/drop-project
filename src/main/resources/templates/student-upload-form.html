@@ -99,7 +99,7 @@
         </div>
 
         <!-- a student who hasn't started a continuation yet starts from their group's submission to the previous part
-             or, if they have none, from its reference solution -->
+             or, if they have none that passes its required tests, from its reference solution -->
         <div class="panel panel-info" th:if="${continuationStart != null}">
             <div class="panel-body">
                 <p th:if="${continuationStart.baseSubmission != null}">
@@ -112,10 +112,15 @@
                     <small th:text="#{student.upload.form.defense.download-info(${assignment.baseAssignmentId},${#dates.format(continuationStart.baseSubmission.submissionDate, 'dd/MMM HH:mm')})}"></small>
                 </p>
                 <p th:if="${continuationStart.baseSubmission == null}">
-                    <span th:if="${!isAuthorizedTeacher}"
+                    <span th:if="${!isAuthorizedTeacher and !continuationStart.baseSubmissionFailsTests}"
                           th:text="#{student.upload.form.continuation.reference-solution(${assignment.baseAssignmentId})}"></span>
+                    <span th:if="${!isAuthorizedTeacher and continuationStart.baseSubmissionFailsTests and continuationBaseMandatoryTestsSuffix == null}"
+                          th:text="#{student.upload.form.continuation.reference-solution-failing(${assignment.baseAssignmentId})}"></span>
+                    <span th:if="${!isAuthorizedTeacher and continuationStart.baseSubmissionFailsTests and continuationBaseMandatoryTestsSuffix != null}"
+                          th:text="#{student.upload.form.continuation.reference-solution-failing-mandatory(${assignment.baseAssignmentId})}"></span>
                     <span th:if="${isAuthorizedTeacher}">Students without a submission to
-                        <span th:text="${assignment.baseAssignmentId}"></span> start from its reference solution
+                        <span th:text="${assignment.baseAssignmentId}"></span> that passes its required tests (its
+                        mandatory tests, if it has them, or all of them otherwise) start from its reference solution
                         <small>(only visible to students until they submit)</small>:</span>
                     <br/>
                     <a th:href="@{'/upload/' + ${assignment.id} + '/reference-solution'}">

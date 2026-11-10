@@ -85,8 +85,9 @@ data class CreateAssignment(val assignmentForm: AssignmentForm) : ToolCommand {
                 appendLine("## Continuation of '${assignment.baseAssignmentId}'")
                 appendLine()
                 appendLine("Until they submit, the students can download the code their group submitted to ")
-                appendLine("'${assignment.baseAssignmentId}' or, if they have none, its reference solution (its ")
-                appendLine("src/main). Each group must remain the same as there, unless the student is in the ")
+                appendLine("'${assignment.baseAssignmentId}' if it passes the mandatory tests there (or all of them, ")
+                appendLine("when there are no mandatory tests) or, otherwise, its reference solution (its src/main). ")
+                appendLine("Each group must remain the same as there, unless the student is in the ")
                 appendLine("group exceptions. The package was set to the one of '${assignment.baseAssignmentId}' ")
                 appendLine("(${assignment.packageName ?: "which has none"}), and the acl, group size and group ")
                 appendLine("exceptions that the call didn't pass were copied from it.")
@@ -282,7 +283,8 @@ data class CreateAssignment(val assignmentForm: AssignmentForm) : ToolCommand {
                                     "default) is described in baseAssignmentId. CONTINUATION is the next part of a " +
                                     "multi-part project: until they submit, students can download the code their " +
                                     "group submitted to the base assignment (or its reference solution, i.e. its " +
-                                    "src/main, if they have none), and a group must remain the same as there unless " +
+                                    "src/main, if that code doesn't pass the base assignment's mandatory tests, or all of " +
+                                    "its tests when it has no mandatory ones), and a group must remain the same as there unless " +
                                     "the student is in the group exceptions. A continuation uses the package of the " +
                                     "base assignment and inherits its acl, group size and group exceptions, unless " +
                                     "acl or the group size are passed. Only valid together with baseAssignmentId"
