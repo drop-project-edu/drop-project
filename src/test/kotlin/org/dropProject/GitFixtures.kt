@@ -153,4 +153,40 @@ class GitFixtures {
 
         return Triple(gitSubmission, commitA.name, commitB.name)
     }
+
+    /**
+     * Creates the [GitSubmission] of a group made only of [studentUserId] to the assignment [assignmentId], backed by a
+     * local repository with one commit per folder of [commitContents], in order: each commit has exactly the files of
+     * that folder. The repository is left checked out at the last commit, which is what happens when Drop Project
+     * pulls commits that were pushed after a submission.
+     *
+     * @return the saved [GitSubmission] together with the hashes of the commits, in the same order
+     */
+    fun createGitSubmissionWithCommits(assignmentId: String, commitContents: List<File>,
+                                       studentUserId: String = "student1"): Pair<GitSubmission, List<String>> {
+        val group = ProjectGroup()
+        projectGroupRepository.save(group)
+        authorRepository.save(Author(name = studentUserId, number = studentUserId, group = group))
+
+        val gitSubmission = GitSubmission(
+            assignmentId = assignmentId, submitterUserId = studentUserId,
+            gitRepositoryUrl = "git@github.com:${studentUserId}/${assignmentId}.git", group = group
+        )
+        gitSubmissionRepository.save(gitSubmission)
+
+        val repositoryFolder =
+            File(dropProjectProperties.storage.gitLocation, gitSubmission.getFolderRelativeToStorageRoot())
+        repositoryFolder.mkdirs()
+        val commitHashes = Git.init().setDirectory(repositoryFolder).call().use { git ->
+            commitContents.mapIndexed { index, contents ->
+                repositoryFolder.listFiles()!!.filter { it.name != ".git" }.forEach { it.deleteRecursively() }
+                contents.copyRecursively(repositoryFolder)
+                git.add().addFilepattern(".").setUpdate(true).call()  // stages the removals
+                git.add().addFilepattern(".").call()
+                git.commit().setMessage("commit ${index + 1}").call().name
+            }
+        }
+
+        return Pair(gitSubmission, commitHashes)
+    }
 }

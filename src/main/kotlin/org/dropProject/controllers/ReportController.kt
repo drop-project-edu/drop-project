@@ -295,7 +295,8 @@ class ReportController(
 
     /**
      * Controller that handles the download of a specific submission's code, in its original format, i.e. the zip file
-     * that was uploaded or, for git submissions, the repository at the submitted commit. Teachers may download any
+     * that was uploaded or, for git submissions, the repository at the submitted commit (without its git history,
+     * see [SubmissionService.withSubmittedCode]). Teachers may download any
      * submission, while students may only download the ones that
      * [SubmissionService.studentMayDownloadOriginal] allows.
      *
@@ -341,42 +342,26 @@ class ReportController(
 
                 return FileSystemResource(projectFile)
             } else {  // submission by git
-                val gitSubmissionId = submission.gitSubmissionId
-                    ?: throw IllegalArgumentException("Git submission without gitSubmissionId")
-                val gitSubmission = gitSubmissionRepository.findById(gitSubmissionId).orElse(null)
-                    ?: throw IllegalArgumentException("git submission ${gitSubmissionId} is not registered")
-                val repositoryFolder =
-                    File(dropProjectProperties.storage.gitLocation, gitSubmission.getFolderRelativeToStorageRoot())
-
                 val zipFilename = submission.group.authorsIdStr().replace(",", "_")
                 val zFile = File.createTempFile(zipFilename, ".zip")
                 if (zFile.exists()) {
                     zFile.delete();
                 }
 
-                val hash = reportService.submissionGitInfoRepository.getBySubmissionId(submission.id)?.gitCommitHash
-
-                // clone into an isolated temp folder so we never check out a specific commit
-                // in the shared repository (which would be unsafe under concurrent downloads
-                // and could leave the shared repo in a broken state if the checkout failed)
-                val tempCloneFolder = gitClient.cloneRepositoryAtCommit(repositoryFolder, hash)
-                try {
-                    val zipFile = ZipFile(zFile)
+                // the repository at the submitted commit, without its history, so that the student can't get to
+                // anything that was pushed afterwards (e.g. when this is the code a defense starts from)
+                submissionService.withSubmittedCode(submission) { codeFolder ->
                     val zipParameters = ZipParameters()
                     zipParameters.isIncludeRootFolder = false
                     zipParameters.compressionLevel = CompressionLevel.ULTRA
-                    zipFile.addFolder(tempCloneFolder, zipParameters)
-//                zipFile.createZipFileFromFolder(repositoryFolder, zipParameters, false, -1)
-
-                    LOG.info("Created ${zipFile.file.absolutePath}")
-
-                    response.setHeader("Content-Disposition", "attachment; filename=${zipFilename}.zip")
-
-                    return FileSystemResource(zipFile.file)
-                } finally {
-                    FileUtils.deleteQuietly(tempCloneFolder)
+                    ZipFile(zFile).use { it.addFolder(codeFolder, zipParameters) }
                 }
 
+                LOG.info("Created ${zFile.absolutePath}")
+
+                response.setHeader("Content-Disposition", "attachment; filename=${zipFilename}.zip")
+
+                return FileSystemResource(zFile)
             }
         } else {
             throw ResourceNotFoundException()

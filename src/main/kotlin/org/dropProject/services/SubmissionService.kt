@@ -78,6 +78,8 @@ import jakarta.servlet.http.HttpServletRequest
 class SubmissionService(
     val submissionRepository: SubmissionRepository,
     val gitSubmissionRepository: GitSubmissionRepository,
+    val submissionGitInfoRepository: SubmissionGitInfoRepository,
+    val gitClient: GitClient,
     val submissionReportRepository: SubmissionReportRepository,
     val assignmentTeacherFiles: AssignmentTeacherFiles,
     val buildReportBuilder: BuildReportBuilder,
@@ -322,7 +324,7 @@ class SubmissionService(
                 // teachers try the defense out without ever having submitted to the project assignment, so they are
                 // not required to have one and there is simply nothing to measure their submission against
                 baseSubmission?.let {
-                    sourceDiffService.countChangedLines(getOriginalProjectFolder(it), projectFolder)
+                    withSubmittedCode(it) { baseFolder -> sourceDiffService.countChangedLines(baseFolder, projectFolder) }
                 }
             } else {
                 null
@@ -1087,6 +1089,46 @@ class SubmissionService(
     private fun mavenizedFolderOf(submission: Submission) =
         assignmentTeacherFiles.getProjectFolderAsFile(submission,
             submission.getStatus() == SubmissionStatus.VALIDATED_REBUILT)
+
+    /**
+     * Runs [block] on the code of [submission] exactly as the student submitted it.
+     *
+     * For an upload, that is its original project folder. For a git submission, the group's repository on disk always
+     * reflects its last pull, which may have happened after [submission] was made (e.g. a student who went on pushing
+     * after the due date), so the repository is checked out at the commit of [submission] into a temporary folder.
+     * That folder has no git metadata, so that it doesn't carry any commits beyond the submitted one, and it is removed
+     * as soon as [block] returns.
+     *
+     * For example, to count the lines of a submission's main file:
+     *
+     * ```
+     * val lines: Int = withSubmittedCode(submission) { codeFolder ->
+     *     File(codeFolder, "src/Main.java").readLines().size
+     * }
+     * ```
+     *
+     * [block] receives the folder with the code and whatever it returns (here, the number of lines) is what
+     * withSubmittedCode returns. The folder must not be used after [block] returns, because it may no longer exist.
+     */
+    fun <T> withSubmittedCode(submission: Submission, block: (File) -> T): T {
+        val gitSubmissionId = submission.gitSubmissionId ?: return block(getOriginalProjectFolder(submission))
+
+        val gitSubmission = gitSubmissionRepository.findById(gitSubmissionId).orElse(null)
+            ?: throw IllegalArgumentException("git submission ${gitSubmissionId} is not registered")
+        val repositoryFolder = File(dropProjectProperties.storage.gitLocation, gitSubmission.getFolderRelativeToStorageRoot())
+        val commitHash = submissionGitInfoRepository.getBySubmissionId(submission.id)?.gitCommitHash
+        if (commitHash == null) {
+            LOG.warn("Submission ${submission.id} has no commit registered, so its code is the last one pulled")
+        }
+
+        val checkoutFolder = gitClient.cloneRepositoryAtCommit(repositoryFolder, commitHash)
+        try {
+            FileUtils.deleteDirectory(File(checkoutFolder, ".git"))
+            return block(checkoutFolder)
+        } finally {
+            FileUtils.deleteQuietly(checkoutFolder)
+        }
+    }
 
     fun getOriginalProjectFolder(submission: Submission): File {
         val projectFolder =

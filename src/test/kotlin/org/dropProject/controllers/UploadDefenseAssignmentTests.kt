@@ -28,6 +28,7 @@ import org.dropproject.TestUsers.TEACHER_1
 import org.dropproject.dao.Submission
 import org.dropproject.services.AssignmentTeacherFiles
 import org.dropproject.services.SourceDiffService
+import net.lingala.zip4j.ZipFile
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.CoreMatchers.not
@@ -351,6 +352,84 @@ class UploadDefenseAssignmentTests : UploadTestBase() {
 
         this.mvc.perform(get("/submissions/${baseSubmissionId}/original").with(user(STUDENT_3)))
             .andExpect(status().isForbidden)
+    }
+
+    /**
+     * Creates a git submission of student1 to the project assignment, made when their repository had the code of
+     * projectOK, after which they went on pushing the code of projectCheckstyleErrors, which Drop Project pulled.
+     *
+     * @return the id of the submission (the one a defense starts from)
+     */
+    private fun gitSubmissionFollowedByLaterCommits(): Long {
+        val (gitSubmission, commitHashes) = gitFixtures.createGitSubmissionWithCommits(projectAssignmentId,
+            listOf(sampleProjectFolder("projectOK"), sampleProjectFolder("projectCheckstyleErrors")))
+        val projectAssignment = assignmentRepository.findById(projectAssignmentId).get()
+        return submissionFixtures.saveHistoricalSubmission(gitSubmission, projectAssignment,
+            assignmentGitHash = "somehash", studentCommitHash = commitHashes[0], submissionDate = Date()).id
+    }
+
+    @Test
+    fun `the code of a git submission is the submitted commit, even if later commits were pulled`() {
+
+        gitSubmissionFollowedByLaterCommits()
+        assignmentFixtures.createDefenseAssignment()
+
+        val submissionId = submissionFixtures.uploadProject("projectOK", defenseAssignmentId, STUDENT_1)
+
+        assertEquals(0, savedSubmission(submissionId).baseDivergenceLines)
+    }
+
+    @Test
+    fun `on the first phase, the code pushed after a git submission is rejected`() {
+
+        gitSubmissionFollowedByLaterCommits()
+        assignmentFixtures.createDefenseAssignment()
+
+        val error = submissionFixtures.uploadProject("projectCheckstyleErrors", defenseAssignmentId, STUDENT_1,
+            expectedResultMatcher = status().isInternalServerError())
+
+        assertEquals("Your submission was rejected: this is not the code you submitted to assignment " +
+                "${projectAssignmentId}. Download that submission and submit it without any change.", error)
+    }
+
+    @Test
+    fun `on the second phase, the changes are measured from the submitted commit of a git submission`() {
+
+        val expectedDivergence = divergenceBetween("projectOK", "projectCheckstyleErrors")
+
+        gitSubmissionFollowedByLaterCommits()
+        assignmentFixtures.createDefenseAssignment()
+        startDefenseFor(STUDENT_1, checkpointProject = "projectOK")
+
+        val submissionId = submissionFixtures.uploadProject("projectCheckstyleErrors", defenseAssignmentId, STUDENT_1)
+
+        // measured from the later commits, the divergence would be zero
+        assertEquals(expectedDivergence, savedSubmission(submissionId).baseDivergenceLines)
+    }
+
+    @Test
+    fun `the download of a git submission has the submitted commit and no git history`() {
+
+        val baseSubmissionId = gitSubmissionFollowedByLaterCommits()
+        assignmentFixtures.createDefenseAssignment()
+
+        val zipBytes = this.mvc.perform(get("/submissions/${baseSubmissionId}/original").with(user(STUDENT_1)))
+            .andExpect(status().isOk)
+            .andReturn().response.contentAsByteArray
+
+        val zipFile = File.createTempFile("downloaded", ".zip")
+        try {
+            zipFile.writeBytes(zipBytes)
+            val entries = ZipFile(zipFile).use { zip -> zip.fileHeaders.map { it.fileName } }
+            // the history would let the student check out the commits pushed after the submission
+            assertTrue(entries.none { it.startsWith(".git") }, "the zip should not have the git history: ${entries}")
+        } finally {
+            zipFile.delete()
+        }
+
+        val mainFile = "src/org/dropProject/sampleAssignments/testProj/Main.java"
+        assertEquals(File(sampleProjectFolder("projectOK"), mainFile).readText(),
+            submissionFixtures.zipEntryContent(zipBytes, mainFile))
     }
 
     @Test

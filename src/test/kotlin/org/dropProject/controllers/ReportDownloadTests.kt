@@ -215,7 +215,16 @@ class ReportDownloadTests : ReportTestBase() {
             .andExpect(status().isOk)
             .andReturn()
 
-        assertTrue(result.response.contentLength > 5000)  // just to make sure we don't get an empty file
+        val downloadedFile = File.createTempFile("downloaded", ".zip")
+        try {
+            FileUtils.writeByteArrayToFile(downloadedFile, result.response.contentAsByteArray)
+            val entries = ZipFile(downloadedFile).use { zip -> zip.fileHeaders.map { it.fileName } }
+            assertTrue(entries.contains("AUTHORS.txt"), "the zip should have the repository files: ${entries}")
+            assertTrue(entries.any { it.endsWith(".java") }, "the zip should have the repository files: ${entries}")
+            assertTrue(entries.none { it.startsWith(".git") }, "the zip should not have the git history: ${entries}")
+        } finally {
+            downloadedFile.delete()
+        }
     }
 
     @Test
