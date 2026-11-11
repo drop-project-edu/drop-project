@@ -34,8 +34,10 @@ import org.dropproject.repository.PersonalTokenRepository
 import org.dropproject.repository.SubmissionRepository
 import org.dropproject.services.AssignmentService
 import org.dropproject.services.AssignmentTeacherFiles
+import org.dropproject.services.GitClient
 import org.dropproject.services.ReportService
 import org.dropproject.services.StudentService
+import org.dropproject.services.SubmissionGitService
 import org.dropproject.storage.StorageService
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.stereotype.Service
@@ -55,6 +57,8 @@ class McpService(
     val reportService: ReportService,
     val assignmentRepository: AssignmentRepository,
     val assigneeRepository: AssigneeRepository,
+    val gitClient: GitClient,
+    val submissionGitService: SubmissionGitService,
     val request: HttpServletRequest,
     private val personalTokenRepository: PersonalTokenRepository
 ) {

@@ -292,6 +292,66 @@ class McpControllerTests: ApiTestSupport {
                                 "required": ["submissionId", "path"]
                             }
                         },
+                        {
+                            "name": "get_submission_git_history",
+                            "description": "Retrieve the git commit history of the repository behind a submission, up to the commit that was submitted, with the author and the lines added and removed by each commit. Lets a teacher check how much each group member contributed, for example whether every student made at least one non-trivial commit before the deadline. Only available for assignments whose submission method is GIT, and only to the owner of the assignment and to the teachers it was shared with.",
+                            "inputSchema": {
+                                "type": "object",
+                                "properties": {
+                                    "submissionId": {
+                                        "type": "number",
+                                        "description": "The submission whose repository is analysed. The history ends at the commit of this submission, not at the current tip of the branch, so that commits made after the deadline don't count. Commits from other branches that were never merged into the submitted commit are ignored."
+                                    },
+                                    "since": {
+                                        "type": "string",
+                                        "description": "Only commits from this date on, in ISO-8601 (e.g. '2026-10-15' or '2026-10-15T23:59', in the server's time zone). Isolates one part of a multi-part project, e.g. part 2 without the commits of part 1. Commits are dated by their author date."
+                                    },
+                                    "until": {
+                                        "type": "string",
+                                        "description": "Only commits up to this date, in ISO-8601. A date without time includes that whole day. By default, every commit up to the submitted one."
+                                    },
+                                    "paths": {
+                                        "type": "string",
+                                        "description": "Comma-separated path prefixes whose changes are counted (default 'src/'), matched by whole file and folder names. Commits that change nothing under them are left out, so files like pom.xml or instructions.md don't count."
+                                    },
+                                    "includeMerges": {
+                                        "type": "boolean",
+                                        "description": "By default false: merge commits are left out, since the lines they bring were already counted in the commits that were merged. If true, they are listed and count the lines changed relative to their first parent."
+                                    }
+                                },
+                                "required": [
+                                    "submissionId"
+                                ]
+                            }
+                        },
+                        {
+                            "name": "get_submission_git_blame",
+                            "description": "Retrieve, for the files of a submission's repository at the submitted commit, how many lines are currently attributed to each author (git blame). Complements get_submission_git_history: commits show activity, blame shows whose code is still in the submission. Same availability and permissions as get_submission_git_history.",
+                            "inputSchema": {
+                                "type": "object",
+                                "properties": {
+                                    "submissionId": {
+                                        "type": "number",
+                                        "description": "The submission to analyse, at its submitted commit"
+                                    },
+                                    "paths": {
+                                        "type": "string",
+                                        "description": "Comma-separated path prefixes of the files to analyse (default 'src/main/'), matched by whole file and folder names. Binary files are skipped."
+                                    },
+                                    "perLine": {
+                                        "type": "boolean",
+                                        "description": "By default false: only the totals per file and per author. If true, returns the commit and author of each line, in which case paths must name a single file, to keep the response small."
+                                    },
+                                    "ignoreWhitespace": {
+                                        "type": "boolean",
+                                        "description": "By default true (like git blame -w): reformatting code doesn't change the author of its lines."
+                                    }
+                                },
+                                "required": [
+                                    "submissionId"
+                                ]
+                            }
+                        },
                     {
                         "name": "create_assignment",
                         "description": "Create a new assignment in Drop Project and get back the ssh public key that must be installed as a read-only deploy key on its git repository. The repository must already exist and contain the teacher's Maven project (pom.xml, unit tests and instructions) - Drop Project only reads repositories, it never creates or writes to them. The assignment is created inactive and disconnected; call connect_assignment once the deploy key is in place, and edit_assignment to change any of these settings later. Only teachers can use this tool.",
