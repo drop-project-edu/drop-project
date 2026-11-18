@@ -77,7 +77,8 @@ enum class LeaderboardType {
  *    many lines a submission changes;
  *  - CONTINUATION - the next part of a multi-part project: the group continues from the code they submitted to the
  *    base assignment, if it passes its required tests (see [org.dropproject.services.RequiredTestsService]), or
- *    from its reference solution otherwise, and must remain the same group.
+ *    from its reference solution otherwise. Students can't form new groups, but they can leave theirs (e.g. to submit
+ *    individually).
  */
 enum class BaseAssignmentKind {
     DEFENSE,

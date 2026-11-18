@@ -545,21 +545,25 @@ class SubmissionService(
     }
 
     /**
-     * Checks that the group of a submission to the continuation [assignment], made by [authorIds], is the same group
-     * that each of them was in when submitting to the assignment it continues. A student who has nothing there to
-     * continue (and so starts from the reference solution) doesn't constrain the group, and neither does one that the
-     * teacher listed in the exceptions of the group restrictions.
+     * Checks that the group of a submission to the continuation [assignment], made by [authorIds], doesn't bring
+     * together students who weren't in the same group when submitting to the assignment it continues: every member
+     * has to have been in the group of each of the others there. Students can't form new groups, but they can leave
+     * one, e.g. to submit individually (if the group restrictions allow it). A student who has nothing there to
+     * continue (and so starts from the reference solution) doesn't constrain the group.
      *
-     * @throws InvalidProjectGroupException naming the first student whose group changed
+     * The exceptions of the group restrictions only exempt students from the group size, not from this: they are
+     * inherited from the previous part, where they typically list the students who worked alone, and those students
+     * mustn't use them to join someone else's group.
+     *
+     * @throws InvalidProjectGroupException naming the first student who would be joining students of another group
      */
     private fun checkContinuationGroup(assignment: Assignment, authorIds: List<String>) {
-        val exceptions = assignment.projectGroupRestrictions?.exceptionsAsList().orEmpty()
         val group = authorIds.toSet()
 
-        for (authorId in authorIds.filter { it !in exceptions }) {
+        for (authorId in authorIds) {
             val baseSubmission = findBaseSubmission(assignment, authorId) ?: continue
             val previousGroup = baseSubmission.group.authors.map { it.userId }.toSet()
-            if (previousGroup != group) {
+            if (!previousGroup.containsAll(group)) {
                 LOG.info("[${authorIds.joinToString("|")}] ${authorId} submitted to ${assignment.baseAssignmentId} " +
                         "in another group (${previousGroup.sorted().joinToString("|")})")
                 throw InvalidProjectGroupException(i18n.getMessage("student.submit.continuationGroupChanged",

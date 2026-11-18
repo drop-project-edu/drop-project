@@ -23,6 +23,7 @@ import org.dropproject.DropProjectIntegrationTest
 import org.dropproject.FakeBuild
 import org.dropproject.FakeBuildRunner
 import org.dropproject.TestUsers.STUDENT_1
+import org.dropproject.TestUsers.STUDENT_2
 import org.dropproject.TestUsers.STUDENT_3
 import org.dropproject.TestUsers.TEACHER_1
 import org.dropproject.dao.AssignmentACL
@@ -49,7 +50,7 @@ import java.util.zip.ZipInputStream
 /**
  * Tests for the "continuation" assignments, that is, the next part of a multi-part project, which each group starts
  * from the code they submitted to the previous part (or from its reference solution, if they have none that passes
- * its required tests) and which must be done by the same groups.
+ * its required tests) and in which students can't form new groups (but can leave theirs).
  *
  * Like [UploadDefenseAssignmentTests], they replace the (slow) Maven build with [FakeBuildRunner], since nothing here
  * depends on the results of the build, so this class also runs with 'mvn test -Pfast'.
@@ -222,7 +223,7 @@ class UploadContinuationAssignmentTests : UploadTestBase() {
     }
 
     @Test
-    fun `the group must remain the same even when it starts from the reference solution`() {
+    fun `students can't form new groups even when they start from the reference solution`() {
 
         // student1 submitted with student2, and that code fails the tests
         buildsFailing("testFuncaoLentaParaTestar")
@@ -230,11 +231,11 @@ class UploadContinuationAssignmentTests : UploadTestBase() {
         assignmentFixtures.createContinuationAssignment()
 
         val error = submissionFixtures.uploadProject("projectOK", continuationId, STUDENT_1,
-            authors = listOf("student1" to "Student 1"),
+            authors = listOf("student1" to "Student 1", "student3" to "Student 3"),
             expectedResultMatcher = status().isInternalServerError())
 
-        assertEquals("student1 submitted to ${baseAssignmentId} in the group student1, student2, which must " +
-                "remain the same. If the group changed, talk to your teacher.", error)
+        assertEquals("student1 submitted to ${baseAssignmentId} in the group student1, student2 and can't join " +
+                "other students. If the group changed, talk to your teacher.", error)
     }
 
     @Test
@@ -293,22 +294,50 @@ class UploadContinuationAssignmentTests : UploadTestBase() {
     }
 
     @Test
-    fun `the group must remain the same as in the previous part`() {
+    fun `students can't form new groups`() {
 
         // student1 and student2 did the previous part together
         submissionFixtures.uploadProject("projectOK", baseAssignmentId, STUDENT_1)
         assignmentFixtures.createContinuationAssignment()
 
         val error = submissionFixtures.uploadProject("projectOK", continuationId, STUDENT_1,
-            authors = listOf("student1" to "Student 1"),
+            authors = listOf("student1" to "Student 1", "student3" to "Student 3"),
             expectedResultMatcher = status().isInternalServerError())
 
-        assertEquals("student1 submitted to ${baseAssignmentId} in the group student1, student2, which must " +
-                "remain the same. If the group changed, talk to your teacher.", error)
+        assertEquals("student1 submitted to ${baseAssignmentId} in the group student1, student2 and can't join " +
+                "other students. If the group changed, talk to your teacher.", error)
         assertTrue(submissionRepository.findAll().none { it.assignmentId == continuationId })
 
         // the same group is accepted
         submissionFixtures.uploadProject("projectOK", continuationId, STUDENT_1)
+    }
+
+    @Test
+    fun `students may leave their group of the previous part and submit individually`() {
+
+        // student1 and student2 did the previous part together
+        submissionFixtures.uploadProject("projectOK", baseAssignmentId, STUDENT_1)
+        assignmentFixtures.createContinuationAssignment()
+
+        submissionFixtures.uploadProject("projectOK", continuationId, STUDENT_1,
+            authors = listOf("student1" to "Student 1"))
+        submissionFixtures.uploadProject("projectOK", continuationId, STUDENT_2,
+            authors = listOf("student2" to "Student 2"))
+    }
+
+    @Test
+    fun `a student without a submission to the previous part can't join a student who has one`() {
+
+        // student1 and student2 did the previous part together, student3 didn't submit
+        submissionFixtures.uploadProject("projectOK", baseAssignmentId, STUDENT_1)
+        assignmentFixtures.createContinuationAssignment()
+
+        val error = submissionFixtures.uploadProject("projectOK", continuationId, STUDENT_3,
+            authors = listOf("student3" to "Student 3", "student1" to "Student 1"),
+            expectedResultMatcher = status().isInternalServerError())
+
+        assertEquals("student1 submitted to ${baseAssignmentId} in the group student1, student2 and can't join " +
+                "other students. If the group changed, talk to your teacher.", error)
     }
 
     @Test
@@ -323,11 +352,22 @@ class UploadContinuationAssignmentTests : UploadTestBase() {
     }
 
     @Test
-    fun `the students in the group exceptions may change group`() {
+    fun `the students in the group exceptions can't form new groups either`() {
 
-        submissionFixtures.uploadProject("projectOK", baseAssignmentId, STUDENT_1)
+        // student1 did the previous part alone, as one of its exceptions, which the continuation inherited
+        submissionFixtures.uploadProject("projectOK", baseAssignmentId, STUDENT_1,
+            authors = listOf("student1" to "Student 1"))
         assignmentFixtures.createContinuationAssignment(exceptions = "student1")
 
+        // student3, who didn't submit to the previous part, can't join them
+        val error = submissionFixtures.uploadProject("projectOK", continuationId, STUDENT_3,
+            authors = listOf("student3" to "Student 3", "student1" to "Student 1"),
+            expectedResultMatcher = status().isInternalServerError())
+
+        assertEquals("student1 submitted to ${baseAssignmentId} in the group student1 and can't join " +
+                "other students. If the group changed, talk to your teacher.", error)
+
+        // but they can go on alone
         submissionFixtures.uploadProject("projectOK", continuationId, STUDENT_1,
             authors = listOf("student1" to "Student 1"))
     }
