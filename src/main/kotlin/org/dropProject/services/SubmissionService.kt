@@ -100,7 +100,8 @@ class SubmissionService(
     val requiredTestsService: RequiredTestsService,
     val submissionWindowService: SubmissionWindowService,
     val assigneeRepository: AssigneeRepository,
-    val clock: Clock
+    val clock: Clock,
+    val teacherAuthorizationService: TeacherAuthorizationService
 ) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
@@ -221,8 +222,7 @@ class SubmissionService(
                 arrayOf(Constants.MIN_PLUGIN_VERSION_FOR_MAVEN_SUBMISSIONS.toString()), currentLocale))
         }
 
-        val isAuthorizedTeacher = request.isUserInRole("TEACHER") &&
-                assignmentService.isAuthorizedTeacher(assignment, principal.realName(), request)
+        val isAuthorizedTeacher = teacherAuthorizationService.isAuthorizedTeacher(assignment, principal.realName(), request)
 
         // TODO: Validate assignment due date
 
@@ -311,8 +311,7 @@ class SubmissionService(
             // already submitted to the project assignment, and not yet the requested changes. The phase is per
             // student: a student who hasn't passed the first one stays there even after the instructions are released
             val isDefenseCheckpoint = assignment.isDefense() &&
-                    defenseService.defensePhaseFor(assignment, principal.realName(),
-                        request.isUserInRole("TEACHER")) == 1
+                    defenseService.defensePhaseFor(assignment, principal, request) == 1
 
             // a submission to a defense assignment is supposed to be a bounded set of changes on top of the group's
             // code for the linked project assignment, so measure how much it diverges from it

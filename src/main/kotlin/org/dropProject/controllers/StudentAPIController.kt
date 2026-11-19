@@ -61,7 +61,9 @@ class StudentAPIController(
     val submissionService: SubmissionService,
     val assignmentService: AssignmentService,
     val reportService: ReportService,
-    val assignmentTeacherFiles: AssignmentTeacherFiles
+    val assignmentTeacherFiles: AssignmentTeacherFiles,
+    val defenseService: DefenseService,
+    val teacherAuthorizationService: TeacherAuthorizationService
 ) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
@@ -74,15 +76,7 @@ class StudentAPIController(
 
         val assignments = assignmentService.getMyAssignments(principal, archived = false)
             .filter { if (request.isUserInRole("TEACHER")) true else it.active && it.acceptsClientIp(request.remoteAddr) }
-            .map {
-                val instructions = assignmentTeacherFiles.getInstructions(it)
-                if (instructions.format == AssignmentInstructionsFormat.MD) {
-                    // when called through the API, always use HTML
-                    // TODO change this when the plugin is capable of rendering markdown
-                    instructions.format = AssignmentInstructionsFormat.HTML
-                }
-                it.copy(instructions = instructions)
-            }
+            .map { it.copy(instructions = instructionsFor(it, principal, request)) }
 
         return ResponseEntity.ok(assignments)
     }
@@ -165,13 +159,13 @@ class StudentAPIController(
 
         var assignment = assignmentRepository.findById(assignmentID).orElse(null)
 
-        assignment?.instructions = assignmentTeacherFiles.getInstructions(assignment)
+        assignment?.instructions = instructionsFor(assignment, principal, request)
 
         if (assignment == null) {
             assignmentInfoResponse.errorCode = 404
         } else if (!assignment.active ||
             (!assignment.acceptsClientIp(request.remoteAddr) &&
-                !assignmentService.isAuthorizedTeacher(assignment, principal.realName(), request))) {
+                !teacherAuthorizationService.isAuthorizedTeacher(assignment, principal.realName(), request))) {
             assignment=null
             assignmentInfoResponse.errorCode = 403
         }
@@ -179,6 +173,19 @@ class StudentAPIController(
 
         return ResponseEntity.ok().body(assignmentInfoResponse)
 
+    }
+
+    /**
+     * The instructions of [assignment] as [principal] may see them: empty while they are on the first phase of a
+     * defense, since the instructions of a defense are the exercise itself (see [DefenseService.mayShowInstructions]).
+     */
+    private fun instructionsFor(assignment: Assignment, principal: Principal,
+                                request: HttpServletRequest): AssignmentInstructions {
+        if (!defenseService.mayShowInstructions(assignment, principal, request)) {
+            return AssignmentInstructions()
+        }
+
+        return assignmentTeacherFiles.getInstructions(assignment)
     }
 
 }

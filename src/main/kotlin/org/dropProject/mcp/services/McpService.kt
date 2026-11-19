@@ -38,6 +38,7 @@ import org.dropproject.services.GitClient
 import org.dropproject.services.ReportService
 import org.dropproject.services.StudentService
 import org.dropproject.services.SubmissionGitService
+import org.dropproject.services.TeacherAuthorizationService
 import org.dropproject.storage.StorageService
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.stereotype.Service
@@ -60,7 +61,8 @@ class McpService(
     val gitClient: GitClient,
     val submissionGitService: SubmissionGitService,
     val request: HttpServletRequest,
-    private val personalTokenRepository: PersonalTokenRepository
+    private val personalTokenRepository: PersonalTokenRepository,
+    val teacherAuthorizationService: TeacherAuthorizationService
 ) {
 
     fun getInitializeResult(): McpInitializeResult {
@@ -126,7 +128,7 @@ class McpService(
         val assignment = assignmentRepository.findById(assignmentId)
             .orElseThrow { IllegalArgumentException("Assignment $assignmentId not found") }
 
-        if (!assignmentService.isAuthorizedTeacher(assignment, principal.realName(), request)) {
+        if (!teacherAuthorizationService.isAuthorizedTeacher(assignment, principal.realName(), request)) {
             throw AccessDeniedException("Assignment $assignmentId is only available to its owner " +
                     "(${assignment.ownerUserId}) and to the teachers that were given access to it")
         }

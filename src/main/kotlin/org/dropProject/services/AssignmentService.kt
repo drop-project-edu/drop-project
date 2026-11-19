@@ -1464,12 +1464,6 @@ class AssignmentService(
 
     }
 
-    fun isAuthorizedTeacher(assignment: Assignment, principalName: String, request: HttpServletRequest): Boolean {
-        return request.isUserInRole("TEACHER") &&
-                (assignment.ownerUserId == principalName ||
-                        assignmentACLRepository.existsByAssignmentIdAndUserId(assignment.id, principalName))
-    }
-
     /**
      * Checks if a certain user can access a certain [Assignment]. Only relevant for Assignments that have access
      * control lists.

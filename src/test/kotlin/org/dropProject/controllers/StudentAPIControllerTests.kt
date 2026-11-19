@@ -27,6 +27,7 @@ import org.dropproject.DropProjectIntegrationTest
 import org.dropproject.dao.Assignee
 import org.dropproject.dao.Assignment
 import org.dropproject.dao.AssignmentVisibility
+import org.dropproject.dao.BaseAssignmentKind
 import org.dropproject.dao.Language
 import org.dropproject.dao.SubmissionStructure
 import org.dropproject.forms.SubmissionMethod
@@ -287,6 +288,66 @@ class StudentAPIControllerTests: ApiTestSupport {
             .andExpect(jsonPath("$.assignment.instructions.body", containsString("<h2>Sample Java Assignment</h2>")))
             .andExpect(jsonPath("$.errorCode").doesNotExist())
 
+    }
+
+    @Test
+    fun `students don't get the instructions of an inactive assignment`() {
+
+        val assignment = assignmentRepository.findById("sampleJavaProject").get()
+        assignment.active = false
+        assignmentRepository.save(assignment)
+
+        val token = generateToken("student1", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")), mvc)
+
+        this.mvc.perform(
+            get("/api/student/assignments/sampleJavaProject")
+                .header("authorization", basicAuthHeader("student1", token)))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.assignment").doesNotExist())
+            .andExpect(jsonPath("$.errorCode", `is`(403)))
+            .andExpect(content().string(not(containsString("Sample Java Assignment"))))
+
+        this.mvc.perform(
+            get("/api/student/assignments/current")
+                .header("authorization", basicAuthHeader("student1", token)))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$[*].id", not(hasItem("sampleJavaProject"))))
+    }
+
+    @Test
+    fun `students on the first phase of a defense don't get its instructions`() {
+
+        // the instructions of a defense are the exercise itself, so they must stay hidden until the student reaches
+        // the second phase, even though the assignment is already active (the first phase needs that)
+        val defense = assignmentRepository.findById("sampleJavaProject").get()
+        defense.baseAssignmentId = "testJavaProj"
+        defense.baseAssignmentKind = BaseAssignmentKind.DEFENSE
+        assignmentRepository.save(defense)
+
+        val token = generateToken("student1", mutableListOf(SimpleGrantedAuthority("ROLE_STUDENT")), mvc)
+
+        this.mvc.perform(
+            get("/api/student/assignments/sampleJavaProject")
+                .header("authorization", basicAuthHeader("student1", token)))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.assignment.id", `is`("sampleJavaProject")))
+            .andExpect(jsonPath("$.assignment.instructions.body", nullValue()))
+
+        this.mvc.perform(
+            get("/api/student/assignments/current")
+                .header("authorization", basicAuthHeader("student1", token)))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$[?(@.id == 'sampleJavaProject')].instructions.body", contains(nullValue())))
+
+        // releasing the instructions isn't enough either: the student must also pass the first phase
+        defense.defenseInstructionsReleased = true
+        assignmentRepository.save(defense)
+
+        this.mvc.perform(
+            get("/api/student/assignments/sampleJavaProject")
+                .header("authorization", basicAuthHeader("student1", token)))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.assignment.instructions.body", nullValue()))
     }
 
     @Test

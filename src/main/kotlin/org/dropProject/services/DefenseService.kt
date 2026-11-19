@@ -19,12 +19,15 @@
  */
 package org.dropproject.services
 
+import jakarta.servlet.http.HttpServletRequest
 import org.dropproject.dao.Assignment
 import org.dropproject.dao.Submission
 import org.dropproject.dao.SubmissionStatus
+import org.dropproject.extensions.realName
 import org.dropproject.repository.ProjectGroupRepository
 import org.dropproject.repository.SubmissionRepository
 import org.springframework.stereotype.Service
+import java.security.Principal
 
 /**
  * The state of the first phase of a defense, from the point of view of a certain student.
@@ -56,18 +59,24 @@ enum class DefenseCheckpointStatus {
 class DefenseService(
     val submissionRepository: SubmissionRepository,
     val projectGroupRepository: ProjectGroupRepository,
-    val requiredTestsService: RequiredTestsService
+    val requiredTestsService: RequiredTestsService,
+    val teacherAuthorizationService: TeacherAuthorizationService
 ) {
 
     /**
-     * The phase that [submitterUserId] is on, in the defense [assignment]: 1 while they still have to submit their
+     * The phase that [principal] is on, in the defense [assignment]: 1 while they still have to submit their
      * original code, 2 once the teacher has released the instructions to a student who did it.
      *
-     * Teachers are on the second phase from the start, so that they can try the defense out, and see it as the
-     * students will, before releasing it to them.
+     * The teachers that manage the assignment (see [TeacherAuthorizationService.isAuthorizedTeacher]) are on the
+     * second phase from the start, so that they can try the defense out, and see it as the students will, before
+     * releasing it to them. Any other teacher goes through the phases like a student.
+     *
+     * @param request is the HttpServletRequest, used to check the user's teacher role
      */
-    fun defensePhaseFor(assignment: Assignment, submitterUserId: String, isTeacher: Boolean): Int {
-        if (isTeacher) {
+    fun defensePhaseFor(assignment: Assignment, principal: Principal, request: HttpServletRequest): Int {
+        val submitterUserId = principal.realName()
+
+        if (teacherAuthorizationService.isAuthorizedTeacher(assignment, submitterUserId, request)) {
             return 2
         }
 
@@ -78,6 +87,15 @@ class DefenseService(
         // the defense is open, but a student who didn't prove that they can build and submit their own code stays
         // on the first phase: the exercise is to change that code, so there is nothing for them to change yet
         return if (checkpointStatus(assignment, submitterUserId) == DefenseCheckpointStatus.VALID) 2 else 1
+    }
+
+    /**
+     * Whether [principal] may see the instructions of [assignment]. On a defense, the instructions *are* the
+     * exercise, so they stay hidden until the user reaches its second phase (see [defensePhaseFor]). On any other
+     * assignment they are always visible.
+     */
+    fun mayShowInstructions(assignment: Assignment, principal: Principal, request: HttpServletRequest): Boolean {
+        return !assignment.isDefense() || defensePhaseFor(assignment, principal, request) == 2
     }
 
     /**

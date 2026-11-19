@@ -94,7 +94,8 @@ class UploadController(
         val requiredTestsService: RequiredTestsService,
         val submissionWindowService: SubmissionWindowService,
         val clock: Clock,
-        val referenceSolutionService: ReferenceSolutionService
+        val referenceSolutionService: ReferenceSolutionService,
+        val teacherAuthorizationService: TeacherAuthorizationService
         ) {
 
     @Value("\${spring.web.locale}")
@@ -202,8 +203,7 @@ class UploadController(
         val assignment = assignmentRepository.findById(assignmentId)
             .orElseThrow { throw ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found") }
 
-        val isAuthorizedTeacher = request.isUserInRole("TEACHER") &&
-                assignmentService.isAuthorizedTeacher(assignment, principal.realName(), request)
+        val isAuthorizedTeacher = teacherAuthorizationService.isAuthorizedTeacher(assignment, principal.realName(), request)
         // Check authorization (403 if unauthorized)
         checkAssignmentAccess(assignmentId, principal, isAuthorizedTeacher, request)
 
@@ -213,7 +213,7 @@ class UploadController(
         model["isAuthorizedTeacher"] = isAuthorizedTeacher
         model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.realName(), assignment.id)
 
-        val defensePhase = defensePhaseFor(assignment, principal, isAuthorizedTeacher)
+        val defensePhase = defensePhaseFor(assignment, principal, request)
         if (defensePhase != null) {
             model["defensePhase"] = defensePhase
             model["defenseCheckpointStatus"] = defenseService.checkpointStatus(assignment, principal.realName())
@@ -319,8 +319,7 @@ class UploadController(
         val assignment = assignmentRepository.findById(assignmentId)
             .orElseThrow { throw ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found") }
 
-        val isAuthorizedTeacher = request.isUserInRole("TEACHER") &&
-                assignmentService.isAuthorizedTeacher(assignment, principal.realName(), request)
+        val isAuthorizedTeacher = teacherAuthorizationService.isAuthorizedTeacher(assignment, principal.realName(), request)
         checkAssignmentAccess(assignmentId, principal, isAuthorizedTeacher, request)
 
         if (!assignment.isContinuation()) {
@@ -375,12 +374,12 @@ class UploadController(
      * gets there after submitting their original code and having it pass the project assignment's tests, so the
      * phase is calculated per user.
      */
-    private fun defensePhaseFor(assignment: Assignment, principal: Principal, isAuthorizedTeacher: Boolean): Int? {
+    private fun defensePhaseFor(assignment: Assignment, principal: Principal, request: HttpServletRequest): Int? {
         if (!assignment.isDefense()) {
             return null
         }
 
-        return defenseService.defensePhaseFor(assignment, principal.realName(), isAuthorizedTeacher)
+        return defenseService.defensePhaseFor(assignment, principal, request)
     }
 
     /**
@@ -590,13 +589,13 @@ class UploadController(
         // Check authorization (403 if unauthorized)
         checkAssignmentAccess(assignmentId, principal, request.isUserInRole("TEACHER"), request)
 
-        val isAuthorizedTeacher = assignmentService.isAuthorizedTeacher(assignment, principal.realName(), request)
+        val isAuthorizedTeacher = teacherAuthorizationService.isAuthorizedTeacher(assignment, principal.realName(), request)
 
         model["assignment"] = assignment
         model["isAuthorizedTeacher"] = isAuthorizedTeacher
         model["numSubmissions"] = submissionRepository.countBySubmitterUserIdAndAssignmentId(principal.realName(), assignment.id)
         model["instructionsFragment"] = instructionsFor(assignment,
-            defensePhaseFor(assignment, principal, isAuthorizedTeacher)) //quick fix
+            defensePhaseFor(assignment, principal, request)) //quick fix
         model["packageTree"] = assignmentTeacherFiles.buildPackageTree(
                 assignment.packageName, assignment.language,
                 assignment.submissionStructure, assignment.acceptsStudentTests,
@@ -706,7 +705,7 @@ class UploadController(
 
                 // the group can't change after connecting (AUTHORS.txt is only read here), so this is where it's checked
                 submissionService.checkGroup(assignment, authors.map { it.number }, principal.realName(),
-                    assignmentService.isAuthorizedTeacher(assignment, principal.realName(), request))
+                    teacherAuthorizationService.isAuthorizedTeacher(assignment, principal.realName(), request))
 
                 val group = projectGroupService.getOrCreateProjectGroup(authors)
                 gitSubmission.group = group
@@ -824,8 +823,7 @@ class UploadController(
         val gitSubmission = gitSubmissionRepository.findById(gitSubmissionId.toLong()).orElse(null) ?: throw SubmissionNotFoundException(gitSubmissionId.toLong())
         val assignment = assignmentRepository.findById(gitSubmission.assignmentId).orElse(null)
 
-        val isAuthorizedTeacher = request.isUserInRole("TEACHER") &&
-                assignmentService.isAuthorizedTeacher(assignment, principal.realName(), request)
+        val isAuthorizedTeacher = teacherAuthorizationService.isAuthorizedTeacher(assignment, principal.realName(), request)
 
         // Check authorization (403 if unauthorized)
         if (!authorizationService.canAccessAssignmentByGitSubmissionId(gitSubmissionId, principal.realName(),

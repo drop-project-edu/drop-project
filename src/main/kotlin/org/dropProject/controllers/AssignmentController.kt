@@ -86,7 +86,8 @@ class AssignmentController(
     val dropProjectProperties: DropProjectProperties,
     val sourceDiffService: SourceDiffService,
     val cooloffOverrideService: CooloffOverrideService,
-    val submissionWindowService: SubmissionWindowService) {
+    val submissionWindowService: SubmissionWindowService,
+    val teacherAuthorizationService: TeacherAuthorizationService) {
 
     val LOG = LoggerFactory.getLogger(this.javaClass.name)
 
@@ -1101,7 +1102,7 @@ class AssignmentController(
             }
 
             if (!request.isUserInRole("DROP_PROJECT_ADMIN") &&
-                !assignmentService.isAuthorizedTeacher(assignment, principal.realName(), request)) {
+                !teacherAuthorizationService.isAuthorizedTeacher(assignment, principal.realName(), request)) {
                 throw AccessDeniedException("You are not allowed to export the assignment ${assignmentId}")
             }
         }

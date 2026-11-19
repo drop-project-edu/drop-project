@@ -25,6 +25,7 @@ import org.dropproject.FakeBuildRunner
 import org.dropproject.TestUsers.STUDENT_1
 import org.dropproject.TestUsers.STUDENT_3
 import org.dropproject.TestUsers.TEACHER_1
+import org.dropproject.TestUsers.TEACHER_2
 import org.dropproject.dao.Submission
 import org.dropproject.services.AssignmentTeacherFiles
 import org.dropproject.services.SourceDiffService
@@ -472,6 +473,27 @@ class UploadDefenseAssignmentTests : UploadTestBase() {
 
         assertNull(savedSubmission(submissionId).baseDivergenceLines,
             "there is nothing to measure the teacher's submission against")
+    }
+
+    @Test
+    fun `a teacher who doesn't manage the defense goes through the phases like a student`() {
+
+        // only the owner and the ACL try the defense out before releasing it. Another teacher has no say over it,
+        // so the upload page and the submission must both treat them as being on the first phase
+        submissionFixtures.uploadProject("projectOK", projectAssignmentId, TEACHER_2,
+            authors = listOf(TEACHER_2.username to "Teacher 2"))
+        assignmentFixtures.createDefenseAssignment()
+
+        this.mvc.perform(get("/upload/${defenseAssignmentId}").with(user(TEACHER_2)))
+            .andExpect(status().isOk)
+            .andExpect(model().attribute("defensePhase", equalTo(1)))
+            .andExpect(model().attribute("instructionsFragment", nullValue()))
+
+        val submissionId = submissionFixtures.uploadProject("projectOK", defenseAssignmentId, TEACHER_2,
+            authors = listOf(TEACHER_2.username to "Teacher 2"))
+
+        assertTrue(savedSubmission(submissionId).defenseCheckpoint,
+            "the submission of a teacher who doesn't manage the defense is a checkpoint of their original code")
     }
 
     @Test
